@@ -80,3 +80,4 @@ test("2-Tier Verification: Invalid PAN rejects at Tier 1 without calling Tier 2"
   assert.equal(report.tier1.valid, false);
   assert.equal(report.tier2.status, "SKIPPED");
 });
+

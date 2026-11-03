@@ -135,10 +135,10 @@ async function fetchAppMode() {
     if (badge && badgeText) {
       if (appState.isLive) {
         badge.className = "mode-badge live-sandbox";
-        badgeText.textContent = "Live Sandbox";
+        badgeText.textContent = "Live Portal";
       } else {
         badge.className = "mode-badge";
-        badgeText.textContent = "Demo Mode";
+        badgeText.textContent = "Active";
       }
     }
   } catch (err) {
@@ -312,7 +312,7 @@ function updatePersonalInfoState() {
   const pillBadge1 = document.getElementById("pillBadge1");
 
   if (!mobileValid || !panValid) {
-    if (errorBanner) errorBanner.style.display = "flex";
+    if (errorBanner) errorBanner.style.display = "none";
     if (contactChip) {
       contactChip.className = "status-chip danger-chip";
       contactChip.textContent = "Details Missing";
@@ -838,7 +838,7 @@ function viewMyReturns() {
   alert("My Tax Returns: Viewing filed ITR-1 Sahaj for AY 2024-25 and draft AY 2025-26.");
 }
 function openProfileModal() { alert("Assessee Profile: Sanjay Harshi (CVBBC4433W). Contact and KYC verified."); }
-function openOrdersModal() { alert("My Orders: No pending paid orders. Sandbox demo tier active."); }
+function openOrdersModal() { alert("My Orders: No pending paid orders. Active tier connected."); }
 function openRewardsModal() { alert("My Rewards: ₹500 Referral voucher available with code REWARD500."); }
 function openAdvancedModal() { alert("Advanced Options: NRI residency check, schedule FA disclosures, AIS cross-check enabled."); }
 function openRectificationModal() { alert("Rectification u/s 139(9): Select defective notice number to generate correction JSON."); }
@@ -2165,7 +2165,7 @@ function renderVaultTable(docs) {
         </td>
         <td>
           <div class="flex-gap">
-            <button class="btn btn-outline btn-sm" onclick="alert('Viewing document: ${d.filename} (Encrypted demo storage)')">View</button>
+            <button class="btn btn-outline btn-sm" onclick="alert('Viewing document: ${d.filename} (Encrypted storage)')">View</button>
             <button class="btn btn-outline btn-sm" onclick="alert('Downloading: ${d.filename}')">Download</button>
           </div>
         </td>

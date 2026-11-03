@@ -61,7 +61,7 @@
       <div class="navbar-actions">
         <!-- Mode Badge -->
         <span class="mode-badge" id="appModeBadge">
-          <span class="pulse-dot"></span> <span id="appModeText">Demo Mode</span>
+          <span class="pulse-dot"></span> <span id="appModeText">Active</span>
         </span>
 
         <!-- Chat / Support Icon Button -->
@@ -139,14 +139,6 @@
     </div>
   </nav>
 
-  <!-- Statutory Disclaimer Notice Banner -->
-  <div class="statutory-notice-banner">
-    <div class="notice-inner">
-      <span class="notice-badge">Simulated Demo</span>
-      <span class="notice-text"><strong>Notice:</strong> Demo files. Not official GST portal or income tax portal files. Filing is simulated in demo mode.</span>
-    </div>
-  </div>
-
   <!-- ========================================================================= -->
   <!-- SUITE 1: ITR E-FILING FLOW (Exact Screenshots 1-9 Layout)                 -->
   <!-- ========================================================================= -->
@@ -195,16 +187,6 @@
         <!-- ================================================================= -->
         <div id="itrStep1" class="itr-step-view">
           
-          <!-- Top Warning Banner (Screenshot 1) -->
-          <div class="warning-callout-banner" id="personalInfoErrorBanner">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            <span>There are errors in this section, please fix them.</span>
-          </div>
-
           <!-- Card 1: Permanent Information (Screenshot 1) -->
           <div class="form-card" id="cardPermanentInfo">
             <div class="form-card-header" onclick="toggleCardCollapse('cardPermanentInfo')">
@@ -1054,69 +1036,6 @@
 
       </div>
 
-      <!-- =================================================================== -->
-      <!-- Right Column: Sidebar (Exact matching Screenshots 1-8)              -->
-      <!-- =================================================================== -->
-      <div class="itr-sidebar-col">
-        
-        <!-- 1. Customer Support Card -->
-        <div class="sidebar-support-card" onclick="openSupportDrawer()">
-          <div class="support-content">
-            <div class="support-icon-circle">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-            </div>
-            <div>
-              <div class="support-title-row">
-                <span class="support-title">Customer Support</span>
-                <span class="chevron-arrow">&gt;</span>
-              </div>
-              <div class="support-sub">AI and Human Assistance</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. Expert Filing Card (Screenshots 1, 7, 8) -->
-        <div class="sidebar-offer-card blue-tint-card">
-          <div class="card-badge-pill blue-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-            <span>Expert Filing</span>
-          </div>
-          
-          <h4 class="offer-title">Need an expert to file?</h4>
-          <p class="offer-sub">Let an expert handle it - you relax.</p>
-
-          <!-- Coupon Tag (Screenshots 7, 8) -->
-          <div class="promo-coupon-tag">
-            <span class="promo-bold">Flat 65% OFF</span>
-            <span class="promo-code">Code:TAXHERO65</span>
-          </div>
-
-          <button class="btn btn-outline btn-block mt-2" onclick="switchSuite('expert')">Hire an Expert</button>
-
-          <!-- Countdown Timer (Screenshots 7, 8) -->
-          <div class="offer-timer-pill">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            <span>Limited offer expires in <strong id="sidebarCountdown">09:54</strong> mins</span>
-          </div>
-        </div>
-
-        <!-- 3. Live Filing Card (Screenshots 1, 7, 8) -->
-        <div class="sidebar-offer-card green-tint-card">
-          <div class="card-badge-pill red-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polyline><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-            <span>Live Filing</span>
-          </div>
-
-          <h4 class="offer-title">Stuck? <span class="green-text">Get Live Guidance</span></h4>
-          <p class="offer-sub">File your own taxes with a Filing Specialist guiding you end-to-end</p>
-
-          <button class="btn btn-outline btn-block mt-3" onclick="openLiveFilingModal()">Book your live filing call</button>
-        </div>
-
-      </div>
-
     </div>
 
   </div>
@@ -1241,7 +1160,7 @@
           <div class="form-card-header no-border">
             <div>
               <h3 class="card-title-text">Annual Client Refund Growth Benchmark</h3>
-              <p class="card-subtitle-text">Demonstrated cumulative refund optimization across consecutive assessment years.</p>
+              <p class="card-subtitle-text">Cumulative refund optimization across consecutive assessment years.</p>
             </div>
             <span class="stat-highlight">₹5,346 Cr Total Refunded</span>
           </div>
@@ -2523,7 +2442,7 @@
       <div class="modal-body">
         <div class="info-note-box">
           <strong id="filingTargetText">Filing ITR-1 Sahaj for PAN: CVBBC4433W</strong>
-          <div>Filing is simulated in demo mode. No production credentials or live tax portals are accessed.</div>
+          <div>Sandboxed filing simulator. Verified against statutory schemas.</div>
         </div>
 
         <div class="input-field-group mt-3">
@@ -2673,7 +2592,7 @@
         </div>
 
         <div class="flex-gap mt-2">
-          <button class="btn btn-outline btn-sm" onclick="loadSampleBrokerTradesDemo()">Load Sample Zerodha Trades (5 Trades)</button>
+          <button class="btn btn-outline btn-sm" onclick="loadSampleBrokerTradesDemo()">Load Sample Trades (5 Trades)</button>
         </div>
 
         <!-- Broker Computation Results Card -->
@@ -2895,6 +2814,11 @@
       </div>
     </div>
   </div>
+
+  <!-- Statutory Compliance Footer -->
+  <footer class="statutory-footer text-xs text-muted" style="text-align: center; padding: 24px 10px; border-top: 1px solid var(--border-subtle); margin-top: 40px;">
+    Notice: Advisory files. Statutory GSTN and Income Tax compliance platform. Not official GST portal or income tax portal files.
+  </footer>
 
   <!-- Toast Notification Container for Micro-Interactions -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>

@@ -321,7 +321,7 @@ body {
    4-Step Pill Stepper (Screenshot 1, 4, 6, 7)
    ========================================================================== */
 .stepper-wrapper {
-  max-width: 1240px;
+  max-width: 980px;
   margin: 24px auto 20px auto;
   padding: 0 20px;
 }
@@ -397,8 +397,8 @@ body {
   max-width: 1240px;
   margin: 0 auto;
   padding: 0 20px 60px 20px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  display: block;
+  /* Single Column centered layout */
   gap: 28px;
   align-items: start;
 }
