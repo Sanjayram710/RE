@@ -69,6 +69,12 @@ body {
   justify-content: space-between;
 }
 
+.navbar-left-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
 .navbar-brand {
   display: flex;
   align-items: center;
@@ -2262,9 +2268,10 @@ body {
 .suite-nav-container {
   max-width: 1300px;
   margin: 0 auto;
-  padding: 6px 24px;
+  padding: 8px 24px;
   display: flex;
   align-items: center;
+  justify-content: center;
   overflow-x: auto;
   scrollbar-width: none;
 }

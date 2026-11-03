@@ -105,12 +105,14 @@ function showToast(message, type = "info") {
 // ============================================================================
 document.addEventListener("DOMContentLoaded", async () => {
   setupSidebarCountdown();
+  initAuth();
   await fetchAppMode();
   await loadGstDemoData();
   
   // Initialize ITR Step 1 & Computation
   updatePersonalInfoState();
   await recalculateItrTax();
+  goToItrStep(1); // Ensure Option 1 (Personal Info) is active on load
   
   // Close dropdowns on outside click
   document.addEventListener("click", (e) => {
@@ -844,7 +846,208 @@ function openAdvancedModal() { alert("Advanced Options: NRI residency check, sch
 function openRectificationModal() { alert("Rectification u/s 139(9): Select defective notice number to generate correction JSON."); }
 function openPrefillModal() { fetchIncomeDetailsDemo(); }
 function checkItrStatusModal() { alert("ITR Status: Return processed with zero outstanding demand."); }
-function logoutAction() { alert("Simulated Logout: Session data saved locally."); }
+// ============================================================================
+// Authentication & Session Management (Sign In, Register, Logout)
+// ============================================================================
+appState.auth = {
+  isLoggedIn: true,
+  user: {
+    name: "Sanjay Harshi",
+    email: "sanjay@example.com",
+    mobile: "9876543210",
+    pan: "CVBBC4433W"
+  }
+};
+
+function initAuth() {
+  try {
+    const saved = localStorage.getItem("simplegst_user_session");
+    if (saved) {
+      appState.auth = JSON.parse(saved);
+    }
+  } catch (e) {
+    console.warn("Could not parse saved user session:", e);
+  }
+  renderAuthState();
+}
+
+function renderAuthState() {
+  const loggedOutNav = document.getElementById("navAuthLoggedOut");
+  const loggedInNav = document.getElementById("navAuthLoggedIn");
+  const navUserName = document.getElementById("navUserName");
+  const menuUserName = document.getElementById("menuUserFullName");
+  const menuUserEmail = document.getElementById("menuUserEmail");
+  const currentFilingPan = document.getElementById("currentFilingPan");
+
+  if (appState.auth && appState.auth.isLoggedIn && appState.auth.user) {
+    const user = appState.auth.user;
+    if (loggedOutNav) loggedOutNav.style.display = "none";
+    if (loggedInNav) loggedInNav.style.display = "flex";
+    if (navUserName) navUserName.textContent = user.name || "Assessee";
+    if (menuUserName) menuUserName.textContent = user.name || "Assessee";
+    if (menuUserEmail) menuUserEmail.textContent = user.email || "user@simplegst.tax";
+    if (currentFilingPan) currentFilingPan.textContent = user.pan || "CVBBC4433W";
+  } else {
+    if (loggedOutNav) loggedOutNav.style.display = "flex";
+    if (loggedInNav) loggedInNav.style.display = "none";
+    if (currentFilingPan) currentFilingPan.textContent = "Guest";
+  }
+}
+
+function openAuthModal(tab = "signin") {
+  openModal("modalAuth");
+  switchAuthTab(tab);
+}
+
+function closeAuthModal() {
+  closeModal("modalAuth");
+}
+
+function switchAuthTab(tab) {
+  const btnSignIn = document.getElementById("tabAuthSignIn");
+  const btnRegister = document.getElementById("tabAuthRegister");
+  const formSignIn = document.getElementById("formSignIn");
+  const formRegister = document.getElementById("formRegister");
+  const title = document.getElementById("authModalTitle");
+  const sub = document.getElementById("authModalSubtitle");
+
+  if (tab === "signin") {
+    if (btnSignIn) {
+      btnSignIn.style.background = "var(--white)";
+      btnSignIn.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)";
+      btnSignIn.style.color = "var(--primary-blue)";
+      btnSignIn.style.fontWeight = "700";
+    }
+    if (btnRegister) {
+      btnRegister.style.background = "transparent";
+      btnRegister.style.boxShadow = "none";
+      btnRegister.style.color = "var(--text-muted)";
+      btnRegister.style.fontWeight = "600";
+    }
+    if (formSignIn) formSignIn.classList.remove("hidden");
+    if (formRegister) formRegister.classList.add("hidden");
+    if (title) title.textContent = "Sign In to SimpleGST";
+    if (sub) sub.textContent = "Secure access to your tax returns, GSTR filings, and compliance vault";
+  } else {
+    if (btnRegister) {
+      btnRegister.style.background = "var(--white)";
+      btnRegister.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)";
+      btnRegister.style.color = "var(--primary-blue)";
+      btnRegister.style.fontWeight = "700";
+    }
+    if (btnSignIn) {
+      btnSignIn.style.background = "transparent";
+      btnSignIn.style.boxShadow = "none";
+      btnSignIn.style.color = "var(--text-muted)";
+      btnSignIn.style.fontWeight = "600";
+    }
+    if (formSignIn) formSignIn.classList.add("hidden");
+    if (formRegister) formRegister.classList.remove("hidden");
+    if (title) title.textContent = "Create New Account (New Sign In)";
+    if (sub) sub.textContent = "Enter your PAN and contact info to start frictionless e-filing";
+  }
+}
+
+function handleSignInSubmit(e) {
+  e.preventDefault();
+  const idInput = document.getElementById("loginIdentifier");
+  const identifier = idInput ? idInput.value.trim() : "CVBBC4433W";
+  const pan = identifier.length === 10 ? identifier.toUpperCase() : "CVBBC4433W";
+
+  appState.auth = {
+    isLoggedIn: true,
+    user: {
+      name: pan === "CVBBC4433W" ? "Sanjay Harshi" : "Authorized Taxpayer",
+      email: identifier.includes("@") ? identifier : `${pan.toLowerCase()}@taxpayer.in`,
+      mobile: "9876543210",
+      pan
+    }
+  };
+
+  localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
+  renderAuthState();
+  closeAuthModal();
+  goToItrStep(1); // Ensure Option 1 is selected after login
+  alert(`✓ Welcome back, ${appState.auth.user.name}!\nSigned in successfully. Option 1 (Personal Info) is ready for filing.`);
+}
+
+function handleRegisterSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById("regFullName")?.value.trim() || "New Taxpayer";
+  const pan = (document.getElementById("regPan")?.value || "").trim().toUpperCase();
+  const mobile = document.getElementById("regMobile")?.value.trim() || "9876543210";
+  const email = document.getElementById("regEmail")?.value.trim() || "user@simplegst.tax";
+
+  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+  if (!panRegex.test(pan)) {
+    alert("Please enter a valid 10-character PAN (e.g. ABCDE1234F).");
+    return;
+  }
+
+  appState.auth = {
+    isLoggedIn: true,
+    user: { name, pan, mobile, email }
+  };
+
+  localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
+
+  // Sync with personal info
+  const nameParts = name.split(" ");
+  appState.itr.personalInfo.firstName = nameParts[0] || name;
+  appState.itr.personalInfo.lastName = nameParts.slice(1).join(" ") || "Taxpayer";
+  appState.itr.personalInfo.pan = pan;
+  appState.itr.personalInfo.mobile = mobile;
+  appState.itr.personalInfo.email = email;
+
+  renderAuthState();
+  closeAuthModal();
+  goToItrStep(1); // Ensure Option 1 is selected after register
+  alert(`✓ Account created successfully for ${name}!\nOption 1 (Personal Info) has been updated with your details.`);
+}
+
+function quickDemoLogin() {
+  appState.auth = {
+    isLoggedIn: true,
+    user: {
+      name: "Sanjay Harshi",
+      email: "sanjay@example.com",
+      mobile: "9876543210",
+      pan: "CVBBC4433W"
+    }
+  };
+  localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
+  renderAuthState();
+  closeAuthModal();
+  goToItrStep(1);
+  alert("✓ One-Click Login successful as Sanjay Harshi (CVBBC4433W).\nOption 1 (Personal Info) is active.");
+}
+
+function logoutAction() {
+  appState.auth = {
+    isLoggedIn: false,
+    user: null
+  };
+  localStorage.removeItem("simplegst_user_session");
+  renderAuthState();
+  document.getElementById("profileDropdownMenu")?.classList.remove("active");
+  goToItrStep(1);
+  alert("✓ You have been logged out.\nClick 'Sign In' or 'New Sign In' at any time to resume filing.");
+}
+
+function onRegisterPanInput(val) {
+  const pan = (val || "").trim().toUpperCase();
+  const feedback = document.getElementById("regPanFeedback");
+  if (!feedback) return;
+  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+  if (panRegex.test(pan)) {
+    const code = pan[3];
+    feedback.innerHTML = `<span class="text-success font-medium">✓ Valid PAN syntax (Entity category: '${code}')</span>`;
+  } else if (pan.length > 0) {
+    feedback.innerHTML = `<span class="text-danger font-medium">✗ Expected 5 letters, 4 digits, 1 letter</span>`;
+  } else {
+    feedback.innerHTML = "Tier 1 regex: 5 letters, 4 digits, 1 letter.";
+  }
+}
 
 // Customer Support Drawer
 function openSupportDrawer() {
