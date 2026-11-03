@@ -257,26 +257,37 @@ function toggleAdditionalInfo() {
 }
 
 function validateLivePan(value) {
-  const pan = (value || "").toUpperCase().trim();
+  const pan = (value || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
   const panFeedback = document.getElementById("panFeedback");
   const panInput = document.getElementById("inputPan");
-  if (panInput) panInput.value = pan;
+  if (panInput && panInput.value !== pan) panInput.value = pan;
   appState.itr.personalInfo.pan = pan;
-  document.getElementById("currentFilingPan").textContent = pan;
+
+  const currentFilingPan = document.getElementById("currentFilingPan");
+  if (currentFilingPan) {
+    currentFilingPan.textContent = pan || (appState.auth && appState.auth.isLoggedIn && appState.auth.user ? appState.auth.user.pan : "Guest / New Filing");
+  }
 
   const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
   if (!panRegex.test(pan)) {
     if (panFeedback) {
-      panFeedback.textContent = "Invalid PAN structure (e.g. 5 letters, 4 digits, 1 letter)";
+      panFeedback.textContent = pan.length === 0 ? "" : "Invalid PAN syntax (5 letters, 4 digits, 1 letter in capital form)";
       panFeedback.style.color = "#EA580C";
     }
   } else {
     if (panFeedback) {
-      panFeedback.textContent = "✓ Valid CBDT PAN format";
+      panFeedback.textContent = `✓ Valid CBDT PAN format (Category '${pan[3]}')`;
       panFeedback.style.color = "#16A34A";
     }
+    // Update logged in user object if active
+    if (appState.auth && appState.auth.isLoggedIn && appState.auth.user) {
+      appState.auth.user.pan = pan;
+      localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
+    }
   }
+  renderFilingDropdownMenu();
   updatePersonalInfoState();
+  renderFilingDropdownMenu();
 }
 
 function validateLiveMobile(value) {
@@ -869,6 +880,49 @@ function initAuth() {
   renderAuthState();
 }
 
+function renderFilingDropdownMenu() {
+  const menu = document.getElementById("filingDropdownMenu");
+  if (!menu) return;
+
+  if (appState.auth && appState.auth.isLoggedIn && appState.auth.user) {
+    const user = appState.auth.user;
+    const pan = user.pan || appState.itr.personalInfo.pan || "NO PAN";
+    const name = user.name || "Authorized Taxpayer";
+
+    menu.innerHTML = `
+      <div class="filing-menu-item active" style="background: #EFF6FF; border-left: 3px solid #0F67FE;">
+        <div class="entity-pan" style="color: #0F67FE; font-weight: 800;">${pan}</div>
+        <div class="entity-name" style="font-weight: 600;">${name} • AY 2026-27 (Active)</div>
+      </div>
+      <div style="height: 1px; background: #E2E8F0; margin: 6px 0;"></div>
+      <div class="filing-menu-item" onclick="openProfileModal()">
+        <div style="font-size: 12px; font-weight: 600; color: #1E3A8A;">👤 Manage PAN & Profile (${pan})</div>
+      </div>
+      <div class="filing-menu-item" onclick="logoutAction()">
+        <div style="font-size: 12px; font-weight: 600; color: #DC2626;">🚪 Log Out (${name})</div>
+      </div>
+    `;
+  } else {
+    // Guest Mode
+    menu.innerHTML = `
+      <div class="filing-menu-item active">
+        <div class="entity-pan">Guest Mode</div>
+        <div class="entity-name">Sign In or Register to link PAN</div>
+      </div>
+      <div style="height: 1px; background: #E2E8F0; margin: 6px 0;"></div>
+      <div style="padding: 6px 12px; font-size: 11px; text-transform: uppercase; color: #64748B; font-weight: 700;">Demo Quick Logins</div>
+      <div class="filing-menu-item" onclick="quickDemoLogin('sanjay')">
+        <div class="entity-pan">CVBBC4433W</div>
+        <div class="entity-name">Sanjay Harshi (Demo) • Salaried</div>
+      </div>
+      <div class="filing-menu-item" onclick="quickDemoLogin('priya')">
+        <div class="entity-pan">AAPCS1234F</div>
+        <div class="entity-name">Priya Sharma (Demo) • Professional</div>
+      </div>
+    `;
+  }
+}
+
 function renderAuthState() {
   const loggedOutNav = document.getElementById("navAuthLoggedOut");
   const loggedInNav = document.getElementById("navAuthLoggedIn");
@@ -1004,32 +1058,57 @@ function switchAuthTab(tab) {
 function handleSignInSubmit(e) {
   e.preventDefault();
   const idInput = document.getElementById("loginIdentifier");
-  const identifier = idInput ? idInput.value.trim() : "CVBBC4433W";
-  const pan = identifier.length === 10 ? identifier.toUpperCase() : "CVBBC4433W";
+  const identifier = idInput ? idInput.value.trim() : "";
 
-  const isSanjay = (pan === "CVBBC4433W");
-  const name = isSanjay ? "Sanjay Harshi" : "Authorized Taxpayer";
+  if (!identifier) {
+    alert("Please enter your Mobile Number or Email Address to sign in.");
+    return;
+  }
 
-  appState.auth = {
-    isLoggedIn: true,
-    user: {
-      name,
-      firstName: isSanjay ? "Sanjay" : name.split(" ")[0],
-      lastName: isSanjay ? "Harshi" : name.split(" ")[1] || "",
-      email: identifier.includes("@") ? identifier : `${pan.toLowerCase()}@taxpayer.in`,
-      mobile: "9876543210",
-      pan,
-      dob: "07/10/2006",
-      fatherName: "Harshi V",
-      aadhaar: "482910482910"
+  // Check previously registered users from localStorage
+  let matchedUser = null;
+  try {
+    const users = JSON.parse(localStorage.getItem("simplegst_registered_users") || "[]");
+    matchedUser = users.find(u => (u.email && u.email.toLowerCase() === identifier.toLowerCase()) || (u.mobile && u.mobile === identifier));
+  } catch (err) {}
+
+  if (!matchedUser && appState.auth && appState.auth.user) {
+    if ((appState.auth.user.email && appState.auth.user.email.toLowerCase() === identifier.toLowerCase()) || (appState.auth.user.mobile && appState.auth.user.mobile === identifier)) {
+      matchedUser = appState.auth.user;
     }
-  };
+  }
+
+  if (matchedUser) {
+    appState.auth = {
+      isLoggedIn: true,
+      user: matchedUser
+    };
+  } else {
+    // Fresh user logged in with phone or email
+    const isEmail = identifier.includes("@");
+    const cleanName = isEmail ? identifier.split("@")[0] : `User ${identifier.slice(-4)}`;
+    const formattedName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+    appState.auth = {
+      isLoggedIn: true,
+      user: {
+        name: formattedName,
+        firstName: formattedName,
+        lastName: "",
+        email: isEmail ? identifier : `${identifier}@taxpayer.in`,
+        mobile: isEmail ? "" : identifier.replace(/\D/g, '').slice(0, 10),
+        pan: "", // User will type their PAN in Step 1
+        dob: "",
+        fatherName: "",
+        aadhaar: ""
+      }
+    };
+  }
 
   localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
   renderAuthState();
   closeAuthModal();
   goToItrStep(1);
-  showToast(`✓ Welcome back, ${appState.auth.user.name}! Option 1 (Personal Info) is ready for filing.`, "success");
+  showToast(`✓ Welcome, ${appState.auth.user.name}! Signed in successfully.`, "success");
 }
 
 function handleRegisterSubmit(e) {
@@ -1065,6 +1144,13 @@ function handleRegisterSubmit(e) {
   };
 
   localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
+  try {
+    let users = JSON.parse(localStorage.getItem("simplegst_registered_users") || "[]");
+    users = users.filter(u => u.pan !== pan && u.email !== email && u.mobile !== mobile);
+    users.push(appState.auth.user);
+    localStorage.setItem("simplegst_registered_users", JSON.stringify(users));
+  } catch (err) {}
+
   renderAuthState();
   closeAuthModal();
   goToItrStep(1);

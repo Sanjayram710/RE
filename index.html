@@ -313,7 +313,7 @@
 
               <div class="input-field-group mt-3">
                 <label class="field-label">PAN *</label>
-                <input type="text" class="text-input" id="inputPan" value="" placeholder="10-digit PAN (e.g. ABCDE1234F)" maxlength="10" oninput="validateLivePan(this.value)">
+                <input type="text" class="text-input font-mono uppercase" id="inputPan" value="" placeholder="10-digit PAN (e.g. ABCDE1234F)" maxlength="10" style="text-transform: uppercase;" autocapitalize="characters" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10); validateLivePan(this.value);">
                 <span class="validation-feedback" id="panFeedback"></span>
               </div>
 
@@ -323,7 +323,7 @@
                   <select class="phone-code-select">
                     <option value="+91">+91</option>
                   </select>
-                  <input type="text" class="text-input has-warning-border" id="inputMobile" placeholder="XXXXXXXXXX" value="" oninput="validateLiveMobile(this.value)">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" class="text-input has-warning-border font-mono" id="inputMobile" placeholder="XXXXXXXXXX" value="" maxlength="10" onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 13;" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10); validateLiveMobile(this.value);">
                   <span class="input-warning-icon" id="mobileWarningIcon">⚠️</span>
                 </div>
                 <p class="error-msg-text" id="mobileErrorMsg">Please fill this field.</p>
@@ -3229,8 +3229,8 @@
         <!-- Form 1: Sign In -->
         <form id="formSignIn" onsubmit="handleSignInSubmit(event)">
           <div class="input-field-group">
-            <label class="field-label">Email, PAN or Mobile</label>
-            <input type="text" id="loginIdentifier" class="text-input" placeholder="e.g. CVBBC4433W or sanjay@example.com" value="CVBBC4433W" required>
+            <label class="field-label">Mobile Number or Email Address</label>
+            <input type="text" id="loginIdentifier" class="text-input" placeholder="Enter Mobile Number or Email (e.g. 9876543210)" value="" required>
           </div>
           <div class="input-field-group mt-3">
             <label class="field-label" style="display: flex; justify-content: space-between;">
@@ -3269,13 +3269,13 @@
           </div>
           <div class="input-field-group mt-2">
             <label class="field-label">Permanent Account Number (PAN) <span class="text-danger">*</span></label>
-            <input type="text" id="regPan" class="text-input font-mono" placeholder="e.g. ABCDE1234F" maxlength="10" oninput="onRegisterPanInput(this.value)" required>
+            <input type="text" id="regPan" class="text-input font-mono uppercase" style="text-transform: uppercase;" placeholder="e.g. ABCDE1234F" maxlength="10" autocapitalize="characters" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10); onRegisterPanInput(this.value);" required>
             <div id="regPanFeedback" class="text-xs text-muted mt-1">Tier 1 regex: 5 letters, 4 digits, 1 letter.</div>
           </div>
           <div class="form-grid-2 mt-2">
             <div class="input-field-group">
               <label class="field-label">Mobile Number <span class="text-danger">*</span></label>
-              <input type="tel" id="regMobile" class="text-input font-mono" placeholder="9876543210" maxlength="10" required>
+              <input type="tel" inputmode="numeric" pattern="[0-9]*" id="regMobile" class="text-input font-mono" placeholder="9876543210" maxlength="10" onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 13;" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required>
             </div>
             <div class="input-field-group">
               <label class="field-label">Email Address <span class="text-danger">*</span></label>
