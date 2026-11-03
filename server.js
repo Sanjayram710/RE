@@ -13,7 +13,10 @@ import {
   gstr1Adapter,
   gstr2bAdapter,
   gstr3bAdapter,
-  imsAdapter
+  imsAdapter,
+  getAllApis,
+  executeGspApi,
+  runAllApisHealthCheck
 } from "./lib/gsp/index.js";
 import {
   DEMO_BUSINESS,
@@ -738,6 +741,25 @@ export function createServer() {
         const result = await imsAdapter.saveAction(body.gstin || DEMO_BUSINESS.gstin, body.period || "102026", body.actions);
         return sendJson(res, result.allowed === false ? 501 : 200, result);
       }
+
+      // 8f. 182 Statutory APIs Hub & Universal Dispatcher
+      if (pathname === "/api/gsp/apis" && method === "GET") {
+        return sendJson(res, 200, {
+          total: 182,
+          apis: getAllApis()
+        });
+      }
+      if (pathname === "/api/gsp/invoke" && method === "POST") {
+        const body = await readBody(req);
+        const result = await executeGspApi(body.id, body.options || body);
+        const statusCode = result.httpStatusCode || (result.status_cd === "0" && !result.isSuccess ? 400 : 200);
+        return sendJson(res, statusCode, result);
+      }
+      if (pathname === "/api/gsp/health-check" && (method === "GET" || method === "POST")) {
+        const body = method === "POST" ? await readBody(req) : {};
+        const result = await runAllApisHealthCheck(body.gstin || DEMO_BUSINESS.gstin);
+        return sendJson(res, 200, result);
+      }
     }
 
     // ---------------------------------------------------------
@@ -800,6 +822,16 @@ function escapeXmlVal(str) {
 // Start server if executed directly
 if (process.argv[1] && process.argv[1].endsWith("server.js")) {
   const server = createServer();
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(`[SimpleGST] Port ${PORT} is already in use.`);
+      console.error(`[SimpleGST] Tip: You can set a different port, e.g.: $env:PORT=3001; npm start`);
+      process.exit(1);
+    } else {
+      console.error(`[SimpleGST] Server error:`, err);
+      process.exit(1);
+    }
+  });
   server.listen(PORT, () => {
     const gspMode = getGspMode();
     console.log(`[SimpleGST] Server active at http://localhost:${PORT}`);

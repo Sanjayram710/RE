@@ -1,1094 +1,1822 @@
 [
- {
-  "id": 1,
-  "api": "Initiate OTP for EVC",
-  "group": "Initiate OTP for EVC",
-  "status": "working"
- },
- {
-  "id": 2,
-  "api": "Logout",
-  "group": "Logout",
-  "status": "working"
- },
- {
-  "id": 3,
-  "api": "Request for extension of authorization token",
-  "group": "Request for extension of authorization token",
-  "status": "working"
- },
- {
-  "id": 4,
-  "api": "Request for OTP",
-  "group": "Request for OTP",
-  "status": "working"
- },
- {
-  "id": 5,
-  "api": "Request forAuthorization token",
-  "group": "Request forAuthorization token",
-  "status": "working"
- },
- {
-  "id": 6,
-  "api": "GSTR1 - File Gstr1",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 7,
-  "api": "GSTR1 - Get AT",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 8,
-  "api": "GSTR1 - Get ATA",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 9,
-  "api": "GSTR1 - Get B2B Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 10,
-  "api": "GSTR1 - Get B2BA Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 11,
-  "api": "GSTR1 - Get B2CL Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 12,
-  "api": "GSTR1 - Get B2CLA Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 13,
-  "api": "GSTR1 - Get B2CS Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 14,
-  "api": "GSTR1 - Get B2CSA Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 15,
-  "api": "GSTR1 - Get CDNR Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 16,
-  "api": "GSTR1 - Get CDNRA Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 17,
-  "api": "GSTR1 - Get CDNUR Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 18,
-  "api": "GSTR1 - Get CDNURA Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 19,
-  "api": "GSTR1 - Get Doc Issued",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 20,
-  "api": "GSTR1 - Get E-Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 21,
-  "api": "GSTR1 - Get ECOM Invoices",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 22,
-  "api": "GSTR1 - Get ECOMA Invoices",
-  "group": "GSTR1",
-  "status": "not_working"
- },
- {
-  "id": 23,
-  "api": "GSTR1 - Get EXP",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 24,
-  "api": "GSTR1 - Get EXPA",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 25,
-  "api": "GSTR1 - Get GSTR1 Summary",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 26,
-  "api": "GSTR1 - Get HSN Summary details",
-  "group": "GSTR1",
-  "status": "not_working"
- },
- {
-  "id": 27,
-  "api": "GSTR1 - Get Nil Rated Supplies",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 28,
-  "api": "GSTR1 - Get Return Status",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 29,
-  "api": "GSTR1 - Get SUPECO Details",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 30,
-  "api": "GSTR1 - Get SUPECOA Details",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 31,
-  "api": "GSTR1 - Get TXP",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 32,
-  "api": "GSTR1 - Get TXPA",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 33,
-  "api": "GSTR1 - Reset GSTR1",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 34,
-  "api": "GSTR1 - Save GSTR1 data",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 35,
-  "api": "GSTR1 - Validate HSN Summary",
-  "group": "GSTR1",
-  "status": "working"
- },
- {
-  "id": 36,
-  "api": "All - New Proceed to File(for GSTR6,GSTR5,GSTR1)",
-  "group": "All",
-  "status": "unknown"
- },
- {
-  "id": 37,
-  "api": "GSTR1A - Confirm Declaration Details",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 38,
-  "api": "GSTR1A - File Gstr1A",
-  "group": "GSTR1A",
-  "status": "working"
- },
- {
-  "id": 39,
-  "api": "GSTR1A - Get AT",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 40,
-  "api": "GSTR1A - Get ATA",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 41,
-  "api": "GSTR1A - Get B2B Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 42,
-  "api": "GSTR1A - Get B2BA Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 43,
-  "api": "GSTR1A - Get B2CL Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 44,
-  "api": "GSTR1A - Get B2CLA Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 45,
-  "api": "GSTR1A - Get B2CS Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 46,
-  "api": "GSTR1A - Get B2CSA Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 47,
-  "api": "GSTR1A - Get CDNR Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 48,
-  "api": "GSTR1A - Get CDNRA Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 49,
-  "api": "GSTR1A - Get CDNUR Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 50,
-  "api": "GSTR1A - Get CDNURA Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 51,
-  "api": "GSTR1A - Get Declaration Details",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 52,
-  "api": "GSTR1A - Get Doc Issued",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 53,
-  "api": "GSTR1A - Get ECOM Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 54,
-  "api": "GSTR1A - Get ECOMA Invoices",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 55,
-  "api": "GSTR1A - Get EXP",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 56,
-  "api": "GSTR1A - Get EXPA",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 57,
-  "api": "GSTR1A - Get GSTR1A Summary",
-  "group": "GSTR1A",
-  "status": "working"
- },
- {
-  "id": 58,
-  "api": "GSTR1A - Get HSN Summary details",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 59,
-  "api": "GSTR1A - Get Nil Rated Supplies",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 60,
-  "api": "GSTR1A - Get Return Status",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 61,
-  "api": "GSTR1A - Get SUPECO Details",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 62,
-  "api": "GSTR1A - Get SUPECOA Details",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 63,
-  "api": "GSTR1A - Get TXP",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 64,
-  "api": "GSTR1A - Get TXPA",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 65,
-  "api": "GSTR1A - Proceed to File",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 66,
-  "api": "GSTR1A - Reset GSTR1A",
-  "group": "GSTR1A",
-  "status": "not_tested"
- },
- {
-  "id": 67,
-  "api": "GSTR1A - Save GSTR1A data",
-  "group": "GSTR1A",
-  "status": "partial"
- },
- {
-  "id": 68,
-  "api": "GSTR2A - Get AMDHIST",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 69,
-  "api": "GSTR2A - Get B2B Invoices",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 70,
-  "api": "GSTR2A - Get B2BA Invoices",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 71,
-  "api": "GSTR2A - Get CDN Invoices",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 72,
-  "api": "GSTR2A - Get CDNA Invoices",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 73,
-  "api": "GSTR2A - Get ECOM Invoices",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 74,
-  "api": "GSTR2A - Get ECOMA Invoices",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 75,
-  "api": "GSTR2A - Get IMPG",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 76,
-  "api": "GSTR2A - Get IMPGSEZ",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 77,
-  "api": "GSTR2A - Get ISD Credit",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 78,
-  "api": "GSTR2A - Get TCS Credit",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 79,
-  "api": "GSTR2A - Get TDS Credit",
-  "group": "GSTR2A",
-  "status": "working"
- },
- {
-  "id": 80,
-  "api": "IMS - Get Added Back Liability Records",
-  "group": "IMS",
-  "status": "working"
- },
- {
-  "id": 81,
-  "api": "IMS - Get IMS Request Status",
-  "group": "IMS",
-  "status": "working"
- },
- {
-  "id": 82,
-  "api": "IMS - Get Invoice Count",
-  "group": "IMS",
-  "status": "working"
- },
- {
-  "id": 83,
-  "api": "IMS - Get Invoices",
-  "group": "IMS",
-  "status": "partial"
- },
- {
-  "id": 84,
-  "api": "IMS - Get Supplier Invoices API",
-  "group": "IMS",
-  "status": "working"
- },
- {
-  "id": 85,
-  "api": "IMS - Reset IMS Action",
-  "group": "IMS",
-  "status": "working"
- },
- {
-  "id": 86,
-  "api": "IMS - Save IMS Action",
-  "group": "IMS",
-  "status": "working"
- },
- {
-  "id": 87,
-  "api": "IMS- Get IMS File Details API",
-  "group": "IMS Get IMS File Details API",
-  "status": "working"
- },
- {
-  "id": 88,
-  "api": "GSTR2B - Generate 2B On Demand API",
-  "group": "GSTR2B",
-  "status": "working"
- },
- {
-  "id": 89,
-  "api": "GSTR2B - Get 2B Gen Status API",
-  "group": "GSTR2B",
-  "status": "working"
- },
- {
-  "id": 90,
-  "api": "GSTR2B - Get All Details",
-  "group": "GSTR2B",
-  "status": "working"
- },
- {
-  "id": 91,
-  "api": "GSTR3B - File GSTR3B data",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 92,
-  "api": "GSTR3B - Get GSTR3B Details",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 93,
-  "api": "GSTR3B - Get ITC Liability Auto Calc Details",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 94,
-  "api": "GSTR3B - Get ITC Reversal Balance",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 95,
-  "api": "GSTR3B - Get Latest RCM Balance",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 96,
-  "api": "GSTR3B - Get Opening Balance For Credit Reversal and Re-claimed Details",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 97,
-  "api": "GSTR3B - Get RCM Opening Balance",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 98,
-  "api": "GSTR3B - Get system calculated interest",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 99,
-  "api": "GSTR3B - Offset Liability GSTR3B data",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 100,
-  "api": "GSTR3B - Re-compute interest",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 101,
-  "api": "GSTR3B - Save GSTR3B data",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 102,
-  "api": "GSTR3B - Save Opening Balance For Credit Reversal and Re-claimed Details",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 103,
-  "api": "GSTR3B - Save past liability breakup",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 104,
-  "api": "GSTR3B - Submit RCM Opening Balance",
-  "group": "GSTR3B",
-  "status": "not_working"
- },
- {
-  "id": 105,
-  "api": "GSTR3B - Validate GSTR3B against AutoCalculated data",
-  "group": "GSTR3B",
-  "status": "working"
- },
- {
-  "id": 106,
-  "api": "GSTR4 Annual - File",
-  "group": "GSTR4",
-  "status": "not_tested"
- },
- {
-  "id": 107,
-  "api": "GSTR4 Annual - Get 4A-4B Autopop Details",
-  "group": "GSTR4",
-  "status": "not_working"
- },
- {
-  "id": 108,
-  "api": "GSTR4 Annual - Get Inward Outward Supply",
-  "group": "GSTR4",
-  "status": "working"
- },
- {
-  "id": 109,
-  "api": "GSTR4 Annual - Get Summary",
-  "group": "GSTR4",
-  "status": "not_tested"
- },
- {
-  "id": 110,
-  "api": "GSTR4 Annual - Get TDSCMP Summary",
-  "group": "GSTR4",
-  "status": "not_working"
- },
- {
-  "id": 111,
-  "api": "GSTR4 Annual - Proceed to File",
-  "group": "GSTR4",
-  "status": "not_tested"
- },
- {
-  "id": 112,
-  "api": "GSTR4 Annual - Save",
-  "group": "GSTR4",
-  "status": "not_tested"
- },
- {
-  "id": 113,
-  "api": "GSTR4 Annual - Validate Liability",
-  "group": "GSTR4",
-  "status": "not_tested"
- },
- {
-  "id": 114,
-  "api": "GSTR4 Annual - Validate Turnover",
-  "group": "GSTR4",
-  "status": "not_tested"
- },
- {
-  "id": 115,
-  "api": "GSTR6 - Calculate R6",
-  "group": "GSTR6",
-  "status": "working"
- },
- {
-  "id": 116,
-  "api": "GSTR6 - File GSTR6",
-  "group": "GSTR6",
-  "status": "not_tested"
- },
- {
-  "id": 117,
-  "api": "GSTR6 - Get Amendment ISD Details",
-  "group": "GSTR6",
-  "status": "working"
- },
- {
-  "id": 118,
-  "api": "GSTR6 - Get B2B Invoices",
-  "group": "GSTR6",
-  "status": "working"
- },
- {
-  "id": 119,
-  "api": "GSTR6 - Get B2BA Invoices",
-  "group": "GSTR6",
-  "status": "working"
- },
- {
-  "id": 120,
-  "api": "GSTR6 - Get CDN Invoices",
-  "group": "GSTR6",
-  "status": "working"
- },
- {
-  "id": 121,
-  "api": "GSTR6 - Get CDNA Invoices",
-  "group": "GSTR6",
-  "status": "not_working"
- },
- {
-  "id": 122,
-  "api": "GSTR6 - Get GSTR6 Summary",
-  "group": "GSTR6",
-  "status": "working"
- },
- {
-  "id": 123,
-  "api": "GSTR6 - Get ISD Details",
-  "group": "GSTR6",
-  "status": "not_tested"
- },
- {
-  "id": 124,
-  "api": "GSTR6 - get ITC details",
-  "group": "GSTR6",
-  "status": "working"
- },
- {
-  "id": 125,
-  "api": "GSTR6 - get Late fee",
-  "group": "GSTR6",
-  "status": "working"
- },
- {
-  "id": 126,
-  "api": "GSTR6 - Offset Late fee",
-  "group": "GSTR6",
-  "status": "not_tested"
- },
- {
-  "id": 127,
-  "api": "GSTR6 - Save Cross ITC Details",
-  "group": "GSTR6",
-  "status": "not_tested"
- },
- {
-  "id": 128,
-  "api": "GSTR6 - Save GSTR6",
-  "group": "GSTR6",
-  "status": "working"
- },
- {
-  "id": 129,
-  "api": "GSTR6 - Submit Gstr6",
-  "group": "GSTR6",
-  "status": "working"
- },
- {
-  "id": 130,
-  "api": "GSTR7 - File GSTR7",
-  "group": "GSTR7",
-  "status": "working"
- },
- {
-  "id": 131,
-  "api": "GSTR7 - Get TDS checksum",
-  "group": "GSTR7",
-  "status": "working"
- },
- {
-  "id": 132,
-  "api": "GSTR7 - Get TDS details",
-  "group": "GSTR7",
-  "status": "working"
- },
- {
-  "id": 133,
-  "api": "GSTR7 - Save GSTR7",
-  "group": "GSTR7",
-  "status": "not_tested"
- },
- {
-  "id": 134,
-  "api": "GSTR7- Get GSTR7 Summary",
-  "group": "GSTR7 Get GSTR7 Summary",
-  "status": "working"
- },
- {
-  "id": 135,
-  "api": "GSTR8 - File GSTR8",
-  "group": "GSTR8",
-  "status": "not_tested"
- },
- {
-  "id": 136,
-  "api": "GSTR8 - Get Checksum",
-  "group": "GSTR8",
-  "status": "not_tested"
- },
- {
-  "id": 137,
-  "api": "GSTR8 - Get Summary",
-  "group": "GSTR8",
-  "status": "not_tested"
- },
- {
-  "id": 138,
-  "api": "GSTR8 - GetEID",
-  "group": "GSTR8",
-  "status": "not_tested"
- },
- {
-  "id": 139,
-  "api": "GSTR8 - GetTCS",
-  "group": "GSTR8",
-  "status": "not_tested"
- },
- {
-  "id": 140,
-  "api": "GSTR8 - SAVE",
-  "group": "GSTR8",
-  "status": "not_tested"
- },
- {
-  "id": 141,
-  "api": "GSTR9 - Create 8A Data API",
-  "group": "GSTR9",
-  "status": "not_tested"
- },
- {
-  "id": 142,
-  "api": "GSTR9 - File GSTR9",
-  "group": "GSTR9",
-  "status": "not_tested"
- },
- {
-  "id": 143,
-  "api": "GSTR9 - Get 8A Details",
-  "group": "GSTR9",
-  "status": "not_tested"
- },
- {
-  "id": 144,
-  "api": "GSTR9 - Get Autocalculated Details",
-  "group": "GSTR9",
-  "status": "working"
- },
- {
-  "id": 145,
-  "api": "GSTR9 - Get Details",
-  "group": "GSTR9",
-  "status": "working"
- },
- {
-  "id": 146,
-  "api": "GSTR9 - Get R1R1A HSN Data",
-  "group": "GSTR9",
-  "status": "not_tested"
- },
- {
-  "id": 147,
-  "api": "GSTR9 - Save GSTR9 data",
-  "group": "GSTR9",
-  "status": "not_tested"
- },
- {
-  "id": 148,
-  "api": "GSTR9C - File GSTR9C",
-  "group": "GSTR9C",
-  "status": "not_tested"
- },
- {
-  "id": 149,
-  "api": "GSTR9C - Generate Certificate",
-  "group": "GSTR9C",
-  "status": "not_tested"
- },
- {
-  "id": 150,
-  "api": "GSTR9C - Get 9 Records for 9C",
-  "group": "GSTR9C",
-  "status": "working"
- },
- {
-  "id": 151,
-  "api": "GSTR9C - Get Summary",
-  "group": "GSTR9C",
-  "status": "working"
- },
- {
-  "id": 152,
-  "api": "GSTR9C - Save GSTR9C data",
-  "group": "GSTR9C",
-  "status": "not_tested"
- },
- {
-  "id": 153,
-  "api": "GSTR9CHashGenerator",
-  "group": "GSTR9CHashGenerator",
-  "status": "not_tested"
- },
- {
-  "id": 154,
-  "api": "ITC01 - File",
-  "group": "ITC01",
-  "status": "not_tested"
- },
- {
-  "id": 155,
-  "api": "ITC01 - Get",
-  "group": "ITC01",
-  "status": "not_tested"
- },
- {
-  "id": 156,
-  "api": "ITC01 - Save",
-  "group": "ITC01",
-  "status": "not_tested"
- },
- {
-  "id": 157,
-  "api": "ITC01 - Submit",
-  "group": "ITC01",
-  "status": "not_tested"
- },
- {
-  "id": 158,
-  "api": "ITC01 GET CADETAILS",
-  "group": "ITC01 GET CADETAILS",
-  "status": "not_tested"
- },
- {
-  "id": 159,
-  "api": "ITC01 SAVE OR DELETE CADETAILS",
-  "group": "ITC01 SAVE OR DELETE CADETAILS",
-  "status": "not_tested"
- },
- {
-  "id": 160,
-  "api": "ITC01-18D CLOSE",
-  "group": "ITC0118D CLOSE",
-  "status": "not_tested"
- },
- {
-  "id": 161,
-  "api": "ITC03 - Close ITC03",
-  "group": "ITC03",
-  "status": "not_tested"
- },
- {
-  "id": 162,
-  "api": "ITC03 - File ITC03",
-  "group": "ITC03",
-  "status": "not_tested"
- },
- {
-  "id": 163,
-  "api": "ITC03 - Get ITC03 Invoices",
-  "group": "ITC03",
-  "status": "not_tested"
- },
- {
-  "id": 164,
-  "api": "ITC03 - Get ITC03 Summary",
-  "group": "ITC03",
-  "status": "not_tested"
- },
- {
-  "id": 165,
-  "api": "ITC03 - Save ITC03",
-  "group": "ITC03",
-  "status": "not_tested"
- },
- {
-  "id": 166,
-  "api": "ITC03 - SetOff ITC03 Liability",
-  "group": "ITC03",
-  "status": "not_tested"
- },
- {
-  "id": 167,
-  "api": "ITC04 - File",
-  "group": "ITC04",
-  "status": "not_tested"
- },
- {
-  "id": 168,
-  "api": "ITC04 - Get Invoices",
-  "group": "ITC04",
-  "status": "not_tested"
- },
- {
-  "id": 169,
-  "api": "ITC04 - Get Summary",
-  "group": "ITC04",
-  "status": "not_tested"
- },
- {
-  "id": 170,
-  "api": "ITC04 - Save",
-  "group": "ITC04",
-  "status": "not_tested"
- },
- {
-  "id": 171,
-  "api": "ITC04 - Validate Turnover API",
-  "group": "ITC04",
-  "status": "not_tested"
- },
- {
-  "id": 172,
-  "api": "CMP - File CMP",
-  "group": "CMP",
-  "status": "not_tested"
- },
- {
-  "id": 173,
-  "api": "CMP - Get Details",
-  "group": "CMP",
-  "status": "not_tested"
- },
- {
-  "id": 174,
-  "api": "CMP - Save",
-  "group": "CMP",
-  "status": "not_tested"
- },
- {
-  "id": 175,
-  "api": "CMP - Validate Turnover",
-  "group": "CMP",
-  "status": "not_tested"
- },
- {
-  "id": 176,
-  "api": "Public - Common Authentication",
-  "group": "Public",
-  "status": "working"
- },
- {
-  "id": 177,
-  "api": "Public - GET PREFERENCE",
-  "group": "Public",
-  "status": "working"
- },
- {
-  "id": 178,
-  "api": "Public - Online Verification of GSTIN",
-  "group": "Public",
-  "status": "working"
- },
- {
-  "id": 179,
-  "api": "Public - PAN to GSTIN",
-  "group": "Public",
-  "status": "not_tested"
- },
- {
-  "id": 180,
-  "api": "Public - Search Taxpayer",
-  "group": "Public",
-  "status": "working"
- },
- {
-  "id": 181,
-  "api": "Public - Updated Online Verification of GSTIN",
-  "group": "Public",
-  "status": "working"
- },
- {
-  "id": 182,
-  "api": "Public - View and Track Returns",
-  "group": "Public",
-  "status": "working"
- }
+  {
+    "id": 1,
+    "api": "Initiate OTP for EVC",
+    "group": "Auth",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "INITIATE_OTP_FOR_EVC",
+    "path": "/commonapi/v1.0/auth/initiate_otp_for_evc"
+  },
+  {
+    "id": 2,
+    "api": "Logout",
+    "group": "Auth",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "LOGOUT",
+    "path": "/commonapi/v1.0/auth/logout"
+  },
+  {
+    "id": 3,
+    "api": "Request for extension of authorization token",
+    "group": "Auth",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "REQUEST_FOR_EXTENSION_OF_AUTHORIZATION_TOKEN",
+    "path": "/commonapi/v1.0/auth/request_for_extension_of_authorization_token"
+  },
+  {
+    "id": 4,
+    "api": "Request for OTP",
+    "group": "Auth",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "REQUEST_FOR_OTP",
+    "path": "/commonapi/v1.0/auth/request_for_otp"
+  },
+  {
+    "id": 5,
+    "api": "Request forAuthorization token",
+    "group": "Auth",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "REQUEST_FORAUTHORIZATION_TOKEN",
+    "path": "/commonapi/v1.0/auth/request_forauthorization_token"
+  },
+  {
+    "id": 6,
+    "api": "GSTR1 - File Gstr1",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE_GSTR1",
+    "path": "/returns/v1.0/gstr1/file_gstr1"
+  },
+  {
+    "id": 7,
+    "api": "GSTR1 - Get AT",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_AT",
+    "path": "/returns/v1.0/gstr1/get_at"
+  },
+  {
+    "id": 8,
+    "api": "GSTR1 - Get ATA",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ATA",
+    "path": "/returns/v1.0/gstr1/get_ata"
+  },
+  {
+    "id": 9,
+    "api": "GSTR1 - Get B2B Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2B_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_b2b_invoices"
+  },
+  {
+    "id": 10,
+    "api": "GSTR1 - Get B2BA Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2BA_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_b2ba_invoices"
+  },
+  {
+    "id": 11,
+    "api": "GSTR1 - Get B2CL Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2CL_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_b2cl_invoices"
+  },
+  {
+    "id": 12,
+    "api": "GSTR1 - Get B2CLA Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2CLA_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_b2cla_invoices"
+  },
+  {
+    "id": 13,
+    "api": "GSTR1 - Get B2CS Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2CS_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_b2cs_invoices"
+  },
+  {
+    "id": 14,
+    "api": "GSTR1 - Get B2CSA Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2CSA_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_b2csa_invoices"
+  },
+  {
+    "id": 15,
+    "api": "GSTR1 - Get CDNR Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CDNR_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_cdnr_invoices"
+  },
+  {
+    "id": 16,
+    "api": "GSTR1 - Get CDNRA Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CDNRA_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_cdnra_invoices"
+  },
+  {
+    "id": 17,
+    "api": "GSTR1 - Get CDNUR Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CDNUR_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_cdnur_invoices"
+  },
+  {
+    "id": 18,
+    "api": "GSTR1 - Get CDNURA Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CDNURA_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_cdnura_invoices"
+  },
+  {
+    "id": 19,
+    "api": "GSTR1 - Get Doc Issued",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_DOC_ISSUED",
+    "path": "/returns/v1.0/gstr1/get_doc_issued"
+  },
+  {
+    "id": 20,
+    "api": "GSTR1 - Get E-Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_E_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_e_invoices"
+  },
+  {
+    "id": 21,
+    "api": "GSTR1 - Get ECOM Invoices",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ECOM_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_ecom_invoices"
+  },
+  {
+    "id": 22,
+    "api": "GSTR1 - Get ECOMA Invoices",
+    "group": "GSTR1",
+    "status": "not_working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ECOMA_INVOICES",
+    "path": "/returns/v1.0/gstr1/get_ecoma_invoices"
+  },
+  {
+    "id": 23,
+    "api": "GSTR1 - Get EXP",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_EXP",
+    "path": "/returns/v1.0/gstr1/get_exp"
+  },
+  {
+    "id": 24,
+    "api": "GSTR1 - Get EXPA",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_EXPA",
+    "path": "/returns/v1.0/gstr1/get_expa"
+  },
+  {
+    "id": 25,
+    "api": "GSTR1 - Get GSTR1 Summary",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_GSTR1_SUMMARY",
+    "path": "/returns/v1.0/gstr1/get_gstr1_summary"
+  },
+  {
+    "id": 26,
+    "api": "GSTR1 - Get HSN Summary details",
+    "group": "GSTR1",
+    "status": "not_working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_HSN_SUMMARY_DETAILS",
+    "path": "/returns/v1.0/gstr1/get_hsn_summary_details"
+  },
+  {
+    "id": 27,
+    "api": "GSTR1 - Get Nil Rated Supplies",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_NIL_RATED_SUPPLIES",
+    "path": "/returns/v1.0/gstr1/get_nil_rated_supplies"
+  },
+  {
+    "id": 28,
+    "api": "GSTR1 - Get Return Status",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_RETURN_STATUS",
+    "path": "/returns/v1.0/gstr1/get_return_status"
+  },
+  {
+    "id": 29,
+    "api": "GSTR1 - Get SUPECO Details",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_SUPECO_DETAILS",
+    "path": "/returns/v1.0/gstr1/get_supeco_details"
+  },
+  {
+    "id": 30,
+    "api": "GSTR1 - Get SUPECOA Details",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_SUPECOA_DETAILS",
+    "path": "/returns/v1.0/gstr1/get_supecoa_details"
+  },
+  {
+    "id": 31,
+    "api": "GSTR1 - Get TXP",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_TXP",
+    "path": "/returns/v1.0/gstr1/get_txp"
+  },
+  {
+    "id": 32,
+    "api": "GSTR1 - Get TXPA",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_TXPA",
+    "path": "/returns/v1.0/gstr1/get_txpa"
+  },
+  {
+    "id": 33,
+    "api": "GSTR1 - Reset GSTR1",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "RESET_GSTR1",
+    "path": "/returns/v1.0/gstr1/reset_gstr1"
+  },
+  {
+    "id": 34,
+    "api": "GSTR1 - Save GSTR1 data",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_GSTR1_DATA",
+    "path": "/returns/v1.0/gstr1/save_gstr1_data"
+  },
+  {
+    "id": 35,
+    "api": "GSTR1 - Validate HSN Summary",
+    "group": "GSTR1",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "VALIDATE_HSN_SUMMARY",
+    "path": "/returns/v1.0/gstr1/validate_hsn_summary"
+  },
+  {
+    "id": 36,
+    "api": "All - New Proceed to File(for GSTR6,GSTR5,GSTR1)",
+    "group": "All",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "NEW_PROCEED_TO_FILE_FOR_GSTR6_GSTR5_GSTR1_",
+    "path": "/returns/v1.0/all/new_proceed_to_file_for_gstr6_gstr5_gstr1_"
+  },
+  {
+    "id": 37,
+    "api": "GSTR1A - Confirm Declaration Details",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "CONFIRM_DECLARATION_DETAILS",
+    "path": "/returns/v1.0/gstr1a/confirm_declaration_details"
+  },
+  {
+    "id": 38,
+    "api": "GSTR1A - File Gstr1A",
+    "group": "GSTR1A",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE_GSTR1A",
+    "path": "/returns/v1.0/gstr1a/file_gstr1a"
+  },
+  {
+    "id": 39,
+    "api": "GSTR1A - Get AT",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_AT",
+    "path": "/returns/v1.0/gstr1a/get_at"
+  },
+  {
+    "id": 40,
+    "api": "GSTR1A - Get ATA",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ATA",
+    "path": "/returns/v1.0/gstr1a/get_ata"
+  },
+  {
+    "id": 41,
+    "api": "GSTR1A - Get B2B Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2B_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_b2b_invoices"
+  },
+  {
+    "id": 42,
+    "api": "GSTR1A - Get B2BA Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2BA_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_b2ba_invoices"
+  },
+  {
+    "id": 43,
+    "api": "GSTR1A - Get B2CL Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2CL_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_b2cl_invoices"
+  },
+  {
+    "id": 44,
+    "api": "GSTR1A - Get B2CLA Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2CLA_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_b2cla_invoices"
+  },
+  {
+    "id": 45,
+    "api": "GSTR1A - Get B2CS Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2CS_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_b2cs_invoices"
+  },
+  {
+    "id": 46,
+    "api": "GSTR1A - Get B2CSA Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2CSA_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_b2csa_invoices"
+  },
+  {
+    "id": 47,
+    "api": "GSTR1A - Get CDNR Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CDNR_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_cdnr_invoices"
+  },
+  {
+    "id": 48,
+    "api": "GSTR1A - Get CDNRA Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CDNRA_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_cdnra_invoices"
+  },
+  {
+    "id": 49,
+    "api": "GSTR1A - Get CDNUR Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CDNUR_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_cdnur_invoices"
+  },
+  {
+    "id": 50,
+    "api": "GSTR1A - Get CDNURA Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CDNURA_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_cdnura_invoices"
+  },
+  {
+    "id": 51,
+    "api": "GSTR1A - Get Declaration Details",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_DECLARATION_DETAILS",
+    "path": "/returns/v1.0/gstr1a/get_declaration_details"
+  },
+  {
+    "id": 52,
+    "api": "GSTR1A - Get Doc Issued",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_DOC_ISSUED",
+    "path": "/returns/v1.0/gstr1a/get_doc_issued"
+  },
+  {
+    "id": 53,
+    "api": "GSTR1A - Get ECOM Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ECOM_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_ecom_invoices"
+  },
+  {
+    "id": 54,
+    "api": "GSTR1A - Get ECOMA Invoices",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ECOMA_INVOICES",
+    "path": "/returns/v1.0/gstr1a/get_ecoma_invoices"
+  },
+  {
+    "id": 55,
+    "api": "GSTR1A - Get EXP",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_EXP",
+    "path": "/returns/v1.0/gstr1a/get_exp"
+  },
+  {
+    "id": 56,
+    "api": "GSTR1A - Get EXPA",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_EXPA",
+    "path": "/returns/v1.0/gstr1a/get_expa"
+  },
+  {
+    "id": 57,
+    "api": "GSTR1A - Get GSTR1A Summary",
+    "group": "GSTR1A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_GSTR1A_SUMMARY",
+    "path": "/returns/v1.0/gstr1a/get_gstr1a_summary"
+  },
+  {
+    "id": 58,
+    "api": "GSTR1A - Get HSN Summary details",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_HSN_SUMMARY_DETAILS",
+    "path": "/returns/v1.0/gstr1a/get_hsn_summary_details"
+  },
+  {
+    "id": 59,
+    "api": "GSTR1A - Get Nil Rated Supplies",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_NIL_RATED_SUPPLIES",
+    "path": "/returns/v1.0/gstr1a/get_nil_rated_supplies"
+  },
+  {
+    "id": 60,
+    "api": "GSTR1A - Get Return Status",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_RETURN_STATUS",
+    "path": "/returns/v1.0/gstr1a/get_return_status"
+  },
+  {
+    "id": 61,
+    "api": "GSTR1A - Get SUPECO Details",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_SUPECO_DETAILS",
+    "path": "/returns/v1.0/gstr1a/get_supeco_details"
+  },
+  {
+    "id": 62,
+    "api": "GSTR1A - Get SUPECOA Details",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_SUPECOA_DETAILS",
+    "path": "/returns/v1.0/gstr1a/get_supecoa_details"
+  },
+  {
+    "id": 63,
+    "api": "GSTR1A - Get TXP",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_TXP",
+    "path": "/returns/v1.0/gstr1a/get_txp"
+  },
+  {
+    "id": 64,
+    "api": "GSTR1A - Get TXPA",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_TXPA",
+    "path": "/returns/v1.0/gstr1a/get_txpa"
+  },
+  {
+    "id": 65,
+    "api": "GSTR1A - Proceed to File",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "PROCEED_TO_FILE",
+    "path": "/returns/v1.0/gstr1a/proceed_to_file"
+  },
+  {
+    "id": 66,
+    "api": "GSTR1A - Reset GSTR1A",
+    "group": "GSTR1A",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "RESET_GSTR1A",
+    "path": "/returns/v1.0/gstr1a/reset_gstr1a"
+  },
+  {
+    "id": 67,
+    "api": "GSTR1A - Save GSTR1A data",
+    "group": "GSTR1A",
+    "status": "partial",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_GSTR1A_DATA",
+    "path": "/returns/v1.0/gstr1a/save_gstr1a_data"
+  },
+  {
+    "id": 68,
+    "api": "GSTR2A - Get AMDHIST",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_AMDHIST",
+    "path": "/returns/v1.0/gstr2a/get_amdhist"
+  },
+  {
+    "id": 69,
+    "api": "GSTR2A - Get B2B Invoices",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2B_INVOICES",
+    "path": "/returns/v1.0/gstr2a/get_b2b_invoices"
+  },
+  {
+    "id": 70,
+    "api": "GSTR2A - Get B2BA Invoices",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2BA_INVOICES",
+    "path": "/returns/v1.0/gstr2a/get_b2ba_invoices"
+  },
+  {
+    "id": 71,
+    "api": "GSTR2A - Get CDN Invoices",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CDN_INVOICES",
+    "path": "/returns/v1.0/gstr2a/get_cdn_invoices"
+  },
+  {
+    "id": 72,
+    "api": "GSTR2A - Get CDNA Invoices",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CDNA_INVOICES",
+    "path": "/returns/v1.0/gstr2a/get_cdna_invoices"
+  },
+  {
+    "id": 73,
+    "api": "GSTR2A - Get ECOM Invoices",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ECOM_INVOICES",
+    "path": "/returns/v1.0/gstr2a/get_ecom_invoices"
+  },
+  {
+    "id": 74,
+    "api": "GSTR2A - Get ECOMA Invoices",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ECOMA_INVOICES",
+    "path": "/returns/v1.0/gstr2a/get_ecoma_invoices"
+  },
+  {
+    "id": 75,
+    "api": "GSTR2A - Get IMPG",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_IMPG",
+    "path": "/returns/v1.0/gstr2a/get_impg"
+  },
+  {
+    "id": 76,
+    "api": "GSTR2A - Get IMPGSEZ",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_IMPGSEZ",
+    "path": "/returns/v1.0/gstr2a/get_impgsez"
+  },
+  {
+    "id": 77,
+    "api": "GSTR2A - Get ISD Credit",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ISD_CREDIT",
+    "path": "/returns/v1.0/gstr2a/get_isd_credit"
+  },
+  {
+    "id": 78,
+    "api": "GSTR2A - Get TCS Credit",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_TCS_CREDIT",
+    "path": "/returns/v1.0/gstr2a/get_tcs_credit"
+  },
+  {
+    "id": 79,
+    "api": "GSTR2A - Get TDS Credit",
+    "group": "GSTR2A",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_TDS_CREDIT",
+    "path": "/returns/v1.0/gstr2a/get_tds_credit"
+  },
+  {
+    "id": 80,
+    "api": "IMS - Get Added Back Liability Records",
+    "group": "IMS",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ADDED_BACK_LIABILITY_RECORDS",
+    "path": "/returns/v1.0/ims/get_added_back_liability_records"
+  },
+  {
+    "id": 81,
+    "api": "IMS - Get IMS Request Status",
+    "group": "IMS",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_IMS_REQUEST_STATUS",
+    "path": "/returns/v1.0/ims/get_ims_request_status"
+  },
+  {
+    "id": 82,
+    "api": "IMS - Get Invoice Count",
+    "group": "IMS",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_INVOICE_COUNT",
+    "path": "/returns/v1.0/ims/get_invoice_count"
+  },
+  {
+    "id": 83,
+    "api": "IMS - Get Invoices",
+    "group": "IMS",
+    "status": "partial",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_INVOICES",
+    "path": "/returns/v1.0/ims/get_invoices"
+  },
+  {
+    "id": 84,
+    "api": "IMS - Get Supplier Invoices API",
+    "group": "IMS",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_SUPPLIER_INVOICES_API",
+    "path": "/returns/v1.0/ims/get_supplier_invoices_api"
+  },
+  {
+    "id": 85,
+    "api": "IMS - Reset IMS Action",
+    "group": "IMS",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "RESET_IMS_ACTION",
+    "path": "/returns/v1.0/ims/reset_ims_action"
+  },
+  {
+    "id": 86,
+    "api": "IMS - Save IMS Action",
+    "group": "IMS",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_IMS_ACTION",
+    "path": "/returns/v1.0/ims/save_ims_action"
+  },
+  {
+    "id": 87,
+    "api": "IMS- Get IMS File Details API",
+    "group": "IMS",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "IMS_GET_IMS_FILE_DETAILS_API",
+    "path": "/returns/v1.0/ims/ims_get_ims_file_details_api"
+  },
+  {
+    "id": 88,
+    "api": "GSTR2B - Generate 2B On Demand API",
+    "group": "GSTR2B",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "GENERATE_2B_ON_DEMAND_API",
+    "path": "/returns/v1.0/gstr2b/generate_2b_on_demand_api"
+  },
+  {
+    "id": 89,
+    "api": "GSTR2B - Get 2B Gen Status API",
+    "group": "GSTR2B",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_2B_GEN_STATUS_API",
+    "path": "/returns/v1.0/gstr2b/get_2b_gen_status_api"
+  },
+  {
+    "id": 90,
+    "api": "GSTR2B - Get All Details",
+    "group": "GSTR2B",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ALL_DETAILS",
+    "path": "/returns/v1.0/gstr2b/get_all_details"
+  },
+  {
+    "id": 91,
+    "api": "GSTR3B - File GSTR3B data",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE_GSTR3B_DATA",
+    "path": "/returns/v1.0/gstr3b/file_gstr3b_data"
+  },
+  {
+    "id": 92,
+    "api": "GSTR3B - Get GSTR3B Details",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_GSTR3B_DETAILS",
+    "path": "/returns/v1.0/gstr3b/get_gstr3b_details"
+  },
+  {
+    "id": 93,
+    "api": "GSTR3B - Get ITC Liability Auto Calc Details",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ITC_LIABILITY_AUTO_CALC_DETAILS",
+    "path": "/returns/v1.0/gstr3b/get_itc_liability_auto_calc_details"
+  },
+  {
+    "id": 94,
+    "api": "GSTR3B - Get ITC Reversal Balance",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ITC_REVERSAL_BALANCE",
+    "path": "/returns/v1.0/gstr3b/get_itc_reversal_balance"
+  },
+  {
+    "id": 95,
+    "api": "GSTR3B - Get Latest RCM Balance",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_LATEST_RCM_BALANCE",
+    "path": "/returns/v1.0/gstr3b/get_latest_rcm_balance"
+  },
+  {
+    "id": 96,
+    "api": "GSTR3B - Get Opening Balance For Credit Reversal and Re-claimed Details",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_OPENING_BALANCE_FOR_CREDIT_REVERSAL_AND_RE_CLAIMED_DETAILS",
+    "path": "/returns/v1.0/gstr3b/get_opening_balance_for_credit_reversal_and_re_claimed_details"
+  },
+  {
+    "id": 97,
+    "api": "GSTR3B - Get RCM Opening Balance",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_RCM_OPENING_BALANCE",
+    "path": "/returns/v1.0/gstr3b/get_rcm_opening_balance"
+  },
+  {
+    "id": 98,
+    "api": "GSTR3B - Get system calculated interest",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "GET_SYSTEM_CALCULATED_INTEREST",
+    "path": "/returns/v1.0/gstr3b/get_system_calculated_interest"
+  },
+  {
+    "id": 99,
+    "api": "GSTR3B - Offset Liability GSTR3B data",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "OFFSET_LIABILITY_GSTR3B_DATA",
+    "path": "/returns/v1.0/gstr3b/offset_liability_gstr3b_data"
+  },
+  {
+    "id": 100,
+    "api": "GSTR3B - Re-compute interest",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "RE_COMPUTE_INTEREST",
+    "path": "/returns/v1.0/gstr3b/re_compute_interest"
+  },
+  {
+    "id": 101,
+    "api": "GSTR3B - Save GSTR3B data",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_GSTR3B_DATA",
+    "path": "/returns/v1.0/gstr3b/save_gstr3b_data"
+  },
+  {
+    "id": 102,
+    "api": "GSTR3B - Save Opening Balance For Credit Reversal and Re-claimed Details",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_OPENING_BALANCE_FOR_CREDIT_REVERSAL_AND_RE_CLAIMED_DETAILS",
+    "path": "/returns/v1.0/gstr3b/save_opening_balance_for_credit_reversal_and_re_claimed_details"
+  },
+  {
+    "id": 103,
+    "api": "GSTR3B - Save past liability breakup",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_PAST_LIABILITY_BREAKUP",
+    "path": "/returns/v1.0/gstr3b/save_past_liability_breakup"
+  },
+  {
+    "id": 104,
+    "api": "GSTR3B - Submit RCM Opening Balance",
+    "group": "GSTR3B",
+    "status": "not_working",
+    "remark": "404 - Not Found",
+    "method": "POST",
+    "action": "SUBMIT_RCM_OPENING_BALANCE",
+    "path": "/returns/v1.0/gstr3b/submit_rcm_opening_balance"
+  },
+  {
+    "id": 105,
+    "api": "GSTR3B - Validate GSTR3B against AutoCalculated data",
+    "group": "GSTR3B",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "VALIDATE_GSTR3B_AGAINST_AUTOCALCULATED_DATA",
+    "path": "/returns/v1.0/gstr3b/validate_gstr3b_against_autocalculated_data"
+  },
+  {
+    "id": 106,
+    "api": "GSTR4 Annual - File",
+    "group": "GSTR4",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE",
+    "path": "/returns/v1.0/gstr4/file"
+  },
+  {
+    "id": 107,
+    "api": "GSTR4 Annual - Get 4A-4B Autopop Details",
+    "group": "GSTR4",
+    "status": "not_working",
+    "remark": "{\n    \"message\": \"Unexpected character encountered while parsing value: <. Path '', line 0, position 0.\",\n    \"isSuccess\": false\n}",
+    "method": "GET",
+    "action": "GET_4A_4B_AUTOPOP_DETAILS",
+    "path": "/returns/v1.0/gstr4/get_4a_4b_autopop_details"
+  },
+  {
+    "id": 108,
+    "api": "GSTR4 Annual - Get Inward Outward Supply",
+    "group": "GSTR4",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_INWARD_OUTWARD_SUPPLY",
+    "path": "/returns/v1.0/gstr4/get_inward_outward_supply"
+  },
+  {
+    "id": 109,
+    "api": "GSTR4 Annual - Get Summary",
+    "group": "GSTR4",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_SUMMARY",
+    "path": "/returns/v1.0/gstr4/get_summary"
+  },
+  {
+    "id": 110,
+    "api": "GSTR4 Annual - Get TDSCMP Summary",
+    "group": "GSTR4",
+    "status": "not_working",
+    "remark": "{\n    \"message\": \"success\",\n    \"data\": {\n        \"httpStatusCode\": 200,\n        \"error\": {\n            \"message\": \"Something seems to have gone wrong while processing your request. Please try again.If error persists quote error number GSTN-EXEC2003 when you contact customer care for quick resolution.\",\n            \"error_cd\": \"GSTN-EXEC2003\"\n        }\n    },\n    \"isSuccess\": true\n}",
+    "method": "GET",
+    "action": "GET_TDSCMP_SUMMARY",
+    "path": "/returns/v1.0/gstr4/get_tdscmp_summary"
+  },
+  {
+    "id": 111,
+    "api": "GSTR4 Annual - Proceed to File",
+    "group": "GSTR4",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "PROCEED_TO_FILE",
+    "path": "/returns/v1.0/gstr4/proceed_to_file"
+  },
+  {
+    "id": 112,
+    "api": "GSTR4 Annual - Save",
+    "group": "GSTR4",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE",
+    "path": "/returns/v1.0/gstr4/save"
+  },
+  {
+    "id": 113,
+    "api": "GSTR4 Annual - Validate Liability",
+    "group": "GSTR4",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "VALIDATE_LIABILITY",
+    "path": "/returns/v1.0/gstr4/validate_liability"
+  },
+  {
+    "id": 114,
+    "api": "GSTR4 Annual - Validate Turnover",
+    "group": "GSTR4",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "VALIDATE_TURNOVER",
+    "path": "/returns/v1.0/gstr4/validate_turnover"
+  },
+  {
+    "id": 115,
+    "api": "GSTR6 - Calculate R6",
+    "group": "GSTR6",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "CALCULATE_R6",
+    "path": "/returns/v1.0/gstr6/calculate_r6"
+  },
+  {
+    "id": 116,
+    "api": "GSTR6 - File GSTR6",
+    "group": "GSTR6",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE_GSTR6",
+    "path": "/returns/v1.0/gstr6/file_gstr6"
+  },
+  {
+    "id": 117,
+    "api": "GSTR6 - Get Amendment ISD Details",
+    "group": "GSTR6",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_AMENDMENT_ISD_DETAILS",
+    "path": "/returns/v1.0/gstr6/get_amendment_isd_details"
+  },
+  {
+    "id": 118,
+    "api": "GSTR6 - Get B2B Invoices",
+    "group": "GSTR6",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2B_INVOICES",
+    "path": "/returns/v1.0/gstr6/get_b2b_invoices"
+  },
+  {
+    "id": 119,
+    "api": "GSTR6 - Get B2BA Invoices",
+    "group": "GSTR6",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_B2BA_INVOICES",
+    "path": "/returns/v1.0/gstr6/get_b2ba_invoices"
+  },
+  {
+    "id": 120,
+    "api": "GSTR6 - Get CDN Invoices",
+    "group": "GSTR6",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CDN_INVOICES",
+    "path": "/returns/v1.0/gstr6/get_cdn_invoices"
+  },
+  {
+    "id": 121,
+    "api": "GSTR6 - Get CDNA Invoices",
+    "group": "GSTR6",
+    "status": "not_working",
+    "remark": "{\n    \"message\": \"success\",\n    \"data\": {\n        \"httpStatusCode\": 200,\n        \"data\": {},\n        \"error\": {\n            \"message\": \"Invalid Return Period\",\n            \"error_cd\": \"AUTH113\"\n        }\n    },\n    \"isSuccess\": true\n}",
+    "method": "GET",
+    "action": "GET_CDNA_INVOICES",
+    "path": "/returns/v1.0/gstr6/get_cdna_invoices"
+  },
+  {
+    "id": 122,
+    "api": "GSTR6 - Get GSTR6 Summary",
+    "group": "GSTR6",
+    "status": "working",
+    "remark": "{\n    \"message\": \"success\",\n    \"data\": {\n        \"httpStatusCode\": 200,\n        \"error\": {\n            \"message\": \"System Failure\",\n            \"error_cd\": \"RET12501\"\n        }\n    },\n    \"isSuccess\": true\n}",
+    "method": "GET",
+    "action": "GET_GSTR6_SUMMARY",
+    "path": "/returns/v1.0/gstr6/get_gstr6_summary"
+  },
+  {
+    "id": 123,
+    "api": "GSTR6 - Get ISD Details",
+    "group": "GSTR6",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ISD_DETAILS",
+    "path": "/returns/v1.0/gstr6/get_isd_details"
+  },
+  {
+    "id": 124,
+    "api": "GSTR6 - get ITC details",
+    "group": "GSTR6",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ITC_DETAILS",
+    "path": "/returns/v1.0/gstr6/get_itc_details"
+  },
+  {
+    "id": 125,
+    "api": "GSTR6 - get Late fee",
+    "group": "GSTR6",
+    "status": "working",
+    "remark": "On Production",
+    "method": "GET",
+    "action": "GET_LATE_FEE",
+    "path": "/returns/v1.0/gstr6/get_late_fee"
+  },
+  {
+    "id": 126,
+    "api": "GSTR6 - Offset Late fee",
+    "group": "GSTR6",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "OFFSET_LATE_FEE",
+    "path": "/returns/v1.0/gstr6/offset_late_fee"
+  },
+  {
+    "id": 127,
+    "api": "GSTR6 - Save Cross ITC Details",
+    "group": "GSTR6",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_CROSS_ITC_DETAILS",
+    "path": "/returns/v1.0/gstr6/save_cross_itc_details"
+  },
+  {
+    "id": 128,
+    "api": "GSTR6 - Save GSTR6",
+    "group": "GSTR6",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_GSTR6",
+    "path": "/returns/v1.0/gstr6/save_gstr6"
+  },
+  {
+    "id": 129,
+    "api": "GSTR6 - Submit Gstr6",
+    "group": "GSTR6",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "SUBMIT_GSTR6",
+    "path": "/returns/v1.0/gstr6/submit_gstr6"
+  },
+  {
+    "id": 130,
+    "api": "GSTR7 - File GSTR7",
+    "group": "GSTR7",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE_GSTR7",
+    "path": "/returns/v1.0/gstr7/file_gstr7"
+  },
+  {
+    "id": 131,
+    "api": "GSTR7 - Get TDS checksum",
+    "group": "GSTR7",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_TDS_CHECKSUM",
+    "path": "/returns/v1.0/gstr7/get_tds_checksum"
+  },
+  {
+    "id": 132,
+    "api": "GSTR7 - Get TDS details",
+    "group": "GSTR7",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_TDS_DETAILS",
+    "path": "/returns/v1.0/gstr7/get_tds_details"
+  },
+  {
+    "id": 133,
+    "api": "GSTR7 - Save GSTR7",
+    "group": "GSTR7",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_GSTR7",
+    "path": "/returns/v1.0/gstr7/save_gstr7"
+  },
+  {
+    "id": 134,
+    "api": "GSTR7- Get GSTR7 Summary",
+    "group": "GSTR7",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GSTR7_GET_GSTR7_SUMMARY",
+    "path": "/returns/v1.0/gstr7/gstr7_get_gstr7_summary"
+  },
+  {
+    "id": 135,
+    "api": "GSTR8 - File GSTR8",
+    "group": "GSTR8",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE_GSTR8",
+    "path": "/returns/v1.0/gstr8/file_gstr8"
+  },
+  {
+    "id": 136,
+    "api": "GSTR8 - Get Checksum",
+    "group": "GSTR8",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_CHECKSUM",
+    "path": "/returns/v1.0/gstr8/get_checksum"
+  },
+  {
+    "id": 137,
+    "api": "GSTR8 - Get Summary",
+    "group": "GSTR8",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_SUMMARY",
+    "path": "/returns/v1.0/gstr8/get_summary"
+  },
+  {
+    "id": 138,
+    "api": "GSTR8 - GetEID",
+    "group": "GSTR8",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GETEID",
+    "path": "/returns/v1.0/gstr8/geteid"
+  },
+  {
+    "id": 139,
+    "api": "GSTR8 - GetTCS",
+    "group": "GSTR8",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GETTCS",
+    "path": "/returns/v1.0/gstr8/gettcs"
+  },
+  {
+    "id": 140,
+    "api": "GSTR8 - SAVE",
+    "group": "GSTR8",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE",
+    "path": "/returns/v1.0/gstr8/save"
+  },
+  {
+    "id": 141,
+    "api": "GSTR9 - Create 8A Data API",
+    "group": "GSTR9",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "CREATE_8A_DATA_API",
+    "path": "/returns/v1.0/gstr9/create_8a_data_api"
+  },
+  {
+    "id": 142,
+    "api": "GSTR9 - File GSTR9",
+    "group": "GSTR9",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE_GSTR9",
+    "path": "/returns/v1.0/gstr9/file_gstr9"
+  },
+  {
+    "id": 143,
+    "api": "GSTR9 - Get 8A Details",
+    "group": "GSTR9",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_8A_DETAILS",
+    "path": "/returns/v1.0/gstr9/get_8a_details"
+  },
+  {
+    "id": 144,
+    "api": "GSTR9 - Get Autocalculated Details",
+    "group": "GSTR9",
+    "status": "working",
+    "remark": "",
+    "method": "POST",
+    "action": "GET_AUTOCALCULATED_DETAILS",
+    "path": "/returns/v1.0/gstr9/get_autocalculated_details"
+  },
+  {
+    "id": 145,
+    "api": "GSTR9 - Get Details",
+    "group": "GSTR9",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_DETAILS",
+    "path": "/returns/v1.0/gstr9/get_details"
+  },
+  {
+    "id": 146,
+    "api": "GSTR9 - Get R1R1A HSN Data",
+    "group": "GSTR9",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_R1R1A_HSN_DATA",
+    "path": "/returns/v1.0/gstr9/get_r1r1a_hsn_data"
+  },
+  {
+    "id": 147,
+    "api": "GSTR9 - Save GSTR9 data",
+    "group": "GSTR9",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_GSTR9_DATA",
+    "path": "/returns/v1.0/gstr9/save_gstr9_data"
+  },
+  {
+    "id": 148,
+    "api": "GSTR9C - File GSTR9C",
+    "group": "GSTR9C",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE_GSTR9C",
+    "path": "/returns/v1.0/gstr9c/file_gstr9c"
+  },
+  {
+    "id": 149,
+    "api": "GSTR9C - Generate Certificate",
+    "group": "GSTR9C",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "GENERATE_CERTIFICATE",
+    "path": "/returns/v1.0/gstr9c/generate_certificate"
+  },
+  {
+    "id": 150,
+    "api": "GSTR9C - Get 9 Records for 9C",
+    "group": "GSTR9C",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_9_RECORDS_FOR_9C",
+    "path": "/returns/v1.0/gstr9c/get_9_records_for_9c"
+  },
+  {
+    "id": 151,
+    "api": "GSTR9C - Get Summary",
+    "group": "GSTR9C",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_SUMMARY",
+    "path": "/returns/v1.0/gstr9c/get_summary"
+  },
+  {
+    "id": 152,
+    "api": "GSTR9C - Save GSTR9C data",
+    "group": "GSTR9C",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_GSTR9C_DATA",
+    "path": "/returns/v1.0/gstr9c/save_gstr9c_data"
+  },
+  {
+    "id": 153,
+    "api": "GSTR9CHashGenerator",
+    "group": "GSTR9C",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GSTR9CHASHGENERATOR",
+    "path": "/returns/v1.0/gstr9c/gstr9chashgenerator"
+  },
+  {
+    "id": 154,
+    "api": "ITC01 - File",
+    "group": "ITC01",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE",
+    "path": "/returns/v1.0/itc01/file"
+  },
+  {
+    "id": 155,
+    "api": "ITC01 - Get",
+    "group": "ITC01",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET",
+    "path": "/returns/v1.0/itc01/get"
+  },
+  {
+    "id": 156,
+    "api": "ITC01 - Save",
+    "group": "ITC01",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE",
+    "path": "/returns/v1.0/itc01/save"
+  },
+  {
+    "id": 157,
+    "api": "ITC01 - Submit",
+    "group": "ITC01",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "SUBMIT",
+    "path": "/returns/v1.0/itc01/submit"
+  },
+  {
+    "id": 158,
+    "api": "ITC01 GET CADETAILS",
+    "group": "ITC01",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "ITC01_GET_CADETAILS",
+    "path": "/returns/v1.0/itc01/itc01_get_cadetails"
+  },
+  {
+    "id": 159,
+    "api": "ITC01 SAVE OR DELETE CADETAILS",
+    "group": "ITC01",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "ITC01_SAVE_OR_DELETE_CADETAILS",
+    "path": "/returns/v1.0/itc01/itc01_save_or_delete_cadetails"
+  },
+  {
+    "id": 160,
+    "api": "ITC01-18D CLOSE",
+    "group": "ITC01",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "ITC01_18D_CLOSE",
+    "path": "/returns/v1.0/itc01/itc01_18d_close"
+  },
+  {
+    "id": 161,
+    "api": "ITC03 - Close ITC03",
+    "group": "ITC03",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "CLOSE_ITC03",
+    "path": "/returns/v1.0/itc03/close_itc03"
+  },
+  {
+    "id": 162,
+    "api": "ITC03 - File ITC03",
+    "group": "ITC03",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE_ITC03",
+    "path": "/returns/v1.0/itc03/file_itc03"
+  },
+  {
+    "id": 163,
+    "api": "ITC03 - Get ITC03 Invoices",
+    "group": "ITC03",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ITC03_INVOICES",
+    "path": "/returns/v1.0/itc03/get_itc03_invoices"
+  },
+  {
+    "id": 164,
+    "api": "ITC03 - Get ITC03 Summary",
+    "group": "ITC03",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_ITC03_SUMMARY",
+    "path": "/returns/v1.0/itc03/get_itc03_summary"
+  },
+  {
+    "id": 165,
+    "api": "ITC03 - Save ITC03",
+    "group": "ITC03",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE_ITC03",
+    "path": "/returns/v1.0/itc03/save_itc03"
+  },
+  {
+    "id": 166,
+    "api": "ITC03 - SetOff ITC03 Liability",
+    "group": "ITC03",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "SETOFF_ITC03_LIABILITY",
+    "path": "/returns/v1.0/itc03/setoff_itc03_liability"
+  },
+  {
+    "id": 167,
+    "api": "ITC04 - File",
+    "group": "ITC04",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE",
+    "path": "/returns/v1.0/itc04/file"
+  },
+  {
+    "id": 168,
+    "api": "ITC04 - Get Invoices",
+    "group": "ITC04",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_INVOICES",
+    "path": "/returns/v1.0/itc04/get_invoices"
+  },
+  {
+    "id": 169,
+    "api": "ITC04 - Get Summary",
+    "group": "ITC04",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_SUMMARY",
+    "path": "/returns/v1.0/itc04/get_summary"
+  },
+  {
+    "id": 170,
+    "api": "ITC04 - Save",
+    "group": "ITC04",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE",
+    "path": "/returns/v1.0/itc04/save"
+  },
+  {
+    "id": 171,
+    "api": "ITC04 - Validate Turnover API",
+    "group": "ITC04",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "VALIDATE_TURNOVER_API",
+    "path": "/returns/v1.0/itc04/validate_turnover_api"
+  },
+  {
+    "id": 172,
+    "api": "CMP - File CMP",
+    "group": "CMP",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "FILE_CMP",
+    "path": "/returns/v1.0/cmp/file_cmp"
+  },
+  {
+    "id": 173,
+    "api": "CMP - Get Details",
+    "group": "CMP",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_DETAILS",
+    "path": "/returns/v1.0/cmp/get_details"
+  },
+  {
+    "id": 174,
+    "api": "CMP - Save",
+    "group": "CMP",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "SAVE",
+    "path": "/returns/v1.0/cmp/save"
+  },
+  {
+    "id": 175,
+    "api": "CMP - Validate Turnover",
+    "group": "CMP",
+    "status": "not_tested",
+    "remark": "",
+    "method": "POST",
+    "action": "VALIDATE_TURNOVER",
+    "path": "/returns/v1.0/cmp/validate_turnover"
+  },
+  {
+    "id": 176,
+    "api": "Public - Common Authentication",
+    "group": "Public",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "COMMON_AUTHENTICATION",
+    "path": "/commonapi/v1.0/public/common_authentication"
+  },
+  {
+    "id": 177,
+    "api": "Public - GET PREFERENCE",
+    "group": "Public",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "GET_PREFERENCE",
+    "path": "/commonapi/v1.0/public/get_preference"
+  },
+  {
+    "id": 178,
+    "api": "Public - Online Verification of GSTIN",
+    "group": "Public",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "ONLINE_VERIFICATION_OF_GSTIN",
+    "path": "/commonapi/v1.0/public/online_verification_of_gstin"
+  },
+  {
+    "id": 179,
+    "api": "Public - PAN to GSTIN",
+    "group": "Public",
+    "status": "not_tested",
+    "remark": "",
+    "method": "GET",
+    "action": "PAN_TO_GSTIN",
+    "path": "/commonapi/v1.0/public/pan_to_gstin"
+  },
+  {
+    "id": 180,
+    "api": "Public - Search Taxpayer",
+    "group": "Public",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "SEARCH_TAXPAYER",
+    "path": "/commonapi/v1.0/public/search_taxpayer"
+  },
+  {
+    "id": 181,
+    "api": "Public - Updated Online Verification of GSTIN",
+    "group": "Public",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "UPDATED_ONLINE_VERIFICATION_OF_GSTIN",
+    "path": "/commonapi/v1.0/public/updated_online_verification_of_gstin"
+  },
+  {
+    "id": 182,
+    "api": "Public - View and Track Returns",
+    "group": "Public",
+    "status": "working",
+    "remark": "",
+    "method": "GET",
+    "action": "VIEW_AND_TRACK_RETURNS",
+    "path": "/commonapi/v1.0/public/view_and_track_returns"
+  }
 ]
