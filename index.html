@@ -1168,67 +1168,313 @@
             <button class="btn btn-outline btn-sm" style="background: #fff; font-size: 11px; padding: 4px 10px;" onclick="refreshExpertStatus()">↻ Refresh Status</button>
           </div>
 
-          <!-- 5-Stage Filing Pipeline Tracker -->
+          <!-- 5-Stage Filing Pipeline Tracker (Interactive Step-by-Step Navigation) -->
           <div class="pipeline-tracker-row">
-            <div class="pipeline-stage-item completed" id="stageStep1">
+            <button class="pipeline-stage-item completed" id="stageStep1" onclick="viewExpertPipelineStep(1)" type="button" title="Click to view Step 1 details">
               <div>✓ Step 1</div>
               <div>Free Trial Active</div>
-            </div>
-            <div class="pipeline-stage-item completed" id="stageStep2">
+            </button>
+            <button class="pipeline-stage-item completed" id="stageStep2" onclick="viewExpertPipelineStep(2)" type="button" title="Click to view Step 2 details">
               <div>✓ Step 2</div>
               <div>Profile & Docs</div>
-            </div>
-            <div class="pipeline-stage-item completed" id="stageStep3">
+            </button>
+            <button class="pipeline-stage-item completed" id="stageStep3" onclick="viewExpertPipelineStep(3)" type="button" title="Click to view Step 3 details">
               <div>✓ Step 3</div>
               <div>CA 1-on-1 Assigned</div>
-            </div>
-            <div class="pipeline-stage-item active" id="stageStep4">
+            </button>
+            <button class="pipeline-stage-item active viewing" id="stageStep4" onclick="viewExpertPipelineStep(4)" type="button" title="Click to view Step 4 details">
               <div>● Step 4</div>
               <div>Draft Review</div>
-            </div>
-            <div class="pipeline-stage-item" id="stageStep5">
+            </button>
+            <button class="pipeline-stage-item" id="stageStep5" onclick="viewExpertPipelineStep(5)" type="button" title="Click to view Step 5 details">
               <div>○ Step 5</div>
               <div>E-Filing & ITR-V</div>
+            </button>
+          </div>
+
+          <!-- STEP 1 CONTENT: Free Trial Active -->
+          <div class="expert-step-content" id="expertStepView1" style="display: none;">
+            <div class="form-card" style="border: 1.5px solid #BBF7D0; padding: 22px; border-radius: 14px; background: #F0FDF4; margin-bottom: 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                <div>
+                  <span class="status-chip success-chip" style="font-weight: 700; background: #DCFCE7; color: #15803D;">✓ Step 1 • 30 Days Free Trial Active</span>
+                  <h4 style="font-size: 18px; font-weight: 700; color: #14532D; margin-top: 6px;">ClearTax Direct Tax Expert Advisory Pass</h4>
+                  <p style="font-size: 13px; color: #166534; margin-top: 2px;">Your 1-Month Zero-Fee Advisory Trial is fully activated with coupon <code style="background: #DCFCE7; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: #14532D;">FREE30DAYS</code>.</p>
+                </div>
+                <div style="text-align: right; background: #FFFFFF; border: 1px solid #86EFAC; border-radius: 10px; padding: 10px 16px;">
+                  <div style="font-size: 11px; color: #64748B; text-transform: uppercase; font-weight: 600;">Plan Fee Charged</div>
+                  <div style="font-size: 20px; font-weight: 800; color: #16A34A;">₹ 0 <span style="font-size: 12px; text-decoration: line-through; color: #94A3B8;">₹ 2,499</span></div>
+                  <div style="font-size: 11px; color: #15803D; font-weight: 600;">100% Free for 30 Days</div>
+                </div>
+              </div>
+
+              <!-- Trial Features Grid -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">👨‍💼 Dedicated Senior CA</div>
+                  <div style="font-size: 12px; color: #475569;">1-on-1 filing assistance with CA Anwin Ramachandran (ICAI verified #512891).</div>
+                </div>
+                <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">⚖️ Regime Optimization</div>
+                  <div style="font-size: 12px; color: #475569;">Algorithmic and CA review comparing Old vs Section 115BAC New Regime.</div>
+                </div>
+                <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">🔍 Form 26AS & AIS Audit</div>
+                  <div style="font-size: 12px; color: #475569;">Reconciliation of high-value transactions, TDS certificates, and tax credits.</div>
+                </div>
+                <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">🛡️ Notice Defense Protection</div>
+                  <div style="font-size: 12px; color: #475569;">Complete defense coverage in case of Section 143(1) intimation notices.</div>
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #BBF7D0; padding-top: 14px;">
+                <span style="font-size: 12px; color: #166534;">Step 1 of 5 completed • Next: verify uploaded tax slips and identity dossier.</span>
+                <button class="btn btn-primary" onclick="viewExpertPipelineStep(2)">
+                  Continue to Step 2: Profile & Docs →
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- CA Prepared Draft Computation Card -->
-          <div class="form-card" style="border: 1px solid #E2E8F0; padding: 20px; border-radius: 14px; background: #FAF5FF;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-              <div>
-                <span class="status-chip success-chip" style="background: #DCFCE7; color: #15803D; font-weight: 700;">CA Draft Computation Ready</span>
-                <h4 style="font-size: 16px; font-weight: 700; color: #1E1B4B; margin-top: 4px;">Regime Optimization Summary prepared by CA Anwin Ramachandran</h4>
+          <!-- STEP 2 CONTENT: Profile & Docs -->
+          <div class="expert-step-content" id="expertStepView2" style="display: none;">
+            <div class="form-card" style="border: 1px solid #E2E8F0; padding: 22px; border-radius: 14px; background: #FFFFFF; margin-bottom: 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+                <div>
+                  <span class="status-chip success-chip" style="font-weight: 700;">✓ Step 2 • Ingested & Verified</span>
+                  <h4 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-top: 6px;">Profile & Tax Document Dossier</h4>
+                  <p style="font-size: 13px; color: #64748B; margin-top: 2px;">CBDT portal records and salary certificates ingested for CA review.</p>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="openVaultUploadModal()">+ Upload Additional Document</button>
               </div>
-              <div style="text-align: right;">
-                <div style="font-size: 11px; color: #64748B;">Tax Saved via Expert Audit</div>
-                <div style="font-size: 18px; font-weight: 800; color: #16A34A;">₹ 1,32,600</div>
-              </div>
-            </div>
 
-            <!-- Comparison Table -->
-            <div class="computation-review-grid">
-              <div style="background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px;">
-                <div style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase;">Old Tax Regime</div>
-                <div style="font-size: 13px; color: #334155; margin-top: 6px;">Gross Salary: ₹15,00,000</div>
-                <div style="font-size: 13px; color: #334155;">80C + 80D + HRA: - ₹2,95,000</div>
-                <div style="font-size: 15px; font-weight: 700; color: #DC2626; margin-top: 8px;">Tax: ₹ 2,73,000</div>
+              <!-- Client Profile summary strip -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; margin-bottom: 18px;">
+                <div>
+                  <div style="font-size: 11px; color: #64748B;">Taxpayer Name</div>
+                  <div style="font-size: 13px; font-weight: 700; color: #1E293B;">Sanjay Harshi</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: #64748B;">Permanent Account Number</div>
+                  <div style="font-size: 13px; font-weight: 700; color: #0F67FE;" id="expertStep2Pan">CVBBC4433W</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: #64748B;">Validated Bank Account</div>
+                  <div style="font-size: 13px; font-weight: 700; color: #1E293B;">HDFC Bank ****4431 (Validated)</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: #64748B;">Assessment Year</div>
+                  <div style="font-size: 13px; font-weight: 700; color: #1E293B;">AY 2026-27 (FY 2025-26)</div>
+                </div>
               </div>
-              <div style="background: #EFF6FF; border: 1.5px solid #3B82F6; border-radius: 10px; padding: 14px; position: relative;">
-                <span style="position: absolute; top: -9px; right: 12px; background: #3B82F6; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">CA RECOMMENDED</span>
-                <div style="font-size: 12px; font-weight: 700; color: #1D4ED8; text-transform: uppercase;">New Tax Regime (Sec 115BAC)</div>
-                <div style="font-size: 13px; color: #1E3A8A; margin-top: 6px;">Gross Salary: ₹15,00,000</div>
-                <div style="font-size: 13px; color: #1E3A8A;">Standard Deduction: - ₹75,000</div>
-                <div style="font-size: 15px; font-weight: 800; color: #16A34A; margin-top: 8px;">Tax: ₹ 1,40,400 (Net Refund: ₹24,600)</div>
-              </div>
-            </div>
 
-            <div style="display: flex; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 14px;">
-              <button class="btn btn-outline btn-sm" onclick="openCaChatFocus()">Ask Question to CA Anwin</button>
-              <button class="btn btn-primary" id="btnApproveDraft" onclick="approveCaDraftAndFile()" style="font-weight: 700;">
-                ✓ Approve Draft & Authorize Sandbox E-Filing
-              </button>
+              <!-- Document Ingestion Checklist -->
+              <h5 style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 10px; text-transform: uppercase;">Verified Income Tax Records</h5>
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">📄</span>
+                    <div>
+                      <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Form 16 (Part A & B) - Employer Salary Certificate</div>
+                      <div style="font-size: 11px; color: #64748B;">Gross Salary: ₹15,00,000 • TDS Deducted: ₹1,65,000 • OCR Parsed</div>
+                    </div>
+                  </div>
+                  <span class="status-chip success-chip" style="font-weight: 600;">✓ Verified</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">📑</span>
+                    <div>
+                      <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Form 26AS & Annual Information Statement (AIS)</div>
+                      <div style="font-size: 11px; color: #64748B;">Auto-matched with ITD Portal • ₹1,65,000 tax credit fully confirmed</div>
+                    </div>
+                  </div>
+                  <span class="status-chip success-chip" style="font-weight: 600;">✓ Synced ITD</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">📈</span>
+                    <div>
+                      <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Capital Gains Statement (Zerodha / Groww)</div>
+                      <div style="font-size: 11px; color: #64748B;">₹1,00,000 STCG / LTCG mapped into Schedule CG with 112A grandfathering</div>
+                    </div>
+                  </div>
+                  <span class="status-chip success-chip" style="font-weight: 600;">✓ Processed</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">🏥</span>
+                    <div>
+                      <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Chapter VI-A Deductions & House Rent Proofs</div>
+                      <div style="font-size: 11px; color: #64748B;">Sec 80C (₹1.5L) + Sec 80D (₹25k) + Sec 10(13A) HRA (₹1.2L) scrutinized</div>
+                    </div>
+                  </div>
+                  <span class="status-chip success-chip" style="font-weight: 600;">✓ Audited</span>
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 14px;">
+                <button class="btn btn-outline btn-sm" onclick="viewExpertPipelineStep(1)">← Back to Step 1</button>
+                <button class="btn btn-primary" onclick="viewExpertPipelineStep(3)">
+                  Proceed to Step 3: CA 1-on-1 Consultation →
+                </button>
+              </div>
             </div>
-            <div id="approveDraftAckResult" class="hidden mt-3"></div>
+          </div>
+
+          <!-- STEP 3 CONTENT: CA 1-on-1 Assigned -->
+          <div class="expert-step-content" id="expertStepView3" style="display: none;">
+            <div class="form-card" style="border: 1.5px solid #DBEAFE; padding: 22px; border-radius: 14px; background: #FFFFFF; margin-bottom: 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+                <div>
+                  <span class="status-chip success-chip" style="font-weight: 700; background: #EFF6FF; color: #1D4ED8;">✓ Step 3 • CA Assigned & Slot Confirmed</span>
+                  <h4 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-top: 6px;">Your Dedicated Chartered Accountant</h4>
+                  <p style="font-size: 13px; color: #64748B; margin-top: 2px;">Assigned Senior Chartered Accountant managing your return end-to-end.</p>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="openCaChatFocus()">💬 Open CA Chat</button>
+              </div>
+
+              <!-- CA Details & Slot Card -->
+              <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 18px; margin-bottom: 18px;">
+                <div class="ca-avatar-circle" style="width: 56px; height: 56px; font-size: 20px;">CA</div>
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <h4 style="font-size: 16px; font-weight: 700; color: #0F172A; margin: 0;">CA Anwin Ramachandran</h4>
+                    <span class="ca-verified-check" title="ICAI Certified">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="#0F67FE"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#fff"/><circle cx="12" cy="12" r="9" stroke="#0F67FE" stroke-width="2" fill="none"/></svg>
+                    </span>
+                  </div>
+                  <div style="font-size: 12px; color: #64748B; margin-top: 2px;">ICAI Reg #512891 • Senior Direct Tax & Expat Specialist • 8,420+ Filings</div>
+                  <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12px; font-weight: 600; color: #D97706;">
+                    ★★★★★ 4.9 / 5 Rating from verified taxpayers
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <div class="ca-slot-pill" style="margin-bottom: 0;">
+                    <span class="ca-slot-dot"></span>
+                    <span>Slot: Today, 03:00 PM (IST)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CA Preliminary Finding -->
+              <div style="background: #FAF5FF; border: 1px solid #E9D5FF; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                  <span style="font-size: 16px;">📝</span>
+                  <strong style="font-size: 13px; color: #581C87;">CA Anwin's Audit Note:</strong>
+                </div>
+                <p style="font-size: 13px; color: #3B0764; line-height: 1.5; margin: 0;">
+                  "I have audited your Form 16 from employment, bank interest TDS in 26AS, and broker P&L. By transitioning from the Old Regime to the Section 115BAC New Regime, your taxable burden drops from ₹2,73,000 down to ₹1,40,400. Because your employer deducted ₹1,65,000 at source, this immediately unlocks an income tax refund of ₹24,600! Review the computed draft in Step 4 and approve when ready."
+                </p>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 14px;">
+                <button class="btn btn-outline btn-sm" onclick="viewExpertPipelineStep(2)">← Back to Step 2</button>
+                <button class="btn btn-primary" onclick="viewExpertPipelineStep(4)">
+                  Proceed to Step 4: Draft Review →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 4 CONTENT: Draft Review (Current Active CA Draft) -->
+          <div class="expert-step-content" id="expertStepView4">
+            <div class="form-card" style="border: 1px solid #E2E8F0; padding: 20px; border-radius: 14px; background: #FAF5FF; margin-bottom: 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                  <span class="status-chip success-chip" style="background: #DCFCE7; color: #15803D; font-weight: 700;">CA Draft Computation Ready</span>
+                  <h4 style="font-size: 16px; font-weight: 700; color: #1E1B4B; margin-top: 4px;">Regime Optimization Summary prepared by CA Anwin Ramachandran</h4>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 11px; color: #64748B;">Tax Saved via Expert Audit</div>
+                  <div style="font-size: 18px; font-weight: 800; color: #16A34A;">₹ 1,32,600</div>
+                </div>
+              </div>
+
+              <!-- Comparison Table -->
+              <div class="computation-review-grid">
+                <div style="background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px;">
+                  <div style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase;">Old Tax Regime</div>
+                  <div style="font-size: 13px; color: #334155; margin-top: 6px;">Gross Salary: ₹15,00,000</div>
+                  <div style="font-size: 13px; color: #334155;">80C + 80D + HRA: - ₹2,95,000</div>
+                  <div style="font-size: 15px; font-weight: 700; color: #DC2626; margin-top: 8px;">Tax: ₹ 2,73,000</div>
+                </div>
+                <div style="background: #EFF6FF; border: 1.5px solid #3B82F6; border-radius: 10px; padding: 14px; position: relative;">
+                  <span style="position: absolute; top: -9px; right: 12px; background: #3B82F6; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">CA RECOMMENDED</span>
+                  <div style="font-size: 12px; font-weight: 700; color: #1D4ED8; text-transform: uppercase;">New Tax Regime (Sec 115BAC)</div>
+                  <div style="font-size: 13px; color: #1E3A8A; margin-top: 6px;">Gross Salary: ₹15,00,000</div>
+                  <div style="font-size: 13px; color: #1E3A8A;">Standard Deduction: - ₹75,000</div>
+                  <div style="font-size: 15px; font-weight: 800; color: #16A34A; margin-top: 8px;">Tax: ₹ 1,40,400 (Net Refund: ₹24,600)</div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 14px; flex-wrap: wrap;">
+                <button class="btn btn-outline btn-sm" onclick="viewExpertPipelineStep(3)">← Back to Step 3</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <button class="btn btn-outline btn-sm" onclick="openCaChatFocus()">Ask Question to CA Anwin</button>
+                  <button class="btn btn-primary" id="btnApproveDraft" onclick="approveCaDraftAndFile()" style="font-weight: 700;">
+                    ✓ Approve Draft & Authorize Sandbox E-Filing
+                  </button>
+                </div>
+              </div>
+              <div id="approveDraftAckResult" class="hidden mt-3"></div>
+            </div>
+          </div>
+
+          <!-- STEP 5 CONTENT: E-Filing & ITR-V Acknowledgement -->
+          <div class="expert-step-content" id="expertStepView5" style="display: none;">
+            <div class="form-card" style="border: 1.5px solid #86EFAC; padding: 24px; border-radius: 14px; background: #F0FDF4; margin-bottom: 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                  <span class="status-chip success-chip" style="font-weight: 700; background: #DCFCE7; color: #15803D;">✓ Step 5 • Transmitted to ITD Portal</span>
+                  <h4 style="font-size: 20px; font-weight: 800; color: #14532D; margin-top: 6px;">ITR-V Acknowledgement & E-Filing Confirmation</h4>
+                  <p style="font-size: 13px; color: #166534; margin-top: 2px;">Your income tax return has been verified and e-filed under Section 139(1) of the Income Tax Act.</p>
+                </div>
+                <span style="background: #16A34A; color: #FFFFFF; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 9999px;">FILED & VERIFIED</span>
+              </div>
+
+              <!-- Official Filing Details Receipt Grid -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; background: #FFFFFF; border: 1px solid #BBF7D0; border-radius: 12px; padding: 18px; margin-bottom: 18px;">
+                <div>
+                  <div style="font-size: 11px; color: #64748B; text-transform: uppercase; font-weight: 600;">Acknowledgement No. (ARN)</div>
+                  <div style="font-size: 15px; font-weight: 800; color: #0F67FE; margin-top: 4px;" id="expertStep5Arn">ITR20268841920</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: #64748B; text-transform: uppercase; font-weight: 600;">Assessment Year</div>
+                  <div style="font-size: 14px; font-weight: 700; color: #1E293B; margin-top: 4px;">AY 2026-27 (FY 2025-26)</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: #64748B; text-transform: uppercase; font-weight: 600;">ITR Form & Regime</div>
+                  <div style="font-size: 14px; font-weight: 700; color: #1E293B; margin-top: 4px;">ITR-1 / New Regime (115BAC)</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: #64748B; text-transform: uppercase; font-weight: 600;">E-Verification Status</div>
+                  <div style="font-size: 14px; font-weight: 700; color: #15803D; margin-top: 4px;">✓ Instant Aadhaar OTP Verified</div>
+                </div>
+              </div>
+
+              <!-- Expected Refund Alert Box -->
+              <div style="display: flex; align-items: center; justify-content: space-between; background: #DCFCE7; border: 1px solid #86EFAC; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="font-size: 26px;">💰</span>
+                  <div>
+                    <div style="font-size: 14px; font-weight: 800; color: #14532D;">Expected Direct Tax Refund: ₹ 24,600</div>
+                    <div style="font-size: 12px; color: #166534;">Refund will be credited directly to validated HDFC Bank A/c ending ****4431 within 7-10 working days.</div>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="alert('Tracking Status: Return in processing at CPC Bengaluru. Refund determination in progress.')">Track Refund</button>
+              </div>
+
+              <div style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+                <button class="btn btn-outline" onclick="alert('Downloading Official CBDT ITR-V Acknowledgement PDF...')">⬇ Download ITR-V PDF</button>
+                <button class="btn btn-outline" onclick="alert('Downloading Detailed CA Tax Computation Statement...')">⬇ Computation Sheet</button>
+                <button class="btn btn-primary" onclick="viewExpertPipelineStep(4)">View Regime Calculation Draft</button>
+              </div>
+            </div>
           </div>
 
           <!-- Real-Time CA Advisory Chat Drawer (ClearTax Working Feature) -->

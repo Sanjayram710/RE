@@ -3210,6 +3210,33 @@ function openCaChatFocus() {
   }
 }
 
+let currentViewingExpertStep = 4;
+
+function viewExpertPipelineStep(stepNum) {
+  currentViewingExpertStep = Math.max(1, Math.min(5, Number(stepNum) || 4));
+
+  for (let i = 1; i <= 5; i++) {
+    const stepView = document.getElementById(`expertStepView${i}`);
+    if (stepView) {
+      stepView.style.display = (i === currentViewingExpertStep) ? "block" : "none";
+    }
+    const stagePill = document.getElementById(`stageStep${i}`);
+    if (stagePill) {
+      if (i === currentViewingExpertStep) {
+        stagePill.classList.add("viewing");
+      } else {
+        stagePill.classList.remove("viewing");
+      }
+    }
+  }
+
+  // Sync active PAN into Step 2 display if available
+  const panEl = document.getElementById("expertStep2Pan");
+  if (panEl && appState.itr?.personalInfo?.pan) {
+    panEl.textContent = appState.itr.personalInfo.pan;
+  }
+}
+
 async function approveCaDraftAndFile() {
   const pan = appState.itr?.personalInfo?.pan || "CVBBC4433W";
   const btn = document.getElementById("btnApproveDraft");
@@ -3224,12 +3251,16 @@ async function approveCaDraftAndFile() {
     const data = await res.json();
     if (data.success) {
       updatePipelineStages("efiled");
+      const arn = data.ackNumber || "ITR20268841920";
+      const arnEl = document.getElementById("expertStep5Arn");
+      if (arnEl) arnEl.textContent = arn;
+
       const resultDiv = document.getElementById("approveDraftAckResult");
       if (resultDiv) {
         resultDiv.className = "filing-success-box info-note-box";
         resultDiv.innerHTML = `
           <h4 style="color: #15803D;">✓ ITR-V Filing Successfully Transmitted!</h4>
-          <div class="mt-1"><strong>Official Acknowledgement Number (ARN):</strong> ${data.ackNumber}</div>
+          <div class="mt-1"><strong>Official Acknowledgement Number (ARN):</strong> ${arn}</div>
           <div><strong>Filing Mode:</strong> ${data.verificationMode}</div>
           <div><strong>Status:</strong> ${data.status}</div>
           <div class="text-xs text-muted mt-1">${data.message}</div>
@@ -3237,9 +3268,14 @@ async function approveCaDraftAndFile() {
         resultDiv.classList.remove("hidden");
       }
       showToast("✓ Return Approved & Transmitted to Sandbox!", "success");
+
+      // Seamlessly switch to Step 5 to reveal the official ITR-V Filing Confirmation
+      viewExpertPipelineStep(5);
     }
   } catch (err) {
     console.error("Approve draft failed:", err);
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -3250,11 +3286,15 @@ function updatePipelineStages(currentStage) {
   for (let i = 1; i <= 5; i++) {
     const el = document.getElementById(`stageStep${i}`);
     if (!el) continue;
+    const isViewing = (i === currentViewingExpertStep);
     el.className = "pipeline-stage-item";
     if (i - 1 < stageIdx) {
       el.classList.add("completed");
     } else if (i - 1 === stageIdx) {
       el.classList.add("active");
+    }
+    if (isViewing) {
+      el.classList.add("viewing");
     }
   }
 }
