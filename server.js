@@ -64,6 +64,20 @@ function sendJson(res, statusCode, data) {
 }
 
 function readBody(req) {
+  // Support pre-parsed request body in serverless environments (e.g. Vercel)
+  if (req.body !== undefined && req.body !== null) {
+    if (typeof req.body === "object") {
+      return Promise.resolve(req.body);
+    }
+    if (typeof req.body === "string") {
+      try {
+        return Promise.resolve(req.body ? JSON.parse(req.body) : {});
+      } catch {
+        return Promise.resolve({ rawText: req.body });
+      }
+    }
+  }
+
   return new Promise((resolve, reject) => {
     let body = "";
     req.on("data", chunk => { body += chunk; });
@@ -79,22 +93,34 @@ function readBody(req) {
   });
 }
 
-export function createServer() {
-  return http.createServer(async (req, res) => {
-    const parsedUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
-    const pathname = parsedUrl.pathname;
-    const method = req.method;
+export async function handleRequest(req, res) {
+  // Seamless URL resolution across local Node and Vercel Serverless
+  let requestPath = req.url || "/";
+  const vercelOriginal = req.headers["x-vercel-original-path"] || req.headers["x-matched-path"] || req.headers["x-forwarded-uri"] || req.headers["x-original-url"];
+  if (vercelOriginal && !vercelOriginal.endsWith("index.js")) {
+    requestPath = vercelOriginal;
+  } else if (req.query && req.query.path) {
+    const slug = Array.isArray(req.query.path) ? req.query.path.join("/") : req.query.path;
+    requestPath = `/api/${slug}`;
+  }
 
-    // Enable CORS
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, client-id");
+  const parsedUrl = new URL(requestPath, `http://${req.headers.host || "localhost"}`);
+  let pathname = parsedUrl.pathname;
+  if (pathname === "/api/index.js" || pathname === "/api/index") {
+    pathname = "/api";
+  }
+  const method = req.method;
 
-    if (method === "OPTIONS") {
-      res.writeHead(204);
-      res.end();
-      return;
-    }
+  // Enable CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, client-id");
+
+  if (method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
 
     // ---------------------------------------------------------
     // 1. GET /api/mode
@@ -773,12 +799,20 @@ export function createServer() {
     }
 
     // ---------------------------------------------------------
-    // 9. Static File Serving (from public/)
+    // 9. Static File Serving (from public/ or root)
     // ---------------------------------------------------------
     let relativePath = pathname === "/" ? "index.html" : pathname.replace(/^\//, "");
-    const filePath = path.join(__dirname, "public", relativePath);
+    let filePath = path.join(__dirname, "public", relativePath);
 
-    if (!filePath.startsWith(path.join(__dirname, "public"))) {
+    // Fallback to project root if file exists there (e.g. root index.html, style.css, app.js)
+    if (!fs.existsSync(filePath)) {
+      const rootPath = path.join(__dirname, relativePath);
+      if (fs.existsSync(rootPath)) {
+        filePath = rootPath;
+      }
+    }
+
+    if (!filePath.startsWith(path.join(__dirname, "public")) && !filePath.startsWith(__dirname)) {
       res.writeHead(403, { "Content-Type": "text/plain" });
       res.end("Forbidden");
       return;
@@ -800,7 +834,10 @@ export function createServer() {
         res.end(content);
       }
     });
-  });
+}
+
+export function createServer() {
+  return http.createServer(handleRequest);
 }
 
 function parseCsvInvoices(csvText) {
@@ -852,4 +889,7 @@ if (process.argv[1] && process.argv[1].endsWith("server.js")) {
   });
 }
 
-export default createServer;
+handleRequest.createServer = createServer;
+handleRequest.handleRequest = handleRequest;
+
+export default handleRequest;

@@ -1,0 +1,2845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SimpleGST - Independent Tax & Financial Compliance Platform</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ========================================================================= -->
+  <!-- Top Navigation Header (Exact matching screenshot layout)                 -->
+  <!-- ========================================================================= -->
+  <header class="navbar-header">
+    <div class="navbar-container">
+      
+      <!-- Navbar Left: Brand Logo & Filing No Selector adjacent to name -->
+      <div class="navbar-left-group">
+        <!-- Brand Logo -->
+        <div class="navbar-brand" onclick="switchSuite('itr')">
+          <div class="brand-robot-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="6" width="18" height="14" rx="4" fill="#0F67FE" />
+              <circle cx="9" cy="12" r="2" fill="#FFFFFF" />
+              <circle cx="15" cy="12" r="2" fill="#FFFFFF" />
+              <path d="M9 16c1.5 1 4.5 1 6 0" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" />
+              <path d="M12 2v4" stroke="#0F67FE" stroke-width="2" stroke-linecap="round" />
+              <circle cx="12" cy="2" r="1.5" fill="#00D084" />
+            </svg>
+          </div>
+          <div class="brand-info">
+            <span class="brand-title">SimpleGST</span>
+            <span class="brand-badge">Compliance OS</span>
+          </div>
+        </div>
+
+        <!-- Filing For Selector (Placed adjacent to brand name on the left) -->
+        <div class="navbar-filing-for">
+          <span class="filing-label">Filing for:</span>
+          <div class="filing-dropdown-trigger" id="filingDropdownTrigger" onclick="toggleFilingDropdown(event)">
+            <span class="filing-pan" id="currentFilingPan">CVBBC4433W</span>
+            <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <!-- Filing for Dropdown Menu -->
+          <div class="filing-dropdown-menu" id="filingDropdownMenu">
+            <div class="filing-menu-item active" onclick="selectFilingEntity('CVBBC4433W', 'Sanjay Harshi', 'ITR-1 (Individual)')">
+              <div class="entity-pan">CVBBC4433W</div>
+              <div class="entity-name">Sanjay Harshi • AY 2025-26</div>
+            </div>
+            <div class="filing-menu-item" onclick="selectFilingEntity('32ABCDE1234F1Z5', 'Malabar Spice Traders', 'GST & Business')">
+              <div class="entity-pan">32ABCDE1234F1Z5</div>
+              <div class="entity-name">Malabar Spice Traders • Oct 2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="navbar-actions">
+        <!-- Mode Badge -->
+        <span class="mode-badge" id="appModeBadge">
+          <span class="pulse-dot"></span> <span id="appModeText">Active</span>
+        </span>
+
+        <!-- Chat / Support Icon Button -->
+        <button class="icon-circle-btn" onclick="openSupportDrawer()" title="Customer Support">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            <circle cx="8" cy="11" r="1" fill="currentColor"></circle>
+            <circle cx="12" cy="11" r="1" fill="currentColor"></circle>
+            <circle cx="16" cy="11" r="1" fill="currentColor"></circle>
+          </svg>
+        </button>
+
+        <!-- Unauthenticated Guest Auth Controls -->
+        <div id="navAuthLoggedOut" class="auth-buttons-group hidden" style="display: none; gap: 8px; align-items: center;">
+          <button class="btn btn-outline btn-sm" onclick="openAuthModal('signin')">Sign In</button>
+          <button class="btn btn-primary btn-sm" onclick="openAuthModal('register')">New Sign In</button>
+        </div>
+
+        <!-- Authenticated Profile Menu -->
+        <div id="navAuthLoggedIn" class="profile-dropdown-wrapper" style="display: flex; align-items: center; gap: 8px;">
+          <button class="profile-avatar-btn" id="profileDropdownBtn" onclick="toggleProfileDropdown(event)">
+            <div class="avatar-circle">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#6B7280">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            </div>
+            <span id="navUserName" class="nav-user-name" style="font-size: 13.5px; font-weight: 600; color: var(--text-main); margin-left: 2px;">Sanjay Harshi</span>
+            <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          <!-- Profile Dropdown Menu with Active User Info & Logout -->
+          <div class="profile-dropdown-menu" id="profileDropdownMenu">
+            <div style="padding: 10px 14px; border-bottom: 1px solid var(--border-light); background: #F8FAFC; border-radius: 8px 8px 0 0;">
+              <div style="font-weight: 700; color: var(--text-main); font-size: 13px;" id="menuUserFullName">Sanjay Harshi</div>
+              <div style="font-size: 11.5px; color: var(--text-muted);" id="menuUserEmail">sanjay@example.com</div>
+            </div>
+            <a href="#" class="profile-menu-link" onclick="viewMyReturns()">My Tax Returns</a>
+            <a href="#" class="profile-menu-link" onclick="openProfileModal()">Profile & PAN Details</a>
+            <a href="#" class="profile-menu-link" onclick="openOrdersModal()">My Orders</a>
+            <a href="#" class="profile-menu-link" onclick="openRewardsModal()">My Rewards</a>
+            <a href="#" class="profile-menu-link" onclick="openAdvancedModal()">Advanced Options</a>
+            <a href="#" class="profile-menu-link" onclick="openRectificationModal()">Prepare Rectification JSON U/S 139(9)</a>
+            <a href="#" class="profile-menu-link" onclick="openPrefillModal()">Import Prefill JSON</a>
+            <a href="#" class="profile-menu-link" onclick="checkItrStatusModal()">Check ITR Status</a>
+            <a href="#" class="profile-menu-link" onclick="switchSuite('expert')">Tax filing from experts</a>
+            <a href="#" class="profile-menu-link" onclick="switchSuite('notice')">Notice Defense & Scrutiny</a>
+            <a href="#" class="profile-menu-link" onclick="switchSuite('vault')">Tax Document Vault</a>
+            <a href="#" class="profile-menu-link" onclick="openSupportDrawer()">Need Help?</a>
+            <div class="menu-divider"></div>
+            <a href="#" class="profile-menu-link text-danger" onclick="logoutAction()" style="color: #DC2626; font-weight: 600;">Log Out</a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Suite Navigation Strip (Sleek Segmented Control) -->
+  <nav class="suite-nav-strip">
+    <div class="suite-nav-container">
+      <div class="suite-switch-pills">
+        <button class="suite-pill active" id="btnSuiteItr" onclick="switchSuite('itr')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Income Tax (ITR)</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteExpert" onclick="switchSuite('expert')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Tax Filing from Experts</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteNotice" onclick="switchSuite('notice')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Notice Defense Board</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteVault" onclick="switchSuite('vault')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span>Tax Document Vault</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteGst" onclick="switchSuite('gst')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <span>GST & Reports</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========================================================================= -->
+  <!-- SUITE 1: ITR E-FILING FLOW (Exact Screenshots 1-9 Layout)                 -->
+  <!-- ========================================================================= -->
+  <div id="viewItrSuite" class="app-suite-container active">
+    
+    <!-- 4-Step Horizontal Pill Stepper -->
+    <div class="stepper-wrapper">
+      <div class="stepper-track">
+        <!-- Step 1 Pill -->
+        <button class="step-pill active" id="stepPill1" onclick="goToItrStep(1)">
+          <span class="step-num">1</span>
+          <span>Personal Info</span>
+          <span class="pill-badge pill-badge-error" id="pillBadge1">!</span>
+        </button>
+
+        <!-- Step 2 Pill -->
+        <button class="step-pill" id="stepPill2" onclick="goToItrStep(2)">
+          <span class="step-num">2</span>
+          <span>Income Sources</span>
+          <span class="pill-badge pill-badge-warning" id="pillBadge2">!</span>
+        </button>
+
+        <!-- Step 3 Pill -->
+        <button class="step-pill" id="stepPill3" onclick="goToItrStep(3)">
+          <span class="step-num">3</span>
+          <span>Tax Saving</span>
+          <span class="pill-badge pill-badge-success" id="pillBadge3">✓</span>
+        </button>
+
+        <!-- Step 4 Pill -->
+        <button class="step-pill" id="stepPill4" onclick="goToItrStep(4)">
+          <span class="step-num">4</span>
+          <span>Tax Summary</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content Area: 2-Column Responsive Layout -->
+    <div class="itr-main-layout">
+      
+      <!-- Left Column: Form & Stepper Content -->
+      <div class="itr-content-col">
+
+        <!-- ================================================================= -->
+        <!-- STEP 1: Personal Info (Screenshots 1, 2, 3)                       -->
+        <!-- ================================================================= -->
+        <div id="itrStep1" class="itr-step-view">
+          
+          <!-- Card 1: Permanent Information (Screenshot 1) -->
+          <div class="form-card" id="cardPermanentInfo">
+            <div class="form-card-header" onclick="toggleCardCollapse('cardPermanentInfo')">
+              <div class="header-left">
+                <div class="header-icon-circle blue-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <div>
+                  <div class="card-title-row">
+                    <h3 class="card-title-text">Permanent Information</h3>
+                    <span class="status-chip success-chip">Details Added</span>
+                  </div>
+                  <p class="card-subtitle-text">Please provide all info as per your government identity documents(PAN, Aadhaar etc.)</p>
+                </div>
+              </div>
+              <button class="collapse-toggle-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+              </button>
+            </div>
+            
+            <div class="form-card-body">
+              <div class="form-grid-3">
+                <div class="input-field-group">
+                  <label class="field-label">First Name *</label>
+                  <input type="text" class="text-input" id="inputFirstName" value="Sanjay" oninput="updatePersonalInfoState()">
+                </div>
+                <div class="input-field-group">
+                  <label class="field-label">Middle Name</label>
+                  <input type="text" class="text-input" id="inputMiddleName" value="" oninput="updatePersonalInfoState()">
+                </div>
+                <div class="input-field-group">
+                  <label class="field-label">Last Name *</label>
+                  <input type="text" class="text-input" id="inputLastName" value="Harshi" oninput="updatePersonalInfoState()">
+                </div>
+              </div>
+              <p class="field-hint-text">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                Name should be as per the PAN; 5th character of PAN no. is the first letter of the last name
+              </p>
+
+              <div class="input-field-group mt-3">
+                <label class="field-label">Date of Birth *</label>
+                <input type="text" class="text-input" id="inputDob" value="07/10/2006" placeholder="DD/MM/YYYY" oninput="updatePersonalInfoState()">
+                <p class="field-hint-text">Specify date in a format like DD/MM/YYYY</p>
+              </div>
+
+              <div class="input-field-group mt-3">
+                <label class="field-label">Father's Name *</label>
+                <input type="text" class="text-input" id="inputFatherName" value="Harshi V" oninput="updatePersonalInfoState()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Identification & Contact details (Screenshot 2) -->
+          <div class="form-card" id="cardContactDetails">
+            <div class="form-card-header" onclick="toggleCardCollapse('cardContactDetails')">
+              <div class="header-left">
+                <div class="header-icon-circle orange-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2">
+                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    <line x1="6" y1="9" x2="10" y2="9"></line>
+                    <line x1="6" y1="13" x2="14" y2="13"></line>
+                  </svg>
+                </div>
+                <div>
+                  <div class="card-title-row">
+                    <h3 class="card-title-text">Identification & Contact details</h3>
+                    <span class="status-chip danger-chip" id="contactDetailsChip">Details Missing</span>
+                  </div>
+                  <p class="card-subtitle-text">To e-file your returns, please provide your Aadhaar, PAN and contact details.</p>
+                </div>
+              </div>
+              <button class="collapse-toggle-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+              </button>
+            </div>
+
+            <div class="form-card-body">
+              <div class="input-field-group">
+                <label class="field-label">Aadhaar Details *</label>
+                <input type="text" class="text-input" id="inputAadhaar" placeholder="Enter 12 digit number" value="482910482910" oninput="updatePersonalInfoState()">
+                <p class="field-hint-text">
+                  Dont remember your Aadhaar number? <a href="#" class="blue-link" onclick="searchAadhaarHelp(event)">Search it here</a>
+                </p>
+              </div>
+
+              <div class="input-field-group mt-3">
+                <label class="field-label">PAN *</label>
+                <input type="text" class="text-input" id="inputPan" value="CVBBC4433W" maxlength="10" oninput="validateLivePan(this.value)">
+                <span class="validation-feedback" id="panFeedback"></span>
+              </div>
+
+              <div class="input-field-group mt-3">
+                <label class="field-label">Mobile No *</label>
+                <div class="phone-input-combo">
+                  <select class="phone-code-select">
+                    <option value="+91">+91</option>
+                  </select>
+                  <input type="text" class="text-input has-warning-border" id="inputMobile" placeholder="XXXXXXXXXX" value="" oninput="validateLiveMobile(this.value)">
+                  <span class="input-warning-icon" id="mobileWarningIcon">⚠️</span>
+                </div>
+                <p class="error-msg-text" id="mobileErrorMsg">Please fill this field.</p>
+              </div>
+
+              <div class="input-field-group mt-3">
+                <label class="field-label">Email *</label>
+                <input type="email" class="text-input" id="inputEmail" value="sanjayharshi2005@gmail.com" oninput="updatePersonalInfoState()">
+              </div>
+
+              <div class="optional-accordion mt-3" onclick="toggleAdditionalInfo()">
+                <span class="blue-link font-medium">Add Additional Information (Optional)</span>
+                <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+              <div class="optional-fields-container hidden" id="optionalFields">
+                <div class="form-grid-2 mt-2">
+                  <div class="input-field-group">
+                    <label class="field-label">Employer Category</label>
+                    <select class="text-input" id="inputEmployerType">
+                      <option value="OTH">Private / Others</option>
+                      <option value="GOV">Central Government</option>
+                      <option value="STG">State Government</option>
+                      <option value="PSU">Public Sector Undertaking</option>
+                    </select>
+                  </div>
+                  <div class="input-field-group">
+                    <label class="field-label">Passport Number (If held)</label>
+                    <input type="text" class="text-input" placeholder="Optional">
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Card 3: Your Address (Screenshot 3) -->
+          <div class="form-card collapsed" id="cardYourAddress">
+            <div class="form-card-header" onclick="toggleCardCollapse('cardYourAddress')">
+              <div class="header-left">
+                <div class="header-icon-circle blue-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="card-title-text">Your Address</h3>
+                  <p class="card-subtitle-text">You can provide either your current address or permanent address of residence.</p>
+                </div>
+              </div>
+              <button class="collapse-toggle-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+            </div>
+            <div class="form-card-body">
+              <div class="form-grid-2">
+                <div class="input-field-group">
+                  <label class="field-label">Flat / Door / Block No</label>
+                  <input type="text" class="text-input" id="inputFlat" value="Flat 402, Royal Residency">
+                </div>
+                <div class="input-field-group">
+                  <label class="field-label">Road / Street</label>
+                  <input type="text" class="text-input" id="inputStreet" value="100 Feet Road, Indiranagar">
+                </div>
+              </div>
+              <div class="form-grid-3 mt-2">
+                <div class="input-field-group">
+                  <label class="field-label">City</label>
+                  <input type="text" class="text-input" id="inputCity" value="Bengaluru">
+                </div>
+                <div class="input-field-group">
+                  <label class="field-label">State Code</label>
+                  <select class="text-input" id="inputStateCode">
+                    <option value="29">Karnataka (29)</option>
+                    <option value="32">Kerala (32)</option>
+                    <option value="27">Maharashtra (27)</option>
+                    <option value="33">Tamil Nadu (33)</option>
+                    <option value="07">Delhi (07)</option>
+                  </select>
+                </div>
+                <div class="input-field-group">
+                  <label class="field-label">PIN Code</label>
+                  <input type="text" class="text-input" id="inputPin" value="560038">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Residential Status (Screenshot 3) -->
+          <div class="form-card collapsed" id="cardResidentialStatus">
+            <div class="form-card-header" onclick="toggleCardCollapse('cardResidentialStatus')">
+              <div class="header-left">
+                <div class="header-icon-circle purple-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                    <path d="M2 12h20"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="card-title-text">Residential Status</h3>
+                  <p class="card-subtitle-text">The residential status depends on the number of days you stayed in India. Please follow the process to choose the correct residential status.</p>
+                </div>
+              </div>
+              <button class="collapse-toggle-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+            </div>
+            <div class="form-card-body">
+              <div class="radio-pill-group">
+                <label class="radio-pill active">
+                  <input type="radio" name="resStatus" value="RES" checked> Resident (More than 182 days in India)
+                </label>
+                <label class="radio-pill">
+                  <input type="radio" name="resStatus" value="NRI"> Non-Resident Indian (NRI)
+                </label>
+                <label class="radio-pill">
+                  <input type="radio" name="resStatus" value="RNOR"> Resident but Not Ordinarily Resident (RNOR)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5: Bank Details (Screenshot 3) -->
+          <div class="form-card collapsed" id="cardBankDetails">
+            <div class="form-card-header" onclick="toggleCardCollapse('cardBankDetails')">
+              <div class="header-left">
+                <div class="header-icon-circle blue-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2">
+                    <line x1="3" y1="21" x2="21" y2="21"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                    <polyline points="5 6 12 3 19 6"></polyline>
+                    <line x1="4" y1="10" x2="4" y2="21"></line>
+                    <line x1="20" y1="10" x2="20" y2="21"></line>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="card-title-text">Bank Details</h3>
+                  <p class="card-subtitle-text">Provide bank account details. In case of multiple accounts, First account will be selected as eligible for refund. <strong>Note:</strong> To receive your refund into an account it must be added and verified in the Income Tax portal.</p>
+                </div>
+              </div>
+              <button class="collapse-toggle-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+            </div>
+            <div class="form-card-body">
+              <div class="form-grid-3">
+                <div class="input-field-group">
+                  <label class="field-label">Bank Account Number</label>
+                  <input type="text" class="text-input" id="inputBankAcc" value="918273645120">
+                </div>
+                <div class="input-field-group">
+                  <label class="field-label">IFSC Code</label>
+                  <input type="text" class="text-input" id="inputBankIfsc" value="HDFC0000128">
+                </div>
+                <div class="input-field-group">
+                  <label class="field-label">Account Type</label>
+                  <select class="text-input" id="inputBankType">
+                    <option value="SAV">Savings Account</option>
+                    <option value="CUR">Current Account</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 6: Pre-fill Income details from Income Tax Dept (Screenshot 3) -->
+          <div class="action-card-banner">
+            <div class="banner-left">
+              <div class="header-icon-circle blue-tint">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <line x1="20" y1="8" x2="20" y2="14"></line>
+                  <line x1="23" y1="11" x2="17" y2="11"></line>
+                </svg>
+              </div>
+              <div>
+                <h4 class="action-card-title">Pre-fill Income details from Income Tax Dept</h4>
+                <p class="action-card-desc">Import official CBDT prefill.json (Salary, TDS 26AS, AIS/TIS & Bank Accounts) directly.</p>
+              </div>
+            </div>
+            <div class="banner-actions-row">
+              <input type="file" id="prefillFileInput" accept=".json" class="hidden" onchange="handlePrefillFileChosen(event)">
+              <button class="btn btn-outline" onclick="document.getElementById('prefillFileInput').click()">Import prefill.json</button>
+              <button class="btn btn-primary" onclick="loadSamplePrefillJson()">Load Official Sample</button>
+            </div>
+          </div>
+
+          <!-- Bottom CTA Button (Screenshot 1) -->
+          <div class="step-bottom-cta">
+            <button class="btn btn-primary btn-lg" onclick="goToItrStep(2)">
+              Go to next
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- STEP 2: Income Sources (Screenshots 4 & 5)                        -->
+        <!-- ================================================================= -->
+        <div id="itrStep2" class="itr-step-view hidden">
+          
+          <!-- Accuracy Guarantee Banner (Screenshot 4) -->
+          <div class="accuracy-callout-banner">
+            <div class="banner-content-row">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <polyline points="9 12 11 14 15 10"></polyline>
+              </svg>
+              <span>File your taxes confidently with 100% accuracy — We've got you covered.</span>
+            </div>
+            <a href="#" class="blue-link" onclick="openSupportDrawer()">Learn More &gt;</a>
+          </div>
+
+          <!-- Zero Income Warning Banner (Screenshot 4) -->
+          <div class="warning-callout-banner light-peach" id="zeroIncomeWarning">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>The total income in this tax return is zero. Please check if you have entered your salary / interest income correctly.</span>
+          </div>
+
+          <!-- 8 Income Cards (Screenshots 4 & 5) -->
+          <div class="income-cards-list">
+            
+            <!-- 1. Salary Income -->
+            <div class="action-card-banner">
+              <div class="banner-left">
+                <div class="header-icon-circle purple-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2">
+                    <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                    <circle cx="12" cy="12" r="2"></circle>
+                    <path d="M6 12h.01M18 12h.01"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="card-title-row">
+                    <h4 class="action-card-title">Salary Income</h4>
+                    <span class="income-val-badge" id="badgeSalaryVal">₹ 0</span>
+                  </div>
+                  <p class="action-card-desc">Add details manually or Upload Form 16 to auto-fill your salary details. You can add salary income from multiple jobs as well.</p>
+                </div>
+              </div>
+              <div class="banner-actions-row">
+                <button class="link-btn blue-link font-medium" onclick="openSalaryModal()">Add Manually</button>
+                <button class="btn btn-outline btn-sm" onclick="openForm16UploadModal()">Upload Form 16</button>
+              </div>
+            </div>
+
+            <!-- 2. Interest Income -->
+            <div class="action-card-banner">
+              <div class="banner-left">
+                <div class="header-icon-circle blue-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                  </svg>
+                </div>
+                <div>
+                  <div class="card-title-row">
+                    <h4 class="action-card-title">Interest Income</h4>
+                    <span class="income-val-badge" id="badgeInterestVal">₹ 0</span>
+                  </div>
+                  <p class="action-card-desc">Interest earned from Savings Bank, FDs, Post Office Deposits, P2P, Bonds etc.</p>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openInterestModal()">Add Details</button>
+            </div>
+
+            <!-- 3. Investments -->
+            <div class="action-card-banner">
+              <div class="banner-left">
+                <div class="header-icon-circle green-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                  </svg>
+                </div>
+                <div>
+                  <div class="card-title-row">
+                    <h4 class="action-card-title">Investments - Indian & US Stocks, Mutual Funds, FnO, Others</h4>
+                    <span class="income-val-badge" id="badgeCapGainsVal">₹ 0</span>
+                  </div>
+                  <p class="action-card-desc">Upload broker P&L statement (Zerodha, Groww, Upstox) with automatic 20% STCG & 12.5% LTCG calculation under Finance Act 2024.</p>
+                </div>
+              </div>
+              <div class="banner-actions-row">
+                <button class="btn btn-primary btn-sm" onclick="openBrokerPnlModal()">Upload Broker P&L</button>
+                <button class="btn btn-outline btn-sm" onclick="openTaxLossHarvestingModal()">Tax Loss Harvesting</button>
+                <button class="btn btn-outline btn-sm" onclick="openInvestmentsModal()">Manual Entry</button>
+              </div>
+            </div>
+
+            <!-- 4. ESOPs, RSUs, ESSPs (Screenshot 5) -->
+            <div class="action-card-banner">
+              <div class="banner-left">
+                <div class="header-icon-circle green-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                    <polyline points="17 6 23 6 23 12"></polyline>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="action-card-title">ESOPs, RSUs, ESSPs</h4>
+                  <p class="action-card-desc">Income from your stock options, restricted stock units and share purchase plans</p>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openEsopModal()">Add Details</button>
+            </div>
+
+            <!-- 5. House Properties (Screenshot 5) -->
+            <div class="action-card-banner">
+              <div class="banner-left">
+                <div class="header-icon-circle orange-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                  </svg>
+                </div>
+                <div>
+                  <div class="card-title-row">
+                    <h4 class="action-card-title">House Properties owned by you</h4>
+                    <span class="income-val-badge" id="badgeHousePropVal">₹ 0</span>
+                  </div>
+                  <p class="action-card-desc">Add details if you earned rent from your property or paid interest on home loan</p>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openHousePropertyModal()">Add Details</button>
+            </div>
+
+            <!-- 6. Dividend Income (Screenshot 5) -->
+            <div class="action-card-banner">
+              <div class="banner-left">
+                <div class="header-icon-circle orange-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2">
+                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                    <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="action-card-title">Dividend Income</h4>
+                  <p class="action-card-desc">Dividend earned from Equities, Stocks, Mutual Funds, ULIPs, UTI etc.</p>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openDividendModal()">Add Details</button>
+            </div>
+
+            <!-- 7. Professional, Freelancing and Business Income (Screenshot 5) -->
+            <div class="action-card-banner">
+              <div class="banner-left">
+                <div class="header-icon-circle purple-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="action-card-title">Professional, Freelancing and Business Income</h4>
+                  <p class="action-card-desc">Doctors, Lawyers, Freelancers, FnO investors, Businesses, Tutors, Influencers etc.</p>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openBusinessModal()">Add Details</button>
+            </div>
+
+            <!-- 8. Crypto Income (Screenshot 5) -->
+            <div class="action-card-banner">
+              <div class="banner-left">
+                <div class="header-icon-circle orange-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.5 9.5c.5-1 2-1 3-1s2.5.5 2.5 2-1.5 2-2.5 2.5c1 .5 2.5 1 2.5 2.5s-1.5 2.5-3 2.5-2.5-.5-3-1"></path>
+                    <line x1="12" y1="6" x2="12" y2="8"></line>
+                    <line x1="12" y1="16" x2="12" y2="18"></line>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="action-card-title">Crypto Income (Virtual Digital Assets - VDA)</h4>
+                  <p class="action-card-desc">Crypto income from Trading, Staking, Mining, Minting, Gifts, NFT or other VDA assets</p>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openCryptoModal()">Add Details</button>
+            </div>
+
+          </div>
+
+          <!-- Bottom CTAs -->
+          <div class="step-bottom-cta flex-between">
+            <button class="btn btn-outline" onclick="goToItrStep(1)">
+              &lt; Back
+            </button>
+            <button class="btn btn-primary btn-lg" onclick="goToItrStep(3)">
+              Go to next
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- STEP 3: Tax Saving (Screenshot 6)                                 -->
+        <!-- ================================================================= -->
+        <div id="itrStep3" class="itr-step-view hidden">
+          
+          <!-- Auto-fill AIS/26AS Banner (Screenshot 6) -->
+          <div class="action-card-banner blue-callout">
+            <div class="banner-left">
+              <div class="header-icon-circle blue-tint">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </div>
+              <div>
+                <p class="action-card-title font-normal">Auto-fill all the below details by importing 'Form 26AS' and 'AIS' from Income Tax Department.</p>
+              </div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="importFromItdAction()">Import from ITD</button>
+          </div>
+
+          <!-- Deductions Cards (Screenshot 6) -->
+          <div class="income-cards-list mt-3">
+            
+            <!-- 1. Tax Savings Deductions -->
+            <div class="action-card-banner">
+              <div class="banner-left">
+                <div class="header-icon-circle purple-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2">
+                    <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2 1.5-4 1-6.5-1-6.5z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="card-title-row">
+                    <h4 class="action-card-title">Tax Savings Deductions</h4>
+                    <span class="income-val-badge" id="badgeDeductionsVal">₹ 0</span>
+                  </div>
+                  <p class="action-card-desc">80C (PPF, Insurance, ELSS etc.), 80CCC, 80CCD(1) and (1B), 80CCD(2), Interest earned on Savings Bank Account</p>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openDeductionsModal()">Add Details</button>
+            </div>
+
+            <!-- 2. Taxes Paid, TDS and TCS -->
+            <div class="action-card-banner">
+              <div class="banner-left">
+                <div class="header-icon-circle orange-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 14 14"></polyline>
+                  </svg>
+                </div>
+                <div>
+                  <div class="card-title-row">
+                    <h4 class="action-card-title">Taxes Paid, TDS and TCS</h4>
+                    <span class="income-val-badge" id="badgeTdsVal">₹ 0</span>
+                  </div>
+                  <p class="action-card-desc">TDS or TCS Payments, Payments for Advance Taxes or Tax due and others. You can <a href="#" class="blue-link" onclick="openTdsModal()">Upload Form 26AS</a> to fetch these details.</p>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openTdsModal()">Add Details</button>
+            </div>
+
+            <!-- 3. Carry Forward Losses, AIS & Foreign Assets -->
+            <div class="action-card-banner">
+              <div class="banner-left">
+                <div class="header-icon-circle green-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="action-card-title">Carry Forward Losses, AIS & Foreign Assets(Schedule FA & FSI)</h4>
+                  <p class="action-card-desc">Carry Forward past losses, Upload AIS to auto-fetch income details, Disclose Foreign Assets & Income(Schedule FA and FSI), Tax Deferred on ESOPs.</p>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openAisModal()">Add Details</button>
+            </div>
+
+          </div>
+
+          <!-- Bottom CTAs -->
+          <div class="step-bottom-cta flex-between">
+            <button class="btn btn-outline" onclick="goToItrStep(2)">
+              &lt; Back
+            </button>
+            <button class="btn btn-primary btn-lg" onclick="goToItrStep(4)">
+              Go to next
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- STEP 4: Tax Summary (Screenshots 7 & 8)                           -->
+        <!-- ================================================================= -->
+        <div id="itrStep4" class="itr-step-view hidden">
+          
+          <!-- Top Purple Explanation Banner (Screenshot 7) -->
+          <div class="action-card-banner purple-callout">
+            <div class="banner-left">
+              <div class="header-icon-circle purple-tint">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+              </div>
+              <div>
+                <p class="action-card-title font-medium">View a personalised explanation of how your tax has been computed.</p>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="downloadItrComputation('xlsx')">View Report</button>
+          </div>
+
+          <!-- Warning Banner (Screenshot 7) -->
+          <div class="warning-callout-banner orange-bordered" id="summaryWarningBanner">
+            <div class="banner-content-row">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <span>Few details are missing. Add them to generate your complete tax summary</span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="fixMissingDetailsAction()">Fix Errors</button>
+          </div>
+
+          <!-- Top 2 Status Cards (Screenshot 8) -->
+          <div class="form-grid-2 mt-3">
+            <!-- ITR Type Card -->
+            <div class="summary-status-card">
+              <div class="header-left">
+                <div class="header-icon-circle blue-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <line x1="7" y1="8" x2="17" y2="8"></line>
+                    <line x1="7" y1="12" x2="17" y2="12"></line>
+                  </svg>
+                </div>
+                <div>
+                  <div class="card-title-row">
+                    <span class="status-label">Your ITR Type:</span>
+                    <span class="badge-pill dark-blue-pill">ITR 1</span>
+                  </div>
+                  <p class="sub-check-text">✓ Income from Salary or Interest</p>
+                  <a href="#" class="blue-link font-medium mt-1 inline-block" onclick="viewItrTypeDetails()">View More Details &gt;</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tax Regime Card with Compare/Switch -->
+            <div class="summary-status-card">
+              <div class="header-left">
+                <div class="header-icon-circle green-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="card-title-row">
+                    <span class="status-label">Your Tax Regime:</span>
+                    <span class="badge-pill green-pill" id="badgeRegimeLabel">New Regime</span>
+                  </div>
+                  <p class="sub-check-text">You have selected New Regime</p>
+                  <a href="#" class="blue-link font-medium mt-1 inline-block" onclick="openCompareRegimeModal()">Compare/Switch Regime &gt;</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Assessment Year Selector -->
+          <div class="ay-inline-bar mt-3">
+            <span class="ay-label">Assessment Year:</span>
+            <select class="ay-select" id="summaryAySelector" onchange="onSummaryAyChanged()">
+              <option value="2025-26" selected>AY 2025-26 (FY 2024-25)</option>
+              <option value="2026-27">AY 2026-27 (FY 2025-26)</option>
+            </select>
+            <button class="btn btn-outline btn-xs" onclick="loadSampleSalaryData()">⚡ Load Sample Salary Data</button>
+          </div>
+
+          <!-- Card: Awesome, Let's prepare your tax summary (Screenshot 7) -->
+          <div class="tax-summary-hero-card mt-3">
+            <h2 class="gradient-hero-title">Awesome, Let's prepare your tax summary</h2>
+            
+            <div class="hero-sublinks">
+              <span class="sublink-item" onclick="viewItrTypeDetails()">Your ITR Type: ITR 1 &gt;</span>
+              <span class="sublink-divider">|</span>
+              <span class="sublink-item" onclick="openCompareRegimeModal()">Your Tax Regime: <span id="summaryHeroRegimeText">New Regime</span> &gt;</span>
+            </div>
+
+            <div class="computation-line-items">
+              <div class="calc-row">
+                <span class="calc-label">Gross Income:</span>
+                <span class="calc-val" id="sumGrossIncome">₹ 0</span>
+              </div>
+              <div class="calc-row">
+                <span class="calc-label">Your Tax Savings:</span>
+                <span class="calc-val" id="sumTaxSavings">₹ 0</span>
+              </div>
+              <div class="calc-row">
+                <span class="calc-label">Taxable Income:</span>
+                <span class="calc-val" id="sumTaxableIncome">₹ 0</span>
+              </div>
+              <div class="calc-row font-semibold">
+                <span class="calc-label">Total Tax:</span>
+                <span class="calc-val" id="sumTotalTax">₹ 0</span>
+              </div>
+              <div class="calc-row">
+                <span class="calc-label">Tax Already Paid:</span>
+                <span class="calc-val" id="sumTaxPaid">₹ 0</span>
+              </div>
+              <div class="calc-row highlight-refund">
+                <span class="calc-label" id="sumRefundLabel">Tax Refund:</span>
+                <span class="calc-val green-text" id="sumRefundVal">₹ 0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Review your detailed tax calculation (Screenshot 8) -->
+          <div class="form-card mt-3">
+            <div class="form-card-header no-border">
+              <div class="header-left">
+                <div class="header-icon-circle orange-tint">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="card-title-text">Review your detailed tax calculation</h3>
+                  <p class="card-subtitle-text">See how your tax is calculated based on your income, deductions, and chosen regime.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="detailed-calc-list">
+              <!-- Item 1: Total Tax -->
+              <div class="detailed-calc-item">
+                <div class="item-left">
+                  <div class="calc-icon-small">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 6v6l4 2"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="item-heading">Total Tax</div>
+                    <div class="item-sub">Sum of all applicable Taxes and Charges</div>
+                  </div>
+                </div>
+                <div class="item-val" id="detailTotalTax">₹ 0</div>
+              </div>
+
+              <!-- Item 2: Tax Already Paid -->
+              <div class="detailed-calc-item">
+                <div class="item-left">
+                  <div class="calc-icon-small">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="item-heading">Tax Already Paid</div>
+                    <div class="item-sub">TDS, TCS, Advance Tax Payments etc.</div>
+                  </div>
+                </div>
+                <div class="item-val" id="detailTaxPaid">₹ 0</div>
+              </div>
+
+              <!-- Item 3: Refund Available -->
+              <div class="detailed-calc-item">
+                <div class="item-left">
+                  <div class="calc-icon-small">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="item-heading" id="detailRefundHeading">Refund Available</div>
+                    <div class="item-sub" id="detailRefundSub">(Taxes Paid - Tax Liability)</div>
+                  </div>
+                </div>
+                <div class="item-val green-text" id="detailRefundVal">₹ 0</div>
+              </div>
+
+              <!-- Post-Checkout / Export Access Box (Screenshot 8) -->
+              <div class="checkout-report-access">
+                <div class="access-left">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  <span>Detailed computation report available here in Tax Summary</span>
+                </div>
+                <div class="access-actions">
+                  <button class="btn btn-outline btn-xs" onclick="downloadItrComputation('xlsx')">Download .xlsx (SheetJS)</button>
+                  <button class="btn btn-outline btn-xs" onclick="downloadItrComputation('json')">CBDT JSON</button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Doubt Help Footer (Screenshot 8) -->
+            <div class="doubt-help-footer" onclick="openSupportDrawer()">
+              <div class="footer-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span>Have any doubts regarding tax calculation?</span>
+              </div>
+              <span class="blue-link font-medium">Ask here &gt;</span>
+            </div>
+
+          </div>
+
+          <!-- Bottom CTA (Screenshot 7 & 8) -->
+          <div class="step-bottom-cta flex-between">
+            <button class="btn btn-outline" onclick="goToItrStep(3)">
+              &lt; Back
+            </button>
+            <button class="btn btn-primary btn-lg" onclick="proceedToEfileSandbox()">
+              Continue
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- SUITE 3: TAX FILING FROM EXPERTS (Original FinTech Advisory Layout)       -->
+  <!-- ========================================================================= -->
+  <div id="viewExpertSuite" class="app-suite-container hidden">
+    
+    <!-- Executive Command Header & Metric Strip -->
+    <div class="expert-hub-header">
+      <div class="hub-header-content">
+        <div class="hub-badge-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+          <span>India's Top Chartered Accountants & Direct Tax Specialists</span>
+        </div>
+        <h1 class="hub-title">Tax Filing from Experts</h1>
+        <p class="hub-subtitle">Personalized 1-on-1 CA advisory, guaranteed 24-hour turnaround, and comprehensive notice defense for individuals, traders, and founders.</p>
+      </div>
+
+      <!-- Live Guarantee Strip -->
+      <div class="guarantee-grid">
+        <div class="guarantee-card">
+          <div class="guarantee-icon-box blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <div>
+            <div class="guarantee-heading">Guaranteed 24hr Filing</div>
+            <div class="guarantee-sub">Express turnaround with zero compromise on accuracy</div>
+          </div>
+        </div>
+
+        <div class="guarantee-card">
+          <div class="guarantee-icon-box green">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+          </div>
+          <div>
+            <div class="guarantee-heading">100% Notice Safeguard</div>
+            <div class="guarantee-sub">Free notice defense; 100% fee refund on calculation error</div>
+          </div>
+        </div>
+
+        <div class="guarantee-card">
+          <div class="guarantee-icon-box purple">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <div>
+            <div class="guarantee-heading">Handpicked Senior CAs</div>
+            <div class="guarantee-sub">Vetted experts matched specifically to your income profile</div>
+          </div>
+        </div>
+
+        <div class="guarantee-card">
+          <div class="guarantee-icon-box orange">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          </div>
+          <div>
+            <div class="guarantee-heading">Max Refund Optimization</div>
+            <div class="guarantee-sub">AI scanned across 100+ tax sections to eliminate leakage</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Command Center Grid -->
+    <div class="expert-workbench-layout">
+      
+      <!-- Left Column: Plans Matrix & Pipeline Visualizer -->
+      <div class="workbench-main-col">
+        
+        <!-- Category Filter Tabs -->
+        <div class="plans-filter-bar">
+          <button class="filter-tab-pill active" onclick="filterExpertPlans('all', this)">All Offerings</button>
+          <button class="filter-tab-pill" onclick="filterExpertPlans('filing', this)">Salaried & Job Switches</button>
+          <button class="filter-tab-pill" onclick="filterExpertPlans('wealth', this)">Capital Gains & Traders</button>
+          <button class="filter-tab-pill" onclick="filterExpertPlans('foreign', this)">Foreign Assets / FAST-DS</button>
+          <button class="filter-tab-pill" onclick="filterExpertPlans('gst_tds', this)">Freelance & Business</button>
+          <button class="filter-tab-pill" onclick="filterExpertPlans('past_filings', this)">Notice & Defective Defense</button>
+        </div>
+
+        <!-- Plans Cards Matrix -->
+        <div class="expert-plans-grid" id="expertPlansContainer">
+          <!-- Populated dynamically via JS or server -->
+        </div>
+
+        <!-- Dual-Layer Accuracy Pipeline (AI + CA) -->
+        <div class="form-card mt-3">
+          <div class="form-card-header no-border">
+            <div>
+              <h3 class="card-title-text">Dual-Layer Filing Precision: AI + Chartered Accountant</h3>
+              <p class="card-subtitle-text">Two rigorous verification stages eliminate calculation errors and ensure bulletproof compliance.</p>
+            </div>
+            <span class="status-chip success-chip">Zero Room for Error</span>
+          </div>
+
+          <div class="pipeline-steps-grid mt-3">
+            <div class="pipeline-step-card">
+              <div class="step-num-circle">1</div>
+              <div class="step-card-title">Automated Document Ingestion</div>
+              <p class="step-card-desc">Machine parsing of Form 16s, broker P&L reports, Form 26AS, and AIS/TIS annual statements.</p>
+            </div>
+            <div class="pipeline-step-card">
+              <div class="step-num-circle">2</div>
+              <div class="step-card-title">Algorithmic Section Scan</div>
+              <p class="step-card-desc">System analyzes 100+ deduction sections, detects regime arbitrage (Old vs New), and flags variances.</p>
+            </div>
+            <div class="pipeline-step-card highlight">
+              <div class="step-num-circle active">3</div>
+              <div class="step-card-title">Dedicated CA Consultation</div>
+              <p class="step-card-desc">Handpicked Senior Chartered Accountant reviews your draft 1-on-1 and prepares the finalized return.</p>
+            </div>
+            <div class="pipeline-step-card">
+              <div class="step-num-circle">4</div>
+              <div class="step-card-title">Sandbox EVC Verification</div>
+              <p class="step-card-desc">E-filing authentication via simulated OTP with instant ITR-V acknowledgement number issuance.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Annual Refund Benchmark & Trend Card -->
+        <div class="form-card mt-3">
+          <div class="form-card-header no-border">
+            <div>
+              <h3 class="card-title-text">Annual Client Refund Growth Benchmark</h3>
+              <p class="card-subtitle-text">Cumulative refund optimization across consecutive assessment years.</p>
+            </div>
+            <span class="stat-highlight">₹5,346 Cr Total Refunded</span>
+          </div>
+
+          <div class="benchmark-chart-container mt-2">
+            <div class="chart-bars-row">
+              <div class="chart-bar-col">
+                <div class="bar-val-label">₹380 Cr</div>
+                <div class="chart-bar-fill" style="height: 38%;"></div>
+                <div class="bar-year-label">AY 21-22</div>
+              </div>
+              <div class="chart-bar-col">
+                <div class="bar-val-label">₹520 Cr</div>
+                <div class="chart-bar-fill" style="height: 52%;"></div>
+                <div class="bar-year-label">AY 22-23</div>
+              </div>
+              <div class="chart-bar-col">
+                <div class="bar-val-label">₹640 Cr</div>
+                <div class="chart-bar-fill" style="height: 64%;"></div>
+                <div class="bar-year-label">AY 23-24</div>
+              </div>
+              <div class="chart-bar-col">
+                <div class="bar-val-label">₹710 Cr</div>
+                <div class="chart-bar-fill" style="height: 71%;"></div>
+                <div class="bar-year-label">AY 24-25</div>
+              </div>
+              <div class="chart-bar-col active">
+                <div class="bar-val-label">₹793.91 Cr</div>
+                <div class="chart-bar-fill active" style="height: 85%;"></div>
+                <div class="bar-year-label font-bold text-primary">AY 25-26</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- SUITE 2: GST & FINANCIAL REPORTS SUITE                                    -->
+  <!-- ========================================================================= -->
+  <div id="viewGstSuite" class="app-suite-container hidden">
+    
+    <!-- Secondary Nav for GST Sections -->
+    <nav class="gst-subnav">
+      <button class="gst-subnav-btn active" id="gstSubTabReports" onclick="showGstScreen('reports')">1. Reports & Exports</button>
+      <button class="gst-subnav-btn" id="gstSubTabAddData" onclick="showGstScreen('addData')">2. Add Data & Import</button>
+      <button class="gst-subnav-btn" id="gstSubTabRecon" onclick="showGstScreen('recon')">3. Reconciliation (2B vs Books)</button>
+      <button class="gst-subnav-btn" id="gstSubTabGstr3b" onclick="showGstScreen('gstr3b')">4. GSTR-3B Summary</button>
+      <button class="gst-subnav-btn" id="gstSubTabValidator" onclick="showGstScreen('validator')">5. Live Validator</button>
+      <button class="gst-subnav-btn" id="gstSubTabEinvoice" onclick="showGstScreen('einvoice')">6. E-Invoice & EWB</button>
+      <button class="gst-subnav-btn" id="gstSubTabVendorRisk" onclick="showGstScreen('vendorRisk')">7. ITC at Risk Center</button>
+      <button class="gst-subnav-btn" id="gstSubTabMultiGstin" onclick="showGstScreen('multiGstin')">8. Multi-GSTIN Hub</button>
+      <button class="gst-subnav-btn" id="gstSubTabGstr9" onclick="showGstScreen('gstr9')">9. GSTR-9 Annual</button>
+      <button class="gst-subnav-btn" id="gstSubTabApiHub" onclick="showGstScreen('apiHub')">10. GSP Live API Hub (182 APIs)</button>
+    </nav>
+
+    <!-- GST Screen 1: Reports & Exports -->
+    <section id="gstScreenReports" class="gst-screen-view active">
+      <div class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h3 class="card-title-text">Reports & Tax Exports Center</h3>
+            <p class="card-subtitle-text">Multi-sheet Excel (.xlsx via SheetJS), RFC 4180 CSV, and GSTN Offline JSON</p>
+          </div>
+          <span class="status-chip success-chip">All 8 Reports Available</span>
+        </div>
+
+        <div class="gst-filter-bar">
+          <div class="filter-col">
+            <label class="field-label">Select Report</label>
+            <select id="reportSelect" class="text-input" onchange="onReportChanged()">
+              <option value="sales_register" selected>Sales Register (Itemized Invoices)</option>
+              <option value="purchase_register">Purchase Register (ITC Bills)</option>
+              <option value="reconciliation">ITC Reconciliation (GSTR-2B vs Books)</option>
+              <option value="gstr3b">GSTR-3B Summary & Tax Offset</option>
+              <option value="error_report">Import Error Report (Template Layout)</option>
+              <option value="filing_history">Filing History</option>
+              <option value="gstr1">GSTR-1 Outward Supplies</option>
+              <option value="itr1">ITR-1 Sahaj Statement</option>
+            </select>
+          </div>
+          <div class="filter-col" id="filterAyGroup">
+            <label class="field-label">Assessment Year</label>
+            <select id="reportAySelector" class="text-input" onchange="renderReportPreview()">
+              <option value="2025-26" selected>AY 2025-26</option>
+              <option value="2026-27">AY 2026-27</option>
+            </select>
+          </div>
+          <div class="filter-col">
+            <label class="field-label">Period</label>
+            <select id="reportPeriod" class="text-input" onchange="renderReportPreview()">
+              <option value="102026" selected>October 2026</option>
+              <option value="092026">September 2026</option>
+            </select>
+          </div>
+          <div class="filter-col">
+            <label class="field-label">Filter Party / GSTIN</label>
+            <input type="text" id="reportPartyFilter" class="text-input" placeholder="Search..." oninput="renderReportPreview()">
+          </div>
+          <div class="filter-col align-bottom">
+            <button class="btn btn-primary" onclick="generateReportAction()">Generate Report</button>
+          </div>
+        </div>
+
+        <!-- Progress Box -->
+        <div class="progress-box" id="reportProgressBox">
+          <div class="font-semibold text-primary">Generating report via SheetJS engine...</div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="reportProgressBar"></div>
+          </div>
+        </div>
+
+        <!-- Result Card -->
+        <div class="result-card" id="reportResultCard">
+          <div class="result-meta">
+            <div class="result-filename" id="resultFilename">Sales_Register_102026.xlsx</div>
+            <div class="result-specs" id="resultSpecs">Rows: 48 • Ready for Download</div>
+          </div>
+          <div class="result-actions">
+            <button class="btn btn-primary btn-sm" onclick="downloadCurrentReport('xlsx')">Download Excel (.xlsx)</button>
+            <button class="btn btn-outline btn-sm" onclick="downloadCurrentReport('csv')">Download CSV (.csv)</button>
+            <button class="btn btn-outline btn-sm" onclick="downloadCurrentReport('json')">Download JSON (.json)</button>
+          </div>
+        </div>
+
+        <!-- Live Preview Table -->
+        <div class="table-container mt-3">
+          <table class="data-table" id="reportPreviewTable">
+            <thead id="reportPreviewHead"></thead>
+            <tbody id="reportPreviewBody"></tbody>
+            <tfoot id="reportPreviewFoot"></tfoot>
+          </table>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- GST Screen 2: Add Data & Import -->
+    <section id="gstScreenAddData" class="gst-screen-view hidden">
+      <div class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h3 class="card-title-text">Add Data: Manual Bill Entry & Bulk Import</h3>
+            <p class="card-subtitle-text">Real-time intra/inter-state tax splitting and bulk error round-trip repair</p>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="downloadSampleTemplate()">Download Sample Template</button>
+        </div>
+
+        <!-- Manual Invoice Entry Form -->
+        <div class="form-card-body">
+          <h4 class="action-card-title">Manual Bill Entry</h4>
+          <div class="form-grid-3 mt-2">
+            <div class="input-field-group">
+              <label class="field-label">Invoice Number *</label>
+              <input type="text" id="manualInvNo" class="text-input" placeholder="INV-2026-001">
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">Invoice Date *</label>
+              <input type="date" id="manualDate" class="text-input" value="2026-10-15">
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">Party Name *</label>
+              <input type="text" id="manualPartyName" class="text-input" placeholder="Party or Vendor Name">
+            </div>
+          </div>
+
+          <div class="form-grid-3 mt-2">
+            <div class="input-field-group">
+              <label class="field-label">Party GSTIN *</label>
+              <input type="text" id="manualGstin" class="text-input" placeholder="32ABCDE1234F1Z5" oninput="onManualGstinChanged()">
+              <span id="manualGstinFeedback" class="validation-feedback"></span>
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">Taxable Value (₹) *</label>
+              <input type="number" id="manualTaxable" class="text-input" value="50000" oninput="calculateManualTaxes()">
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">GST Rate (%) *</label>
+              <select id="manualRate" class="text-input" onchange="calculateManualTaxes()">
+                <option value="18" selected>18% Standard</option>
+                <option value="12">12%</option>
+                <option value="5">5%</option>
+                <option value="28">28%</option>
+                <option value="0">0% Nil</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="tax-breakdown-row mt-3">
+            <div class="breakdown-item"><span>Supply Type:</span> <strong id="manualSupplyType">Intra-State (Kerala)</strong></div>
+            <div class="breakdown-item"><span>CGST:</span> <strong id="manualCgst">₹ 4,500.00</strong></div>
+            <div class="breakdown-item"><span>SGST:</span> <strong id="manualSgst">₹ 4,500.00</strong></div>
+            <div class="breakdown-item"><span>IGST:</span> <strong id="manualIgst">₹ 0.00</strong></div>
+            <div class="breakdown-item"><span>Total Amount:</span> <strong id="manualTotal" class="text-primary font-bold">₹ 59,000.00</strong></div>
+          </div>
+
+          <div class="mt-3 flex-gap">
+            <button class="btn btn-primary" onclick="saveManualInvoice('sales')">Save as Sales Invoice</button>
+            <button class="btn btn-outline" onclick="saveManualInvoice('purchase')">Save as Purchase Bill</button>
+          </div>
+        </div>
+
+        <!-- Bulk Ingestion & Round-Trip Error Section -->
+        <div class="form-card-body border-top mt-3">
+          <h4 class="action-card-title">Bulk Excel / CSV Ingestion</h4>
+          <p class="card-subtitle-text">Upload itemized invoices. Erroneous rows will generate a downloadable Error Report for correction.</p>
+          
+          <div class="drop-zone-box mt-2" onclick="document.getElementById('csvFileInput').click()">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <div class="mt-1 font-semibold">Drop CSV/Excel file or Click to Browse</div>
+            <div class="text-muted text-sm">Supports Sales and Purchase templates</div>
+            <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" class="hidden" onchange="handleFileChosen(event)">
+          </div>
+
+          <!-- Import Summary Box -->
+          <div id="importSummaryCard" class="import-summary-card hidden mt-3">
+            <div class="summary-stat-row">
+              <div class="stat-badge">Total Rows: <strong id="importTotalCount">0</strong></div>
+              <div class="stat-badge success">Clean Rows: <strong id="importValidCount">0</strong></div>
+              <div class="stat-badge danger">Errors Detected: <strong id="importErrorCount">0</strong></div>
+            </div>
+            <div id="importErrorActionBox" class="mt-2 hidden">
+              <button class="btn btn-danger btn-sm" onclick="downloadErrorReportFile()">Download Error Report (.xlsx)</button>
+              <span class="text-sm text-muted ml-2">Fix errors in the spreadsheet and re-upload to merge.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- GST Screen 3: Reconciliation -->
+    <section id="gstScreenRecon" class="gst-screen-view hidden">
+      <div class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h3 class="card-title-text">GSTR-2B vs Books Reconciliation</h3>
+            <p class="card-subtitle-text">Section 16(2)(aa) verification and supplier action workflow</p>
+          </div>
+          <div class="flex-gap">
+            <button class="btn btn-outline btn-sm" onclick="exportReconReport()">Export Recon (.xlsx)</button>
+            <button class="btn btn-primary btn-sm" onclick="runReconciliation()">Re-run Reconciliation</button>
+          </div>
+        </div>
+
+        <div class="recon-stats-grid mt-2">
+          <div class="recon-stat-card green-tint">
+            <div class="recon-stat-val" id="reconCountMatched">2</div>
+            <div class="recon-stat-label">Matched (100% Eligible)</div>
+          </div>
+          <div class="recon-stat-card orange-tint">
+            <div class="recon-stat-val" id="reconCountMismatch">1</div>
+            <div class="recon-stat-label">Mismatch in Value/Date</div>
+          </div>
+          <div class="recon-stat-card red-tint">
+            <div class="recon-stat-val" id="reconCountMissing2b">1</div>
+            <div class="recon-stat-label">Missing in 2B (Held)</div>
+          </div>
+        </div>
+
+        <div class="table-container mt-3">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Invoice No</th>
+                <th>Supplier</th>
+                <th>GSTIN</th>
+                <th>Books Tax</th>
+                <th>2B Tax</th>
+                <th>Recon Status</th>
+                <th>Action</th>
+                <th>Supplier Chase</th>
+              </tr>
+            </thead>
+            <tbody id="reconTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- GST Screen 4: GSTR-3B Summary -->
+    <section id="gstScreenGstr3b" class="gst-screen-view hidden">
+      <div class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h3 class="card-title-text">GSTR-3B Summary & Deterministic Tax Offset</h3>
+            <p class="card-subtitle-text">Section 49 statutory set-off and electronic credit/cash ledger calculation</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openGstSandboxFilingModal()">Proceed to File GSTR-3B (Sandbox)</button>
+        </div>
+
+        <div class="tax-offset-flow-cards mt-2">
+          <div class="offset-card">
+            <div class="offset-label">Output Tax Liability (3.1)</div>
+            <div class="offset-val" id="gstr3bOutputTax">₹ 54,000.00</div>
+          </div>
+          <div class="offset-symbol">-</div>
+          <div class="offset-card">
+            <div class="offset-label">Eligible ITC (4C)</div>
+            <div class="offset-val" id="gstr3bEligibleItc">₹ 23,400.00</div>
+          </div>
+          <div class="offset-symbol">=</div>
+          <div class="offset-card highlight">
+            <div class="offset-label">Net Payable in Cash (6.1)</div>
+            <div class="offset-val text-primary" id="gstr3bNetPayable">₹ 30,600.00</div>
+          </div>
+        </div>
+
+        <div class="how-calculated-box mt-3" id="howCalculatedBox">
+          <h4 class="font-semibold text-primary">How Calculated (Section 49 Rules)</h4>
+          <ul class="how-calculated-list mt-1">
+            <li id="calcStep1">Step 1: Gross outward supplies yielded output tax of ₹54,000.</li>
+            <li id="calcStep2">Step 2: Gross ITC less held exceptions equals eligible credit of ₹23,400.</li>
+            <li id="calcStep3">Step 3: IGST credit set off first against IGST liability; CGST/SGST offset respective liabilities.</li>
+            <li id="calcStep4">Step 4: Net cash ledger payable: ₹30,600.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- GST Screen 5: 2-Tier PAN & GSTIN Verification Center -->
+    <section id="gstScreenValidator" class="gst-screen-view hidden">
+      <div class="form-card">
+        <div class="form-card-header">
+          <div class="header-left">
+            <div class="header-icon-circle blue-tint">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+              </svg>
+            </div>
+            <div>
+              <div class="card-title-row">
+                <h3 class="card-title-text">2-Tier PAN & GSTIN Verification Engine</h3>
+                <span class="status-chip success-chip">REA Tier 1 + Tier 2 Integrated</span>
+              </div>
+              <p class="card-subtitle-text">Instant mathematical link verification (Tier 1) combined with statutory GSTN registry lookup via API #179 & #178 (Tier 2).</p>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btnExecute2TierCheck" onclick="run2TierVerificationFlow()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>Execute 2-Tier Verification</span>
+          </button>
+        </div>
+
+        <div class="form-card-body">
+          <!-- Input Parameters -->
+          <div class="form-grid-2">
+            <div class="input-field-group">
+              <label class="field-label">Permanent Account Number (PAN) <span class="text-danger">*</span></label>
+              <input type="text" id="twoTierPanInput" class="text-input font-mono" placeholder="e.g. AAACB1234F" value="AAACB1234F" maxlength="10" oninput="onTwoTierPanInput(this.value)">
+              <div id="twoTierPanInline" class="text-xs text-muted mt-1">Enter a 10-character PAN to begin instant Tier 1 analysis.</div>
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">GST Identification Number (GSTIN) <span class="text-muted">(Optional for Link Check)</span></label>
+              <input type="text" id="twoTierGstinInput" class="text-input font-mono" placeholder="e.g. 29AAACB1234F1Z5" value="29AAACB1234F1Z5" maxlength="15" oninput="onTwoTierGstinInput(this.value)">
+              <div id="twoTierGstinInline" class="text-xs text-muted mt-1">Optional. If provided, checks if GSTIN mathematically embeds this PAN.</div>
+            </div>
+          </div>
+
+          <!-- 2-Tier Status Grid -->
+          <div class="form-grid-2 mt-3" style="gap: 16px;">
+            <!-- Tier 1 Card -->
+            <div class="recon-stat-card" id="tier1Card" style="border-left: 4px solid var(--brand-accent); background: #F8FAFC; padding: 18px; border-radius: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Tier 1: Instant Local Analysis</span>
+                <span class="status-chip success-chip" id="tier1StatusBadge">READY</span>
+              </div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text-main);" id="tier1EntityTitle">Company / Corporate PAN</div>
+              <div class="text-xs text-muted mt-1" id="tier1DetailText">Mathematical link between PAN and GSTIN: Matched (Chars 3-12 identical).</div>
+              <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 12px;" id="tier1MathOutput">
+                <span class="text-muted">Embedded PAN:</span> <strong class="text-primary" id="tier1EmbeddedPan">AAACB1234F</strong>
+                <span class="text-muted" style="margin-left: 12px;">State Code:</span> <strong class="text-primary" id="tier1StateCode">29 (Karnataka)</strong>
+              </div>
+            </div>
+
+            <!-- Tier 2 Card -->
+            <div class="recon-stat-card" id="tier2Card" style="border-left: 4px solid var(--status-success); background: #F8FAFC; padding: 18px; border-radius: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Tier 2: Statutory GSTN Query</span>
+                <span class="status-chip success-chip" id="tier2StatusBadge">VERIFIED ACTIVE</span>
+              </div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text-main);" id="tier2TaxpayerName">Statutory Assessee / Enterprise</div>
+              <div class="text-xs text-muted mt-1" id="tier2DetailText">Registered on GSTN Portal (API #179 & #178 verified). 3 State Branches Discovered.</div>
+              <div style="margin-top: 10px; font-size: 12px;" id="tier2MetaOutput">
+                <span class="text-muted">Taxpayer Type:</span> <strong class="text-primary" id="tier2TaxpayerType">Regular</strong>
+                <span class="text-muted" style="margin-left: 12px;">Active Branches:</span> <strong class="text-success" id="tier2BranchCount">3 Active</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Discovered Branches Table (API #179 Auto-Discovery) -->
+          <div class="mt-4" id="tier2BranchesSection" style="margin-top: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main);">Discovered State Branches Linked to this PAN (API #179)</h4>
+              <span class="text-xs text-muted" id="tier2DiscoveredNotice">Auto-discovered across Pan-India State Registrations</span>
+            </div>
+            <div class="gst-table-wrapper" style="border-radius: 8px; border: 1px solid var(--border-subtle); overflow: hidden;">
+              <table class="gst-data-table">
+                <thead>
+                  <tr>
+                    <th>State Code</th>
+                    <th>State / UT Name</th>
+                    <th>Linked GSTIN</th>
+                    <th>GSTN Status</th>
+                    <th style="text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="twoTierBranchesBody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GST Screen 6: E-Invoicing & E-Way Bill (IRP Sandbox) -->
+    <section id="gstScreenEinvoice" class="gst-screen-view hidden">
+      <div class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h3 class="card-title-text">Statutory E-Invoicing & IRP Sandbox Engine</h3>
+            <p class="card-subtitle-text">Rule 48(4) compliant 64-character SHA-256 IRN generation & statutory dynamic QR code payload</p>
+          </div>
+          <span class="status-chip success-chip">NIC Schema v1.03 Ready</span>
+        </div>
+        <div class="form-card-body">
+          <div class="form-grid-3">
+            <div class="input-field-group">
+              <label class="field-label">Invoice Number *</label>
+              <input type="text" id="einvDocNumber" class="text-input" value="INV-2026-901">
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">Invoice Date *</label>
+              <input type="date" id="einvDocDate" class="text-input" value="2026-10-31">
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">Buyer GSTIN *</label>
+              <input type="text" id="einvBuyerGstin" class="text-input" value="29XYZAB5678C1Z2">
+            </div>
+          </div>
+          <div class="form-grid-3 mt-2">
+            <div class="input-field-group">
+              <label class="field-label">Taxable Value (₹) *</label>
+              <input type="number" id="einvTaxableValue" class="text-input" value="125000">
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">GST Rate %</label>
+              <select id="einvGstRate" class="text-input">
+                <option value="18" selected>18% (Standard Business Services)</option>
+                <option value="12">12% (Goods & Standard)</option>
+                <option value="5">5% (Essential Goods)</option>
+                <option value="28">28% (Luxury / Automotive)</option>
+              </select>
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">Item HSN Code</label>
+              <input type="text" id="einvHsnCode" class="text-input" value="84713010">
+            </div>
+          </div>
+          <div class="mt-3 flex-gap">
+            <button class="btn btn-primary" onclick="submitGenerateEinvoice()">Generate Statutory IRN & Signed E-Invoice</button>
+            <button class="btn btn-outline" onclick="loadSampleEinvoicesList()">View Registered E-Invoices</button>
+          </div>
+
+          <!-- Generated E-Invoice Output Box -->
+          <div id="einvResultCard" class="hidden mt-3">
+            <div class="statutory-specs-card">
+              <div class="calc-row">
+                <span class="font-bold">64-Character SHA-256 IRN:</span>
+                <span class="font-mono text-primary text-xs" id="einvIrnDisplay">--</span>
+              </div>
+              <div class="calc-row">
+                <span>Acknowledgement Number & Date:</span>
+                <span id="einvAckDisplay">--</span>
+              </div>
+              <div class="calc-row">
+                <span>Total Invoice Value (Taxable + GST):</span>
+                <span class="font-bold green-text" id="einvTotalValDisplay">--</span>
+              </div>
+              <div class="mt-2">
+                <label class="field-label text-xs">Statutory Signed QR Code Payload String:</label>
+                <textarea id="einvQrPayloadText" class="text-input font-mono text-xs" rows="2" readonly></textarea>
+              </div>
+              <div class="flex-gap mt-3">
+                <button class="btn btn-outline btn-sm" onclick="copyEinvoiceIrn()">Copy IRN</button>
+                <button class="btn btn-outline btn-sm" onclick="cancelCurrentEinvoice()">Cancel E-Invoice (24h Window)</button>
+                <button class="btn btn-primary btn-sm" onclick="prefillEwbFromEinvoice()">Generate Corresponding E-Way Bill &rarr;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- E-Way Bill Lifecycle Card -->
+      <div class="form-card mt-3">
+        <div class="form-card-header">
+          <div>
+            <h3 class="card-title-text">Rule 138 E-Way Bill (EWB) Lifecycle Engine</h3>
+            <p class="card-subtitle-text">Statutory 12-digit E-Way Bill generation, Rule 138(10) distance validity calculation, and Part-B vehicle updates</p>
+          </div>
+          <span class="status-chip success-chip">Rule 138 Compliant</span>
+        </div>
+        <div class="form-card-body">
+          <div class="form-grid-4">
+            <div class="input-field-group">
+              <label class="field-label">Approx Distance (km) *</label>
+              <input type="number" id="ewbDistanceKm" class="text-input" value="380" oninput="updateEwbValidityPreview()">
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">Vehicle Number (Part-B) *</label>
+              <input type="text" id="ewbVehicleNo" class="text-input" value="KA01AB1234" placeholder="e.g. KA01AB1234">
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">Transporter ID / GSTIN</label>
+              <input type="text" id="ewbTransporterId" class="text-input" value="29TRANS1234A1Z9">
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">Cargo Type</label>
+              <select id="ewbCargoType" class="text-input" onchange="updateEwbValidityPreview()">
+                <option value="REGULAR" selected>Regular Cargo (1 Day / 200 km)</option>
+                <option value="OVER_DIMENSIONAL">Over-Dimensional (1 Day / 20 km)</option>
+              </select>
+            </div>
+          </div>
+          <div class="info-note-box mt-2" id="ewbValidityPreviewBox">
+            <strong>Rule 138(10) Validity:</strong> Distance of 380 km yields <strong>2 Days Validity</strong> from timestamp of generation.
+          </div>
+          <div class="mt-3 flex-gap">
+            <button class="btn btn-primary" onclick="submitGenerateEwayBill()">Generate 12-Digit Statutory EWB</button>
+            <button class="btn btn-outline" onclick="openUpdatePartBModal()">Update Part-B (Vehicle Change)</button>
+          </div>
+          <div id="ewbResultCard" class="hidden mt-3">
+            <div class="statutory-specs-card">
+              <div class="calc-row"><span class="font-bold">E-Way Bill Number:</span> <span class="font-mono text-primary font-bold" id="ewbNoDisplay">--</span></div>
+              <div class="calc-row"><span>Validity Period:</span> <span id="ewbValidityDisplay">--</span></div>
+              <div class="calc-row"><span>Assigned Vehicle:</span> <span id="ewbVehicleDisplay">--</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GST Screen 7: Vendor Compliance & "ITC at Risk" Command Center -->
+    <section id="gstScreenVendorRisk" class="gst-screen-view hidden">
+      <div class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h3 class="card-title-text">Vendor Compliance & "ITC at Risk" Command Center</h3>
+            <p class="card-subtitle-text">Section 16(2)(aa) non-compliant supplier tracking, blocked credit aggregation, and automated payment withholding notices</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="loadVendorRiskLeaderboard()">Refresh Vendor Health</button>
+        </div>
+
+        <!-- Vendor Health Strip -->
+        <div class="recon-stats-grid mt-2">
+          <div class="recon-stat-card blue-tint">
+            <div class="recon-stat-val" id="vendorTotalTracked">3</div>
+            <div class="recon-stat-label">Vendors Monitored</div>
+          </div>
+          <div class="recon-stat-card red-tint">
+            <div class="recon-stat-val text-danger" id="vendorBlockedItcTotal">₹ 54,000</div>
+            <div class="recon-stat-label">Total ITC at Risk</div>
+          </div>
+          <div class="recon-stat-card orange-tint">
+            <div class="recon-stat-val" id="vendorHighRiskCount">1</div>
+            <div class="recon-stat-label">High Risk Defaulters</div>
+          </div>
+          <div class="recon-stat-card green-tint">
+            <div class="recon-stat-val" id="vendorHealthScore">67%</div>
+            <div class="recon-stat-label">Compliance Health</div>
+          </div>
+        </div>
+
+        <!-- Vendor Table -->
+        <div class="table-container mt-3">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Supplier Trade Name</th>
+                <th>Supplier GSTIN</th>
+                <th>Invoices Tracked</th>
+                <th>Missing in 2B</th>
+                <th>Total Purchases</th>
+                <th>ITC at Risk (₹)</th>
+                <th>Compliance %</th>
+                <th>Defaulter Risk</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="vendorRiskTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- GST Screen 8: Multi-GSTIN Pan-India Corporate Hub -->
+    <section id="gstScreenMultiGstin" class="gst-screen-view hidden">
+      <div class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h3 class="card-title-text">Multi-GSTIN Pan-India Corporate Compliance Hub</h3>
+            <p class="card-subtitle-text">Section 25 multi-branch aggregation under single 10-digit Corporate PAN</p>
+          </div>
+          <div class="flex-gap">
+            <input type="text" id="multiGstinPanInput" class="text-input" value="AAACB1234F" style="width: 150px;">
+            <button class="btn btn-primary btn-sm" onclick="loadMultiGstinSummary()">Aggregate PAN</button>
+          </div>
+        </div>
+
+        <!-- Multi-GSTIN Consolidated Metrics Strip -->
+        <div class="recon-stats-grid mt-2">
+          <div class="recon-stat-card blue-tint">
+            <div class="recon-stat-val" id="multiTotalGstins">5 States</div>
+            <div class="recon-stat-label">Registered Branches</div>
+          </div>
+          <div class="recon-stat-card green-tint">
+            <div class="recon-stat-val" id="multiPanTurnover">₹ 1.28 Cr</div>
+            <div class="recon-stat-label">Pan-India Turnover</div>
+          </div>
+          <div class="recon-stat-card orange-tint">
+            <div class="recon-stat-val" id="multiTotalTax">₹ 23.04 L</div>
+            <div class="recon-stat-label">Total Output Liability</div>
+          </div>
+          <div class="recon-stat-card green-tint">
+            <div class="recon-stat-val" id="multiComplianceRate">80%</div>
+            <div class="recon-stat-label">Filing Compliance Rate</div>
+          </div>
+        </div>
+
+        <div class="table-container mt-3">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>State & Jurisdiction</th>
+                <th>Branch GSTIN</th>
+                <th>GSTR-1 Status</th>
+                <th>GSTR-3B Status</th>
+                <th>GSTR-9 Status</th>
+                <th>Monthly Turnover</th>
+                <th>Output Tax</th>
+                <th>Eligible ITC</th>
+                <th>Net Cash Payable</th>
+              </tr>
+            </thead>
+            <tbody id="multiGstinTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- GST Screen 9: GSTR-9 Annual Return Auto-Consolidation -->
+    <section id="gstScreenGstr9" class="gst-screen-view hidden">
+      <div class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h3 class="card-title-text">GSTR-9 Annual Return Auto-Consolidation Engine</h3>
+            <p class="card-subtitle-text">Section 44 full-year consolidation of 12 monthly GSTR-1 and GSTR-3B returns into statutory Tables 4, 6, 8, and 9</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="runGstr9Consolidation()">Run Full-Year Consolidation</button>
+        </div>
+
+        <div id="gstr9TablesContainer" class="mt-2">
+          <div class="form-grid-2">
+            <!-- Table 4 -->
+            <div class="statutory-specs-card">
+              <h4 class="font-bold text-primary">Table 4: Outward Taxable Supplies</h4>
+              <p class="text-xs text-muted">Consolidated from 12 Monthly GSTR-1 Filings</p>
+              <div class="calc-row mt-2"><span>B2B Supplies Taxable:</span> <span id="gstr9T4B2b">₹ 34,00,000</span></div>
+              <div class="calc-row"><span>B2C Supplies Taxable:</span> <span id="gstr9T4B2c">₹ 8,00,000</span></div>
+              <div class="calc-row font-bold"><span>Total Annual Outward Turnover:</span> <span class="text-primary" id="gstr9T4Turnover">₹ 42,00,000</span></div>
+              <div class="calc-row"><span>Total Tax Payable:</span> <span id="gstr9T4Tax">₹ 7,56,000</span></div>
+            </div>
+
+            <!-- Table 6 & 8 -->
+            <div class="statutory-specs-card">
+              <h4 class="font-bold text-primary">Table 6 & 8: ITC Availed & 2A/2B Reconciliation</h4>
+              <p class="text-xs text-muted">Section 16 comparison against GST Portal Credit Ledger</p>
+              <div class="calc-row mt-2"><span>Total ITC Availed in GSTR-3B:</span> <span id="gstr9T6Availed">₹ 5,65,000</span></div>
+              <div class="calc-row"><span>Credit as per GSTR-2A / 2B:</span> <span id="gstr9T8Portal">₹ 5,82,000</span></div>
+              <div class="calc-row font-bold green-text"><span>Reconciliation Difference (Table 8D):</span> <span id="gstr9T8Diff">+ ₹ 17,000 (Surplus Available)</span></div>
+              <div class="text-xs text-muted mt-1">Status: No excess credit liability detected under Section 73.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GST Screen 10: GSP Live API Hub & Diagnostic Console (182 APIs) -->
+    <section id="gstScreenApiHub" class="gst-screen-view hidden">
+      <div class="form-card">
+        <div class="form-card-header">
+          <div class="header-left">
+            <div class="header-icon-circle blue-tint">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+              </svg>
+            </div>
+            <div>
+              <div class="card-title-row">
+                <h3 class="card-title-text">Statutory GSP API Console & Hub (182 Connected APIs)</h3>
+                <span class="status-chip success-chip">182 Endpoints Integrated</span>
+              </div>
+              <p class="card-subtitle-text">Connected GSTN Return Gateway APIs with live parameter dispatcher, error diagnosis, and statutory payload verification.</p>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btnRunBatchHealth" onclick="runBatchApiHealthCheck()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>Run Universal Health Check (182 APIs)</span>
+          </button>
+        </div>
+
+        <div class="form-card-body">
+          <!-- 4 Stat Summary Cards -->
+          <div class="recon-stats-grid">
+            <div class="recon-stat-card green-tint">
+              <div class="recon-stat-val text-success" id="apiStatWorking">--</div>
+              <div class="recon-stat-label">Operational (Working)</div>
+            </div>
+            <div class="recon-stat-card orange-tint">
+              <div class="recon-stat-val text-warning" id="apiStatPartial">--</div>
+              <div class="recon-stat-label">Partial Handlers</div>
+            </div>
+            <div class="recon-stat-card red-tint">
+              <div class="recon-stat-val text-danger" id="apiStatNotWorking">--</div>
+              <div class="recon-stat-label">Needs Attention (Documented Errors)</div>
+            </div>
+            <div class="recon-stat-card blue-tint">
+              <div class="recon-stat-val text-primary" id="apiStatNotTested">--</div>
+              <div class="recon-stat-label">Sandbox Mock Certified</div>
+            </div>
+          </div>
+
+          <!-- Interactive Live Inspector & Tester Box -->
+          <div class="api-inspector-box mt-3" style="background: #F8FAFC; border: 1px solid var(--border-light); border-radius: 12px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+              <div>
+                <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main);">Live API Dispatcher & Payload Inspector</h4>
+                <p class="text-xs text-muted">Test any of the 182 APIs against the live dispatcher engine and view real response bodies.</p>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <span class="status-chip info-chip" id="currentApiBadge">API #9: GSTR1 - Get B2B</span>
+                <button class="btn btn-success btn-sm" id="btnExecuteSelectedApi" onclick="testSelectedGspApi()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <span>Execute API Call</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Parameters Grid -->
+            <div class="form-grid-3">
+              <div>
+                <label class="field-label">Target API</label>
+                <select id="apiSelectDropdown" class="text-input" onchange="onSelectApiDropdown(this.value)">
+                  <!-- Options populated dynamically -->
+                </select>
+              </div>
+              <div>
+                <label class="field-label">Assessee GSTIN</label>
+                <input type="text" id="apiInputGstin" class="text-input font-mono" value="32ABCDE1234F1Z5">
+              </div>
+              <div>
+                <label class="field-label">Return Period (MMYYYY)</label>
+                <input type="text" id="apiInputPeriod" class="text-input font-mono" value="102026">
+              </div>
+            </div>
+
+            <!-- Live Output & Telemetry -->
+            <div style="margin-top: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Standard Response Payload</span>
+                <div style="display: flex; gap: 12px; font-size: 12px; font-family: var(--font-mono);">
+                  <span>HTTP Status: <strong id="apiResponseStatus" style="color: #059669;">200 OK</strong></span>
+                  <span>Execution Time: <strong id="apiResponseTime" class="text-primary">0 ms</strong></span>
+                </div>
+              </div>
+              <pre id="apiResponseJson" class="legal-draft-box" style="height: 240px; font-size: 12px; overflow-y: auto;">Select an API above and click "Execute API Call" to inspect live response.</pre>
+            </div>
+          </div>
+
+          <!-- Catalog Filter Bar -->
+          <div class="gst-filter-bar mt-3" style="margin-top: 24px;">
+            <div class="filter-col">
+              <label class="field-label">Filter by Return Group</label>
+              <select id="apiFilterGroup" class="text-input" onchange="filterApiTable()">
+                <option value="ALL">All Return Groups (182 APIs)</option>
+                <option value="Auth">Auth & Session (IDs 1-5)</option>
+                <option value="GSTR1">GSTR-1 Outward Supplies (IDs 6-35)</option>
+                <option value="GSTR1A">GSTR-1A Post-Cutoff Amendments (IDs 37-67)</option>
+                <option value="GSTR2A">GSTR-2A Dynamic Counterparty (IDs 68-79)</option>
+                <option value="IMS">Invoice Management System (IDs 80-87)</option>
+                <option value="GSTR2B">GSTR-2B Static Auto-Drafted ITC (IDs 88-90)</option>
+                <option value="GSTR3B">GSTR-3B Summary Return & Offset (IDs 91-105)</option>
+                <option value="GSTR4">GSTR-4 Composition Annual (IDs 106-114)</option>
+                <option value="GSTR6">GSTR-6 Input Service Distributor (IDs 115-129)</option>
+                <option value="GSTR7">GSTR-7 TDS Deductors (IDs 130-134)</option>
+                <option value="GSTR8">GSTR-8 E-Commerce TCS (IDs 135-140)</option>
+                <option value="GSTR9">GSTR-9 Annual Return (IDs 141-147)</option>
+                <option value="GSTR9C">GSTR-9C Reconciliation Statement (IDs 148-153)</option>
+                <option value="ITC01">ITC-01 Conversion Credit (IDs 154-160)</option>
+                <option value="ITC03">ITC-03 Exemption Reversal (IDs 161-166)</option>
+                <option value="ITC04">ITC-04 Job Work (IDs 167-171)</option>
+                <option value="CMP">CMP-08 Quarterly Challan (IDs 172-175)</option>
+                <option value="Public">Public Gateways & Taxpayer Search (IDs 176-182)</option>
+              </select>
+            </div>
+            <div class="filter-col">
+              <label class="field-label">Filter by Status</label>
+              <select id="apiFilterStatus" class="text-input" onchange="filterApiTable()">
+                <option value="ALL">All Operational Statuses</option>
+                <option value="working">Working / Operational</option>
+                <option value="not_working">Needs Attention (Not Working)</option>
+                <option value="partial">Partial Implementation</option>
+                <option value="not_tested">Sandbox Mock Certified</option>
+              </select>
+            </div>
+            <div class="filter-col" style="flex: 2;">
+              <label class="field-label">Search API Name / Keyword</label>
+              <input type="text" id="apiSearchQuery" class="text-input" placeholder="e.g. B2B, RCM, E-Invoices, OTP, Turnover..." oninput="filterApiTable()">
+            </div>
+          </div>
+
+          <!-- 182-Row Interactive Table -->
+          <div class="data-table-wrapper mt-2">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">ID</th>
+                  <th>Returns API</th>
+                  <th>Group</th>
+                  <th style="width: 70px;">Method</th>
+                  <th>Status</th>
+                  <th>Statutory Remarks / Edge Cases</th>
+                  <th style="width: 100px; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="apiTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- SUITE 4: STATUTORY NOTICE DEFENSE & SCRUTINY BOARD                        -->
+  <!-- ========================================================================= -->
+  <div id="viewNoticeSuite" class="app-suite-container hidden">
+    <div class="notice-hub-header">
+      <div class="hub-header-content">
+        <div class="hub-badge-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>Statutory ITD Representation & Notice Defense</span>
+        </div>
+        <h1 class="hub-title">Interactive Notice Defense & Scrutiny Board</h1>
+        <p class="hub-subtitle">Analyze Section 143(1) Intimations, 139(9) Defective Return Notices, and Section 148 Reassessments. Compute statutory discrepancy matrices and generate legal rectification drafts under Rule 37BA and Section 154.</p>
+      </div>
+      <div class="notice-quick-actions">
+        <button class="btn btn-primary" onclick="loadSampleSection143Notice()">Load Sample 143(1) Notice</button>
+      </div>
+    </div>
+
+    <!-- 4-Stage Interactive Pipeline -->
+    <div class="notice-pipeline-strip">
+      <div class="pipeline-step active" id="pipelineStep1">
+        <span class="step-num">1</span>
+        <span class="step-name">Notice Ingestion</span>
+      </div>
+      <div class="pipeline-step-arrow">→</div>
+      <div class="pipeline-step" id="pipelineStep2">
+        <span class="step-num">2</span>
+        <span class="step-name">Discrepancy Matrix</span>
+      </div>
+      <div class="pipeline-step-arrow">→</div>
+      <div class="pipeline-step" id="pipelineStep3">
+        <span class="step-num">3</span>
+        <span class="step-name">Statutory Reply Draft</span>
+      </div>
+      <div class="pipeline-step-arrow">→</div>
+      <div class="pipeline-step" id="pipelineStep4">
+        <span class="step-num">4</span>
+        <span class="step-name">Simulated ITD Filing</span>
+      </div>
+    </div>
+
+    <!-- Notice Ingestion Card -->
+    <div class="form-card mt-3">
+      <div class="form-card-header">
+        <div>
+          <h3 class="card-title-text">Stage 1: Notice Parameters & Order Identification</h3>
+          <p class="card-subtitle-text">Enter the Document Identification Number (DIN) and Section from your ITD notice</p>
+        </div>
+        <span class="status-chip success-chip">Live Parser Ready</span>
+      </div>
+      <div class="form-card-body">
+        <div class="form-grid-4">
+          <div class="input-field-group">
+            <label class="field-label">Notice DIN / Order Number *</label>
+            <input type="text" id="noticeInputDin" class="text-input" value="CPC/2526/89401283" placeholder="e.g. CPC/2526/89401283">
+          </div>
+          <div class="input-field-group">
+            <label class="field-label">Statutory Section *</label>
+            <select id="noticeInputSection" class="text-input">
+              <option value="143(1)">Section 143(1) - Summary Intimation (Variance/Demand)</option>
+              <option value="139(9)">Section 139(9) - Defective Return Notice</option>
+              <option value="148">Section 148 - Income Escaping Assessment</option>
+              <option value="154">Section 154 - Rectification Application</option>
+            </select>
+          </div>
+          <div class="input-field-group">
+            <label class="field-label">Assessment Year *</label>
+            <select id="noticeInputAy" class="text-input">
+              <option value="2025-26" selected>AY 2025-26</option>
+              <option value="2024-25">AY 2024-25</option>
+              <option value="2026-27">AY 2026-27</option>
+            </select>
+          </div>
+          <div class="input-field-group">
+            <label class="field-label">Assessee PAN *</label>
+            <input type="text" id="noticeInputPan" class="text-input" value="CVBBC4433W">
+          </div>
+        </div>
+        <div class="mt-3 flex-gap">
+          <button class="btn btn-primary" onclick="runNoticeDiscrepancyAnalysis()">Run Discrepancy & Variance Analysis</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notice Discrepancy Matrix & Statutory Legal Draft (Stage 2 & 3) -->
+    <div id="noticeAnalysisResultContainer" class="hidden mt-3">
+      <!-- Stage 2: Discrepancy Matrix -->
+      <div class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h3 class="card-title-text">Stage 2: Statutory Discrepancy & Variance Matrix</h3>
+            <p class="card-subtitle-text">Automated diff between As Filed Return vs CPC Computerized Computation</p>
+          </div>
+          <div id="noticeVarianceBadge" class="status-chip danger-chip">Variance Detected</div>
+        </div>
+        <div class="table-container mt-2">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Income / Deduction Head</th>
+                <th>As Filed in Return (₹)</th>
+                <th>As Computed by CPC (₹)</th>
+                <th>Discrepancy Variance (₹)</th>
+                <th>Statutory Reason & Notes</th>
+              </tr>
+            </thead>
+            <tbody id="noticeVarianceTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Stage 3 & 4: Statutory Legal Reply Draft & Simulated Submission -->
+      <div class="form-grid-2 mt-3">
+        <!-- Legal Reply Draft -->
+        <div class="form-card">
+          <div class="form-card-header">
+            <div>
+              <h3 class="card-title-text">Stage 3: Legal Objection & Rectification Draft</h3>
+              <p class="card-subtitle-text">Statutory representation citing Rule 37BA, Section 199, and Section 205</p>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="copyNoticeDraftText()">Copy Reply</button>
+          </div>
+          <div class="form-card-body">
+            <textarea id="noticeDraftReplyText" class="text-input font-mono" rows="14" style="font-size: 13px; line-height: 1.5;"></textarea>
+            <div class="flex-gap mt-3">
+              <button class="btn btn-outline btn-sm" onclick="downloadNoticeDraftFile()">Download Reply (.txt)</button>
+              <button class="btn btn-primary btn-sm" onclick="submitSimulatedNoticeReply()">Submit Objection to ITD Portal</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulated ITD Submission Receipt -->
+        <div class="form-card">
+          <div class="form-card-header">
+            <div>
+              <h3 class="card-title-text">Stage 4: Filing Status & Official Acknowledgement</h3>
+              <p class="card-subtitle-text">Simulated CBDT e-Filing submission token & tracking</p>
+            </div>
+            <span class="status-chip success-chip" id="noticeAckStatusChip">Ready to Submit</span>
+          </div>
+          <div class="form-card-body" id="noticeAckContainer">
+            <div class="info-note-box">
+              <strong>Simulated ITD Workflow:</strong> Submitting will record your objection on the simulated e-Filing portal, issue a Document Reference Token, and file a rectification petition u/s 154.
+            </div>
+            <div class="statutory-specs-card mt-3">
+              <div class="calc-row"><span>Target Jurisdiction:</span> <span>CPC Bengaluru / Ward 1(1)</span></div>
+              <div class="calc-row"><span>Notice DIN:</span> <span id="ackDinDisplay">CPC/2526/89401283</span></div>
+              <div class="calc-row"><span>Assessee:</span> <span>Sanjay Harshi (CVBBC4433W)</span></div>
+              <div class="calc-row"><span>Disputed Demand:</span> <span class="text-danger font-bold" id="ackDemandDisplay">₹ 25,000.00</span></div>
+            </div>
+            <div id="noticeSubmissionSuccessBox" class="filing-success-box hidden mt-3">
+              <!-- Dynamically populated after submission -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- SUITE 5: IN-APP TAX DOCUMENT VAULT                                        -->
+  <!-- ========================================================================= -->
+  <div id="viewVaultSuite" class="app-suite-container hidden">
+    <div class="vault-hub-header">
+      <div class="hub-header-content">
+        <div class="hub-badge-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <span>Encrypted Tax Records Repository</span>
+        </div>
+        <h1 class="hub-title">In-App Tax Document Vault</h1>
+        <p class="hub-subtitle">Centralized storage for Form 16, AIS/TIS, Form 26AS, Broker Reports, and ITR Acknowledgements with statutory verification status.</p>
+      </div>
+      <div class="vault-header-actions">
+        <button class="btn btn-primary" onclick="openVaultUploadModal()">+ Upload New Document</button>
+      </div>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div class="vault-filter-tabs mt-3">
+      <button class="vault-tab-pill active" onclick="filterVaultDocs('all', this)">All Documents</button>
+      <button class="vault-tab-pill" onclick="filterVaultDocs('form16', this)">Form 16 / Salary</button>
+      <button class="vault-tab-pill" onclick="filterVaultDocs('ais', this)">AIS / TIS Statement</button>
+      <button class="vault-tab-pill" onclick="filterVaultDocs('26as', this)">Form 26AS (TDS)</button>
+      <button class="vault-tab-pill" onclick="filterVaultDocs('broker', this)">Broker P&L Reports</button>
+      <button class="vault-tab-pill" onclick="filterVaultDocs('itrv', this)">ITR-V Acknowledgement</button>
+    </div>
+
+    <!-- Document Grid / Table -->
+    <div class="form-card mt-3">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Document Title & Filename</th>
+              <th>Category</th>
+              <th>Assessment Year</th>
+              <th>File Size</th>
+              <th>Uploaded Date</th>
+              <th>Verification Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="vaultTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODALS & DRAWERS (Matching Screenshots & Complete Experience)             -->
+  <!-- ========================================================================= -->
+
+  <!-- Modal 1: Salary Income Input Modal -->
+  <div class="modal-overlay hidden" id="modalSalary">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Enter Salary Income Details</h3>
+        <button class="modal-close" onclick="closeModal('modalSalary')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-field-group">
+          <label class="field-label">Employer Name</label>
+          <input type="text" class="text-input" id="salaryEmployerName" value="Infosys BPM Limited">
+        </div>
+        <div class="input-field-group mt-2">
+          <label class="field-label">Gross Salary as per Section 17(1) (₹) *</label>
+          <input type="number" class="text-input" id="salaryGrossAmount" value="1200000" oninput="recalcSalaryModal()">
+        </div>
+        <div class="input-field-group mt-2">
+          <label class="field-label">Exempt Allowances (HRA, LTA etc.) u/s 10 (₹)</label>
+          <input type="number" class="text-input" id="salaryAllowances" value="0" oninput="recalcSalaryModal()">
+        </div>
+        <div class="info-note-box mt-2">
+          <strong>Standard Deduction:</strong> Automatically applied (₹75,000 under New Regime for AY 2025-26/2026-27 or ₹50,000 under Old Regime).
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalSalary')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSalaryIncome()">Save Salary Details</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Deductions Input Modal -->
+  <div class="modal-overlay hidden" id="modalDeductions">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Tax Savings & Chapter VI-A Deductions</h3>
+        <button class="modal-close" onclick="closeModal('modalDeductions')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-field-group">
+          <label class="field-label">Section 80C (PPF, ELSS, EPF, LIC) - Max ₹1,50,000</label>
+          <input type="number" class="text-input" id="dedSec80C" value="150000">
+        </div>
+        <div class="input-field-group mt-2">
+          <label class="field-label">Section 80D (Health Insurance Premium) - Max ₹50,000</label>
+          <input type="number" class="text-input" id="dedSec80D" value="25000">
+        </div>
+        <div class="input-field-group mt-2">
+          <label class="field-label">Section 80CCD(1B) (NPS Voluntary Contribution)</label>
+          <input type="number" class="text-input" id="dedSec80CCD" value="50000">
+        </div>
+        <p class="text-sm text-muted mt-2">Note: Chapter VI-A deductions are considered when opting for Old Tax Regime.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalDeductions')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveDeductions()">Save Deductions</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Taxes Paid Modal -->
+  <div class="modal-overlay hidden" id="modalTds">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Taxes Paid, TDS & Advance Tax</h3>
+        <button class="modal-close" onclick="closeModal('modalTds')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-field-group">
+          <label class="field-label">TDS on Salary (Form 16) (₹)</label>
+          <input type="number" class="text-input" id="tdsSalary" value="95000">
+        </div>
+        <div class="input-field-group mt-2">
+          <label class="field-label">TDS on Other Income / Bank Interest (Form 16A) (₹)</label>
+          <input type="number" class="text-input" id="tdsOther" value="5000">
+        </div>
+        <div class="input-field-group mt-2">
+          <label class="field-label">Advance Tax / Self Assessment Tax Paid (₹)</label>
+          <input type="number" class="text-input" id="advanceTaxPaid" value="0">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalTds')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTdsDetails()">Save Taxes Paid</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Compare Regimes Modal (Screenshots 7, 8) -->
+  <div class="modal-overlay hidden" id="modalCompareRegime">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Compare Tax Regimes (New vs Old)</h3>
+        <button class="modal-close" onclick="closeModal('modalCompareRegime')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="regime-compare-grid" id="regimeCompareContent">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalCompareRegime')">Close</button>
+        <button class="btn btn-primary" id="btnSelectRecommendedRegime" onclick="selectRecommendedRegime()">Apply Recommended Regime</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Filing & EVC OTP Modal -->
+  <div class="modal-overlay hidden" id="modalFilingOtp">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="filingModalTitle">E-File Return (Sandbox Simulation)</h3>
+        <button class="modal-close" onclick="closeModal('modalFilingOtp')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-note-box">
+          <strong id="filingTargetText">Filing ITR-1 Sahaj for PAN: CVBBC4433W</strong>
+          <div>Sandboxed filing simulator. Verified against statutory schemas.</div>
+        </div>
+
+        <div class="input-field-group mt-3">
+          <label class="field-label">Enter 6-Digit OTP (EVC Verification Code)</label>
+          <div class="otp-input-row">
+            <input type="text" class="text-input otp-digit-box" maxlength="6" id="filingOtpInput" value="654321" placeholder="654321">
+            <button class="btn btn-outline btn-sm" onclick="resendSimulatedOtp()">Resend OTP</button>
+          </div>
+          <p class="field-hint-text">Simulated OTP sent to registered mobile ending in <strong>3210</strong></p>
+        </div>
+
+        <div class="consent-checkbox-row mt-3">
+          <input type="checkbox" id="filingConsentCheck" checked>
+          <label for="filingConsentCheck" class="text-sm">
+            I solemnly declare that to the best of my knowledge and belief, the information given in the return is correct and complete.
+          </label>
+        </div>
+
+        <div id="filingSuccessResult" class="filing-success-box hidden mt-3">
+          <!-- Filled dynamically upon filing -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalFilingOtp')">Cancel</button>
+        <button class="btn btn-primary" id="btnConfirmFiling" onclick="confirmFilingOtpAction()">Verify OTP & File Return</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer: Customer Support & Live Help -->
+  <div class="drawer-overlay hidden" id="drawerSupport" onclick="closeSupportDrawer(event)">
+    <div class="drawer-panel" onclick="event.stopPropagation()">
+      <div class="drawer-header">
+        <div>
+          <h3 class="drawer-title">Customer Support</h3>
+          <p class="card-subtitle-text">AI and Human Tax Specialist Assistance</p>
+        </div>
+        <button class="modal-close" onclick="closeSupportDrawer()">&times;</button>
+      </div>
+      <div class="drawer-body">
+        <div class="chat-messages-container" id="chatMessages">
+          <div class="chat-msg bot-msg">
+            <div class="chat-bubble">Hello! I am your SimpleGST tax assistant. I can guide you through ITR filing, deductions u/s 80C, choosing between Old & New regimes, or resolving any section errors. How can I help you today?</div>
+          </div>
+        </div>
+        <div class="quick-questions-row">
+          <button class="quick-chip" onclick="askQuickHelp('Which regime is better for me?')">Which regime is better?</button>
+          <button class="quick-chip" onclick="askQuickHelp('How to fix the mobile number error?')">Fix mobile number</button>
+          <button class="quick-chip" onclick="askQuickHelp('What is the standard deduction for AY 2025-26?')">Standard deduction</button>
+        </div>
+      </div>
+      <div class="drawer-footer">
+        <div class="chat-input-row">
+          <input type="text" class="text-input" id="chatInput" placeholder="Type your tax query..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+          <button class="btn btn-primary" onclick="sendChatMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Expert Booking & Consultation Modal -->
+  <div class="modal-overlay hidden" id="modalBookExpert">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="bookExpertModalTitle">Book Chartered Accountant Consultation</h3>
+        <button class="modal-close" onclick="closeModal('modalBookExpert')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-note-box">
+          <strong id="bookSelectedPlanName">Salaried & Multi-Form 16 Tax Filing</strong>
+          <div class="text-xs mt-1">Guaranteed 24hr filing turnaround with notice defense protection.</div>
+        </div>
+
+        <div class="form-grid-2 mt-3">
+          <div class="input-field-group">
+            <label class="field-label">Full Name *</label>
+            <input type="text" class="text-input" id="bookClientName" value="Sanjay Harshi">
+          </div>
+          <div class="input-field-group">
+            <label class="field-label">Assessee PAN *</label>
+            <input type="text" class="text-input" id="bookClientPan" value="CVBBC4433W">
+          </div>
+        </div>
+
+        <div class="form-grid-2 mt-2">
+          <div class="input-field-group">
+            <label class="field-label">Mobile Number *</label>
+            <input type="text" class="text-input" id="bookClientPhone" value="9876543210">
+          </div>
+          <div class="input-field-group">
+            <label class="field-label">Preferred Time Slot *</label>
+            <select class="text-input" id="bookSlotSelect">
+              <option value="Today at 03:00 PM (IST)">Today at 03:00 PM (IST)</option>
+              <option value="Today at 05:30 PM (IST)">Today at 05:30 PM (IST)</option>
+              <option value="Tomorrow at 11:00 AM (IST)">Tomorrow at 11:00 AM (IST)</option>
+              <option value="Tomorrow at 04:00 PM (IST)">Tomorrow at 04:00 PM (IST)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Promo Code Box -->
+        <div class="promo-box-row mt-3">
+          <input type="text" class="text-input" id="bookCouponInput" value="TAXHERO65" placeholder="Enter coupon code...">
+          <button class="btn btn-outline btn-sm" onclick="applyBookingCoupon()">Apply</button>
+        </div>
+        <div class="text-xs text-muted mt-1" id="bookCouponFeedback">Code <strong>TAXHERO65</strong> applied! 65% Instant Discount.</div>
+
+        <!-- Pricing Summary -->
+        <div class="pricing-summary-card mt-3">
+          <div class="calc-row"><span>Plan Advisory Fee:</span> <span id="bookBasePriceText">₹ 2,499</span></div>
+          <div class="calc-row green-text"><span>Special Discount (65%):</span> <span id="bookDiscountText">- ₹ 1,500</span></div>
+          <div class="calc-row font-bold highlight-refund"><span>Total Payable:</span> <span class="green-text" id="bookFinalPriceText">₹ 999</span></div>
+        </div>
+
+        <div id="bookingConfirmationResult" class="filing-success-box hidden mt-3">
+          <!-- Filled upon confirmation -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalBookExpert')">Cancel</button>
+        <button class="btn btn-primary" id="btnConfirmBooking" onclick="submitExpertBooking()">Confirm & Schedule Call</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Broker Tax P&L Statement Parser Modal -->
+  <div class="modal-overlay hidden" id="modalBrokerPnl">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Broker Tax P&L Parser (Zerodha, Groww, Upstox)</h3>
+        <button class="modal-close" onclick="closeModal('modalBrokerPnl')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-note-box">
+          <strong>Finance Act 2024 Compliance:</strong> Listed equity STCG is computed @ 20% (holding &lt; 12 months) and LTCG @ 12.5% (holding &ge; 12 months) with the enhanced Section 112A ₹1,25,000 exemption limit.
+        </div>
+
+        <div class="upload-dropzone mt-3" id="brokerDropzone" onclick="document.getElementById('brokerCsvInput').click()">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <div class="mt-1 font-semibold">Drop Broker Trade CSV or Click to Browse</div>
+          <div class="text-muted text-sm">Supports Zerodha, Groww, Upstox trade reports</div>
+          <input type="file" id="brokerCsvInput" accept=".csv,.txt" class="hidden" onchange="handleBrokerCsvChosen(event)">
+        </div>
+
+        <div class="flex-gap mt-2">
+          <button class="btn btn-outline btn-sm" onclick="loadSampleBrokerTradesDemo()">Load Sample Trades (5 Trades)</button>
+        </div>
+
+        <!-- Broker Computation Results Card -->
+        <div id="brokerResultsBox" class="hidden mt-3">
+          <div class="broker-summary-grid">
+            <div class="recon-stat-card orange-tint">
+              <div class="recon-stat-val" id="brokerStcgVal">₹ 0.00</div>
+              <div class="recon-stat-label">STCG (Taxable @ 20%)</div>
+            </div>
+            <div class="recon-stat-card blue-tint">
+              <div class="recon-stat-val" id="brokerLtcgVal">₹ 0.00</div>
+              <div class="recon-stat-label">LTCG (Taxable @ 12.5%)</div>
+            </div>
+            <div class="recon-stat-card green-tint">
+              <div class="recon-stat-val" id="brokerExemptionVal">₹ 1,25,000</div>
+              <div class="recon-stat-label">Sec 112A Exemption Applied</div>
+            </div>
+            <div class="recon-stat-card green-tint">
+              <div class="recon-stat-val font-bold green-text" id="brokerTotalTaxableVal">₹ 0.00</div>
+              <div class="recon-stat-label">Total Net Capital Gains</div>
+            </div>
+          </div>
+
+          <div class="table-container mt-3">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Buy Date</th>
+                  <th>Sell Date</th>
+                  <th>Qty</th>
+                  <th>Buy Price</th>
+                  <th>Sell Price</th>
+                  <th>Gain / Loss (₹)</th>
+                  <th>Classification</th>
+                  <th>Tax Rate</th>
+                </tr>
+              </thead>
+              <tbody id="brokerTradesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalBrokerPnl')">Cancel</button>
+        <button class="btn btn-primary" id="btnApplyBrokerGains" onclick="applyBrokerGainsToReturn()" disabled>Apply Gains to Tax Return</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 8: Upload Document to Vault Modal -->
+  <div class="modal-overlay hidden" id="modalVaultUpload">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Upload Document to Tax Vault</h3>
+        <button class="modal-close" onclick="closeModal('modalVaultUpload')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-field-group">
+          <label class="field-label">Document Category *</label>
+          <select id="vaultInputCategory" class="text-input">
+            <option value="form16">Form 16 (Salary Certificate)</option>
+            <option value="ais">Annual Information Statement (AIS/TIS)</option>
+            <option value="26as">Form 26AS (TDS Statement)</option>
+            <option value="broker">Broker Tax P&L Statement</option>
+            <option value="itrv">ITR-V Acknowledgement</option>
+            <option value="other">Other Supporting Tax Document</option>
+          </select>
+        </div>
+        <div class="input-field-group mt-2">
+          <label class="field-label">Document Title *</label>
+          <input type="text" id="vaultInputTitle" class="text-input" placeholder="e.g. Form 16 - Infosys FY 2024-25">
+        </div>
+        <div class="form-grid-2 mt-2">
+          <div class="input-field-group">
+            <label class="field-label">Assessment Year</label>
+            <select id="vaultInputAy" class="text-input">
+              <option value="2025-26" selected>AY 2025-26</option>
+              <option value="2024-25">AY 2024-25</option>
+              <option value="2026-27">AY 2026-27</option>
+            </select>
+          </div>
+          <div class="input-field-group">
+            <label class="field-label">PAN</label>
+            <input type="text" id="vaultInputPan" class="text-input" value="CVBBC4433W">
+          </div>
+        </div>
+        <div class="upload-dropzone mt-3" onclick="document.getElementById('vaultFileInput').click()">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0F67FE" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <div class="mt-1 font-semibold" id="vaultFileDropText">Drop PDF/Excel/JSON or Click to Browse</div>
+          <input type="file" id="vaultFileInput" accept=".pdf,.json,.xlsx,.csv" class="hidden" onchange="handleVaultFileSelected(event)">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalVaultUpload')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitVaultUpload()">Save to Vault</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 9: Tax Loss Harvesting & Loss Set-Off Modal -->
+  <div class="modal-overlay hidden" id="modalTaxLossHarvesting">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Capital Gains Tax Loss Harvesting & Loss Set-Off Optimizer</h3>
+        <button class="modal-close" onclick="closeModal('modalTaxLossHarvesting')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-note-box">
+          <strong>Sections 70, 71 & 74 Compliance:</strong> STCL can be set off against STCG & LTCG; LTCL can only be set off against LTCG. Unabsorbed losses carry forward up to 8 Assessment Years.
+        </div>
+
+        <div class="recon-stats-grid mt-3">
+          <div class="recon-stat-card orange-tint">
+            <div class="recon-stat-val" id="tlhCurrentTax">₹ 13,125</div>
+            <div class="recon-stat-label">Current Tax Liability</div>
+          </div>
+          <div class="recon-stat-card green-tint">
+            <div class="recon-stat-val green-text font-bold" id="tlhPotentialSaved">₹ 6,905</div>
+            <div class="recon-stat-label">Potential Tax Saved</div>
+          </div>
+          <div class="recon-stat-card blue-tint">
+            <div class="recon-stat-val" id="tlhHarvestableLoss">₹ 36,400</div>
+            <div class="recon-stat-label">Unrealized Loss Identified</div>
+          </div>
+          <div class="recon-stat-card green-tint">
+            <div class="recon-stat-val" id="tlhOptimizedTax">₹ 6,220</div>
+            <div class="recon-stat-label">Optimized Tax Liability</div>
+          </div>
+        </div>
+
+        <!-- Harvesting Recommendations Table -->
+        <h4 class="font-bold text-primary mt-3">Recommended Year-End Loss Realization (Before March 31)</h4>
+        <div class="table-container mt-1">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Holding Scrip</th>
+                <th>Quantity</th>
+                <th>Loss to Harvest</th>
+                <th>Classification</th>
+                <th>Statutory Offset Scope</th>
+              </tr>
+            </thead>
+            <tbody id="tlhHoldingsTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-2 text-xs text-muted">
+          * Selling underperforming assets before March 31 allows offsetting realized profits under Section 70.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalTaxLossHarvesting')">Close</button>
+        <button class="btn btn-primary" onclick="applyHarvestedTaxPlan()">Apply Loss Offset to Tax Summary</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 10: E-Way Bill Part-B Vehicle Update Modal -->
+  <div class="modal-overlay hidden" id="modalUpdatePartB">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Update Part-B Vehicle (E-Way Bill)</h3>
+        <button class="modal-close" onclick="closeModal('modalUpdatePartB')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-field-group">
+          <label class="field-label">E-Way Bill Number *</label>
+          <input type="text" id="updateEwbNo" class="text-input" value="241088859439">
+        </div>
+        <div class="input-field-group mt-2">
+          <label class="field-label">New Vehicle Number *</label>
+          <input type="text" id="updateNewVehicle" class="text-input" placeholder="e.g. MH12CD5678">
+        </div>
+        <div class="input-field-group mt-2">
+          <label class="field-label">From Place / Transit Hub *</label>
+          <input type="text" id="updateFromPlace" class="text-input" value="Bengaluru Logistics Park">
+        </div>
+        <div class="input-field-group mt-2">
+          <label class="field-label">Reason for Vehicle Change</label>
+          <select id="updateReasonCode" class="text-input">
+            <option value="1">Transshipment (Regular transit change)</option>
+            <option value="2">Vehicle Breakdown</option>
+            <option value="3">Consignment Split / Multi-vehicle</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalUpdatePartB')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitUpdatePartBVehicle()">Update Vehicle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 11: Vendor Payment Withholding Notice Modal -->
+  <div class="modal-overlay hidden" id="modalWithholdingNotice">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Section 16(2)(aa) Statutory Payment Withholding Notice</h3>
+        <button class="modal-close" onclick="closeModal('modalWithholdingNotice')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-note-box">
+          <strong>Section 16(2)(aa) / Section 41:</strong> Input Tax Credit cannot be claimed unless the supplier has furnished the tax invoice in Form GSTR-1 and reflected in buyer's GSTR-2B.
+        </div>
+        <textarea id="withholdingNoticeText" class="text-input font-mono mt-3" rows="12" style="font-size: 13px; line-height: 1.5;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalWithholdingNotice')">Close</button>
+        <button class="btn btn-outline" onclick="copyWithholdingNoticeText()">Copy Notice</button>
+        <button class="btn btn-primary" id="btnShareNoticeWhatsapp" onclick="shareNoticeWhatsapp()">Send Notice via WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 12: Interactive Sign In & Registration Modal -->
+  <div class="modal-overlay hidden" id="modalAuth">
+    <div class="modal-dialog modal-dialog-md" style="max-width: 480px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="authModalTitle">Sign In to SimpleGST</h3>
+          <p class="text-xs text-muted" id="authModalSubtitle">Secure access to your tax returns, GSTR filings, and compliance vault</p>
+        </div>
+        <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Segmented Tab Switcher: Sign In vs Create Account -->
+        <div style="display: flex; background: #F1F5F9; padding: 4px; border-radius: 9999px; margin-bottom: 20px;">
+          <button type="button" id="tabAuthSignIn" class="btn btn-sm" style="flex: 1; border-radius: 9999px; font-weight: 700; background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.08); color: var(--primary-blue);" onclick="switchAuthTab('signin')">
+            Sign In
+          </button>
+          <button type="button" id="tabAuthRegister" class="btn btn-sm" style="flex: 1; border-radius: 9999px; font-weight: 600; background: transparent; color: var(--text-muted); border: none;" onclick="switchAuthTab('register')">
+            Create Account
+          </button>
+        </div>
+
+        <!-- Form 1: Sign In -->
+        <form id="formSignIn" onsubmit="handleSignInSubmit(event)">
+          <div class="input-field-group">
+            <label class="field-label">Email, PAN or Mobile</label>
+            <input type="text" id="loginIdentifier" class="text-input" placeholder="e.g. CVBBC4433W or sanjay@example.com" value="CVBBC4433W" required>
+          </div>
+          <div class="input-field-group mt-3">
+            <label class="field-label" style="display: flex; justify-content: space-between;">
+              <span>Password / Access PIN</span>
+              <a href="#" class="text-xs text-primary" onclick="alert('Demo reset instructions sent to registered mobile/email.'); return false;">Forgot?</a>
+            </label>
+            <input type="password" id="loginPassword" class="text-input" placeholder="••••••••" value="demo1234" required>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-body); cursor: pointer;">
+              <input type="checkbox" id="loginRememberMe" checked>
+              <span>Keep me signed in</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block mt-3" style="padding: 12px; font-size: 15px; font-weight: 600;">
+            Sign In to Account
+          </button>
+
+          <div style="position: relative; text-align: center; margin: 18px 0;">
+            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--border-subtle); z-index: 1;"></div>
+            <span style="position: relative; z-index: 2; background: var(--white); padding: 0 10px; font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Quick Sign In</span>
+          </div>
+
+          <button type="button" class="btn btn-outline btn-block" style="border-style: dashed;" onclick="quickDemoLogin()">
+            ⚡ One-Click Login as Sanjay Harshi (CVBBC4433W)
+          </button>
+        </form>
+
+        <!-- Form 2: Register (New Sign In) -->
+        <form id="formRegister" class="hidden" onsubmit="handleRegisterSubmit(event)">
+          <div class="input-field-group">
+            <label class="field-label">Full Legal Name (as per PAN) <span class="text-danger">*</span></label>
+            <input type="text" id="regFullName" class="text-input" placeholder="e.g. Sanjay Harshi" required>
+          </div>
+          <div class="input-field-group mt-2">
+            <label class="field-label">Permanent Account Number (PAN) <span class="text-danger">*</span></label>
+            <input type="text" id="regPan" class="text-input font-mono" placeholder="e.g. ABCDE1234F" maxlength="10" oninput="onRegisterPanInput(this.value)" required>
+            <div id="regPanFeedback" class="text-xs text-muted mt-1">Tier 1 regex: 5 letters, 4 digits, 1 letter.</div>
+          </div>
+          <div class="form-grid-2 mt-2">
+            <div class="input-field-group">
+              <label class="field-label">Mobile Number <span class="text-danger">*</span></label>
+              <input type="tel" id="regMobile" class="text-input font-mono" placeholder="9876543210" maxlength="10" required>
+            </div>
+            <div class="input-field-group">
+              <label class="field-label">Email Address <span class="text-danger">*</span></label>
+              <input type="email" id="regEmail" class="text-input" placeholder="name@domain.com" required>
+            </div>
+          </div>
+          <div class="input-field-group mt-2">
+            <label class="field-label">Create Password <span class="text-danger">*</span></label>
+            <input type="password" id="regPassword" class="text-input" placeholder="At least 6 characters" minlength="6" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block mt-3" style="padding: 12px; font-size: 15px; font-weight: 600;">
+            Create Account & Start Filing
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statutory Compliance Footer -->
+  <footer class="statutory-footer text-xs text-muted" style="text-align: center; padding: 24px 10px; border-top: 1px solid var(--border-subtle); margin-top: 40px;">
+    Notice: Advisory files. Statutory GSTN and Income Tax compliance platform. Not official GST portal or income tax portal files.
+  </footer>
+
+  <!-- Toast Notification Container for Micro-Interactions -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
