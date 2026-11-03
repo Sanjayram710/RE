@@ -94,33 +94,34 @@ function readBody(req) {
 }
 
 export async function handleRequest(req, res) {
-  // Seamless URL resolution across local Node and Vercel Serverless
-  let requestPath = req.url || "/";
-  const vercelOriginal = req.headers["x-vercel-original-path"] || req.headers["x-matched-path"] || req.headers["x-forwarded-uri"] || req.headers["x-original-url"];
-  if (vercelOriginal && !vercelOriginal.endsWith("index.js")) {
-    requestPath = vercelOriginal;
-  } else if (req.query && req.query.path) {
-    const slug = Array.isArray(req.query.path) ? req.query.path.join("/") : req.query.path;
-    requestPath = `/api/${slug}`;
-  }
+  try {
+    // Seamless URL resolution across local Node and Vercel Serverless
+    let requestPath = req.url || "/";
+    const vercelOriginal = req.headers["x-vercel-original-path"] || req.headers["x-matched-path"] || req.headers["x-forwarded-uri"] || req.headers["x-original-url"];
+    if (vercelOriginal && !vercelOriginal.endsWith("index.js")) {
+      requestPath = vercelOriginal;
+    } else if (req.query && req.query.path) {
+      const slug = Array.isArray(req.query.path) ? req.query.path.join("/") : req.query.path;
+      requestPath = `/api/${slug}`;
+    }
 
-  const parsedUrl = new URL(requestPath, `http://${req.headers.host || "localhost"}`);
-  let pathname = parsedUrl.pathname;
-  if (pathname === "/api/index.js" || pathname === "/api/index") {
-    pathname = "/api";
-  }
-  const method = req.method;
+    const parsedUrl = new URL(requestPath, `http://${req.headers.host || "localhost"}`);
+    let pathname = parsedUrl.pathname;
+    if (pathname === "/api/index.js" || pathname === "/api/index") {
+      pathname = "/api";
+    }
+    const method = req.method;
 
-  // Enable CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, client-id");
+    // Enable CORS
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, client-id");
 
-  if (method === "OPTIONS") {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
+    if (method === "OPTIONS") {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
 
     // ---------------------------------------------------------
     // 1. GET /api/mode
@@ -839,6 +840,16 @@ export async function handleRequest(req, res) {
       res.end("Server Error: " + err.message);
       return;
     }
+  } catch (err) {
+    console.error("[SimpleGST Request Handler Error]:", err);
+    if (!res.headersSent) {
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({
+        error: "Internal Server Error",
+        message: err.message
+      }));
+    }
+  }
 }
 
 export function createServer() {
@@ -871,8 +882,9 @@ function escapeXmlVal(str) {
     .replace(/'/g, "&apos;");
 }
 
-// Start server if executed directly
-if (process.argv[1] && process.argv[1].endsWith("server.js")) {
+// Start server if executed directly (and not in a serverless environment like Vercel)
+const isVercelEnv = Boolean(process.env.VERCEL || process.env.NOW_REGION || process.env.AWS_LAMBDA_FUNCTION_NAME);
+if (!isVercelEnv && process.argv[1] && process.argv[1].endsWith("server.js")) {
   const server = createServer();
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {
