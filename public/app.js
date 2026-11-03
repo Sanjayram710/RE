@@ -82,6 +82,25 @@ const appState = {
 };
 
 // ============================================================================
+// Micro-interaction Feedback: Non-intrusive Toast Notifications
+// ============================================================================
+function showToast(message, type = "info") {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+  const pill = document.createElement("div");
+  pill.className = `toast-pill ${type === "success" ? "toast-success" : ""}`;
+  const icon = type === "success" ? "✓ " : "ℹ ";
+  pill.textContent = icon + message.replace(/[\r\n]+/g, " ");
+  container.appendChild(pill);
+  setTimeout(() => {
+    pill.style.opacity = "0";
+    pill.style.transform = "translateY(12px) scale(0.95)";
+    pill.style.transition = "all 0.25s ease";
+    setTimeout(() => pill.remove(), 260);
+  }, 3200);
+}
+
+// ============================================================================
 // Initialization
 // ============================================================================
 document.addEventListener("DOMContentLoaded", async () => {
@@ -1850,9 +1869,9 @@ function copyNoticeDraftText() {
   const text = document.getElementById("noticeDraftReplyText")?.value;
   if (!text) return;
   navigator.clipboard.writeText(text).then(() => {
-    alert("✓ Statutory Legal Objection draft copied to clipboard!");
+    showToast("Statutory Legal Objection draft copied to clipboard!", "success");
   }).catch(() => {
-    alert("Please select and copy the draft text manually.");
+    showToast("Please select and copy the draft text manually.");
   });
 }
 
@@ -2074,7 +2093,7 @@ async function submitGenerateEinvoice() {
 function copyEinvoiceIrn() {
   if (!currentGeneratedEinvoice) return;
   navigator.clipboard.writeText(currentGeneratedEinvoice.irn).then(() => {
-    alert("✓ 64-character SHA-256 IRN copied to clipboard!");
+    showToast("64-character SHA-256 IRN copied to clipboard!", "success");
   });
 }
 
@@ -2279,7 +2298,7 @@ function copyWithholdingNoticeText() {
   const text = document.getElementById("withholdingNoticeText")?.value;
   if (!text) return;
   navigator.clipboard.writeText(text).then(() => {
-    alert("✓ Section 16(2)(aa) Withholding Notice copied to clipboard!");
+    showToast("Section 16(2)(aa) Withholding Notice copied to clipboard!", "success");
   });
 }
 

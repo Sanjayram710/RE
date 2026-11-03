@@ -20,7 +20,7 @@
       <!-- Brand Logo -->
       <div class="navbar-brand" onclick="switchSuite('itr')">
         <div class="brand-robot-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="6" width="18" height="14" rx="4" fill="#0F67FE" />
             <circle cx="9" cy="12" r="2" fill="#FFFFFF" />
             <circle cx="15" cy="12" r="2" fill="#FFFFFF" />
@@ -29,7 +29,10 @@
             <circle cx="12" cy="2" r="1.5" fill="#00D084" />
           </svg>
         </div>
-        <span class="brand-title">SimpleGST</span>
+        <div class="brand-info">
+          <span class="brand-title">SimpleGST</span>
+          <span class="brand-badge">Compliance OS</span>
+        </div>
       </div>
 
       <!-- Center: Filing For Selector -->
@@ -56,15 +59,6 @@
 
       <!-- Right Header Actions -->
       <div class="navbar-actions">
-        <!-- Suite Switcher Button -->
-        <div class="suite-switch-pills">
-          <button class="suite-pill active" id="btnSuiteItr" onclick="switchSuite('itr')">Income Tax (ITR)</button>
-          <button class="suite-pill" id="btnSuiteExpert" onclick="switchSuite('expert')">Tax Filing from Experts</button>
-          <button class="suite-pill" id="btnSuiteNotice" onclick="switchSuite('notice')">Notice Defense Board</button>
-          <button class="suite-pill" id="btnSuiteVault" onclick="switchSuite('vault')">Tax Document Vault</button>
-          <button class="suite-pill" id="btnSuiteGst" onclick="switchSuite('gst')">GST & Reports</button>
-        </div>
-
         <!-- Mode Badge -->
         <span class="mode-badge" id="appModeBadge">
           <span class="pulse-dot"></span> <span id="appModeText">Demo Mode</span>
@@ -117,9 +111,40 @@
     </div>
   </header>
 
+  <!-- Suite Navigation Strip (Sleek Segmented Control) -->
+  <nav class="suite-nav-strip">
+    <div class="suite-nav-container">
+      <div class="suite-switch-pills">
+        <button class="suite-pill active" id="btnSuiteItr" onclick="switchSuite('itr')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Income Tax (ITR)</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteExpert" onclick="switchSuite('expert')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Tax Filing from Experts</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteNotice" onclick="switchSuite('notice')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Notice Defense Board</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteVault" onclick="switchSuite('vault')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span>Tax Document Vault</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteGst" onclick="switchSuite('gst')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <span>GST & Reports</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
   <!-- Statutory Disclaimer Notice Banner -->
   <div class="statutory-notice-banner">
-    <strong>Notice:</strong> Demo files. Not official GST portal or income tax portal files. Filing is simulated in demo mode.
+    <div class="notice-inner">
+      <span class="notice-badge">Simulated Demo</span>
+      <span class="notice-text"><strong>Notice:</strong> Demo files. Not official GST portal or income tax portal files. Filing is simulated in demo mode.</span>
+    </div>
   </div>
 
   <!-- ========================================================================= -->
@@ -132,24 +157,28 @@
       <div class="stepper-track">
         <!-- Step 1 Pill -->
         <button class="step-pill" id="stepPill1" onclick="goToItrStep(1)">
+          <span class="step-num">1</span>
           <span>Personal Info</span>
           <span class="pill-badge pill-badge-error" id="pillBadge1">!</span>
         </button>
 
         <!-- Step 2 Pill -->
         <button class="step-pill" id="stepPill2" onclick="goToItrStep(2)">
+          <span class="step-num">2</span>
           <span>Income Sources</span>
           <span class="pill-badge pill-badge-warning" id="pillBadge2">!</span>
         </button>
 
         <!-- Step 3 Pill -->
         <button class="step-pill" id="stepPill3" onclick="goToItrStep(3)">
+          <span class="step-num">3</span>
           <span>Tax Saving</span>
           <span class="pill-badge pill-badge-success" id="pillBadge3">✓</span>
         </button>
 
         <!-- Step 4 Pill -->
         <button class="step-pill active" id="stepPill4" onclick="goToItrStep(4)">
+          <span class="step-num">4</span>
           <span>Tax Summary</span>
         </button>
       </div>
@@ -2633,6 +2662,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Toast Notification Container for Micro-Interactions -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
   <script src="app.js"></script>
 </body>
