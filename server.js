@@ -118,6 +118,7 @@ export async function handleRequest(req, res) {
       pathname = "/api";
     }
     const method = req.method;
+    const query = Object.assign({}, Object.fromEntries(parsedUrl.searchParams.entries()), req.query || {});
 
     // Enable CORS
     res.setHeader("Access-Control-Allow-Origin", "*");

@@ -3830,7 +3830,10 @@ window.toggleKioskMode = function(enable) {
 // 6. Due-Dates & Notifications Simulator
 window.openDueDatesModal = async function() {
   const modal = document.getElementById('modalDueDates');
-  modal?.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
   const container = document.getElementById('dueDatesListContainer');
   try {
     const res = await fetch('/api/compliance/due-dates');
@@ -3860,7 +3863,11 @@ window.openDueDatesModal = async function() {
 };
 
 window.closeDueDatesModal = function() {
-  document.getElementById('modalDueDates')?.classList.add('hidden');
+  const modal = document.getElementById('modalDueDates');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 };
 
 window.simulateNotification = async function(channel) {
@@ -3918,7 +3925,10 @@ window.simulateNotification = async function(channel) {
 // 7. Referral Growth Loop Logic
 window.openReferralModal = async function() {
   const modal = document.getElementById('modalReferral');
-  modal?.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
   try {
     const res = await fetch('/api/referral/stats?gstin=32ABCDE1234F1Z5');
     const json = await res.json();
@@ -3934,7 +3944,11 @@ window.openReferralModal = async function() {
 };
 
 window.closeReferralModal = function() {
-  document.getElementById('modalReferral')?.classList.add('hidden');
+  const modal = document.getElementById('modalReferral');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 };
 
 window.redeemCredit = async function(amount) {
@@ -3958,12 +3972,20 @@ window.redeemCredit = async function(amount) {
 
 // 8. MCA Lookup Logic
 window.openMcaModal = function() {
-  document.getElementById('modalMcaLookup')?.classList.remove('hidden');
+  const modal = document.getElementById('modalMcaLookup');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
   executeMcaLookup('U72900KA2020PTC123456');
 };
 
 window.closeMcaModal = function() {
-  document.getElementById('modalMcaLookup')?.classList.add('hidden');
+  const modal = document.getElementById('modalMcaLookup');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 };
 
 window.executeMcaLookup = async function(cin) {
