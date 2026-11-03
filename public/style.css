@@ -1663,13 +1663,10 @@ body {
 
 /* Workbench Grid */
 .expert-workbench-layout {
-  max-width: 1240px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 0 20px 60px 20px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
-  gap: 24px;
-  align-items: start;
+  display: block;
 }
 
 .workbench-main-col {
