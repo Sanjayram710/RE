@@ -2,12 +2,10 @@
   "version": 2,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/api", "destination": "/api/index.js" },
-    { "source": "/", "destination": "/public/index.html" },
-    { "source": "/(.*)", "destination": "/public/$1" }
+    { "source": "/api", "destination": "/api/index.js" }
   ],
   "functions": {
-    "api/*.js": {
+    "api/index.js": {
       "includeFiles": "data/**"
     }
   }

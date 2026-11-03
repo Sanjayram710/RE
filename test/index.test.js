@@ -4,7 +4,7 @@ import XLSX from "xlsx";
 
 import { validatePan, validateGstin, validateInvoiceRow } from "../lib/validate.js";
 import { exportReport } from "../lib/reportsEngine.js";
-import { calculateGstSummary } from "../lib/gst.ts";
+import { calculateGstSummary } from "../lib/gst.js";
 import { TAX_CONFIG, computeTaxForAy } from "../lib/taxConfig.js";
 import {
   getGspMode,

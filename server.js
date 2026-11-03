@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { exportReport } from "./lib/reportsEngine.js";
 import { validatePan, validateGstin, validateInvoiceRow } from "./lib/validate.js";
-import { calculateGstSummary } from "./lib/gst.ts";
+import { calculateGstSummary } from "./lib/gst.js";
 import {
   getGspMode,
   logGspRequest,
