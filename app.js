@@ -1719,6 +1719,25 @@ function renderExpertPlans(category = "all") {
 
   const plans = (appState.expertPlans && appState.expertPlans.length > 0) ? appState.expertPlans : [
     {
+      id: "plan-free-trial",
+      category: "free_trial",
+      title: "1-Month Free Pro CA Advisory & Return Filing Trial",
+      originalPrice: 2999,
+      price: 0,
+      turnaround: "Instant Activation • 24hr CA Review",
+      badge: "Free for 1 Month",
+      isFreeTrial: true,
+      features: [
+        "1-on-1 Consultation with Senior Chartered Accountant",
+        "Old vs New Tax Regime Arbitrage & Deduction Audit",
+        "Automated Form 16, AIS/TIS & 26AS Reconciliation",
+        "Section 80C, 80D, 80CCD & HRA Tax Optimization",
+        "ClearTax Client Workspace with Real-Time CA Chat",
+        "100% Free for 30 Days • Zero Advance Payment"
+      ]
+    },
+
+    {
       id: "plan-salaried",
       category: "filing",
       title: "Salaried & Multi-Form 16 Tax Filing",
@@ -1867,6 +1886,12 @@ let bookingState = {
 };
 
 function openBookExpertModal(planId, planTitle, price) {
+  if (planId === "plan-free-trial" || price === 0) {
+    bookingState.couponApplied = true;
+    bookingState.discountPercent = 100;
+    const couponInp = document.getElementById("bookCouponInput");
+    if (couponInp) couponInp.value = "FREE30DAYS";
+  }
   bookingState.planId = planId;
   bookingState.planTitle = planTitle;
   bookingState.basePrice = price;
@@ -1885,7 +1910,14 @@ function openBookExpertModal(planId, planTitle, price) {
 function applyBookingCoupon() {
   const input = document.getElementById("bookCouponInput")?.value.trim().toUpperCase();
   const feedback = document.getElementById("bookCouponFeedback");
-  if (input === "TAXHERO65") {
+  if (input === "FREE30DAYS" || input === "CLEARTAXFREE" || input === "1MONTHFREE") {
+    bookingState.couponApplied = true;
+    bookingState.discountPercent = 100;
+    if (feedback) {
+      feedback.textContent = "✓ Code applied! 100% Free for 1 Month (₹0.00 payable).";
+      feedback.style.color = "#16A34A";
+    }
+  } else if (input === "TAXHERO65") {
     bookingState.couponApplied = true;
     bookingState.discountPercent = 65;
     if (feedback) {
@@ -3066,6 +3098,163 @@ async function runBatchApiHealthCheck() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         <span>Run Universal Health Check (182 APIs)</span>
       `;
+    }
+  }
+}
+
+
+// =========================================================================
+// ClearTax Expert Assisted Filing & 1-Month Free Trial Workflows
+// =========================================================================
+
+async function claimOneMonthFreeTrial() {
+  const pan = appState.itr?.personalInfo?.pan || "CVBBC4433W";
+  const name = ((appState.itr?.personalInfo?.firstName || "") + " " + (appState.itr?.personalInfo?.lastName || "")).trim() || "Sanjay Harshi";
+  const phone = appState.itr?.personalInfo?.mobile || "9876543210";
+
+  try {
+    showToast("Activating your 1-Month Free CA Advisory Trial...", "info");
+    const res = await fetch("/api/expert/claim-free-trial", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pan, clientName: name, phone })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast("🎉 1-Month Free CA Advisory Trial Activated!", "success");
+      const workspace = document.getElementById("expertClientWorkspace");
+      if (workspace) {
+        workspace.scrollIntoView({ behavior: "smooth" });
+      }
+      refreshExpertStatus();
+    }
+  } catch (err) {
+    console.error("Free trial claim failed:", err);
+    showToast("Trial active in offline sandbox mode!", "success");
+  }
+}
+
+async function refreshExpertStatus() {
+  const pan = appState.itr?.personalInfo?.pan || "CVBBC4433W";
+  try {
+    const res = await fetch(`/api/expert/status/${pan}`);
+    const data = await res.json();
+    if (data.success && data.booking) {
+      const b = data.booking;
+      if (b.chatHistory && b.chatHistory.length > 0) {
+        renderCaChatMessages(b.chatHistory);
+      }
+      updatePipelineStages(b.stage || "ca_draft_ready");
+    }
+  } catch (err) {
+    console.error("Failed to refresh status:", err);
+  }
+}
+
+function renderCaChatMessages(messages) {
+  const container = document.getElementById("caChatMessages");
+  if (!container) return;
+  container.innerHTML = messages.map(m => `
+    <div class="ca-chat-bubble ${m.role === 'Client' ? 'from-user' : 'from-ca'}">
+      <strong>${m.sender}:</strong><br>
+      ${m.text}
+    </div>
+  `).join("");
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendCaChatMessage() {
+  const input = document.getElementById("caChatInput");
+  if (!input || !input.value.trim()) return;
+  const msg = input.value.trim();
+  input.value = "";
+
+  const container = document.getElementById("caChatMessages");
+  if (container) {
+    container.innerHTML += `
+      <div class="ca-chat-bubble from-user">
+        <strong>You:</strong><br>${msg}
+      </div>
+    `;
+    container.scrollTop = container.scrollHeight;
+  }
+
+  const pan = appState.itr?.personalInfo?.pan || "CVBBC4433W";
+  try {
+    const res = await fetch("/api/expert/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pan, message: msg })
+    });
+    const data = await res.json();
+    if (data.success && data.reply) {
+      if (container) {
+        container.innerHTML += `
+          <div class="ca-chat-bubble from-ca">
+            <strong>${data.reply.sender}:</strong><br>${data.reply.text}
+          </div>
+        `;
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+  } catch (err) {
+    console.error("Chat error:", err);
+  }
+}
+
+function openCaChatFocus() {
+  const input = document.getElementById("caChatInput");
+  if (input) {
+    input.scrollIntoView({ behavior: "smooth" });
+    input.focus();
+  }
+}
+
+async function approveCaDraftAndFile() {
+  const pan = appState.itr?.personalInfo?.pan || "CVBBC4433W";
+  const btn = document.getElementById("btnApproveDraft");
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/expert/approve-draft", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pan })
+    });
+    const data = await res.json();
+    if (data.success) {
+      updatePipelineStages("efiled");
+      const resultDiv = document.getElementById("approveDraftAckResult");
+      if (resultDiv) {
+        resultDiv.className = "filing-success-box info-note-box";
+        resultDiv.innerHTML = `
+          <h4 style="color: #15803D;">✓ ITR-V Filing Successfully Transmitted!</h4>
+          <div class="mt-1"><strong>Official Acknowledgement Number (ARN):</strong> ${data.ackNumber}</div>
+          <div><strong>Filing Mode:</strong> ${data.verificationMode}</div>
+          <div><strong>Status:</strong> ${data.status}</div>
+          <div class="text-xs text-muted mt-1">${data.message}</div>
+        `;
+        resultDiv.classList.remove("hidden");
+      }
+      showToast("✓ Return Approved & Transmitted to Sandbox!", "success");
+    }
+  } catch (err) {
+    console.error("Approve draft failed:", err);
+  }
+}
+
+function updatePipelineStages(currentStage) {
+  const stages = ["registered", "ca_assigned", "slot_confirmed", "ca_draft_ready", "efiled"];
+  const stageIdx = stages.indexOf(currentStage) !== -1 ? stages.indexOf(currentStage) : 3;
+
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById(`stageStep${i}`);
+    if (!el) continue;
+    el.className = "pipeline-stage-item";
+    if (i - 1 < stageIdx) {
+      el.classList.add("completed");
+    } else if (i - 1 === stageIdx) {
+      el.classList.add("active");
     }
   }
 }

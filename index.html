@@ -1115,14 +1115,41 @@
     </div>
 
     <!-- Main Command Center Grid -->
+    
+    <!-- 1-Month Free Trial Hero Banner (ClearTax Model) -->
+    <div class="expert-trial-hero">
+      <div class="trial-hero-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <span>Limited Time Offer • 1-Month Free Trial</span>
+      </div>
+      <h2 class="trial-hero-title">Get 1 Month Free Tax Filing & Advisory from Chartered Accountants</h2>
+      <p class="trial-hero-sub">Experience India's #1 ClearTax-style expert assisted filing with ₹0 upfront cost. Includes 1-on-1 Senior CA consultation, Old vs New regime optimization, 100+ deduction discovery, and notice defense guarantee.</p>
+      <div class="trial-hero-actions">
+        <button class="trial-hero-cta" onclick="claimOneMonthFreeTrial()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+          Claim 1-Month Free CA Consultation
+        </button>
+        <div class="trial-hero-code">
+          Promo Code: <strong>FREE30DAYS</strong> (100% OFF • ₹0.00)
+        </div>
+      </div>
+      <div class="trial-hero-perks">
+        <span>✓ 1-on-1 Dedicated Senior CA</span>
+        <span>✓ Old vs New Regime Arbitrage</span>
+        <span>✓ 24hr Return Computation</span>
+        <span>✓ Zero Hidden Fees • Cancel Anytime</span>
+      </div>
+    </div>
+
     <div class="expert-workbench-layout">
       
       <!-- Left Column: Plans Matrix & Pipeline Visualizer -->
       <div class="workbench-main-col">
         
-        <!-- Category Filter Tabs -->
+                <!-- Category Filter Tabs -->
         <div class="plans-filter-bar">
           <button class="filter-tab-pill active" onclick="filterExpertPlans('all', this)">All Offerings</button>
+          <button class="filter-tab-pill" style="border-color: #0F67FE; color: #0F67FE; background: #EFF6FF;" onclick="filterExpertPlans('free_trial', this)">🎁 Free for 1 Month</button>
           <button class="filter-tab-pill" onclick="filterExpertPlans('filing', this)">Salaried & Job Switches</button>
           <button class="filter-tab-pill" onclick="filterExpertPlans('wealth', this)">Capital Gains & Traders</button>
           <button class="filter-tab-pill" onclick="filterExpertPlans('foreign', this)">Foreign Assets / FAST-DS</button>
@@ -1131,6 +1158,106 @@
         </div>
 
         <!-- Plans Cards Matrix -->
+                <!-- ClearTax Active Expert Filing Client Workspace (Active Trial & Live Pipeline) -->
+        <div class="expert-client-workspace" id="expertClientWorkspace">
+          <div class="trial-active-bar">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="ca-slot-dot"></span>
+              <span><strong>Active 1-Month Free Advisory Trial:</strong> 30 Days Remaining (Zero Fee Charged)</span>
+            </div>
+            <button class="btn btn-outline btn-sm" style="background: #fff; font-size: 11px; padding: 4px 10px;" onclick="refreshExpertStatus()">↻ Refresh Status</button>
+          </div>
+
+          <!-- 5-Stage Filing Pipeline Tracker -->
+          <div class="pipeline-tracker-row">
+            <div class="pipeline-stage-item completed" id="stageStep1">
+              <div>✓ Step 1</div>
+              <div>Free Trial Active</div>
+            </div>
+            <div class="pipeline-stage-item completed" id="stageStep2">
+              <div>✓ Step 2</div>
+              <div>Profile & Docs</div>
+            </div>
+            <div class="pipeline-stage-item completed" id="stageStep3">
+              <div>✓ Step 3</div>
+              <div>CA 1-on-1 Assigned</div>
+            </div>
+            <div class="pipeline-stage-item active" id="stageStep4">
+              <div>● Step 4</div>
+              <div>Draft Review</div>
+            </div>
+            <div class="pipeline-stage-item" id="stageStep5">
+              <div>○ Step 5</div>
+              <div>E-Filing & ITR-V</div>
+            </div>
+          </div>
+
+          <!-- CA Prepared Draft Computation Card -->
+          <div class="form-card" style="border: 1px solid #E2E8F0; padding: 20px; border-radius: 14px; background: #FAF5FF;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <div>
+                <span class="status-chip success-chip" style="background: #DCFCE7; color: #15803D; font-weight: 700;">CA Draft Computation Ready</span>
+                <h4 style="font-size: 16px; font-weight: 700; color: #1E1B4B; margin-top: 4px;">Regime Optimization Summary prepared by CA Anwin Ramachandran</h4>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 11px; color: #64748B;">Tax Saved via Expert Audit</div>
+                <div style="font-size: 18px; font-weight: 800; color: #16A34A;">₹ 1,32,600</div>
+              </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="computation-review-grid">
+              <div style="background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px;">
+                <div style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase;">Old Tax Regime</div>
+                <div style="font-size: 13px; color: #334155; margin-top: 6px;">Gross Salary: ₹15,00,000</div>
+                <div style="font-size: 13px; color: #334155;">80C + 80D + HRA: - ₹2,95,000</div>
+                <div style="font-size: 15px; font-weight: 700; color: #DC2626; margin-top: 8px;">Tax: ₹ 2,73,000</div>
+              </div>
+              <div style="background: #EFF6FF; border: 1.5px solid #3B82F6; border-radius: 10px; padding: 14px; position: relative;">
+                <span style="position: absolute; top: -9px; right: 12px; background: #3B82F6; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">CA RECOMMENDED</span>
+                <div style="font-size: 12px; font-weight: 700; color: #1D4ED8; text-transform: uppercase;">New Tax Regime (Sec 115BAC)</div>
+                <div style="font-size: 13px; color: #1E3A8A; margin-top: 6px;">Gross Salary: ₹15,00,000</div>
+                <div style="font-size: 13px; color: #1E3A8A;">Standard Deduction: - ₹75,000</div>
+                <div style="font-size: 15px; font-weight: 800; color: #16A34A; margin-top: 8px;">Tax: ₹ 1,40,400 (Net Refund: ₹24,600)</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 14px;">
+              <button class="btn btn-outline btn-sm" onclick="openCaChatFocus()">Ask Question to CA Anwin</button>
+              <button class="btn btn-primary" id="btnApproveDraft" onclick="approveCaDraftAndFile()" style="font-weight: 700;">
+                ✓ Approve Draft & Authorize Sandbox E-Filing
+              </button>
+            </div>
+            <div id="approveDraftAckResult" class="hidden mt-3"></div>
+          </div>
+
+          <!-- Real-Time CA Advisory Chat Drawer (ClearTax Working Feature) -->
+          <div class="ca-chat-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="ca-avatar-circle" style="width: 34px; height: 34px; font-size: 13px;">CA</div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #0F172A;">Direct Chat with CA Anwin Ramachandran</div>
+                  <div style="font-size: 11px; color: #16A34A;">● Active in consultation session</div>
+                </div>
+              </div>
+              <span class="status-chip success-chip" style="font-size: 11px;">1-Month Free Access</span>
+            </div>
+
+            <div class="ca-chat-messages" id="caChatMessages">
+              <div class="ca-chat-bubble from-ca">
+                <strong>CA Anwin Ramachandran:</strong><br>
+                Hello Sanjay! I reviewed your Form 16 and AIS records; by adopting Section 115BAC New Tax Regime with your deductions, we have saved ₹1,32,600 and unlocked an estimated refund of ₹24,600! Review your computation draft above and ask me anything here.
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+              <input type="text" id="caChatInput" class="text-input" placeholder="Ask your CA about 80C, regime choice, capital gains, etc..." onkeydown="if(event.key==='Enter') sendCaChatMessage()">
+              <button class="btn btn-primary btn-sm" onclick="sendCaChatMessage()">Send</button>
+            </div>
+          </div>
+        </div>
+
         <div class="expert-plans-grid" id="expertPlansContainer">
           <!-- Populated dynamically via JS or server -->
         </div>
@@ -1207,6 +1334,75 @@
                 <div class="bar-year-label font-bold text-primary">AY 25-26</div>
               </div>
             </div>
+      <!-- Right Column: Dedicated CA Profile & Smart Savings Estimator -->
+      <div class="workbench-side-col">
+        
+        <!-- Dedicated CA Profile Card (Exact match to screenshot) -->
+        <div class="ca-profile-card">
+          <div class="ca-header-row">
+            <div class="ca-avatar-circle">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <div>
+              <div class="ca-name-title">
+                <span>CA Anwin Ramachandran</span>
+                <span class="ca-verified-check">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="#0F67FE"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </span>
+              </div>
+              <div class="ca-role-label">Senior Direct Tax & FAST-DS Specialist</div>
+              <div class="ca-ratings-row">
+                <span>★★★★★</span>
+                <span>4.9/5</span>
+                <span style="color: #64748B; font-weight: 400;">(8,420+ filings)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ca-slot-pill">
+            <span class="ca-slot-dot"></span>
+            <span>Next Available Slot: <strong>Today, 03:00 PM (IST)</strong></span>
+          </div>
+
+          <button class="btn btn-primary btn-block" onclick="openBookExpertModal('plan-free-trial', '1-Month Free Pro CA Advisory & Filing Trial', 0)">
+            Schedule 1-on-1 Consultation
+          </button>
+        </div>
+
+        <!-- Smart Savings & Refund Estimator (Exact match to screenshot) -->
+        <div class="savings-estimator-card">
+          <div class="savings-est-badge">Live Calculator</div>
+          <h4 style="font-size: 15px; font-weight: 700; color: #065F46; margin-bottom: 4px;">Smart Savings & Refund Estimator</h4>
+          <p style="font-size: 12px; color: #475569; margin-bottom: 14px;">Estimate how much a Chartered Accountant can save on your return.</p>
+
+          <div class="input-field-group mb-2">
+            <label class="field-label" style="font-size: 11px;">Gross Annual Salary (₹)</label>
+            <input type="number" id="calcEstSalary" class="text-input" value="1500000" oninput="recalculateSavingsEstimator()">
+          </div>
+
+          <div class="input-field-group mb-2">
+            <label class="field-label" style="font-size: 11px;">Capital Gains / Other Income (₹)</label>
+            <input type="number" id="calcEstCapGains" class="text-input" value="100000" oninput="recalculateSavingsEstimator()">
+          </div>
+
+          <div class="input-field-group mb-3">
+            <label class="field-label" style="font-size: 11px;">Eligible Deductions (80C, 80D, HRA) (₹)</label>
+            <input type="number" id="calcEstDeductions" class="text-input" value="175000" oninput="recalculateSavingsEstimator()">
+          </div>
+
+          <div style="background: #fff; border: 1px solid #86EFAC; border-radius: 10px; padding: 12px; margin-bottom: 14px;">
+            <div style="font-size: 11px; color: #64748B;">Estimated Tax Savings with CA:</div>
+            <div id="calcEstSavingsVal" style="font-size: 20px; font-weight: 800; color: #16A34A;">₹ 37,500.00</div>
+            <div id="calcEstRecommendedPlan" style="font-size: 11px; color: #0F67FE; margin-top: 4px;">Recommended: <strong>1-Month Free Trial Plan</strong></div>
+          </div>
+
+          <button class="btn btn-outline btn-block" style="border-color: #16A34A; color: #16A34A; font-weight: 700;" onclick="applyEstimatorToBooking()">
+            Apply to Booking (1-Month Free)
+          </button>
+        </div>
+
+      </div>
+
           </div>
         </div>
 

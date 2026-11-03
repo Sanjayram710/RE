@@ -55,8 +55,9 @@ const MIME_TYPES = {
   ".csv": "text/csv; charset=utf-8"
 };
 
-// In-memory store for generated error reports
+// In-memory store for generated error reports and expert bookings
 const errorReportStore = new Map();
+const expertBookingStore = new Map();
 
 function sendJson(res, statusCode, data) {
   res.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
@@ -209,12 +210,30 @@ export async function handleRequest(req, res) {
     }
 
     // ---------------------------------------------------------
-    // 2d. GET & POST /api/expert/ (Tax Filing from Experts)
+    // 2d. GET & POST /api/expert/ (ClearTax Expert Assisted Filing & 1-Month Free Trial)
     // ---------------------------------------------------------
     if (pathname === "/api/expert/plans" && method === "GET") {
       return sendJson(res, 200, {
         success: true,
         plans: [
+          {
+            id: "plan-free-trial",
+            category: "free_trial",
+            title: "1-Month Free Pro CA Advisory & Return Filing Trial",
+            originalPrice: 2999,
+            price: 0,
+            turnaround: "Instant Activation • 24hr CA Review",
+            badge: "Free for 1 Month",
+            isFreeTrial: true,
+            features: [
+              "1-on-1 Consultation with Senior Chartered Accountant",
+              "Old vs New Tax Regime Arbitrage & Deduction Audit",
+              "Automated Form 16, AIS/TIS & 26AS Reconciliation",
+              "Section 80C, 80D, 80CCD & HRA Tax Optimization",
+              "ClearTax Client Workspace with Real-Time CA Chat",
+              "100% Free for 30 Days • Zero Advance Payment"
+            ]
+          },
           {
             id: "plan-salaried",
             category: "filing",
@@ -299,45 +318,266 @@ export async function handleRequest(req, res) {
       });
     }
 
+    if (pathname === "/api/expert/claim-free-trial" && method === "POST") {
+      const body = await readBody(req);
+      const pan = (body.pan || DEMO_BUSINESS.pan || "CVBBC4433W").toUpperCase();
+      const bookingId = `CT-TRIAL-${Date.now().toString().slice(-6)}`;
+      const trialRecord = {
+        bookingId,
+        pan,
+        clientName: body.clientName || "Sanjay Harshi",
+        phone: body.phone || "9876543210",
+        email: body.email || "sanjay@example.com",
+        planId: "plan-free-trial",
+        planTitle: "1-Month Free Pro CA Advisory & Filing Trial",
+        basePrice: 2999,
+        discountPercent: 100,
+        finalPrice: 0,
+        isFreeTrial: true,
+        activatedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        daysRemaining: 30,
+        assignedExpert: {
+          id: "ca-anwin",
+          name: "CA Anwin Ramachandran",
+          membershipNo: "ICAI #512891",
+          role: "Senior Direct Tax & FAST-DS Specialist",
+          rating: 4.9,
+          reviewsCount: "8,420+",
+          nextSlot: "Today, 03:00 PM (IST)"
+        },
+        slot: body.slot || "Today at 03:00 PM (IST)",
+        meetingLink: `https://meet.cleartax.simplegst.internal/${bookingId}`,
+        stage: "ca_draft_ready",
+        status: "Active 1-Month Free Trial",
+        computationDraft: {
+          assessmentYear: "2025-26",
+          financialYear: "2024-25",
+          grossSalary: 1500000,
+          capitalGains: 100000,
+          section80C: 150000,
+          section80D: 25000,
+          hraExemption: 120000,
+          oldRegimeTax: 273000,
+          newRegimeTax: 140400,
+          recommendedRegime: "New Tax Regime (Section 115BAC)",
+          taxSavedByCA: 132600,
+          eligibleRefund: 24600,
+          status: "Verified by CA Anwin Ramachandran"
+        },
+        chatHistory: [
+          {
+            sender: "CA Anwin Ramachandran",
+            role: "Chartered Accountant",
+            time: "Today, 09:30 AM",
+            text: "Hello Sanjay! I have activated your 1-Month Free Expert Assisted Filing Trial. I audited your Form 16 and AIS records; by adopting Section 115BAC New Tax Regime with your deductions, you save ₹1,32,600! Review your computation draft below and feel free to ask questions here."
+          }
+        ]
+      };
+      expertBookingStore.set(pan, trialRecord);
+      return sendJson(res, 200, { success: true, booking: trialRecord });
+    }
+
     if (pathname === "/api/expert/book" && method === "POST") {
       const body = await readBody(req);
       const { planId, clientName, pan, phone, slot, couponCode } = body;
+      const cleanPan = (pan || "CVBBC4433W").toUpperCase();
       
       let basePrice = 2499;
-      if (planId === "plan-salaried") basePrice = 999;
-      else if (planId === "plan-capital-gains") basePrice = 2499;
-      else if (planId === "plan-fast-ds") basePrice = 4999;
-      else if (planId === "plan-business") basePrice = 3499;
-      else if (planId === "plan-notice-defense") basePrice = 4499;
+      let planTitle = "Salaried & Multi-Form 16 Tax Filing";
+      if (planId === "plan-free-trial") { basePrice = 2999; planTitle = "1-Month Free Pro CA Advisory & Filing Trial"; }
+      else if (planId === "plan-salaried") { basePrice = 999; planTitle = "Salaried & Multi-Form 16 Tax Filing"; }
+      else if (planId === "plan-capital-gains") { basePrice = 2499; planTitle = "Capital Gains, Traders & Investors"; }
+      else if (planId === "plan-fast-ds") { basePrice = 4999; planTitle = "Foreign Assets, RSUs & FAST-DS Disclosure"; }
+      else if (planId === "plan-business") { basePrice = 3499; planTitle = "Business & Freelancers (Section 44ADA/44AD)"; }
+      else if (planId === "plan-notice-defense") { basePrice = 4499; planTitle = "Notice Management & Scrutiny Defense"; }
 
       let discountPercent = 0;
-      if (couponCode && couponCode.toUpperCase() === "TAXHERO65") {
+      const code = (couponCode || "").toUpperCase();
+      if (planId === "plan-free-trial" || code === "FREE30DAYS" || code === "CLEARTAXFREE" || code === "1MONTHFREE") {
+        discountPercent = 100;
+      } else if (code === "TAXHERO65") {
         discountPercent = 65;
       }
       const finalPrice = Math.round(basePrice * (1 - discountPercent / 100));
-      const bookingId = `SG-EXP-${Date.now().toString().slice(-6)}`;
+      const bookingId = `CT-EXP-${Date.now().toString().slice(-6)}`;
       
-      return sendJson(res, 200, {
-        success: true,
+      const record = {
         bookingId,
-        clientName: clientName || "Taxpayer",
-        pan: (pan || "CVBBC4433W").toUpperCase(),
+        clientName: clientName || "Sanjay Harshi",
+        pan: cleanPan,
         phone: phone || "9876543210",
-        assignedExpert: {
-          name: "CA Anwin Ramachandran",
-          role: "Senior Direct Tax & Compliance Specialist",
-          rating: 4.9,
-          experience: "11+ Years"
-        },
-        slot: slot || "Today at 03:00 PM (IST)",
-        meetingLink: `https://meet.simplegst.internal/${bookingId}`,
-        planId,
+        planId: planId || "plan-free-trial",
+        planTitle,
         basePrice,
         discountPercent,
         finalPrice,
+        isFreeTrial: finalPrice === 0,
         currency: "INR",
-        status: "Confirmed (Sandbox Booking)",
-        guarantee: "100% Accuracy or Full Fee Refund Guaranteed"
+        assignedExpert: {
+          id: "ca-anwin",
+          name: "CA Anwin Ramachandran",
+          membershipNo: "ICAI #512891",
+          role: "Senior Direct Tax & FAST-DS Specialist",
+          rating: 4.9,
+          reviewsCount: "8,420+",
+          experience: "11+ Years"
+        },
+        slot: slot || "Today at 03:00 PM (IST)",
+        meetingLink: `https://meet.cleartax.simplegst.internal/${bookingId}`,
+        stage: "ca_draft_ready",
+        status: finalPrice === 0 ? "Active 1-Month Free Trial" : "Confirmed (Sandbox Booking)",
+        guarantee: "100% Accuracy & Notice Defense Guarantee Included",
+        computationDraft: {
+          assessmentYear: "2025-26",
+          financialYear: "2024-25",
+          grossSalary: 1500000,
+          capitalGains: 100000,
+          section80C: 150000,
+          section80D: 25000,
+          hraExemption: 120000,
+          oldRegimeTax: 273000,
+          newRegimeTax: 140400,
+          recommendedRegime: "New Tax Regime (Section 115BAC)",
+          taxSavedByCA: 132600,
+          eligibleRefund: 24600,
+          status: "Verified by CA Anwin Ramachandran"
+        },
+        chatHistory: [
+          {
+            sender: "CA Anwin Ramachandran",
+            role: "Chartered Accountant",
+            time: "Today, 09:30 AM",
+            text: "Hello! Your consultation is confirmed. I have audited your tax profile and prepared a regime optimization computation. Check the draft computation below and let me know if you have any questions."
+          }
+        ]
+      };
+      expertBookingStore.set(cleanPan, record);
+      return sendJson(res, 200, { success: true, ...record });
+    }
+
+    if (pathname.startsWith("/api/expert/status") && method === "GET") {
+      const parts = pathname.split("/");
+      const pan = (parts[parts.length - 1] || "CVBBC4433W").toUpperCase();
+      let record = expertBookingStore.get(pan);
+      if (!record) {
+        record = {
+          bookingId: `CT-TRIAL-DEMO`,
+          pan,
+          clientName: "Sanjay Harshi",
+          planId: "plan-free-trial",
+          planTitle: "1-Month Free Pro CA Advisory & Filing Trial",
+          basePrice: 2999,
+          discountPercent: 100,
+          finalPrice: 0,
+          isFreeTrial: true,
+          daysRemaining: 30,
+          assignedExpert: {
+            id: "ca-anwin",
+            name: "CA Anwin Ramachandran",
+            membershipNo: "ICAI #512891",
+            role: "Senior Direct Tax & FAST-DS Specialist",
+            rating: 4.9,
+            reviewsCount: "8,420+",
+            nextSlot: "Today, 03:00 PM (IST)"
+          },
+          slot: "Today at 03:00 PM (IST)",
+          meetingLink: `https://meet.cleartax.simplegst.internal/CT-TRIAL-DEMO`,
+          stage: "ca_draft_ready",
+          status: "Active 1-Month Free Trial",
+          computationDraft: {
+            assessmentYear: "2025-26",
+            financialYear: "2024-25",
+            grossSalary: 1500000,
+            capitalGains: 100000,
+            section80C: 150000,
+            section80D: 25000,
+            hraExemption: 120000,
+            oldRegimeTax: 273000,
+            newRegimeTax: 140400,
+            recommendedRegime: "New Tax Regime (Section 115BAC)",
+            taxSavedByCA: 132600,
+            eligibleRefund: 24600,
+            status: "Verified by CA Anwin Ramachandran"
+          },
+          chatHistory: [
+            {
+              sender: "CA Anwin Ramachandran",
+              role: "Chartered Accountant",
+              time: "Today, 09:30 AM",
+              text: "Hello Sanjay! I have activated your 1-Month Free Expert Assisted Filing Trial. I audited your Form 16 and AIS records; by adopting Section 115BAC New Tax Regime with your deductions, you save ₹1,32,600! Review your computation draft below and feel free to ask questions here."
+            }
+          ]
+        };
+        expertBookingStore.set(pan, record);
+      }
+      return sendJson(res, 200, { success: true, booking: record });
+    }
+
+    if (pathname === "/api/expert/chat" && method === "POST") {
+      const body = await readBody(req);
+      const pan = (body.pan || "CVBBC4433W").toUpperCase();
+      const message = body.message || "";
+      let record = expertBookingStore.get(pan);
+      if (!record) {
+        record = { chatHistory: [] };
+        expertBookingStore.set(pan, record);
+      }
+      record.chatHistory = record.chatHistory || [];
+      record.chatHistory.push({
+        sender: "You",
+        role: "Client",
+        time: "Just now",
+        text: message
+      });
+
+      let replyText = "Thank you for your message. As your assigned Chartered Accountant, I have logged this note. I will address this in detail during our scheduled consultation.";
+      const lower = message.toLowerCase();
+      if (lower.includes("regime") || lower.includes("old vs new") || lower.includes("115bac")) {
+        replyText = "Based on your total gross income of ₹15,00,000, the New Regime (Section 115BAC) yields a tax liability of ₹1,40,400 compared to ₹2,73,000 under the Old Regime—giving you an immediate tax saving of ₹1,32,600!";
+      } else if (lower.includes("80c") || lower.includes("80d") || lower.includes("deduction")) {
+        replyText = "Under Old Regime, you can claim up to ₹1.5L under 80C and ₹25K under 80D. However, even with ₹2,95,000 total deductions, the lower slab rates of Section 115BAC still beat the Old Regime for your income profile.";
+      } else if (lower.includes("free") || lower.includes("trial") || lower.includes("charge")) {
+        replyText = "Your 1-Month Free Expert Filing Trial is 100% active with ₹0 fees. You receive unlimited CA advisory, calculation reviews, and e-filing authorization for the next 30 days without any automatic charges.";
+      } else if (lower.includes("broker") || lower.includes("capital gain") || lower.includes("stock") || lower.includes("crypto")) {
+        replyText = "For equity trades, under Finance Act 2024, listed STCG is taxed @ 20% and LTCG @ 12.5% above the new ₹1.25L exemption threshold. I will automatically reconcile your Zerodha/Groww P&L in Schedule CG.";
+      } else if (lower.includes("file") || lower.includes("approve") || lower.includes("ack")) {
+        replyText = "You can click 'Approve Draft Computation' below to authorize e-filing. We will transmit the validated JSON to the Income Tax Department sandbox and issue your instant ITR-V acknowledgement number.";
+      }
+
+      const caReply = {
+        sender: "CA Anwin Ramachandran",
+        role: "Chartered Accountant",
+        time: "Just now",
+        text: replyText
+      };
+      record.chatHistory.push(caReply);
+
+      return sendJson(res, 200, {
+        success: true,
+        reply: caReply,
+        chatHistory: record.chatHistory
+      });
+    }
+
+    if (pathname === "/api/expert/approve-draft" && method === "POST") {
+      const body = await readBody(req);
+      const pan = (body.pan || "CVBBC4433W").toUpperCase();
+      let record = expertBookingStore.get(pan);
+      const ackNumber = `ITR2026${Math.floor(10000000 + Math.random() * 90000000)}`;
+      if (record) {
+        record.stage = "efiled";
+        record.ackNumber = ackNumber;
+        record.filedAt = new Date().toISOString();
+        record.status = "Filed & Verified via EVC";
+      }
+      return sendJson(res, 200, {
+        success: true,
+        pan,
+        ackNumber,
+        status: "Return Filed Successfully",
+        verificationMode: "Aadhaar OTP / EVC (Simulated)",
+        message: "Your ITR computation draft has been approved and successfully transmitted to the Income Tax e-Filing sandbox. ITR-V Acknowledgement generated!"
       });
     }
 

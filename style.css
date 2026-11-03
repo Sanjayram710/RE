@@ -1669,10 +1669,12 @@ body {
 
 /* Workbench Grid */
 .expert-workbench-layout {
-  max-width: 1080px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 20px 60px 20px;
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 24px;
 }
 
 .workbench-main-col {
@@ -2415,4 +2417,336 @@ body {
 /* Tabular Numerals on all monetary and key fields */
 .calc-val, .item-val, .plan-price, .recon-stat-val, .bar-val-label, td.font-mono {
   font-variant-numeric: tabular-nums lining-nums;
+}
+
+
+/* ========================================================================= */
+/* ClearTax Expert Assisted Filing & 1-Month Free Trial Workflows            */
+/* ========================================================================= */
+
+.expert-trial-hero {
+  background: linear-gradient(135deg, #0F67FE 0%, #1E3A8A 100%);
+  border-radius: 18px;
+  padding: 26px 30px;
+  color: #FFFFFF;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 25px -5px rgba(15, 103, 254, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.expert-trial-hero::after {
+  content: "";
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.trial-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.trial-hero-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.25;
+}
+
+.trial-hero-sub {
+  font-size: 14px;
+  color: #E0E7FF;
+  max-width: 680px;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.trial-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.trial-hero-cta {
+  background: #FFFFFF;
+  color: #0F67FE;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 11px 22px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trial-hero-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  background: #F8FAFC;
+}
+
+.trial-hero-code {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #F8FAFC;
+}
+
+.trial-hero-perks {
+  display: flex;
+  gap: 20px;
+  margin-top: 18px;
+  font-size: 12px;
+  color: #C7D2FE;
+  flex-wrap: wrap;
+}
+
+/* CA Verified Profile Card */
+.ca-profile-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 20px;
+}
+
+.ca-header-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.ca-avatar-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #EFF6FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0F67FE;
+  font-weight: 700;
+  font-size: 18px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ca-avatar-circle::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background: #10B981;
+  border: 2px solid #FFFFFF;
+  border-radius: 50%;
+}
+
+.ca-name-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ca-verified-check {
+  display: inline-flex;
+  color: #0F67FE;
+}
+
+.ca-role-label {
+  font-size: 12px;
+  color: #64748B;
+  margin-top: 2px;
+}
+
+.ca-ratings-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #D97706;
+}
+
+.ca-slot-pill {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #166534;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ca-slot-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16A34A;
+  display: inline-block;
+  animation: pulse-green 2s infinite;
+}
+
+/* Smart Savings Estimator */
+.savings-estimator-card {
+  background: #F0FDF4;
+  border: 1.5px solid #BBF7D0;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.savings-est-badge {
+  background: #16A34A;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+/* ClearTax Client Workspace & Filing Pipeline */
+.expert-client-workspace {
+  background: #FFFFFF;
+  border: 1.5px solid #BFDBFE;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 14px rgba(15, 103, 254, 0.06);
+}
+
+.trial-active-bar {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 10px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  color: #065F46;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pipeline-tracker-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.pipeline-stage-item {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748B;
+  transition: all 0.2s;
+}
+
+.pipeline-stage-item.completed {
+  background: #F0FDF4;
+  border-color: #86EFAC;
+  color: #166534;
+}
+
+.pipeline-stage-item.active {
+  background: #EFF6FF;
+  border-color: #93C5FD;
+  color: #1D4ED8;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.computation-review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.ca-chat-container {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 18px;
+}
+
+.ca-chat-messages {
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-right: 4px;
+}
+
+.ca-chat-bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ca-chat-bubble.from-ca {
+  align-self: flex-start;
+  background: #EFF6FF;
+  border: 1px solid #DBEAFE;
+  color: #1E3A8A;
+  border-bottom-left-radius: 2px;
+}
+
+.ca-chat-bubble.from-user {
+  align-self: flex-end;
+  background: #0F67FE;
+  color: #FFFFFF;
+  border-bottom-right-radius: 2px;
 }
