@@ -522,7 +522,7 @@
             </div>
           </div>
 
-          <!-- Card 6: Pre-fill Income details from Income Tax Dept (Screenshot 3) -->
+          <!-- Card 6: Auto-Fill Income details (ClearTax Layman UX) -->
           <div class="action-card-banner">
             <div class="banner-left">
               <div class="header-icon-circle blue-tint">
@@ -534,14 +534,18 @@
                 </svg>
               </div>
               <div>
-                <h4 class="action-card-title">Pre-fill Income details from Income Tax Dept</h4>
-                <p class="action-card-desc">Import official CBDT prefill.json (Salary, TDS 26AS, AIS/TIS & Bank Accounts) directly.</p>
+                <h4 class="action-card-title">Auto-Fill from Income Tax Department</h4>
+                <p class="action-card-desc">Automatically fetch your Salary, TDS, and Bank Interest in 1 click. No manual data entry needed.</p>
               </div>
             </div>
             <div class="banner-actions-row">
               <input type="file" id="prefillFileInput" accept=".json" class="hidden" onchange="handlePrefillFileChosen(event)">
-              <button class="btn btn-outline" onclick="document.getElementById('prefillFileInput').click()">Import prefill.json</button>
-              <button class="btn btn-primary" onclick="loadSamplePrefillJson()">Load Official Sample</button>
+              <button class="btn btn-primary" onclick="loadSamplePrefillJson()" style="font-weight: 700;">
+                ⚡ 1-Click Auto-Fill (Official Data)
+              </button>
+              <button class="btn btn-outline" onclick="document.getElementById('prefillFileInput').click()">
+                📂 Upload JSON File
+              </button>
             </div>
           </div>
 
