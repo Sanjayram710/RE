@@ -1,0 +1,103 @@
+{
+  "itrData": {
+    "assessmentYear": "2025-26",
+    "financialYear": "2024-25",
+    "taxRegime": "NEW",
+    "personalInfo": {
+      "firstName": "Rohan",
+      "middleName": "K",
+      "lastName": "Sharma",
+      "pan": "ABCDE1234F",
+      "dob": "1992-08-24",
+      "aadhaar": "XXXXXXXX8899",
+      "mobile": "9845012345",
+      "email": "rohan.sharma@example.com",
+      "employerType": "OTH",
+      "address": {
+        "flat": "Flat 302, Green Glen Layout",
+        "street": "Bellandur Outer Ring Road",
+        "locality": "Bellandur",
+        "city": "Bengaluru",
+        "stateCode": "KA",
+        "pincode": "560103"
+      }
+    },
+    "income": {
+      "grossSalary": 1650000,
+      "housePropertyIncome": -180000,
+      "otherIncome": 45000,
+      "deductions": {
+        "sec80C": 150000,
+        "sec80D": 25000,
+        "other": 10000
+      },
+      "taxesPaid": {
+        "tds": 140000,
+        "advanceTax": 15000
+      }
+    }
+  },
+  "gstData": {
+    "gstin": "29ABCDE1234F1Z5",
+    "legalName": "Apex Software & Analytics Solutions Pvt Ltd",
+    "filingPeriod": "032025",
+    "grossTurnover": 12500000,
+    "b2bInvoices": [
+      {
+        "invoiceNumber": "INV-2025-001",
+        "invoiceDate": "04-03-2025",
+        "recipientGstin": "29XYZAB5678C1Z2",
+        "recipientName": "Infosurge Cloud Systems Ltd",
+        "pos": "29",
+        "taxableValue": 450000,
+        "rate": 18,
+        "reverseCharge": false
+      },
+      {
+        "invoiceNumber": "INV-2025-002",
+        "invoiceDate": "12-03-2025",
+        "recipientGstin": "27MNOPE9012D1Z9",
+        "recipientName": "West Coast Logistics Corp",
+        "pos": "27",
+        "taxableValue": 680000,
+        "rate": 18,
+        "reverseCharge": false
+      },
+      {
+        "invoiceNumber": "INV-2025-003",
+        "invoiceDate": "22-03-2025",
+        "recipientGstin": "07AABCC3344E1Z0",
+        "recipientName": "Capital Delhi Tech Advisors LLP",
+        "pos": "07",
+        "taxableValue": 320000,
+        "rate": 18,
+        "reverseCharge": false
+      },
+      {
+        "invoiceNumber": "INV-2025-004",
+        "invoiceDate": "28-03-2025",
+        "recipientGstin": "29XYZAB5678C1Z2",
+        "recipientName": "Infosurge Cloud Systems Ltd",
+        "pos": "29",
+        "taxableValue": 250000,
+        "rate": 18,
+        "reverseCharge": false
+      }
+    ],
+    "hsnSummary": [
+      {
+        "hsn_sc": "998314",
+        "desc": "Information Technology Application Design & Tax Software Services",
+        "uqc": "OTH",
+        "qty": 4,
+        "val": 2006000,
+        "txval": 1700000,
+        "iamt": 180000,
+        "camt": 63000,
+        "samt": 63000,
+        "csamt": 0
+      }
+    ]
+  }
+}
+

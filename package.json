@@ -1,0 +1,26 @@
+{
+  "name": "simple-gst-platform",
+  "version": "1.0.0",
+  "description": "SimpleGST Platform & Export Engine. Demo files. Not official GST portal or income tax portal files.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/index.test.js"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "keywords": [
+    "simplegst",
+    "export",
+    "itr",
+    "gst",
+    "excel",
+    "json",
+    "csv",
+    "gsp"
+  ],
+  "author": "SimpleGST Engine",
+  "license": "MIT"
+}

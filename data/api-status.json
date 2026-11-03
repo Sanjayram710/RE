@@ -1,0 +1,1094 @@
+[
+ {
+  "id": 1,
+  "api": "Initiate OTP for EVC",
+  "group": "Initiate OTP for EVC",
+  "status": "working"
+ },
+ {
+  "id": 2,
+  "api": "Logout",
+  "group": "Logout",
+  "status": "working"
+ },
+ {
+  "id": 3,
+  "api": "Request for extension of authorization token",
+  "group": "Request for extension of authorization token",
+  "status": "working"
+ },
+ {
+  "id": 4,
+  "api": "Request for OTP",
+  "group": "Request for OTP",
+  "status": "working"
+ },
+ {
+  "id": 5,
+  "api": "Request forAuthorization token",
+  "group": "Request forAuthorization token",
+  "status": "working"
+ },
+ {
+  "id": 6,
+  "api": "GSTR1 - File Gstr1",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 7,
+  "api": "GSTR1 - Get AT",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 8,
+  "api": "GSTR1 - Get ATA",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 9,
+  "api": "GSTR1 - Get B2B Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 10,
+  "api": "GSTR1 - Get B2BA Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 11,
+  "api": "GSTR1 - Get B2CL Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 12,
+  "api": "GSTR1 - Get B2CLA Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 13,
+  "api": "GSTR1 - Get B2CS Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 14,
+  "api": "GSTR1 - Get B2CSA Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 15,
+  "api": "GSTR1 - Get CDNR Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 16,
+  "api": "GSTR1 - Get CDNRA Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 17,
+  "api": "GSTR1 - Get CDNUR Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 18,
+  "api": "GSTR1 - Get CDNURA Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 19,
+  "api": "GSTR1 - Get Doc Issued",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 20,
+  "api": "GSTR1 - Get E-Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 21,
+  "api": "GSTR1 - Get ECOM Invoices",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 22,
+  "api": "GSTR1 - Get ECOMA Invoices",
+  "group": "GSTR1",
+  "status": "not_working"
+ },
+ {
+  "id": 23,
+  "api": "GSTR1 - Get EXP",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 24,
+  "api": "GSTR1 - Get EXPA",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 25,
+  "api": "GSTR1 - Get GSTR1 Summary",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 26,
+  "api": "GSTR1 - Get HSN Summary details",
+  "group": "GSTR1",
+  "status": "not_working"
+ },
+ {
+  "id": 27,
+  "api": "GSTR1 - Get Nil Rated Supplies",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 28,
+  "api": "GSTR1 - Get Return Status",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 29,
+  "api": "GSTR1 - Get SUPECO Details",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 30,
+  "api": "GSTR1 - Get SUPECOA Details",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 31,
+  "api": "GSTR1 - Get TXP",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 32,
+  "api": "GSTR1 - Get TXPA",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 33,
+  "api": "GSTR1 - Reset GSTR1",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 34,
+  "api": "GSTR1 - Save GSTR1 data",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 35,
+  "api": "GSTR1 - Validate HSN Summary",
+  "group": "GSTR1",
+  "status": "working"
+ },
+ {
+  "id": 36,
+  "api": "All - New Proceed to File(for GSTR6,GSTR5,GSTR1)",
+  "group": "All",
+  "status": "unknown"
+ },
+ {
+  "id": 37,
+  "api": "GSTR1A - Confirm Declaration Details",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 38,
+  "api": "GSTR1A - File Gstr1A",
+  "group": "GSTR1A",
+  "status": "working"
+ },
+ {
+  "id": 39,
+  "api": "GSTR1A - Get AT",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 40,
+  "api": "GSTR1A - Get ATA",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 41,
+  "api": "GSTR1A - Get B2B Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 42,
+  "api": "GSTR1A - Get B2BA Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 43,
+  "api": "GSTR1A - Get B2CL Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 44,
+  "api": "GSTR1A - Get B2CLA Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 45,
+  "api": "GSTR1A - Get B2CS Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 46,
+  "api": "GSTR1A - Get B2CSA Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 47,
+  "api": "GSTR1A - Get CDNR Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 48,
+  "api": "GSTR1A - Get CDNRA Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 49,
+  "api": "GSTR1A - Get CDNUR Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 50,
+  "api": "GSTR1A - Get CDNURA Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 51,
+  "api": "GSTR1A - Get Declaration Details",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 52,
+  "api": "GSTR1A - Get Doc Issued",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 53,
+  "api": "GSTR1A - Get ECOM Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 54,
+  "api": "GSTR1A - Get ECOMA Invoices",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 55,
+  "api": "GSTR1A - Get EXP",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 56,
+  "api": "GSTR1A - Get EXPA",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 57,
+  "api": "GSTR1A - Get GSTR1A Summary",
+  "group": "GSTR1A",
+  "status": "working"
+ },
+ {
+  "id": 58,
+  "api": "GSTR1A - Get HSN Summary details",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 59,
+  "api": "GSTR1A - Get Nil Rated Supplies",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 60,
+  "api": "GSTR1A - Get Return Status",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 61,
+  "api": "GSTR1A - Get SUPECO Details",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 62,
+  "api": "GSTR1A - Get SUPECOA Details",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 63,
+  "api": "GSTR1A - Get TXP",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 64,
+  "api": "GSTR1A - Get TXPA",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 65,
+  "api": "GSTR1A - Proceed to File",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 66,
+  "api": "GSTR1A - Reset GSTR1A",
+  "group": "GSTR1A",
+  "status": "not_tested"
+ },
+ {
+  "id": 67,
+  "api": "GSTR1A - Save GSTR1A data",
+  "group": "GSTR1A",
+  "status": "partial"
+ },
+ {
+  "id": 68,
+  "api": "GSTR2A - Get AMDHIST",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 69,
+  "api": "GSTR2A - Get B2B Invoices",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 70,
+  "api": "GSTR2A - Get B2BA Invoices",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 71,
+  "api": "GSTR2A - Get CDN Invoices",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 72,
+  "api": "GSTR2A - Get CDNA Invoices",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 73,
+  "api": "GSTR2A - Get ECOM Invoices",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 74,
+  "api": "GSTR2A - Get ECOMA Invoices",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 75,
+  "api": "GSTR2A - Get IMPG",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 76,
+  "api": "GSTR2A - Get IMPGSEZ",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 77,
+  "api": "GSTR2A - Get ISD Credit",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 78,
+  "api": "GSTR2A - Get TCS Credit",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 79,
+  "api": "GSTR2A - Get TDS Credit",
+  "group": "GSTR2A",
+  "status": "working"
+ },
+ {
+  "id": 80,
+  "api": "IMS - Get Added Back Liability Records",
+  "group": "IMS",
+  "status": "working"
+ },
+ {
+  "id": 81,
+  "api": "IMS - Get IMS Request Status",
+  "group": "IMS",
+  "status": "working"
+ },
+ {
+  "id": 82,
+  "api": "IMS - Get Invoice Count",
+  "group": "IMS",
+  "status": "working"
+ },
+ {
+  "id": 83,
+  "api": "IMS - Get Invoices",
+  "group": "IMS",
+  "status": "partial"
+ },
+ {
+  "id": 84,
+  "api": "IMS - Get Supplier Invoices API",
+  "group": "IMS",
+  "status": "working"
+ },
+ {
+  "id": 85,
+  "api": "IMS - Reset IMS Action",
+  "group": "IMS",
+  "status": "working"
+ },
+ {
+  "id": 86,
+  "api": "IMS - Save IMS Action",
+  "group": "IMS",
+  "status": "working"
+ },
+ {
+  "id": 87,
+  "api": "IMS- Get IMS File Details API",
+  "group": "IMS Get IMS File Details API",
+  "status": "working"
+ },
+ {
+  "id": 88,
+  "api": "GSTR2B - Generate 2B On Demand API",
+  "group": "GSTR2B",
+  "status": "working"
+ },
+ {
+  "id": 89,
+  "api": "GSTR2B - Get 2B Gen Status API",
+  "group": "GSTR2B",
+  "status": "working"
+ },
+ {
+  "id": 90,
+  "api": "GSTR2B - Get All Details",
+  "group": "GSTR2B",
+  "status": "working"
+ },
+ {
+  "id": 91,
+  "api": "GSTR3B - File GSTR3B data",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 92,
+  "api": "GSTR3B - Get GSTR3B Details",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 93,
+  "api": "GSTR3B - Get ITC Liability Auto Calc Details",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 94,
+  "api": "GSTR3B - Get ITC Reversal Balance",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 95,
+  "api": "GSTR3B - Get Latest RCM Balance",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 96,
+  "api": "GSTR3B - Get Opening Balance For Credit Reversal and Re-claimed Details",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 97,
+  "api": "GSTR3B - Get RCM Opening Balance",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 98,
+  "api": "GSTR3B - Get system calculated interest",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 99,
+  "api": "GSTR3B - Offset Liability GSTR3B data",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 100,
+  "api": "GSTR3B - Re-compute interest",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 101,
+  "api": "GSTR3B - Save GSTR3B data",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 102,
+  "api": "GSTR3B - Save Opening Balance For Credit Reversal and Re-claimed Details",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 103,
+  "api": "GSTR3B - Save past liability breakup",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 104,
+  "api": "GSTR3B - Submit RCM Opening Balance",
+  "group": "GSTR3B",
+  "status": "not_working"
+ },
+ {
+  "id": 105,
+  "api": "GSTR3B - Validate GSTR3B against AutoCalculated data",
+  "group": "GSTR3B",
+  "status": "working"
+ },
+ {
+  "id": 106,
+  "api": "GSTR4 Annual - File",
+  "group": "GSTR4",
+  "status": "not_tested"
+ },
+ {
+  "id": 107,
+  "api": "GSTR4 Annual - Get 4A-4B Autopop Details",
+  "group": "GSTR4",
+  "status": "not_working"
+ },
+ {
+  "id": 108,
+  "api": "GSTR4 Annual - Get Inward Outward Supply",
+  "group": "GSTR4",
+  "status": "working"
+ },
+ {
+  "id": 109,
+  "api": "GSTR4 Annual - Get Summary",
+  "group": "GSTR4",
+  "status": "not_tested"
+ },
+ {
+  "id": 110,
+  "api": "GSTR4 Annual - Get TDSCMP Summary",
+  "group": "GSTR4",
+  "status": "not_working"
+ },
+ {
+  "id": 111,
+  "api": "GSTR4 Annual - Proceed to File",
+  "group": "GSTR4",
+  "status": "not_tested"
+ },
+ {
+  "id": 112,
+  "api": "GSTR4 Annual - Save",
+  "group": "GSTR4",
+  "status": "not_tested"
+ },
+ {
+  "id": 113,
+  "api": "GSTR4 Annual - Validate Liability",
+  "group": "GSTR4",
+  "status": "not_tested"
+ },
+ {
+  "id": 114,
+  "api": "GSTR4 Annual - Validate Turnover",
+  "group": "GSTR4",
+  "status": "not_tested"
+ },
+ {
+  "id": 115,
+  "api": "GSTR6 - Calculate R6",
+  "group": "GSTR6",
+  "status": "working"
+ },
+ {
+  "id": 116,
+  "api": "GSTR6 - File GSTR6",
+  "group": "GSTR6",
+  "status": "not_tested"
+ },
+ {
+  "id": 117,
+  "api": "GSTR6 - Get Amendment ISD Details",
+  "group": "GSTR6",
+  "status": "working"
+ },
+ {
+  "id": 118,
+  "api": "GSTR6 - Get B2B Invoices",
+  "group": "GSTR6",
+  "status": "working"
+ },
+ {
+  "id": 119,
+  "api": "GSTR6 - Get B2BA Invoices",
+  "group": "GSTR6",
+  "status": "working"
+ },
+ {
+  "id": 120,
+  "api": "GSTR6 - Get CDN Invoices",
+  "group": "GSTR6",
+  "status": "working"
+ },
+ {
+  "id": 121,
+  "api": "GSTR6 - Get CDNA Invoices",
+  "group": "GSTR6",
+  "status": "not_working"
+ },
+ {
+  "id": 122,
+  "api": "GSTR6 - Get GSTR6 Summary",
+  "group": "GSTR6",
+  "status": "working"
+ },
+ {
+  "id": 123,
+  "api": "GSTR6 - Get ISD Details",
+  "group": "GSTR6",
+  "status": "not_tested"
+ },
+ {
+  "id": 124,
+  "api": "GSTR6 - get ITC details",
+  "group": "GSTR6",
+  "status": "working"
+ },
+ {
+  "id": 125,
+  "api": "GSTR6 - get Late fee",
+  "group": "GSTR6",
+  "status": "working"
+ },
+ {
+  "id": 126,
+  "api": "GSTR6 - Offset Late fee",
+  "group": "GSTR6",
+  "status": "not_tested"
+ },
+ {
+  "id": 127,
+  "api": "GSTR6 - Save Cross ITC Details",
+  "group": "GSTR6",
+  "status": "not_tested"
+ },
+ {
+  "id": 128,
+  "api": "GSTR6 - Save GSTR6",
+  "group": "GSTR6",
+  "status": "working"
+ },
+ {
+  "id": 129,
+  "api": "GSTR6 - Submit Gstr6",
+  "group": "GSTR6",
+  "status": "working"
+ },
+ {
+  "id": 130,
+  "api": "GSTR7 - File GSTR7",
+  "group": "GSTR7",
+  "status": "working"
+ },
+ {
+  "id": 131,
+  "api": "GSTR7 - Get TDS checksum",
+  "group": "GSTR7",
+  "status": "working"
+ },
+ {
+  "id": 132,
+  "api": "GSTR7 - Get TDS details",
+  "group": "GSTR7",
+  "status": "working"
+ },
+ {
+  "id": 133,
+  "api": "GSTR7 - Save GSTR7",
+  "group": "GSTR7",
+  "status": "not_tested"
+ },
+ {
+  "id": 134,
+  "api": "GSTR7- Get GSTR7 Summary",
+  "group": "GSTR7 Get GSTR7 Summary",
+  "status": "working"
+ },
+ {
+  "id": 135,
+  "api": "GSTR8 - File GSTR8",
+  "group": "GSTR8",
+  "status": "not_tested"
+ },
+ {
+  "id": 136,
+  "api": "GSTR8 - Get Checksum",
+  "group": "GSTR8",
+  "status": "not_tested"
+ },
+ {
+  "id": 137,
+  "api": "GSTR8 - Get Summary",
+  "group": "GSTR8",
+  "status": "not_tested"
+ },
+ {
+  "id": 138,
+  "api": "GSTR8 - GetEID",
+  "group": "GSTR8",
+  "status": "not_tested"
+ },
+ {
+  "id": 139,
+  "api": "GSTR8 - GetTCS",
+  "group": "GSTR8",
+  "status": "not_tested"
+ },
+ {
+  "id": 140,
+  "api": "GSTR8 - SAVE",
+  "group": "GSTR8",
+  "status": "not_tested"
+ },
+ {
+  "id": 141,
+  "api": "GSTR9 - Create 8A Data API",
+  "group": "GSTR9",
+  "status": "not_tested"
+ },
+ {
+  "id": 142,
+  "api": "GSTR9 - File GSTR9",
+  "group": "GSTR9",
+  "status": "not_tested"
+ },
+ {
+  "id": 143,
+  "api": "GSTR9 - Get 8A Details",
+  "group": "GSTR9",
+  "status": "not_tested"
+ },
+ {
+  "id": 144,
+  "api": "GSTR9 - Get Autocalculated Details",
+  "group": "GSTR9",
+  "status": "working"
+ },
+ {
+  "id": 145,
+  "api": "GSTR9 - Get Details",
+  "group": "GSTR9",
+  "status": "working"
+ },
+ {
+  "id": 146,
+  "api": "GSTR9 - Get R1R1A HSN Data",
+  "group": "GSTR9",
+  "status": "not_tested"
+ },
+ {
+  "id": 147,
+  "api": "GSTR9 - Save GSTR9 data",
+  "group": "GSTR9",
+  "status": "not_tested"
+ },
+ {
+  "id": 148,
+  "api": "GSTR9C - File GSTR9C",
+  "group": "GSTR9C",
+  "status": "not_tested"
+ },
+ {
+  "id": 149,
+  "api": "GSTR9C - Generate Certificate",
+  "group": "GSTR9C",
+  "status": "not_tested"
+ },
+ {
+  "id": 150,
+  "api": "GSTR9C - Get 9 Records for 9C",
+  "group": "GSTR9C",
+  "status": "working"
+ },
+ {
+  "id": 151,
+  "api": "GSTR9C - Get Summary",
+  "group": "GSTR9C",
+  "status": "working"
+ },
+ {
+  "id": 152,
+  "api": "GSTR9C - Save GSTR9C data",
+  "group": "GSTR9C",
+  "status": "not_tested"
+ },
+ {
+  "id": 153,
+  "api": "GSTR9CHashGenerator",
+  "group": "GSTR9CHashGenerator",
+  "status": "not_tested"
+ },
+ {
+  "id": 154,
+  "api": "ITC01 - File",
+  "group": "ITC01",
+  "status": "not_tested"
+ },
+ {
+  "id": 155,
+  "api": "ITC01 - Get",
+  "group": "ITC01",
+  "status": "not_tested"
+ },
+ {
+  "id": 156,
+  "api": "ITC01 - Save",
+  "group": "ITC01",
+  "status": "not_tested"
+ },
+ {
+  "id": 157,
+  "api": "ITC01 - Submit",
+  "group": "ITC01",
+  "status": "not_tested"
+ },
+ {
+  "id": 158,
+  "api": "ITC01 GET CADETAILS",
+  "group": "ITC01 GET CADETAILS",
+  "status": "not_tested"
+ },
+ {
+  "id": 159,
+  "api": "ITC01 SAVE OR DELETE CADETAILS",
+  "group": "ITC01 SAVE OR DELETE CADETAILS",
+  "status": "not_tested"
+ },
+ {
+  "id": 160,
+  "api": "ITC01-18D CLOSE",
+  "group": "ITC0118D CLOSE",
+  "status": "not_tested"
+ },
+ {
+  "id": 161,
+  "api": "ITC03 - Close ITC03",
+  "group": "ITC03",
+  "status": "not_tested"
+ },
+ {
+  "id": 162,
+  "api": "ITC03 - File ITC03",
+  "group": "ITC03",
+  "status": "not_tested"
+ },
+ {
+  "id": 163,
+  "api": "ITC03 - Get ITC03 Invoices",
+  "group": "ITC03",
+  "status": "not_tested"
+ },
+ {
+  "id": 164,
+  "api": "ITC03 - Get ITC03 Summary",
+  "group": "ITC03",
+  "status": "not_tested"
+ },
+ {
+  "id": 165,
+  "api": "ITC03 - Save ITC03",
+  "group": "ITC03",
+  "status": "not_tested"
+ },
+ {
+  "id": 166,
+  "api": "ITC03 - SetOff ITC03 Liability",
+  "group": "ITC03",
+  "status": "not_tested"
+ },
+ {
+  "id": 167,
+  "api": "ITC04 - File",
+  "group": "ITC04",
+  "status": "not_tested"
+ },
+ {
+  "id": 168,
+  "api": "ITC04 - Get Invoices",
+  "group": "ITC04",
+  "status": "not_tested"
+ },
+ {
+  "id": 169,
+  "api": "ITC04 - Get Summary",
+  "group": "ITC04",
+  "status": "not_tested"
+ },
+ {
+  "id": 170,
+  "api": "ITC04 - Save",
+  "group": "ITC04",
+  "status": "not_tested"
+ },
+ {
+  "id": 171,
+  "api": "ITC04 - Validate Turnover API",
+  "group": "ITC04",
+  "status": "not_tested"
+ },
+ {
+  "id": 172,
+  "api": "CMP - File CMP",
+  "group": "CMP",
+  "status": "not_tested"
+ },
+ {
+  "id": 173,
+  "api": "CMP - Get Details",
+  "group": "CMP",
+  "status": "not_tested"
+ },
+ {
+  "id": 174,
+  "api": "CMP - Save",
+  "group": "CMP",
+  "status": "not_tested"
+ },
+ {
+  "id": 175,
+  "api": "CMP - Validate Turnover",
+  "group": "CMP",
+  "status": "not_tested"
+ },
+ {
+  "id": 176,
+  "api": "Public - Common Authentication",
+  "group": "Public",
+  "status": "working"
+ },
+ {
+  "id": 177,
+  "api": "Public - GET PREFERENCE",
+  "group": "Public",
+  "status": "working"
+ },
+ {
+  "id": 178,
+  "api": "Public - Online Verification of GSTIN",
+  "group": "Public",
+  "status": "working"
+ },
+ {
+  "id": 179,
+  "api": "Public - PAN to GSTIN",
+  "group": "Public",
+  "status": "not_tested"
+ },
+ {
+  "id": 180,
+  "api": "Public - Search Taxpayer",
+  "group": "Public",
+  "status": "working"
+ },
+ {
+  "id": 181,
+  "api": "Public - Updated Online Verification of GSTIN",
+  "group": "Public",
+  "status": "working"
+ },
+ {
+  "id": 182,
+  "api": "Public - View and Track Returns",
+  "group": "Public",
+  "status": "working"
+ }
+]
