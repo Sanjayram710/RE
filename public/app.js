@@ -850,20 +850,18 @@ function checkItrStatusModal() { alert("ITR Status: Return processed with zero o
 // Authentication & Session Management (Sign In, Register, Logout)
 // ============================================================================
 appState.auth = {
-  isLoggedIn: true,
-  user: {
-    name: "Sanjay Harshi",
-    email: "sanjay@example.com",
-    mobile: "9876543210",
-    pan: "CVBBC4433W"
-  }
+  isLoggedIn: false,
+  user: null
 };
 
 function initAuth() {
   try {
     const saved = localStorage.getItem("simplegst_user_session");
     if (saved) {
-      appState.auth = JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.isLoggedIn && parsed.user) {
+        appState.auth = parsed;
+      }
     }
   } catch (e) {
     console.warn("Could not parse saved user session:", e);
@@ -878,6 +876,17 @@ function renderAuthState() {
   const menuUserName = document.getElementById("menuUserFullName");
   const menuUserEmail = document.getElementById("menuUserEmail");
   const currentFilingPan = document.getElementById("currentFilingPan");
+  const guestBanner = document.getElementById("guestWelcomeBanner");
+
+  const inputFirst = document.getElementById("inputFirstName");
+  const inputLast = document.getElementById("inputLastName");
+  const inputPan = document.getElementById("inputPan");
+  const inputMobile = document.getElementById("inputMobile");
+  const inputEmail = document.getElementById("inputEmail");
+  const inputDob = document.getElementById("inputDob");
+  const inputFather = document.getElementById("inputFatherName");
+  const inputAadhaar = document.getElementById("inputAadhaar");
+  const expertTaxpayerName = document.getElementById("expertTaxpayerName");
 
   if (appState.auth && appState.auth.isLoggedIn && appState.auth.user) {
     const user = appState.auth.user;
@@ -887,11 +896,55 @@ function renderAuthState() {
     if (menuUserName) menuUserName.textContent = user.name || "Assessee";
     if (menuUserEmail) menuUserEmail.textContent = user.email || "user@simplegst.tax";
     if (currentFilingPan) currentFilingPan.textContent = user.pan || "CVBBC4433W";
+    if (guestBanner) guestBanner.style.display = "none";
+    if (expertTaxpayerName) expertTaxpayerName.textContent = user.name;
+
+    // Populate personal info inputs if user exists
+    const nameParts = (user.name || "").trim().split(" ");
+    const firstName = user.firstName || nameParts[0] || "";
+    const lastName = user.lastName || nameParts.slice(1).join(" ") || "";
+
+    if (inputFirst) inputFirst.value = firstName;
+    if (inputLast) inputLast.value = lastName;
+    if (inputPan) inputPan.value = user.pan || "";
+    if (inputMobile) inputMobile.value = user.mobile || "";
+    if (inputEmail) inputEmail.value = user.email || "";
+    if (inputDob) inputDob.value = user.dob || "07/10/2006";
+    if (inputFather) inputFather.value = user.fatherName || "Harshi V";
+    if (inputAadhaar) inputAadhaar.value = user.aadhaar || "482910482910";
+
+    // Sync appState
+    appState.itr.personalInfo.firstName = firstName;
+    appState.itr.personalInfo.lastName = lastName;
+    appState.itr.personalInfo.pan = user.pan;
+    appState.itr.personalInfo.mobile = user.mobile;
+    appState.itr.personalInfo.email = user.email;
+
   } else {
+    // GUEST / LOGGED OUT STATE
     if (loggedOutNav) loggedOutNav.style.display = "flex";
     if (loggedInNav) loggedInNav.style.display = "none";
-    if (currentFilingPan) currentFilingPan.textContent = "Guest";
+    if (currentFilingPan) currentFilingPan.textContent = "Guest / New Filing";
+    if (guestBanner) guestBanner.style.display = "flex";
+    if (expertTaxpayerName) expertTaxpayerName.textContent = "New Taxpayer (Guest)";
+
+    // Clear personal info fields so a new user has a clean slate
+    if (inputFirst) inputFirst.value = "";
+    if (inputLast) inputLast.value = "";
+    if (inputPan) inputPan.value = "";
+    if (inputMobile) inputMobile.value = "";
+    if (inputEmail) inputEmail.value = "";
+    if (inputDob) inputDob.value = "";
+    if (inputFather) inputFather.value = "";
+    if (inputAadhaar) inputAadhaar.value = "";
+
+    appState.itr.personalInfo.firstName = "";
+    appState.itr.personalInfo.lastName = "";
+    appState.itr.personalInfo.pan = "";
+    appState.itr.personalInfo.mobile = "";
+    appState.itr.personalInfo.email = "";
   }
+  updatePersonalInfoState();
 }
 
 function openAuthModal(tab = "signin") {
@@ -927,7 +980,7 @@ function switchAuthTab(tab) {
     if (formSignIn) formSignIn.classList.remove("hidden");
     if (formRegister) formRegister.classList.add("hidden");
     if (title) title.textContent = "Sign In to SimpleGST";
-    if (sub) sub.textContent = "Secure access to your tax returns, GSTR filings, and compliance vault";
+    if (sub) sub.textContent = "Secure ClearTax-grade access to tax returns, AIS data & CA consultations";
   } else {
     if (btnRegister) {
       btnRegister.style.background = "var(--white)";
@@ -943,8 +996,8 @@ function switchAuthTab(tab) {
     }
     if (formSignIn) formSignIn.classList.add("hidden");
     if (formRegister) formRegister.classList.remove("hidden");
-    if (title) title.textContent = "Create New Account (New Sign In)";
-    if (sub) sub.textContent = "Enter your PAN and contact info to start frictionless e-filing";
+    if (title) title.textContent = "Create New Taxpayer Account";
+    if (sub) sub.textContent = "Enter your legal PAN and contact info to start frictionless e-filing";
   }
 }
 
@@ -954,21 +1007,29 @@ function handleSignInSubmit(e) {
   const identifier = idInput ? idInput.value.trim() : "CVBBC4433W";
   const pan = identifier.length === 10 ? identifier.toUpperCase() : "CVBBC4433W";
 
+  const isSanjay = (pan === "CVBBC4433W");
+  const name = isSanjay ? "Sanjay Harshi" : "Authorized Taxpayer";
+
   appState.auth = {
     isLoggedIn: true,
     user: {
-      name: pan === "CVBBC4433W" ? "Sanjay Harshi" : "Authorized Taxpayer",
+      name,
+      firstName: isSanjay ? "Sanjay" : name.split(" ")[0],
+      lastName: isSanjay ? "Harshi" : name.split(" ")[1] || "",
       email: identifier.includes("@") ? identifier : `${pan.toLowerCase()}@taxpayer.in`,
       mobile: "9876543210",
-      pan
+      pan,
+      dob: "07/10/2006",
+      fatherName: "Harshi V",
+      aadhaar: "482910482910"
     }
   };
 
   localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
   renderAuthState();
   closeAuthModal();
-  goToItrStep(1); // Ensure Option 1 is selected after login
-  alert(`✓ Welcome back, ${appState.auth.user.name}!\nSigned in successfully. Option 1 (Personal Info) is ready for filing.`);
+  goToItrStep(1);
+  showToast(`✓ Welcome back, ${appState.auth.user.name}! Option 1 (Personal Info) is ready for filing.`, "success");
 }
 
 function handleRegisterSubmit(e) {
@@ -984,42 +1045,69 @@ function handleRegisterSubmit(e) {
     return;
   }
 
-  appState.auth = {
-    isLoggedIn: true,
-    user: { name, pan, mobile, email }
-  };
-
-  localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
-
-  // Sync with personal info
   const nameParts = name.split(" ");
-  appState.itr.personalInfo.firstName = nameParts[0] || name;
-  appState.itr.personalInfo.lastName = nameParts.slice(1).join(" ") || "Taxpayer";
-  appState.itr.personalInfo.pan = pan;
-  appState.itr.personalInfo.mobile = mobile;
-  appState.itr.personalInfo.email = email;
+  const firstName = nameParts[0] || name;
+  const lastName = nameParts.slice(1).join(" ") || "Taxpayer";
 
-  renderAuthState();
-  closeAuthModal();
-  goToItrStep(1); // Ensure Option 1 is selected after register
-  alert(`✓ Account created successfully for ${name}!\nOption 1 (Personal Info) has been updated with your details.`);
-}
-
-function quickDemoLogin() {
   appState.auth = {
     isLoggedIn: true,
     user: {
+      name,
+      firstName,
+      lastName,
+      pan,
+      mobile,
+      email,
+      dob: "01/01/1995",
+      fatherName: "Guardian Name",
+      aadhaar: "500012345678"
+    }
+  };
+
+  localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
+  renderAuthState();
+  closeAuthModal();
+  goToItrStep(1);
+  showToast(`🎉 Account created for ${name} (${pan})! Ready to file.`, "success");
+}
+
+function quickDemoLogin(profile = "sanjay") {
+  let user;
+  if (profile === "priya") {
+    user = {
+      name: "Priya Sharma",
+      firstName: "Priya",
+      lastName: "Sharma",
+      email: "priya.sharma@techfirm.io",
+      mobile: "9811223344",
+      pan: "AAPCS1234F",
+      dob: "15/04/1994",
+      fatherName: "Ramesh Sharma",
+      aadhaar: "593810293841"
+    };
+  } else {
+    user = {
       name: "Sanjay Harshi",
+      firstName: "Sanjay",
+      lastName: "Harshi",
       email: "sanjay@example.com",
       mobile: "9876543210",
-      pan: "CVBBC4433W"
-    }
+      pan: "CVBBC4433W",
+      dob: "07/10/2006",
+      fatherName: "Harshi V",
+      aadhaar: "482910482910"
+    };
+  }
+
+  appState.auth = {
+    isLoggedIn: true,
+    user
   };
   localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
   renderAuthState();
   closeAuthModal();
   goToItrStep(1);
-  alert("✓ One-Click Login successful as Sanjay Harshi (CVBBC4433W).\nOption 1 (Personal Info) is active.");
+  showToast(`✓ Logged in as ${user.name} (${user.pan})`, "success");
 }
 
 function logoutAction() {
@@ -1031,7 +1119,7 @@ function logoutAction() {
   renderAuthState();
   document.getElementById("profileDropdownMenu")?.classList.remove("active");
   goToItrStep(1);
-  alert("✓ You have been logged out.\nClick 'Sign In' or 'New Sign In' at any time to resume filing.");
+  showToast("✓ You have been logged out. Switched to Guest mode.", "info");
 }
 
 function onRegisterPanInput(val) {
