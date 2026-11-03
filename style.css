@@ -174,10 +174,12 @@ body {
 }
 
 .suite-switch-pills {
-  display: flex;
+  display: inline-flex;
   background: #F1F5F9;
   padding: 3px;
   border-radius: 9999px;
+  gap: 2px;
+  flex-wrap: nowrap;
 }
 
 .suite-pill {
@@ -2278,14 +2280,15 @@ body {
 }
 
 .suite-nav-container {
-  max-width: 1300px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 8px 24px;
+  padding: 8px 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow-x: auto;
   scrollbar-width: none;
+  white-space: nowrap;
 }
 
 .suite-nav-container::-webkit-scrollbar {
