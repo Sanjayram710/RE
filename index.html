@@ -136,7 +136,7 @@
 
   <!-- Suite Navigation Strip (Sleek Segmented Control) -->
   <nav class="suite-nav-strip">
-    <div class="suite-nav-container">
+    <div class="suite-nav-container" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
       <div class="suite-switch-pills">
         <button class="suite-pill active" id="btnSuiteItr" onclick="switchSuite('itr')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -146,6 +146,22 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           <span>Tax Filing from Experts</span>
         </button>
+        <button class="suite-pill" id="btnSuiteCopilot" onclick="switchSuite('copilot')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><rect x="4" y="8" width="16" height="12" rx="2"/><circle cx="9" cy="13" r="1.5"/><circle cx="15" cy="13" r="1.5"/><path d="M10 17h4"/></svg>
+          <span>GST Copilot (5-Step)</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteStartup" onclick="switchSuite('startup')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>
+          <span>Startup Express</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteCompliance" onclick="switchSuite('compliance')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>Health Score (0-100)</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteGst" onclick="switchSuite('gst')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <span>GST & Reports</span>
+        </button>
         <button class="suite-pill" id="btnSuiteNotice" onclick="switchSuite('notice')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span>Notice Defense Board</span>
@@ -154,9 +170,19 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
           <span>Tax Document Vault</span>
         </button>
-        <button class="suite-pill" id="btnSuiteGst" onclick="switchSuite('gst')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-          <span>GST & Reports</span>
+      </div>
+      <div class="suite-quick-actions" style="margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button class="btn btn-sm btn-outline" style="border-radius: 9999px; padding: 5px 12px; font-weight: 600;" onclick="openDueDatesModal()" title="View Statutory Deadlines">
+          📅 Due Dates
+        </button>
+        <button class="btn btn-sm btn-outline" style="border-radius: 9999px; padding: 5px 12px; font-weight: 600; color: #10B981; border-color: #A7F3D0;" onclick="openReferralModal()" title="Refer & Earn ₹500">
+          🎁 Referral (₹500)
+        </button>
+        <button class="btn btn-sm btn-outline" style="border-radius: 9999px; padding: 5px 12px; font-weight: 600;" onclick="openMcaModal()" title="MCA CIN Lookup">
+          🏛️ MCA Lookup
+        </button>
+        <button class="btn btn-sm" style="border-radius: 9999px; padding: 5px 14px; font-weight: 700; background: #0F172A; color: #38BDF8; border: 1px solid #1E293B;" onclick="toggleKioskMode(true)" title="Touch-friendly Kiosk Mode">
+          🖥️ Kiosk Mode
         </button>
       </div>
     </div>
@@ -3301,7 +3327,645 @@
   </div>
 
   <!-- Statutory Compliance Footer -->
-  <footer class="statutory-footer text-xs text-muted" style="text-align: center; padding: 24px 10px; border-top: 1px solid var(--border-subtle); margin-top: 40px;">
+  
+  <!-- ========================================================================= -->
+  <!-- GST COPILOT SUITE (Plain-English 5-Step Hero Workflow)                    -->
+  <!-- ========================================================================= -->
+  <div id="viewCopilotSuite" class="app-suite-container hidden">
+    <div class="form-card">
+      <div class="form-card-header" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h2 class="card-title-text" style="font-size: 22px; margin: 0;">GST Copilot (Zero Jargon)</h2>
+            <span class="status-chip success-chip">Period: October 2026</span>
+          </div>
+          <p class="card-subtitle-text" style="margin-top: 4px; font-size: 14px;">
+            Plain-English Return Preparation: Sales → Purchases → ITC → Tax → 1-Click File
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline btn-sm" onclick="fetchCopilotPipeline()">🔄 Refresh Data</button>
+        </div>
+      </div>
+
+      <!-- 5-Step Stepper Bar -->
+      <div class="copilot-steps-bar mt-3">
+        <button class="copilot-step-btn active" id="btnCopilotStep1" onclick="viewCopilotStep(1)">
+          <div class="step-number">Step 1</div>
+          <div class="step-title">1. Sales Invoices</div>
+        </button>
+        <button class="copilot-step-btn" id="btnCopilotStep2" onclick="viewCopilotStep(2)">
+          <div class="step-number">Step 2</div>
+          <div class="step-title">2. Purchase Bills</div>
+        </button>
+        <button class="copilot-step-btn" id="btnCopilotStep3" onclick="viewCopilotStep(3)">
+          <div class="step-number">Step 3</div>
+          <div class="step-title">3. Input Credit (ITC)</div>
+        </button>
+        <button class="copilot-step-btn" id="btnCopilotStep4" onclick="viewCopilotStep(4)">
+          <div class="step-number">Step 4</div>
+          <div class="step-title">4. Tax Calculation</div>
+        </button>
+        <button class="copilot-step-btn" id="btnCopilotStep5" onclick="viewCopilotStep(5)">
+          <div class="step-number">Step 5</div>
+          <div class="step-title">5. Authorise & File</div>
+        </button>
+      </div>
+
+      <!-- Step 1 Content: Sales Invoices -->
+      <div id="copilotStepView1" class="copilot-step-content">
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+          <h3 style="margin-top: 0; color: #1E40AF;">Step 1: Your Sales for October 2026</h3>
+          <p style="font-size: 15px; color: #334155; line-height: 1.6;" id="copilotSentenceStep1">
+            You made <strong>₹12,40,000</strong> in total taxable sales across 15 invoices and collected <strong>₹2,23,200</strong> in GST.
+          </p>
+          <div class="form-grid-3 mt-3">
+            <div class="summary-metric-card" style="background: #FFFFFF; padding: 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <div class="text-xs text-muted">Total Sales Invoices</div>
+              <div class="font-mono" style="font-size: 20px; font-weight: 700; color: #0F172A;">15 Invoices</div>
+              <div class="text-xs text-success mt-1">✓ Validated against schema</div>
+            </div>
+            <div class="summary-metric-card" style="background: #FFFFFF; padding: 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <div class="text-xs text-muted">Total Taxable Value</div>
+              <div class="font-mono" style="font-size: 20px; font-weight: 700; color: #0F172A;">₹12,40,000</div>
+              <div class="text-xs text-muted mt-1">Goods & Services</div>
+            </div>
+            <div class="summary-metric-card" style="background: #FFFFFF; padding: 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <div class="text-xs text-muted">Total GST Collected</div>
+              <div class="font-mono" style="font-size: 20px; font-weight: 700; color: #2563EB;">₹2,23,200</div>
+              <div class="text-xs text-muted mt-1">CGST + SGST + IGST</div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button class="btn btn-primary" onclick="viewCopilotStep(2)">Proceed to Step 2: Purchases →</button>
+        </div>
+      </div>
+
+      <!-- Step 2 Content: Purchase Bills -->
+      <div id="copilotStepView2" class="copilot-step-content hidden">
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+          <h3 style="margin-top: 0; color: #1E40AF;">Step 2: Purchase Bills from Your Suppliers</h3>
+          <p style="font-size: 15px; color: #334155; line-height: 1.6;" id="copilotSentenceStep2">
+            We found <strong>₹8,50,000</strong> of supplier purchase bills across 5 invoices.
+          </p>
+          <div class="form-grid-3 mt-3">
+            <div class="summary-metric-card" style="background: #FFFFFF; padding: 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <div class="text-xs text-muted">Purchase Invoices Found</div>
+              <div class="font-mono" style="font-size: 20px; font-weight: 700; color: #0F172A;">5 Invoices</div>
+              <div class="text-xs text-success mt-1">✓ Auto-fetched from GSTR-2B</div>
+            </div>
+            <div class="summary-metric-card" style="background: #FFFFFF; padding: 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <div class="text-xs text-muted">Purchases Value</div>
+              <div class="font-mono" style="font-size: 20px; font-weight: 700; color: #0F172A;">₹8,50,000</div>
+              <div class="text-xs text-muted mt-1">Spices & Packaging Materials</div>
+            </div>
+            <div class="summary-metric-card" style="background: #FFFFFF; padding: 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <div class="text-xs text-muted">GST Paid to Suppliers</div>
+              <div class="font-mono" style="font-size: 20px; font-weight: 700; color: #10B981;">₹1,53,000</div>
+              <div class="text-xs text-muted mt-1">Available for Input Tax Credit</div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; gap: 10px;">
+          <button class="btn btn-outline" onclick="viewCopilotStep(1)">← Back to Sales</button>
+          <button class="btn btn-primary" onclick="viewCopilotStep(3)">Proceed to Step 3: Available ITC →</button>
+        </div>
+      </div>
+
+      <!-- Step 3 Content: Input Tax Credit (ITC) -->
+      <div id="copilotStepView3" class="copilot-step-content hidden">
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+          <h3 style="margin-top: 0; color: #1E40AF;">Step 3: Your Available Input Tax Credit (ITC)</h3>
+          <p style="font-size: 15px; color: #334155; line-height: 1.6;" id="copilotSentenceStep3">
+            Your available tax credit is <strong>₹1,53,000</strong>. All suppliers have filed their returns, so 100% of this credit is legally safe to claim.
+          </p>
+          <div style="display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; padding: 16px;">
+              <div style="font-size: 13px; font-weight: 700; color: #065F46;">Safe Claimable ITC</div>
+              <div class="font-mono" style="font-size: 24px; font-weight: 800; color: #059669; margin: 4px 0;">₹1,53,000</div>
+              <div style="font-size: 12px; color: #047857;">Section 16(2)(aa) check passed</div>
+            </div>
+            <div style="flex: 1; min-width: 200px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 16px;">
+              <div style="font-size: 13px; font-weight: 700; color: #334155;">Blocked ITC (Sec 17(5))</div>
+              <div class="font-mono" style="font-size: 24px; font-weight: 800; color: #64748B; margin: 4px 0;">₹0</div>
+              <div style="font-size: 12px; color: #64748B;">No ineligible personal/motor expenses</div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; gap: 10px;">
+          <button class="btn btn-outline" onclick="viewCopilotStep(2)">← Back to Purchases</button>
+          <button class="btn btn-primary" onclick="viewCopilotStep(4)">Proceed to Step 4: Tax Calculation →</button>
+        </div>
+      </div>
+
+      <!-- Step 4 Content: Tax Calculation -->
+      <div id="copilotStepView4" class="copilot-step-content hidden">
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+          <h3 style="margin-top: 0; color: #1E40AF;">Step 4: Deterministic Tax Calculation</h3>
+          <p style="font-size: 15px; color: #334155; line-height: 1.6;" id="copilotSentenceStep4">
+            Estimated GST payable: <strong>₹70,200</strong> (Sales Tax ₹2,23,200 minus Available Credit ₹1,53,000).
+          </p>
+
+          <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #E2E8F0;">
+              <span style="color: #334155;">Total Tax Collected on Sales (Output Tax)</span>
+              <span class="font-mono" style="font-weight: 700; color: #0F172A;">₹2,23,200</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #E2E8F0;">
+              <span style="color: #334155;">Less: Available Input Tax Credit (ITC)</span>
+              <span class="font-mono" style="font-weight: 700; color: #059669;">- ₹1,53,000</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 12px 0 4px 0;">
+              <span style="font-size: 16px; font-weight: 700; color: #0F172A;">Net GST Payable for October 2026</span>
+              <span class="font-mono" style="font-size: 22px; font-weight: 800; color: #2563EB;">₹70,200</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; gap: 10px;">
+          <button class="btn btn-outline" onclick="viewCopilotStep(3)">← Back to ITC</button>
+          <button class="btn btn-primary" onclick="viewCopilotStep(5)">Proceed to Step 5: Authorise Filing →</button>
+        </div>
+      </div>
+
+      <!-- Step 5 Content: Authorise & File -->
+      <div id="copilotStepView5" class="copilot-step-content hidden">
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+          <h3 style="margin-top: 0; color: #1E40AF;">Step 5: Authorise & E-File Return</h3>
+          <p style="font-size: 15px; color: #334155; line-height: 1.6;">
+            Your GSTR-3B return for <strong>October 2026</strong> has passed all deterministic rules and is ready for live GSTN filing.
+          </p>
+
+          <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <div style="font-weight: 700; color: #1E40AF;">Statutory Authorization Ready</div>
+                <div style="font-size: 13px; color: #3B82F6;">Entity: Malabar Spice Traders (32ABCDE1234F1Z5)</div>
+              </div>
+              <span class="status-chip success-chip">Sandbox Connected</span>
+            </div>
+          </div>
+
+          <div id="copilotFilingResult" class="hidden mt-3" style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; padding: 16px;">
+            <div style="font-weight: 700; color: #065F46; font-size: 16px;">🎉 Return Filed Successfully!</div>
+            <div style="font-size: 13px; color: #047857; margin-top: 4px;">
+              Statutory ARN: <strong class="font-mono" id="copilotArn">AA321126098765A</strong> • Filing Date: <span id="copilotFilingDate">Today</span>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 12px;">
+              <button class="btn btn-outline btn-sm" onclick="alert('Downloading statutory GSTR-3B Signed PDF Acknowledgement...');">Download ITR-V / GSTR-3B Acknowledgement</button>
+              <button class="btn btn-primary btn-sm" onclick="openReferralModal()">🎁 Claim ₹500 Referral Reward</button>
+            </div>
+          </div>
+
+          <div id="copilotFilingActionBox" class="mt-3">
+            <button class="btn btn-primary btn-lg" style="padding: 14px 28px; font-size: 16px; font-weight: 700;" onclick="executeCopilotFiling()">
+              ✓ Authorise & File GSTR-3B (1-Click OTP)
+            </button>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-start;">
+          <button class="btn btn-outline" onclick="viewCopilotStep(4)">← Back to Tax Calculation</button>
+        </div>
+      </div>
+
+      <!-- Plain-English AI Q&A Drawer -->
+      <div style="margin-top: 32px; border-top: 2px dashed #E2E8F0; padding-top: 24px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h4 style="margin: 0; font-size: 17px; color: #0F172A;">💬 Ask Copilot in Plain English</h4>
+          <span class="text-xs text-muted">(Zero jargon questions for shopkeepers & traders)</span>
+        </div>
+        
+        <div class="qa-chips-row">
+          <button class="qa-chip" onclick="askCopilot('Do I need to file this month?')">Do I need to file this month?</button>
+          <button class="qa-chip" onclick="askCopilot('What is my next GST deadline?')">What is my next GST deadline?</button>
+          <button class="qa-chip" onclick="askCopilot('Why is my ITC different?')">Why is my ITC different?</button>
+          <button class="qa-chip" onclick="askCopilot('How much tax do I approximately owe?')">How much tax do I owe?</button>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+          <input type="text" id="inputCopilotQuery" class="text-input" placeholder="Type any question about your GST return..." style="flex: 1;" onkeypress="if (event.key === 'Enter') askCopilot(this.value)">
+          <button class="btn btn-primary" onclick="askCopilot(document.getElementById('inputCopilotQuery').value)">Ask AI Copilot</button>
+        </div>
+
+        <div id="copilotAnswerCard" class="hidden" style="background: #FFFFFF; border: 1px solid #BFDBFE; border-left: 4px solid #2563EB; border-radius: 8px; padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+          <div style="font-size: 13px; font-weight: 700; color: #1E40AF;" id="copilotAnswerQuestion">Question</div>
+          <div style="font-size: 14px; color: #334155; margin-top: 6px; line-height: 1.6;" id="copilotAnswerBody">Answer</div>
+          <div style="margin-top: 10px;" id="copilotAnswerActionContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- STARTUP EXPRESS SUITE ("START MY BUSINESS" Guided Onboarding)             -->
+  <!-- ========================================================================= -->
+  <div id="viewStartupSuite" class="app-suite-container hidden">
+    <div class="form-card">
+      <div class="form-card-header" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
+        <div>
+          <h2 class="card-title-text" style="font-size: 22px; margin: 0;">Startup Express — Start My Business</h2>
+          <p class="card-subtitle-text" style="margin-top: 4px; font-size: 14px;">
+            1-Click Guided Business Setup: Legal Constitution → PAN & MCA → GST Registration → First Compliant Invoice
+          </p>
+        </div>
+        <span class="status-chip success-chip">Zero-Friction Wizard</span>
+      </div>
+
+      <!-- Business Structure Choices -->
+      <div style="margin: 20px 0;">
+        <label style="font-weight: 700; font-size: 14px; color: #0F172A; display: block; margin-bottom: 10px;">
+          What type of entity are you starting?
+        </label>
+        <div class="form-grid-4">
+          <div class="kiosk-card" id="cardEntityProprietor" style="background: #EFF6FF; border-color: #2563EB; cursor: pointer; padding: 18px;" onclick="selectStartupType('proprietorship')">
+            <div style="font-size: 16px; font-weight: 700; color: #1E40AF;">Sole Proprietorship</div>
+            <p style="font-size: 13px; color: #475569; margin: 6px 0;">Single owner, retail shops, independent professionals.</p>
+            <div class="text-xs text-primary font-mono mt-1">PAN: Individual (P)</div>
+          </div>
+          <div class="kiosk-card" id="cardEntityPartnership" style="background: #FFFFFF; border-color: #E2E8F0; cursor: pointer; padding: 18px;" onclick="selectStartupType('partnership')">
+            <div style="font-size: 16px; font-weight: 700; color: #0F172A;">Partnership / LLP</div>
+            <p style="font-size: 13px; color: #64748B; margin: 6px 0;">2+ partners sharing profits & limited liability.</p>
+            <div class="text-xs text-muted font-mono mt-1">PAN: Firm (F)</div>
+          </div>
+          <div class="kiosk-card" id="cardEntityPvtLtd" style="background: #FFFFFF; border-color: #E2E8F0; cursor: pointer; padding: 18px;" onclick="selectStartupType('pvt_ltd')">
+            <div style="font-size: 16px; font-weight: 700; color: #0F172A;">Private Limited Company</div>
+            <p style="font-size: 13px; color: #64748B; margin: 6px 0;">Independent legal entity, investor ready (requires MCA CIN).</p>
+            <div class="text-xs text-muted font-mono mt-1">PAN: Company (C)</div>
+          </div>
+          <div class="kiosk-card" id="cardEntityOpc" style="background: #FFFFFF; border-color: #E2E8F0; cursor: pointer; padding: 18px;" onclick="selectStartupType('opc')">
+            <div style="font-size: 16px; font-weight: 700; color: #0F172A;">One Person Company (OPC)</div>
+            <p style="font-size: 13px; color: #64748B; margin: 6px 0;">Single founder with full corporate protection.</p>
+            <div class="text-xs text-muted font-mono mt-1">PAN: Company (C)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Startup Application Form -->
+      <form id="formStartupExpress" onsubmit="handleStartupExpressSubmit(event)">
+        <div class="form-grid-2">
+          <div class="input-field-group">
+            <label class="field-label">Trade / Business Name <span class="text-danger">*</span></label>
+            <input type="text" id="startupBusinessName" class="text-input" placeholder="e.g. Green Valley Organics" value="Malabar Agro Traders" required>
+          </div>
+          <div class="input-field-group">
+            <label class="field-label">Owner / Authorized Signatory Name <span class="text-danger">*</span></label>
+            <input type="text" id="startupOwnerName" class="text-input" placeholder="e.g. Anil Varma" value="Anil Varma" required>
+          </div>
+        </div>
+
+        <div class="form-grid-3 mt-3">
+          <div class="input-field-group">
+            <label class="field-label">Permanent Account Number (PAN) <span class="text-danger">*</span></label>
+            <input type="text" id="startupPan" class="text-input font-mono uppercase" style="text-transform: uppercase;" placeholder="e.g. ABCPS1234F" value="ABCPS1234F" maxlength="10" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); verifyStartupPan();" required>
+            <div id="startupPanFeedback" class="text-xs text-success mt-1">✓ 4th char 'P' matches Sole Proprietorship</div>
+          </div>
+          <div class="input-field-group" id="groupStartupCin" style="display: none;">
+            <label class="field-label">MCA CIN (Corporate Identification Number)</label>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="startupCin" class="text-input font-mono uppercase" style="text-transform: uppercase;" placeholder="U72900KA2020PTC123456" value="U72900KA2020PTC123456">
+              <button type="button" class="btn btn-outline btn-sm" onclick="lookupStartupCin()">Verify</button>
+            </div>
+            <div id="startupCinFeedback" class="text-xs text-muted mt-1">Required for Pvt Ltd / LLP</div>
+          </div>
+          <div class="input-field-group">
+            <label class="field-label">GST Tax Scheme</label>
+            <select id="startupScheme" class="text-input">
+              <option value="regular">Regular Scheme (Input Tax Credit Claimable)</option>
+              <option value="composition">Composition Scheme (Flat 1% rate, turnover &lt; ₹1.5 Cr)</option>
+            </select>
+          </div>
+          <div class="input-field-group">
+            <label class="field-label">Principal Place State</label>
+            <select id="startupState" class="text-input">
+              <option value="Kerala|32">Kerala (State Code: 32)</option>
+              <option value="Karnataka|29">Karnataka (State Code: 29)</option>
+              <option value="Maharashtra|27">Maharashtra (State Code: 27)</option>
+              <option value="Tamil Nadu|33">Tamil Nadu (State Code: 33)</option>
+              <option value="Delhi|07">Delhi (State Code: 07)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2 mt-3">
+          <div class="input-field-group">
+            <label class="field-label">Business Pincode</label>
+            <input type="text" id="startupPincode" class="text-input font-mono" placeholder="682002" value="682002" maxlength="6" required>
+          </div>
+          <div class="input-field-group">
+            <label class="field-label">Bank Account Number (Penny Drop Verified)</label>
+            <input type="text" id="startupBank" class="text-input font-mono" placeholder="987654321012" value="50100234567890">
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; gap: 12px; align-items: center;">
+          <button type="submit" class="btn btn-primary btn-lg" style="padding: 14px 28px; font-weight: 700;">
+            🚀 Submit Registration & Launch Business
+          </button>
+          <span class="text-xs text-muted">Auto-generates provisional GSTIN ARN & Compliant First Invoice</span>
+        </div>
+      </form>
+
+      <!-- Startup Success Result Box -->
+      <div id="startupSuccessBox" class="hidden mt-4" style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 12px; padding: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <h3 style="margin: 0; color: #065F46; font-size: 18px;">🎉 Business Successfully Registered in SimpleGST!</h3>
+          <span class="status-chip success-chip">Provisional Approved</span>
+        </div>
+        <p style="color: #047857; margin: 8px 0 16px 0; font-size: 14px;">
+          Your provisional application has been submitted and registered across compliance modules.
+        </p>
+
+        <div class="form-grid-3">
+          <div style="background: #FFFFFF; padding: 14px; border-radius: 8px; border: 1px solid #A7F3D0;">
+            <div class="text-xs text-muted">Provisional ARN</div>
+            <div class="font-mono" style="font-weight: 800; color: #0F172A;" id="resStartupArn">AA321126123456Z</div>
+          </div>
+          <div style="background: #FFFFFF; padding: 14px; border-radius: 8px; border: 1px solid #A7F3D0;">
+            <div class="text-xs text-muted">Provisional GSTIN</div>
+            <div class="font-mono" style="font-weight: 800; color: #2563EB;" id="resStartupGstin">32ABCPS1234F1Z1</div>
+          </div>
+          <div style="background: #FFFFFF; padding: 14px; border-radius: 8px; border: 1px solid #A7F3D0;">
+            <div class="text-xs text-muted">Compliant First Invoice</div>
+            <div class="font-mono" style="font-weight: 800; color: #059669;" id="resStartupInvoice">INV-001 (₹5,900)</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 18px;">
+          <button class="btn btn-outline btn-sm" onclick="alert('Downloading Certificate of Registration & Welcome Kit PDF...');">
+            Download Registration Certificate
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="switchSuite('copilot')">
+            Open GST Copilot with New Entity →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- BUSINESS COMPLIANCE HEALTH SCORE SUITE (0–100 Traffic-Light Dashboard)   -->
+  <!-- ========================================================================= -->
+  <div id="viewComplianceSuite" class="app-suite-container hidden">
+    <div class="form-card">
+      <div class="form-card-header" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
+        <div>
+          <h2 class="card-title-text" style="font-size: 22px; margin: 0;">Business Compliance Health Score</h2>
+          <p class="card-subtitle-text" style="margin-top: 4px; font-size: 14px;">
+            Statutory 0–100 Traffic-Light Index for GST, KYC, and Counter-party Risk
+          </p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadComplianceScore()">🔄 Recalculate</button>
+      </div>
+
+      <!-- Hero Score Badge -->
+      <div class="score-hero-container mt-3">
+        <div class="score-circle-badge" id="scoreCircle">
+          <div class="score-circle-number" id="scoreNumber">92</div>
+          <div class="score-circle-label" id="scoreBadgeText">PASS</div>
+        </div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h3 style="margin: 0; font-size: 20px; color: #0F172A;" id="scoreRatingTitle">Excellent Compliance Status</h3>
+            <span class="status-chip success-chip" id="scoreChip">Low Audit Risk</span>
+          </div>
+          <p style="margin: 8px 0; font-size: 14px; color: #475569;" id="scoreSummary">
+            Your business is in the top 5% of compliant MSMEs. All outward returns and tax offsets are up to date.
+          </p>
+          <div style="display: flex; gap: 10px; align-items: center; margin-top: 12px;">
+            <button class="btn btn-sm btn-outline" id="btnQuickFixMismatch" onclick="resolveScoreMismatch()" style="border-color: #D97706; color: #D97706;">
+              ⚡ Resolve 2 Mismatches (+8 Points to 100)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Breakdown Table -->
+      <div style="margin-top: 24px;">
+        <h4 style="margin: 0 0 12px 0; font-size: 16px; color: #0F172A;">Detailed Statutory Parameter Audit</h4>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Compliance Parameter</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Points Awarded</th>
+                <th>Statutory Finding</th>
+              </tr>
+            </thead>
+            <tbody id="complianceTableBody">
+              <!-- Rendered via loadComplianceScore() -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- KIOSK OPERATOR FULLSCREEN OVERLAY (CSC / Touch-Friendly View)              -->
+  <!-- ========================================================================= -->
+  <div id="kioskOverlay" class="kiosk-overlay hidden">
+    <div class="kiosk-header">
+      <div>
+        <h1 style="font-size: 28px; font-weight: 800; margin: 0; color: #38BDF8;">SimpleGST Kiosk Mode</h1>
+        <p style="font-size: 16px; color: #94A3B8; margin: 4px 0 0 0;">High-Contrast Assisted Operator Interface • Common Service Centre (CSC)</p>
+      </div>
+      <button class="btn btn-outline" style="color: #FFFFFF; border-color: #64748B; padding: 12px 24px; font-size: 16px; font-weight: 700;" onclick="toggleKioskMode(false)">
+        ✕ Exit Kiosk Mode
+      </button>
+    </div>
+
+    <div class="kiosk-grid">
+      <div class="kiosk-card" onclick="toggleKioskMode(false); switchSuite('startup');">
+        <div>
+          <div style="font-size: 32px;">🚀</div>
+          <h3>1. Express GST Registration</h3>
+          <p>5-minute guided setup for new MSMEs, sole traders, and retail shops.</p>
+        </div>
+        <div style="margin-top: 20px; font-weight: 700; color: #60A5FA;">Launch Express Setup →</div>
+      </div>
+
+      <div class="kiosk-card" onclick="toggleKioskMode(false); switchSuite('copilot');">
+        <div>
+          <div style="font-size: 32px;">🤖</div>
+          <h3>2. Fast Return Filing</h3>
+          <p>Zero-jargon 5-step return assistant. Review sales, purchases and file GSTR-3B.</p>
+        </div>
+        <div style="margin-top: 20px; font-weight: 700; color: #60A5FA;">Open GST Copilot →</div>
+      </div>
+
+      <div class="kiosk-card" onclick="toggleKioskMode(false); switchSuite('gst'); showGstScreen('validator');">
+        <div>
+          <div style="font-size: 32px;">🔍</div>
+          <h3>3. PAN to GSTIN Verification</h3>
+          <p>2-Tier statutory verification, entity decoding, and state branch discovery.</p>
+        </div>
+        <div style="margin-top: 20px; font-weight: 700; color: #60A5FA;">Verify Identifier →</div>
+      </div>
+
+      <div class="kiosk-card" onclick="alert('Printing last filing acknowledgement (GSTR-3B ARN AA321126098765A)...');">
+        <div>
+          <div style="font-size: 32px;">🖨️</div>
+          <h3>4. Print Acknowledgement</h3>
+          <p>Instant PDF print for tax receipts, challans, and statutory return summaries.</p>
+        </div>
+        <div style="margin-top: 20px; font-weight: 700; color: #60A5FA;">Print Document →</div>
+      </div>
+
+      <div class="kiosk-card" onclick="toggleKioskMode(false); openDueDatesModal();">
+        <div>
+          <div style="font-size: 32px;">📅</div>
+          <h3>5. Check Due Dates & Deadlines</h3>
+          <p>Upcoming statutory calendar, late fee calculators, and reminder triggers.</p>
+        </div>
+        <div style="margin-top: 20px; font-weight: 700; color: #60A5FA;">View Deadlines →</div>
+      </div>
+
+      <div class="kiosk-card" onclick="toggleKioskMode(false); switchSuite('compliance');">
+        <div>
+          <div style="font-size: 32px;">📊</div>
+          <h3>6. Check Health Score</h3>
+          <p>Instant 0–100 statutory compliance score with red/amber/green indicators.</p>
+        </div>
+        <div style="margin-top: 20px; font-weight: 700; color: #60A5FA;">Audit Health →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: STATUTORY DUE DATES & AUTOMATED REMINDER SIMULATOR                -->
+  <!-- ========================================================================= -->
+  <div id="modalDueDates" class="modal-backdrop hidden">
+    <div class="modal-dialog modal-dialog-lg" style="max-width: 680px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Statutory Due-Dates & Reminder Engine</h3>
+          <p class="text-xs text-muted">Upcoming GST deadlines for November 2026 with multi-channel alert simulation</p>
+        </div>
+        <button class="modal-close" onclick="closeDueDatesModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="dueDatesListContainer">
+          <!-- Populated dynamically via openDueDatesModal() -->
+        </div>
+
+        <div style="margin-top: 24px; border-top: 1px solid var(--border-subtle); padding-top: 18px;">
+          <h4 style="margin: 0 0 10px 0; font-size: 15px; color: #0F172A;">Simulate Automated Reminder Notification</h4>
+          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+            <button class="btn btn-sm btn-outline active" id="btnNotifWa" onclick="simulateNotification('whatsapp')">WhatsApp Alert</button>
+            <button class="btn btn-sm btn-outline" id="btnNotifSms" onclick="simulateNotification('sms')">SMS Gateway</button>
+            <button class="btn btn-sm btn-outline" id="btnNotifEmail" onclick="simulateNotification('email')">Email Digest</button>
+          </div>
+
+          <div id="notificationPreviewBox" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px;">
+            <!-- Populated via simulateNotification() -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+        <button class="btn btn-outline" onclick="closeDueDatesModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: REFERRAL GROWTH LOOP & CREDITS WALLET                              -->
+  <!-- ========================================================================= -->
+  <div id="modalReferral" class="modal-backdrop hidden">
+    <div class="modal-dialog modal-dialog-md" style="max-width: 520px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Referral Program: Earn ₹500 per Business</h3>
+          <p class="text-xs text-muted">Invite another MSME or trader to SimpleGST and earn credits on your filings</p>
+        </div>
+        <button class="modal-close" onclick="closeReferralModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Wallet Balance Card -->
+        <div style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border: 1px solid #A7F3D0; border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: #065F46;">Available Wallet Balance</div>
+            <div class="font-mono" style="font-size: 32px; font-weight: 800; color: #047857;" id="refWalletBalance">₹1,500</div>
+            <div style="font-size: 12px; color: #065F46;">Can be redeemed towards expert filing & advisory fees</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="redeemCredit(500)">Redeem ₹500</button>
+        </div>
+
+        <!-- Shareable Link & Code -->
+        <div style="margin-top: 20px;">
+          <label class="field-label">Your Unique Referral Link</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="refShareUrlInput" class="text-input font-mono" value="https://simplegst.in/ref/MALABAR500" readonly>
+            <button class="btn btn-outline" onclick="navigator.clipboard.writeText(document.getElementById('refShareUrlInput').value); alert('Copied referral link to clipboard!');">Copy</button>
+          </div>
+        </div>
+
+        <!-- 1-Click WhatsApp Share -->
+        <div style="margin-top: 14px;">
+          <a id="btnRefWhatsappShare" href="https://api.whatsapp.com/send?text=Hey%2C%20I%20file%20my%20GST%20hassle-free%20with%20SimpleGST.%20Get%20flat%20%E2%82%B9250%20off%20your%20first%20filing%3A%20https%3A%2F%2Fsimplegst.in%2Fref%2FMALABAR500" target="_blank" class="btn btn-success btn-block" style="display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: 600;">
+            Share on WhatsApp (+₹500 per friend)
+          </a>
+        </div>
+
+        <!-- Referral Stats Funnel -->
+        <div class="form-grid-3 mt-3 text-center">
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 8px;">
+            <div class="text-xs text-muted">Invites Sent</div>
+            <div class="font-mono" style="font-size: 18px; font-weight: 700;">6</div>
+          </div>
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 8px;">
+            <div class="text-xs text-muted">Registered</div>
+            <div class="font-mono" style="font-size: 18px; font-weight: 700;">4</div>
+          </div>
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 8px;">
+            <div class="text-xs text-muted">Filed Returns</div>
+            <div class="font-mono" style="font-size: 18px; font-weight: 700; color: #059669;">3 (₹1,500)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+        <button class="btn btn-outline" onclick="closeReferralModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: MCA CORPORATE INTELLIGENCE & CIN LOOKUP                           -->
+  <!-- ========================================================================= -->
+  <div id="modalMcaLookup" class="modal-backdrop hidden">
+    <div class="modal-dialog modal-dialog-lg" style="max-width: 640px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Ministry of Corporate Affairs (MCA) Lookup</h3>
+          <p class="text-xs text-muted">Live 21-character CIN validation, corporate registry & Director DIN inspection</p>
+        </div>
+        <button class="modal-close" onclick="closeMcaModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <input type="text" id="mcaModalCinInput" class="text-input font-mono uppercase" style="text-transform: uppercase;" placeholder="Enter 21-char CIN (e.g. U72900KA2020PTC123456)" value="U72900KA2020PTC123456" maxlength="21">
+          <button class="btn btn-primary" onclick="executeMcaLookup(document.getElementById('mcaModalCinInput').value)">Search MCA</button>
+        </div>
+
+        <div id="mcaModalResultBox" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 18px;">
+          <div class="text-muted text-xs">Enter a valid 21-character CIN or click "Search MCA" to inspect official corporate filings.</div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+        <button class="btn btn-outline" onclick="closeMcaModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+<footer class="statutory-footer text-xs text-muted" style="text-align: center; padding: 24px 10px; border-top: 1px solid var(--border-subtle); margin-top: 40px;">
     Notice: Advisory files. Statutory GSTN and Income Tax compliance platform. Not official GST portal or income tax portal files.
   </footer>
 

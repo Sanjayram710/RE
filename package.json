@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/index.test.js test/api182.test.js test/panGstin2tier.test.js test/expertClearTax.test.js"
+    "test": "node --test test/index.test.js test/api182.test.js test/panGstin2tier.test.js test/expertClearTax.test.js test/cdaPdfModules.test.js"
   },
   "dependencies": {
     "xlsx": "^0.18.5"

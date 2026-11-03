@@ -3472,3 +3472,538 @@ function updatePipelineStages(currentStage) {
     }
   }
 }
+
+
+// =========================================================================
+// CDA PDF MODULES CONTROLLER LOGIC (Copilot, Startup, Score, Kiosk, Referral)
+// =========================================================================
+
+// State tracking for new modules
+const cdaState = {
+  currentCopilotStep: 1,
+  copilotPipeline: null,
+  selectedStartupType: 'proprietorship',
+  scoreResolvedMismatches: false,
+  referralBalance: 1500
+};
+
+// 1. Extended Suite Switcher
+const originalSwitchSuite = window.switchSuite;
+window.switchSuite = function(suite) {
+  const viewItr = document.getElementById("viewItrSuite");
+  const viewExpert = document.getElementById("viewExpertSuite");
+  const viewNotice = document.getElementById("viewNoticeSuite");
+  const viewVault = document.getElementById("viewVaultSuite");
+  const viewGst = document.getElementById("viewGstSuite");
+  const viewCopilot = document.getElementById("viewCopilotSuite");
+  const viewStartup = document.getElementById("viewStartupSuite");
+  const viewCompliance = document.getElementById("viewComplianceSuite");
+
+  const btnItr = document.getElementById("btnSuiteItr");
+  const btnExpert = document.getElementById("btnSuiteExpert");
+  const btnNotice = document.getElementById("btnSuiteNotice");
+  const btnVault = document.getElementById("btnSuiteVault");
+  const btnGst = document.getElementById("btnSuiteGst");
+  const btnCopilot = document.getElementById("btnSuiteCopilot");
+  const btnStartup = document.getElementById("btnSuiteStartup");
+  const btnCompliance = document.getElementById("btnSuiteCompliance");
+
+  // Reset all
+  [viewItr, viewExpert, viewNotice, viewVault, viewGst, viewCopilot, viewStartup, viewCompliance].forEach(v => {
+    v?.classList.remove("active");
+    v?.classList.add("hidden");
+  });
+  [btnItr, btnExpert, btnNotice, btnVault, btnGst, btnCopilot, btnStartup, btnCompliance].forEach(b => b?.classList.remove("active"));
+
+  if (suite === "copilot") {
+    viewCopilot?.classList.add("active");
+    viewCopilot?.classList.remove("hidden");
+    btnCopilot?.classList.add("active");
+    fetchCopilotPipeline();
+  } else if (suite === "startup") {
+    viewStartup?.classList.add("active");
+    viewStartup?.classList.remove("hidden");
+    btnStartup?.classList.add("active");
+    selectStartupType(cdaState.selectedStartupType || 'proprietorship');
+  } else if (suite === "compliance") {
+    viewCompliance?.classList.add("active");
+    viewCompliance?.classList.remove("hidden");
+    btnCompliance?.classList.add("active");
+    loadComplianceScore();
+  } else if (typeof originalSwitchSuite === "function") {
+    originalSwitchSuite(suite);
+  }
+};
+
+// 2. GST Copilot 5-Step Logic
+window.viewCopilotStep = function(stepNum) {
+  cdaState.currentCopilotStep = stepNum;
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.getElementById("btnCopilotStep" + i);
+    const view = document.getElementById("copilotStepView" + i);
+    if (i === stepNum) {
+      btn?.classList.add("active");
+      view?.classList.remove("hidden");
+    } else {
+      btn?.classList.remove("active");
+      view?.classList.add("hidden");
+    }
+  }
+};
+
+window.fetchCopilotPipeline = async function() {
+  try {
+    const res = await fetch("/api/copilot/pipeline?period=102026");
+    const json = await res.json();
+    if (json.success && json.pipeline) {
+      cdaState.copilotPipeline = json.pipeline;
+      const s1 = json.pipeline.steps[0];
+      const s2 = json.pipeline.steps[1];
+      const s3 = json.pipeline.steps[2];
+      const s4 = json.pipeline.steps[3];
+
+      if (document.getElementById("copilotSentenceStep1")) {
+        document.getElementById("copilotSentenceStep1").innerHTML = s1.plainSentence;
+      }
+      if (document.getElementById("copilotSentenceStep2")) {
+        document.getElementById("copilotSentenceStep2").innerHTML = s2.plainSentence;
+      }
+      if (document.getElementById("copilotSentenceStep3")) {
+        document.getElementById("copilotSentenceStep3").innerHTML = s3.plainSentence;
+      }
+      if (document.getElementById("copilotSentenceStep4")) {
+        document.getElementById("copilotSentenceStep4").innerHTML = s4.plainSentence;
+      }
+    }
+  } catch(e) {
+    console.warn("Could not fetch remote copilot pipeline:", e);
+  }
+};
+
+window.executeCopilotFiling = function() {
+  const resultBox = document.getElementById("copilotFilingResult");
+  const actionBox = document.getElementById("copilotFilingActionBox");
+  const arnElem = document.getElementById("copilotArn");
+  const dateElem = document.getElementById("copilotFilingDate");
+
+  const randomArn = "AA321126" + Math.floor(100000 + Math.random() * 900000) + "A";
+  if (arnElem) arnElem.textContent = randomArn;
+  if (dateElem) dateElem.textContent = new Date().toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' });
+
+  actionBox?.classList.add("hidden");
+  resultBox?.classList.remove("hidden");
+  showToast("GSTR-3B return successfully authorized & filed with ARN: " + randomArn, "success");
+};
+
+window.askCopilot = async function(question) {
+  if (!question || !question.trim()) return;
+  const card = document.getElementById("copilotAnswerCard");
+  const qElem = document.getElementById("copilotAnswerQuestion");
+  const bElem = document.getElementById("copilotAnswerBody");
+  const actElem = document.getElementById("copilotAnswerActionContainer");
+
+  try {
+    const res = await fetch("/api/copilot/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
+    });
+    const json = await res.json();
+    if (json.success && json.result) {
+      if (qElem) qElem.textContent = "Q: " + json.result.question;
+      if (bElem) bElem.textContent = json.result.answer;
+      if (actElem) {
+        actElem.innerHTML = json.result.actionLink 
+          ? `<a href="${json.result.actionLink}" class="btn btn-sm btn-outline" style="display: inline-block;">${json.result.actionText || 'Take Action'} →</a>`
+          : '';
+      }
+      card?.classList.remove("hidden");
+    }
+  } catch(e) {
+    if (qElem) qElem.textContent = "Q: " + question;
+    if (bElem) bElem.textContent = "SimpleGST Copilot is actively tracking all your sales, purchase bills, and auto-drafted GSTR-2B statements.";
+    card?.classList.remove("hidden");
+  }
+};
+
+// 3. Startup Express Logic
+window.selectStartupType = function(typeId) {
+  cdaState.selectedStartupType = typeId;
+  const cards = {
+    'proprietorship': document.getElementById('cardEntityProprietor'),
+    'partnership': document.getElementById('cardEntityPartnership'),
+    'pvt_ltd': document.getElementById('cardEntityPvtLtd'),
+    'opc': document.getElementById('cardEntityOpc')
+  };
+
+  Object.keys(cards).forEach(k => {
+    if (cards[k]) {
+      if (k === typeId) {
+        cards[k].style.background = '#EFF6FF';
+        cards[k].style.borderColor = '#2563EB';
+      } else {
+        cards[k].style.background = '#FFFFFF';
+        cards[k].style.borderColor = '#E2E8F0';
+      }
+    }
+  });
+
+  const cinGroup = document.getElementById('groupStartupCin');
+  if (cinGroup) {
+    cinGroup.style.display = (typeId === 'pvt_ltd' || typeId === 'opc' || typeId === 'partnership') ? 'block' : 'none';
+  }
+
+  // Pre-fill valid sample PAN for that structure
+  const panInput = document.getElementById('startupPan');
+  if (panInput) {
+    if (typeId === 'proprietorship') panInput.value = 'ABCPS1234F';
+    else if (typeId === 'partnership') panInput.value = 'ABCFS1234F';
+    else panInput.value = 'ABCCS1234F';
+  }
+  verifyStartupPan();
+};
+
+window.verifyStartupPan = function() {
+  const pan = (document.getElementById('startupPan')?.value || '').trim().toUpperCase();
+  const feedback = document.getElementById('startupPanFeedback');
+  if (!feedback) return;
+
+  if (pan.length !== 10) {
+    feedback.textContent = "PAN must be 10 characters (e.g. ABCPS1234F)";
+    feedback.className = "text-xs text-muted mt-1";
+    return;
+  }
+
+  const fourth = pan[3];
+  const type = cdaState.selectedStartupType;
+  if (type === 'proprietorship' && fourth !== 'P') {
+    feedback.textContent = "⚠️ Sole Proprietorship requires individual PAN (4th character 'P'). Found '" + fourth + "'";
+    feedback.className = "text-xs text-danger mt-1";
+  } else if (type === 'partnership' && fourth !== 'F') {
+    feedback.textContent = "⚠️ Partnership/LLP requires firm PAN (4th character 'F'). Found '" + fourth + "'";
+    feedback.className = "text-xs text-danger mt-1";
+  } else if ((type === 'pvt_ltd' || type === 'opc') && fourth !== 'C') {
+    feedback.textContent = "⚠️ Corporate entity requires Company PAN (4th character 'C'). Found '" + fourth + "'";
+    feedback.className = "text-xs text-danger mt-1";
+  } else {
+    feedback.textContent = "✓ PAN valid & entity character '" + fourth + "' matches " + type;
+    feedback.className = "text-xs text-success mt-1";
+  }
+};
+
+window.lookupStartupCin = async function() {
+  const cin = (document.getElementById('startupCin')?.value || '').trim().toUpperCase();
+  const feedback = document.getElementById('startupCinFeedback');
+  if (!cin || cin.length !== 21) {
+    if (feedback) feedback.textContent = "CIN must be 21 characters";
+    return;
+  }
+  try {
+    const res = await fetch('/api/mca/lookup?cin=' + encodeURIComponent(cin));
+    const json = await res.json();
+    if (json.success && json.company) {
+      if (feedback) {
+        feedback.innerHTML = "✓ MCA Record Verified: <strong>" + json.company.companyName + "</strong> (" + json.company.directors.length + " Directors, " + json.company.complianceStatus + ")";
+        feedback.className = "text-xs text-success mt-1";
+      }
+    } else {
+      if (feedback) {
+        feedback.textContent = "⚠️ " + (json.error || "CIN not found in MCA registry");
+        feedback.className = "text-xs text-danger mt-1";
+      }
+    }
+  } catch(e) {
+    if (feedback) feedback.textContent = "MCA lookup service offline";
+  }
+};
+
+window.handleStartupExpressSubmit = async function(event) {
+  event.preventDefault();
+  const businessType = cdaState.selectedStartupType || 'proprietorship';
+  const businessName = document.getElementById('startupBusinessName')?.value;
+  const ownerName = document.getElementById('startupOwnerName')?.value;
+  const pan = document.getElementById('startupPan')?.value;
+  const cin = document.getElementById('startupCin')?.value;
+  const [state, stateCode] = (document.getElementById('startupState')?.value || 'Kerala|32').split('|');
+  const pincode = document.getElementById('startupPincode')?.value;
+  const bank = document.getElementById('startupBank')?.value;
+
+  try {
+    const res = await fetch('/api/startup-express/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ businessType, businessName, ownerName, pan, cin, state, stateCode, pincode, bankAccountNumber: bank })
+    });
+    const json = await res.json();
+    if (json.success && json.application) {
+      const app = json.application;
+      document.getElementById('resStartupArn').textContent = app.provisionalArn;
+      document.getElementById('resStartupGstin').textContent = app.provisionalGstin;
+      document.getElementById('resStartupInvoice').textContent = app.firstInvoice.invoiceNumber + " (₹" + app.firstInvoice.grandTotal.toLocaleString("en-IN") + ")";
+      document.getElementById('startupSuccessBox')?.classList.remove('hidden');
+      showToast("Provisional registration ARN generated: " + app.provisionalArn, "success");
+    } else {
+      alert("Submission error: " + (json.errors ? json.errors.join("\n") : json.error));
+    }
+  } catch(e) {
+    alert("Could not connect to registration engine: " + e.message);
+  }
+};
+
+// 4. Compliance Health Score Logic
+window.loadComplianceScore = async function(overrideMismatches) {
+  const mismatches = overrideMismatches !== undefined ? overrideMismatches : (cdaState.scoreResolvedMismatches ? 0 : 2);
+  try {
+    const res = await fetch('/api/compliance/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gstinStatus: "ACTIVE",
+        gstr1Filed: true,
+        gstr3bFiled: true,
+        itcMismatchesCount: mismatches,
+        delinquentVendorsCount: 0,
+        taxPaidOnTime: true,
+        panAadhaarLinked: true
+      })
+    });
+    const data = await res.json();
+    const scoreNum = document.getElementById('scoreNumber');
+    const scoreBadge = document.getElementById('scoreBadgeText');
+    const scoreCircle = document.getElementById('scoreCircle');
+    const scoreRating = document.getElementById('scoreRatingTitle');
+    const scoreSummary = document.getElementById('scoreSummary');
+    const tableBody = document.getElementById('complianceTableBody');
+
+    if (scoreNum) scoreNum.textContent = data.score;
+    if (scoreBadge) scoreBadge.textContent = data.rating;
+    if (scoreRating) scoreRating.textContent = data.rating === 'EXCELLENT' ? 'Excellent Statutory Compliance' : 'Attention Needed';
+
+    if (scoreCircle) {
+      scoreCircle.style.borderColor = data.badgeColor === 'GREEN' ? '#10B981' : '#F59E0B';
+    }
+
+    if (scoreSummary) {
+      scoreSummary.textContent = data.recommendations.join(' ');
+    }
+
+    if (tableBody && data.breakdown) {
+      tableBody.innerHTML = data.breakdown.map(r => `
+        <tr>
+          <td style="font-weight: 600;">${r.item}</td>
+          <td><span class="status-chip">${r.category}</span></td>
+          <td><span class="status-chip ${r.badge === 'GREEN' ? 'success-chip' : 'warning-chip'}">${r.status}</span></td>
+          <td class="font-mono">${r.points} / ${r.maxPoints} pts</td>
+          <td class="text-xs text-muted">${r.message}</td>
+        </tr>
+      `).join('');
+    }
+  } catch(e) {
+    console.warn("Failed to load compliance score:", e);
+  }
+};
+
+window.resolveScoreMismatch = function() {
+  cdaState.scoreResolvedMismatches = true;
+  loadComplianceScore(0);
+  const btn = document.getElementById('btnQuickFixMismatch');
+  if (btn) {
+    btn.textContent = "✓ All 2 Discrepancies Accepted in GSTR-2B";
+    btn.style.color = "#059669";
+    btn.style.borderColor = "#10B981";
+  }
+  showToast("ITC discrepancies accepted in 2B! Compliance score boosted to 100/100.", "success");
+};
+
+// 5. Kiosk Mode Operator Screen
+window.toggleKioskMode = function(enable) {
+  const overlay = document.getElementById('kioskOverlay');
+  if (enable) {
+    overlay?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  } else {
+    overlay?.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  }
+};
+
+// 6. Due-Dates & Notifications Simulator
+window.openDueDatesModal = async function() {
+  const modal = document.getElementById('modalDueDates');
+  modal?.classList.remove('hidden');
+  const container = document.getElementById('dueDatesListContainer');
+  try {
+    const res = await fetch('/api/compliance/due-dates');
+    const json = await res.json();
+    if (json.success && json.dueDates && container) {
+      container.innerHTML = json.dueDates.map(d => `
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-weight: 700; color: #0F172A; font-size: 15px;">${d.form}</span>
+              <span class="text-xs text-muted">• ${d.title}</span>
+            </div>
+            <div class="text-xs text-muted" style="margin-top: 2px;">${d.statutoryRule} • ${d.period}</div>
+            <div class="text-xs text-danger" style="margin-top: 2px;">Penalty: ${d.penaltyRule}</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="font-mono" style="font-size: 16px; font-weight: 800; color: ${d.daysRemaining <= 10 ? '#DC2626' : '#2563EB'};">
+              ${d.daysRemaining} Days Left
+            </div>
+            <div class="text-xs text-muted">${new Date(d.dueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch(e) {}
+  simulateNotification('whatsapp');
+};
+
+window.closeDueDatesModal = function() {
+  document.getElementById('modalDueDates')?.classList.add('hidden');
+};
+
+window.simulateNotification = async function(channel) {
+  ['btnNotifWa', 'btnNotifSms', 'btnNotifEmail'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+  if (channel === 'whatsapp') document.getElementById('btnNotifWa')?.classList.add('active');
+  if (channel === 'sms') document.getElementById('btnNotifSms')?.classList.add('active');
+  if (channel === 'email') document.getElementById('btnNotifEmail')?.classList.add('active');
+
+  const box = document.getElementById('notificationPreviewBox');
+  try {
+    const res = await fetch('/api/notifications/simulate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ channel })
+    });
+    const json = await res.json();
+    if (json.success && json.payload && box) {
+      const p = json.payload;
+      if (channel === 'whatsapp') {
+        box.innerHTML = `
+          <div style="font-size: 11px; font-weight: 700; color: #059669; text-transform: uppercase;">WhatsApp Meta Cloud API Mock Preview</div>
+          <div class="whatsapp-chat-bubble">
+            <div style="font-weight: 700; margin-bottom: 6px;">${p.header}</div>
+            <div style="white-space: pre-line;">${p.body}</div>
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+              ${p.buttons.map(b => `<button class="btn btn-sm btn-outline" style="background: #FFFFFF; font-size: 12px;" onclick="alert('Triggered: ' + '${b.title}')">${b.title}</button>`).join('')}
+            </div>
+          </div>
+          <button class="btn btn-sm btn-primary" onclick="showToast('Simulated WhatsApp reminder pushed to +91 98765 43210', 'success')">Simulate Live WhatsApp Send</button>
+        `;
+      } else if (channel === 'sms') {
+        box.innerHTML = `
+          <div style="font-size: 11px; font-weight: 700; color: #2563EB; text-transform: uppercase;">TRAI DLT SMS Gateway Preview</div>
+          <div style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; padding: 12px; margin: 8px 0; font-family: monospace; font-size: 13px;">
+            [${p.senderId}] ${p.message}
+          </div>
+          <div class="text-xs text-muted mb-2">Template ID: ${p.dltTemplateId}</div>
+          <button class="btn btn-sm btn-primary" onclick="showToast('Simulated SMS alert dispatched via SMPGST gateway', 'success')">Simulate SMS Dispatch</button>
+        `;
+      } else {
+        box.innerHTML = `
+          <div style="font-size: 11px; font-weight: 700; color: #7C3AED; text-transform: uppercase;">Statutory Email Digest Preview</div>
+          <div style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; padding: 12px; margin: 8px 0;">
+            ${p.bodyHtml}
+          </div>
+          <button class="btn btn-sm btn-primary" onclick="showToast('Simulated statutory notice sent to recipient email', 'success')">Simulate Email Dispatch</button>
+        `;
+      }
+    }
+  } catch(e) {}
+};
+
+// 7. Referral Growth Loop Logic
+window.openReferralModal = async function() {
+  const modal = document.getElementById('modalReferral');
+  modal?.classList.remove('hidden');
+  try {
+    const res = await fetch('/api/referral/stats?gstin=32ABCDE1234F1Z5');
+    const json = await res.json();
+    if (json.code) {
+      const balElem = document.getElementById('refWalletBalance');
+      const inputElem = document.getElementById('refShareUrlInput');
+      const waElem = document.getElementById('btnRefWhatsappShare');
+      if (balElem) balElem.textContent = "₹" + json.walletBalance.toLocaleString("en-IN");
+      if (inputElem) inputElem.value = json.shareUrl;
+      if (waElem) waElem.href = json.whatsappShareUrl;
+    }
+  } catch(e) {}
+};
+
+window.closeReferralModal = function() {
+  document.getElementById('modalReferral')?.classList.add('hidden');
+};
+
+window.redeemCredit = async function(amount) {
+  try {
+    const res = await fetch('/api/referral/redeem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: 'MALABAR500', amount })
+    });
+    const json = await res.json();
+    if (json.success) {
+      document.getElementById('refWalletBalance').textContent = "₹" + json.remainingBalance.toLocaleString("en-IN");
+      showToast("Successfully redeemed ₹" + amount + " towards your filing fees!", "success");
+    } else {
+      alert(json.error);
+    }
+  } catch(e) {
+    alert("Redemption failed: " + e.message);
+  }
+};
+
+// 8. MCA Lookup Logic
+window.openMcaModal = function() {
+  document.getElementById('modalMcaLookup')?.classList.remove('hidden');
+  executeMcaLookup('U72900KA2020PTC123456');
+};
+
+window.closeMcaModal = function() {
+  document.getElementById('modalMcaLookup')?.classList.add('hidden');
+};
+
+window.executeMcaLookup = async function(cin) {
+  const box = document.getElementById('mcaModalResultBox');
+  if (!cin || !box) return;
+  box.innerHTML = '<div class="text-muted text-xs">Querying MCA corporate database...</div>';
+  try {
+    const res = await fetch('/api/mca/lookup?cin=' + encodeURIComponent(cin.trim().toUpperCase()));
+    const json = await res.json();
+    if (json.success && json.company) {
+      const c = json.company;
+      box.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 12px;">
+          <div>
+            <div style="font-size: 16px; font-weight: 800; color: #1E40AF;">${c.companyName}</div>
+            <div class="font-mono text-xs text-muted mt-1">${c.cin} • ${c.roc}</div>
+          </div>
+          <span class="status-chip success-chip">${c.complianceStatus}</span>
+        </div>
+        <div class="form-grid-2">
+          <div><span class="text-xs text-muted">Incorporation Date:</span> <strong style="font-size: 13px;">${c.incorporationDate}</strong></div>
+          <div><span class="text-xs text-muted">Company Class:</span> <strong style="font-size: 13px;">${c.classOfCompany} (${c.listingStatus})</strong></div>
+          <div><span class="text-xs text-muted">Authorized Capital:</span> <strong class="font-mono" style="font-size: 13px;">₹${c.authorizedCapital.toLocaleString("en-IN")}</strong></div>
+          <div><span class="text-xs text-muted">Paid-up Capital:</span> <strong class="font-mono" style="font-size: 13px;">₹${c.paidUpCapital.toLocaleString("en-IN")}</strong></div>
+        </div>
+        <div style="margin-top: 12px; font-size: 13px;"><span class="text-xs text-muted">Registered Address:</span> ${c.registeredAddress}</div>
+        <div style="margin-top: 14px;">
+          <div class="text-xs text-muted" style="font-weight: 700; margin-bottom: 6px;">Board of Directors & DIN:</div>
+          ${c.directors.map(d => `
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; display: flex; justify-content: space-between;">
+              <span style="font-weight: 600;">${d.name} <span class="text-xs text-muted">(${d.designation})</span></span>
+              <span class="font-mono text-xs text-primary">DIN: ${d.din}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      box.innerHTML = `<div class="text-danger text-xs">⚠️ ${json.error || 'CIN lookup failed'}</div>`;
+    }
+  } catch(e) {
+    box.innerHTML = `<div class="text-danger text-xs">Failed to connect to MCA service: ${e.message}</div>`;
+  }
+};

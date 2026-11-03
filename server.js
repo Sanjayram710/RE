@@ -37,6 +37,12 @@ import { getVendorRiskLeaderboard, generateWithholdingNotice } from "./lib/vendo
 import { getMultiGstinSummary } from "./lib/multiGstinEngine.js";
 import { consolidateGstr9AnnualReturn } from "./lib/gstr9Engine.js";
 import { execute2TierVerification } from "./lib/panGstinValidator.js";
+import { validateCin, lookupMcaCompany } from "./lib/mcaEngine.js";
+import { calculateComplianceScore } from "./lib/complianceScoreEngine.js";
+import { getStatutoryDueDates, generateNotificationPayload } from "./lib/dueDateEngine.js";
+import { getOrCreateReferralCode, redeemReferralCredit } from "./lib/referralEngine.js";
+import { validateStartupApplication, BUSINESS_TYPES } from "./lib/startupExpressEngine.js";
+import { getCopilotPipelineData, answerCopilotQuestion } from "./lib/gstCopilotEngine.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -789,6 +795,80 @@ export async function handleRequest(req, res) {
       } catch (err) {
         return sendJson(res, 400, { success: false, error: err.message });
       }
+    }
+
+    // ---------------------------------------------------------
+    // MCA Corporate Registry Lookup (/api/mca/lookup)
+    // ---------------------------------------------------------
+    if (pathname === "/api/mca/lookup") {
+      const cin = query.cin || (method === "POST" ? (await readBody(req)).cin : null);
+      if (!cin) {
+        return sendJson(res, 400, { success: false, error: "Query parameter 'cin' is required." });
+      }
+      return sendJson(res, 200, lookupMcaCompany(cin));
+    }
+
+    // ---------------------------------------------------------
+    // Compliance Health Score (/api/compliance/score)
+    // ---------------------------------------------------------
+    if (pathname === "/api/compliance/score") {
+      const params = method === "POST" ? await readBody(req) : {};
+      return sendJson(res, 200, calculateComplianceScore(params));
+    }
+
+    // ---------------------------------------------------------
+    // Statutory Due-Date Deadlines (/api/compliance/due-dates)
+    // ---------------------------------------------------------
+    if (pathname === "/api/compliance/due-dates" && method === "GET") {
+      return sendJson(res, 200, { success: true, dueDates: getStatutoryDueDates() });
+    }
+
+    // ---------------------------------------------------------
+    // Multi-Channel Notification Simulator (/api/notifications/simulate)
+    // ---------------------------------------------------------
+    if (pathname === "/api/notifications/simulate" && method === "POST") {
+      const body = await readBody(req);
+      const payload = generateNotificationPayload(body);
+      return sendJson(res, 200, { success: true, payload });
+    }
+
+    // ---------------------------------------------------------
+    // Referral Growth Loop (/api/referral/stats & /api/referral/redeem)
+    // ---------------------------------------------------------
+    if (pathname === "/api/referral/stats" && method === "GET") {
+      const gstin = query.gstin || "32ABCDE1234F1Z5";
+      const businessName = query.businessName || "Malabar Spice Traders";
+      return sendJson(res, 200, getOrCreateReferralCode(gstin, businessName));
+    }
+
+    if (pathname === "/api/referral/redeem" && method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, redeemReferralCredit(body.code, Number(body.amount) || 0));
+    }
+
+    // ---------------------------------------------------------
+    // Startup Express Onboarding (/api/startup-express/types & submit)
+    // ---------------------------------------------------------
+    if (pathname === "/api/startup-express/types" && method === "GET") {
+      return sendJson(res, 200, { success: true, businessTypes: BUSINESS_TYPES });
+    }
+
+    if (pathname === "/api/startup-express/submit" && method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, validateStartupApplication(body));
+    }
+
+    // ---------------------------------------------------------
+    // GST Copilot Plain-English Pipeline (/api/copilot/pipeline & /api/copilot/ask)
+    // ---------------------------------------------------------
+    if (pathname === "/api/copilot/pipeline" && method === "GET") {
+      const period = query.period || "102026";
+      return sendJson(res, 200, { success: true, pipeline: getCopilotPipelineData(period) });
+    }
+
+    if (pathname === "/api/copilot/ask" && method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, { success: true, result: answerCopilotQuestion(body.question) });
     }
 
     // ---------------------------------------------------------
