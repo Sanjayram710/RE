@@ -802,38 +802,43 @@ export async function handleRequest(req, res) {
     // 9. Static File Serving (from public/ or root)
     // ---------------------------------------------------------
     let relativePath = pathname === "/" ? "index.html" : pathname.replace(/^\//, "");
-    let filePath = path.join(__dirname, "public", relativePath);
 
-    // Fallback to project root if file exists there (e.g. root index.html, style.css, app.js)
-    if (!fs.existsSync(filePath)) {
-      const rootPath = path.join(__dirname, relativePath);
-      if (fs.existsSync(rootPath)) {
-        filePath = rootPath;
-      }
+    // Check multiple candidate locations across local Node and Vercel serverless bundles
+    const candidatePaths = [
+      path.join(__dirname, "public", relativePath),
+      path.join(__dirname, relativePath),
+      path.join(process.cwd(), "public", relativePath),
+      path.join(process.cwd(), relativePath)
+    ];
+
+    let targetFile = null;
+    for (const p of candidatePaths) {
+      try {
+        if (fs.existsSync(p) && fs.statSync(p).isFile()) {
+          targetFile = p;
+          break;
+        }
+      } catch {}
     }
 
-    if (!filePath.startsWith(path.join(__dirname, "public")) && !filePath.startsWith(__dirname)) {
-      res.writeHead(403, { "Content-Type": "text/plain" });
-      res.end("Forbidden");
+    if (!targetFile) {
+      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end("Not Found: " + relativePath);
       return;
     }
 
-    fs.readFile(filePath, (err, content) => {
-      if (err) {
-        if (err.code === "ENOENT") {
-          res.writeHead(404, { "Content-Type": "text/plain" });
-          res.end("Not Found");
-        } else {
-          res.writeHead(500, { "Content-Type": "text/plain" });
-          res.end("Server Error: " + err.message);
-        }
-      } else {
-        const ext = path.extname(filePath).toLowerCase();
-        const contentType = MIME_TYPES[ext] || "application/octet-stream";
-        res.writeHead(200, { "Content-Type": contentType });
-        res.end(content);
-      }
-    });
+    try {
+      const content = await fs.promises.readFile(targetFile);
+      const ext = path.extname(targetFile).toLowerCase();
+      const contentType = MIME_TYPES[ext] || "application/octet-stream";
+      res.writeHead(200, { "Content-Type": contentType });
+      res.end(content);
+      return;
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end("Server Error: " + err.message);
+      return;
+    }
 }
 
 export function createServer() {

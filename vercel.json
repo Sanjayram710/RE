@@ -6,7 +6,10 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "data/**"
+      "includeFiles": "{data/**,public/**,index.html,style.css,app.js}"
+    },
+    "server.js": {
+      "includeFiles": "{data/**,public/**,index.html,style.css,app.js}"
     }
   }
 }
