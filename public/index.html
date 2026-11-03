@@ -3838,7 +3838,7 @@
   <!-- ========================================================================= -->
   <!-- MODAL: STATUTORY DUE DATES & AUTOMATED REMINDER SIMULATOR                -->
   <!-- ========================================================================= -->
-  <div id="modalDueDates" class="modal-backdrop hidden">
+  <div id="modalDueDates" class="modal-overlay hidden" onclick="if (event.target === this) closeDueDatesModal()">
     <div class="modal-dialog modal-dialog-lg" style="max-width: 680px;">
       <div class="modal-header">
         <div>
@@ -3876,7 +3876,7 @@
   <!-- ========================================================================= -->
   <!-- MODAL: REFERRAL GROWTH LOOP & CREDITS WALLET                              -->
   <!-- ========================================================================= -->
-  <div id="modalReferral" class="modal-backdrop hidden">
+  <div id="modalReferral" class="modal-overlay hidden" onclick="if (event.target === this) closeReferralModal()">
     <div class="modal-dialog modal-dialog-md" style="max-width: 520px;">
       <div class="modal-header">
         <div>
@@ -3939,7 +3939,7 @@
   <!-- ========================================================================= -->
   <!-- MODAL: MCA CORPORATE INTELLIGENCE & CIN LOOKUP                           -->
   <!-- ========================================================================= -->
-  <div id="modalMcaLookup" class="modal-backdrop hidden">
+  <div id="modalMcaLookup" class="modal-overlay hidden" onclick="if (event.target === this) closeMcaModal()">
     <div class="modal-dialog modal-dialog-lg" style="max-width: 640px;">
       <div class="modal-header">
         <div>
