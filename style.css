@@ -1691,9 +1691,18 @@ body {
 .plans-filter-bar {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
   overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   padding-bottom: 6px;
   margin-bottom: 18px;
+}
+
+.plans-filter-bar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .filter-tab-pill {
