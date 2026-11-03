@@ -980,6 +980,7 @@ function showGstScreen(screenId) {
   if (screenId === "reports") renderReportPreview();
   if (screenId === "recon") renderReconciliationScreen();
   if (screenId === "gstr3b") renderGstr3bScreen();
+  if (screenId === "validator") run2TierVerificationFlow();
   if (screenId === "vendorRisk") loadVendorRiskLeaderboard();
   if (screenId === "multiGstin") loadMultiGstinSummary();
   if (screenId === "gstr9") runGstr9Consolidation();
@@ -1283,26 +1284,205 @@ function openGstSandboxFilingModal() {
   openModal("modalFilingOtp");
 }
 
-// Standalone Validators
-function runStandaloneGstinValidator(val) {
-  const res = document.getElementById("testGstinResult");
-  const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-  if (gstinRegex.test(val)) {
-    res.innerHTML = `<span style="color:#16A34A;">✓ Valid GSTIN: State Code ${val.substring(0,2)}, PAN ${val.substring(2,12)}</span>`;
+// ============================================================================
+// 2-TIER PAN & GSTIN VERIFICATION CONTROLLER (REA Tier 1 + Tier 2)
+// ============================================================================
+const PAN_ENTITY_MAP = {
+  "P": "Individual / Proprietorship",
+  "C": "Company / Corporate",
+  "H": "Hindu Undivided Family (HUF)",
+  "F": "Partnership Firm / LLP",
+  "A": "Association of Persons (AOP)",
+  "T": "Trust",
+  "B": "Body of Individuals (BOI)",
+  "L": "Local Authority",
+  "J": "Artificial Juridical Person",
+  "G": "Government Agency"
+};
+
+function onTwoTierPanInput(val) {
+  const pan = (val || "").trim().toUpperCase();
+  const inline = document.getElementById("twoTierPanInline");
+  const entityTitle = document.getElementById("tier1EntityTitle");
+  const badge = document.getElementById("tier1StatusBadge");
+  const embeddedPan = document.getElementById("tier1EmbeddedPan");
+
+  if (embeddedPan) embeddedPan.textContent = pan || "--";
+
+  if (!pan) {
+    if (inline) inline.innerHTML = "Enter a 10-character PAN to begin instant Tier 1 analysis.";
+    if (badge) { badge.textContent = "WAITING"; badge.className = "status-chip info-chip"; }
+    return;
+  }
+
+  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+  if (panRegex.test(pan)) {
+    const code = pan[3];
+    const entityType = PAN_ENTITY_MAP[code] || "Other Taxpayer Entity";
+    if (entityTitle) entityTitle.textContent = `${entityType} (Category: ${code})`;
+    if (inline) inline.innerHTML = `<span class="text-success font-medium">✓ Valid PAN syntax (${entityType})</span>`;
+    if (badge) { badge.textContent = "SYNTAX VALID"; badge.className = "status-chip success-chip"; }
   } else {
-    res.innerHTML = `<span style="color:#EA580C;">✗ Invalid GSTIN structure</span>`;
+    if (entityTitle) entityTitle.textContent = "Invalid PAN Format";
+    if (inline) inline.innerHTML = `<span class="text-danger font-medium">✗ Expected 5 letters, 4 digits, 1 letter (e.g. AAACB1234F)</span>`;
+    if (badge) { badge.textContent = "SYNTAX ERROR"; badge.className = "status-chip danger-chip"; }
+  }
+
+  // Also check cross-link with GSTIN if present
+  checkCrossLinkTier1();
+}
+
+function onTwoTierGstinInput(val) {
+  checkCrossLinkTier1();
+}
+
+function checkCrossLinkTier1() {
+  const panInput = document.getElementById("twoTierPanInput");
+  const gstinInput = document.getElementById("twoTierGstinInput");
+  const gstinInline = document.getElementById("twoTierGstinInline");
+  const detailText = document.getElementById("tier1DetailText");
+  const stateCodeEl = document.getElementById("tier1StateCode");
+  const badge = document.getElementById("tier1StatusBadge");
+
+  const pan = panInput ? panInput.value.trim().toUpperCase() : "";
+  const gstin = gstinInput ? gstinInput.value.trim().toUpperCase() : "";
+
+  if (!gstin) {
+    if (gstinInline) gstinInline.innerHTML = "Optional. If provided, checks if GSTIN mathematically embeds this PAN.";
+    if (stateCodeEl) stateCodeEl.textContent = "--";
+    return;
+  }
+
+  const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+  if (!gstinRegex.test(gstin)) {
+    if (gstinInline) gstinInline.innerHTML = `<span class="text-danger font-medium">✗ Invalid GSTIN structure (15 chars)</span>`;
+    return;
+  }
+
+  const embedded = gstin.substring(2, 12);
+  const state = gstin.substring(0, 2);
+  if (stateCodeEl) stateCodeEl.textContent = `${state}`;
+
+  if (pan && embedded === pan) {
+    if (gstinInline) gstinInline.innerHTML = `<span class="text-success font-medium">✓ Mathematical Link Validated: Chars 3-12 match PAN '${pan}'</span>`;
+    if (detailText) detailText.textContent = `Mathematical link: Matched (GSTIN ${gstin} embeds PAN ${pan}).`;
+    if (badge) { badge.textContent = "LINK MATCHED"; badge.className = "status-chip success-chip"; }
+  } else if (pan) {
+    if (gstinInline) gstinInline.innerHTML = `<span class="text-danger font-bold">✗ PAN-GSTIN MISMATCH: GSTIN embeds '${embedded}', not '${pan}'</span>`;
+    if (detailText) detailText.textContent = `PAN Mismatch: Entered PAN is '${pan}', but GSTIN belongs to '${embedded}'.`;
+    if (badge) { badge.textContent = "PAN MISMATCH"; badge.className = "status-chip danger-chip"; }
   }
 }
 
-function runStandalonePanValidator(val) {
-  const res = document.getElementById("testPanResult");
-  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-  if (panRegex.test(val)) {
-    res.innerHTML = `<span style="color:#16A34A;">✓ Valid PAN: Individual/Assessee Status '${val[3]}'</span>`;
-  } else {
-    res.innerHTML = `<span style="color:#EA580C;">✗ Invalid PAN structure</span>`;
+async function run2TierVerificationFlow() {
+  const pan = (document.getElementById("twoTierPanInput")?.value || "").trim().toUpperCase();
+  const gstin = (document.getElementById("twoTierGstinInput")?.value || "").trim().toUpperCase();
+  const btn = document.getElementById("btnExecute2TierCheck");
+
+  if (!pan) {
+    alert("Please enter a valid 10-character PAN to verify.");
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span>Verifying Tier 1 & Querying Tier 2...</span>`;
+  }
+
+  try {
+    const res = await fetch("/api/pan-gstin/verify-2tier", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pan, gstin: gstin || undefined })
+    });
+
+    const data = await res.json();
+
+    // 1. Update Tier 1
+    const t1Badge = document.getElementById("tier1StatusBadge");
+    const t1Title = document.getElementById("tier1EntityTitle");
+    const t1Detail = document.getElementById("tier1DetailText");
+
+    if (t1Badge) {
+      t1Badge.textContent = data.tier1.valid ? (data.tier1.hasGstin ? (data.tier1.isLinked ? "LINK MATCHED" : "MISMATCH") : "SYNTAX VALID") : "FAILED";
+      t1Badge.className = `status-chip ${data.tier1.valid && (!data.tier1.hasGstin || data.tier1.isLinked) ? "success-chip" : "danger-chip"}`;
+    }
+    if (t1Title) t1Title.textContent = `${data.tier1.entityType} (Category: ${data.tier1.entityCode || 'N/A'})`;
+    if (t1Detail) {
+      t1Detail.textContent = data.tier1.error || `Tier 1 instant check passed. Structure is valid and mathematically sound.`;
+    }
+
+    // 2. Update Tier 2
+    const t2Badge = document.getElementById("tier2StatusBadge");
+    const t2Name = document.getElementById("tier2TaxpayerName");
+    const t2Detail = document.getElementById("tier2DetailText");
+    const t2BranchCount = document.getElementById("tier2BranchCount");
+    const t2Type = document.getElementById("tier2TaxpayerType");
+
+    if (data.tier2 && data.tier2.status !== "SKIPPED") {
+      if (t2Badge) {
+        t2Badge.textContent = data.tier2.status === "VERIFIED_ACTIVE" ? "VERIFIED ACTIVE" : data.tier2.status;
+        t2Badge.className = `status-chip ${data.tier2.portalLinked ? "success-chip" : "warning-chip"}`;
+      }
+      if (t2Name && data.tier2.taxpayer) {
+        t2Name.textContent = data.tier2.taxpayer.legalName || data.tier2.taxpayer.tradeName || "Active Statutory Assessee";
+      }
+      if (t2Detail) {
+        t2Detail.textContent = `GSTN Portal Status: ${data.tier2.taxpayer?.status || "Active"}. Found ${data.tier2.branches?.length || 0} registered state branch(es).`;
+      }
+      if (t2BranchCount) t2BranchCount.textContent = `${data.tier2.activeBranchesCount || data.tier2.branches?.length || 0} Active`;
+      if (t2Type && data.tier2.taxpayer) t2Type.textContent = data.tier2.taxpayer.taxpayerType || "Regular";
+
+      // Render Branches Table
+      const tbody = document.getElementById("twoTierBranchesBody");
+      if (tbody) {
+        const branches = data.tier2.branches || [];
+        if (branches.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted" style="padding: 24px;">No active branch registrations found for PAN ${pan}.</td></tr>`;
+        } else {
+          tbody.innerHTML = branches.map(b => `
+            <tr>
+              <td><span class="status-chip blue-chip font-mono text-xs">${b.state_code}</span></td>
+              <td><strong>${b.state_name}</strong></td>
+              <td><span class="font-mono text-xs" style="color: var(--brand-primary); font-weight: 700;">${b.gstin}</span></td>
+              <td><span class="status-chip ${b.status === 'Active' ? 'success-chip' : 'warning-chip'}">${b.status}</span></td>
+              <td style="text-align: right;">
+                <button class="btn btn-outline btn-xs" onclick="applyDiscoveredGstin('${b.gstin}')">
+                  Use in Profile
+                </button>
+              </td>
+            </tr>
+          `).join("");
+        }
+      }
+    } else {
+      if (t2Badge) { t2Badge.textContent = "SKIPPED"; t2Badge.className = "status-chip warning-chip"; }
+      if (t2Detail) t2Detail.textContent = data.tier2.message || "Tier 2 check skipped due to Tier 1 issues.";
+    }
+
+  } catch (err) {
+    alert("2-Tier Verification failed: " + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span>Execute 2-Tier Verification</span>
+      `;
+    }
   }
 }
+
+function applyDiscoveredGstin(gstin) {
+  const gstinInput = document.getElementById("twoTierGstinInput");
+  if (gstinInput) gstinInput.value = gstin;
+  checkCrossLinkTier1();
+  alert(`✓ Selected GSTIN ${gstin} applied! Tier 1 cross-link verified with PAN.`);
+}
+
+// Backward compatibility aliases
+function runStandaloneGstinValidator(val) { onTwoTierGstinInput(val); }
+function runStandalonePanValidator(val) { onTwoTierPanInput(val); }
 
 // ============================================================================
 // TAX FILING FROM EXPERTS (Assisted CA Advisory & Booking Logic)

@@ -36,6 +36,7 @@ import { computeCapitalLossSetOff, scanTaxLossHarvesting } from "./lib/taxLossHa
 import { getVendorRiskLeaderboard, generateWithholdingNotice } from "./lib/vendorRiskEngine.js";
 import { getMultiGstinSummary } from "./lib/multiGstinEngine.js";
 import { consolidateGstr9AnnualReturn } from "./lib/gstr9Engine.js";
+import { execute2TierVerification } from "./lib/panGstinValidator.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -542,6 +543,15 @@ export function createServer() {
         const panRes = validatePan(value);
         return sendJson(res, 200, { gstin: gstinRes, pan: panRes });
       }
+    }
+
+    // ---------------------------------------------------------
+    // 3b. POST /api/pan-gstin/verify-2tier
+    // ---------------------------------------------------------
+    if (pathname === "/api/pan-gstin/verify-2tier" && method === "POST") {
+      const body = await readBody(req);
+      const result = await execute2TierVerification(body.pan, body.gstin);
+      return sendJson(res, 200, result);
     }
 
     // ---------------------------------------------------------

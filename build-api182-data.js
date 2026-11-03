@@ -392,3 +392,4 @@ const enrichedList = rawList.map(item => {
 
 fs.writeFileSync(path.join(__dirname, "data", "api-status.json"), JSON.stringify(enrichedList, null, 2), "utf8");
 console.log("Successfully wrote enriched data/api-status.json with 182 APIs!");
+

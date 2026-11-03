@@ -1658,26 +1658,98 @@
       </div>
     </section>
 
-    <!-- GST Screen 5: Live Validator -->
+    <!-- GST Screen 5: 2-Tier PAN & GSTIN Verification Center -->
     <section id="gstScreenValidator" class="gst-screen-view hidden">
       <div class="form-card">
         <div class="form-card-header">
-          <div>
-            <h3 class="card-title-text">Statutory PAN & GSTIN Validator</h3>
-            <p class="card-subtitle-text">Live regex and state code validation compliant with CBDT and GSTN rules</p>
+          <div class="header-left">
+            <div class="header-icon-circle blue-tint">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+              </svg>
+            </div>
+            <div>
+              <div class="card-title-row">
+                <h3 class="card-title-text">2-Tier PAN & GSTIN Verification Engine</h3>
+                <span class="status-chip success-chip">REA Tier 1 + Tier 2 Integrated</span>
+              </div>
+              <p class="card-subtitle-text">Instant mathematical link verification (Tier 1) combined with statutory GSTN registry lookup via API #179 & #178 (Tier 2).</p>
+            </div>
           </div>
+          <button class="btn btn-primary btn-sm" id="btnExecute2TierCheck" onclick="run2TierVerificationFlow()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>Execute 2-Tier Verification</span>
+          </button>
         </div>
+
         <div class="form-card-body">
+          <!-- Input Parameters -->
           <div class="form-grid-2">
             <div class="input-field-group">
-              <label class="field-label">Test GSTIN (15 characters)</label>
-              <input type="text" id="testGstinInput" class="text-input" placeholder="e.g. 32ABCDE1234F1Z5" oninput="runStandaloneGstinValidator(this.value)">
-              <div id="testGstinResult" class="validation-box mt-2">Enter a GSTIN to validate</div>
+              <label class="field-label">Permanent Account Number (PAN) <span class="text-danger">*</span></label>
+              <input type="text" id="twoTierPanInput" class="text-input font-mono" placeholder="e.g. AAACB1234F" value="AAACB1234F" maxlength="10" oninput="onTwoTierPanInput(this.value)">
+              <div id="twoTierPanInline" class="text-xs text-muted mt-1">Enter a 10-character PAN to begin instant Tier 1 analysis.</div>
             </div>
             <div class="input-field-group">
-              <label class="field-label">Test PAN (10 characters)</label>
-              <input type="text" id="testPanInput" class="text-input" placeholder="e.g. ABCDE1234F" oninput="runStandalonePanValidator(this.value)">
-              <div id="testPanResult" class="validation-box mt-2">Enter a PAN to validate</div>
+              <label class="field-label">GST Identification Number (GSTIN) <span class="text-muted">(Optional for Link Check)</span></label>
+              <input type="text" id="twoTierGstinInput" class="text-input font-mono" placeholder="e.g. 29AAACB1234F1Z5" value="29AAACB1234F1Z5" maxlength="15" oninput="onTwoTierGstinInput(this.value)">
+              <div id="twoTierGstinInline" class="text-xs text-muted mt-1">Optional. If provided, checks if GSTIN mathematically embeds this PAN.</div>
+            </div>
+          </div>
+
+          <!-- 2-Tier Status Grid -->
+          <div class="form-grid-2 mt-3" style="gap: 16px;">
+            <!-- Tier 1 Card -->
+            <div class="recon-stat-card" id="tier1Card" style="border-left: 4px solid var(--brand-accent); background: #F8FAFC; padding: 18px; border-radius: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Tier 1: Instant Local Analysis</span>
+                <span class="status-chip success-chip" id="tier1StatusBadge">READY</span>
+              </div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text-main);" id="tier1EntityTitle">Company / Corporate PAN</div>
+              <div class="text-xs text-muted mt-1" id="tier1DetailText">Mathematical link between PAN and GSTIN: Matched (Chars 3-12 identical).</div>
+              <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 12px;" id="tier1MathOutput">
+                <span class="text-muted">Embedded PAN:</span> <strong class="text-primary" id="tier1EmbeddedPan">AAACB1234F</strong>
+                <span class="text-muted" style="margin-left: 12px;">State Code:</span> <strong class="text-primary" id="tier1StateCode">29 (Karnataka)</strong>
+              </div>
+            </div>
+
+            <!-- Tier 2 Card -->
+            <div class="recon-stat-card" id="tier2Card" style="border-left: 4px solid var(--status-success); background: #F8FAFC; padding: 18px; border-radius: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Tier 2: Statutory GSTN Query</span>
+                <span class="status-chip success-chip" id="tier2StatusBadge">VERIFIED ACTIVE</span>
+              </div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text-main);" id="tier2TaxpayerName">Statutory Assessee / Enterprise</div>
+              <div class="text-xs text-muted mt-1" id="tier2DetailText">Registered on GSTN Portal (API #179 & #178 verified). 3 State Branches Discovered.</div>
+              <div style="margin-top: 10px; font-size: 12px;" id="tier2MetaOutput">
+                <span class="text-muted">Taxpayer Type:</span> <strong class="text-primary" id="tier2TaxpayerType">Regular</strong>
+                <span class="text-muted" style="margin-left: 12px;">Active Branches:</span> <strong class="text-success" id="tier2BranchCount">3 Active</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Discovered Branches Table (API #179 Auto-Discovery) -->
+          <div class="mt-4" id="tier2BranchesSection" style="margin-top: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main);">Discovered State Branches Linked to this PAN (API #179)</h4>
+              <span class="text-xs text-muted" id="tier2DiscoveredNotice">Auto-discovered across Pan-India State Registrations</span>
+            </div>
+            <div class="gst-table-wrapper" style="border-radius: 8px; border: 1px solid var(--border-subtle); overflow: hidden;">
+              <table class="gst-data-table">
+                <thead>
+                  <tr>
+                    <th>State Code</th>
+                    <th>State / UT Name</th>
+                    <th>Linked GSTIN</th>
+                    <th>GSTN Status</th>
+                    <th style="text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="twoTierBranchesBody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
