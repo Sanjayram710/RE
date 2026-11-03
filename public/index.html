@@ -103,24 +103,29 @@
 
           <!-- Profile Dropdown Menu with Active User Info & Logout -->
           <div class="profile-dropdown-menu" id="profileDropdownMenu">
-            <div style="padding: 10px 14px; border-bottom: 1px solid var(--border-light); background: #F8FAFC; border-radius: 8px 8px 0 0;">
-              <div style="font-weight: 700; color: var(--text-main); font-size: 13px;" id="menuUserFullName">Sanjay Harshi</div>
-              <div style="font-size: 11.5px; color: var(--text-muted);" id="menuUserEmail">sanjay@example.com</div>
+            <div style="padding: 10px 14px; border-bottom: 1px solid var(--border-light); background: #F8FAFC; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <div>
+                <div style="font-weight: 700; color: var(--text-main); font-size: 13px;" id="menuUserFullName">User</div>
+                <div style="font-size: 11.5px; color: var(--text-muted);" id="menuUserEmail">user@example.com</div>
+              </div>
+              <button class="btn btn-outline btn-xs" onclick="logoutAction()" style="color: #DC2626; border-color: #FCA5A5; background: #FEF2F2; font-weight: 700; padding: 4px 10px; border-radius: 6px; white-space: nowrap;">
+                Log Out
+              </button>
             </div>
-            <a href="#" class="profile-menu-link" onclick="viewMyReturns()">My Tax Returns</a>
-            <a href="#" class="profile-menu-link" onclick="openProfileModal()">Profile & PAN Details</a>
-            <a href="#" class="profile-menu-link" onclick="openOrdersModal()">My Orders</a>
-            <a href="#" class="profile-menu-link" onclick="openRewardsModal()">My Rewards</a>
-            <a href="#" class="profile-menu-link" onclick="openAdvancedModal()">Advanced Options</a>
-            <a href="#" class="profile-menu-link" onclick="openRectificationModal()">Prepare Rectification JSON U/S 139(9)</a>
-            <a href="#" class="profile-menu-link" onclick="openPrefillModal()">Import Prefill JSON</a>
-            <a href="#" class="profile-menu-link" onclick="checkItrStatusModal()">Check ITR Status</a>
-            <a href="#" class="profile-menu-link" onclick="switchSuite('expert')">Tax filing from experts</a>
-            <a href="#" class="profile-menu-link" onclick="switchSuite('notice')">Notice Defense & Scrutiny</a>
-            <a href="#" class="profile-menu-link" onclick="switchSuite('vault')">Tax Document Vault</a>
-            <a href="#" class="profile-menu-link" onclick="openSupportDrawer()">Need Help?</a>
-            <div class="menu-divider"></div>
-            <a href="#" class="profile-menu-link text-danger" onclick="logoutAction()" style="color: #DC2626; font-weight: 600;">Log Out</a>
+            <div style="padding: 4px 0;">
+              <a href="#" class="profile-menu-link" onclick="openProfileModal()">👤 Profile & PAN Details</a>
+              <a href="#" class="profile-menu-link" onclick="viewMyReturns()">📋 My Tax Returns</a>
+              <a href="#" class="profile-menu-link" onclick="openOrdersModal()">🎁 My Orders & Rewards</a>
+              <a href="#" class="profile-menu-link" onclick="openPrefillModal()">📥 Import Prefill JSON</a>
+              <a href="#" class="profile-menu-link" onclick="checkItrStatusModal()">🔍 Check ITR Status</a>
+              <a href="#" class="profile-menu-link" onclick="openAdvancedModal()">⚙️ Advanced Options u/s 139(9)</a>
+              <a href="#" class="profile-menu-link" onclick="openSupportDrawer()">💬 Need Help & Support</a>
+            </div>
+            <div style="border-top: 1px solid var(--border-light); padding: 4px 0; background: #FFF5F5; border-radius: 0 0 10px 10px;">
+              <a href="#" class="profile-menu-link text-danger" onclick="logoutAction()" style="color: #DC2626; font-weight: 700; display: flex; align-items: center; gap: 6px; padding: 8px 16px;">
+                <span>🚪</span> <span>Log Out</span>
+              </a>
+            </div>
           </div>
         </div>
 
