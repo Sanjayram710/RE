@@ -3533,6 +3533,15 @@ window.switchSuite = function(suite) {
     fetchCopilotPipeline();
     renderCadenceTimeline();
     onDelaySliderChange(0);
+  } else if (suite === "expert") {
+    if (viewExpert) {
+      viewExpert.classList.add("active");
+      viewExpert.classList.remove("hidden");
+      viewExpert.style.display = "block";
+    }
+    btnExpert?.classList.add("active");
+    if (typeof loadExpertPlans === "function") loadExpertPlans();
+    if (typeof recalculateSavingsEstimator === "function") recalculateSavingsEstimator();
   } else if (suite === "gst") {
     if (viewGst) {
       viewGst.classList.add("active");
@@ -3540,6 +3549,9 @@ window.switchSuite = function(suite) {
       viewGst.style.display = "block";
     }
     btnGst?.classList.add("active");
+    if (typeof showGstScreen === "function") {
+      showGstScreen(appState?.gst?.currentScreen || "reports");
+    }
   } else if (suite === "startup") {
     if (viewStartup) {
       viewStartup.classList.add("active");
@@ -3556,10 +3568,13 @@ window.switchSuite = function(suite) {
     }
     btnCompliance?.classList.add("active");
     loadComplianceScore();
-  } else if (typeof originalSwitchSuite === "function") {
-    originalSwitchSuite(suite);
-  }
-    originalSwitchSuite(suite);
+  } else if (suite === "itr") {
+    if (viewItr) {
+      viewItr.classList.add("active");
+      viewItr.classList.remove("hidden");
+      viewItr.style.display = "block";
+    }
+    btnItr?.classList.add("active");
   }
 };
 

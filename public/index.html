@@ -135,19 +135,29 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><rect x="4" y="8" width="16" height="12" rx="2"/><circle cx="9" cy="13" r="1.5"/><circle cx="15" cy="13" r="1.5"/><path d="M10 17h4"/></svg>
           <span>🧭 GST Return Assistant (Guiding Path)</span>
         </button>
+        <button class="suite-pill" id="btnSuiteExpert" onclick="switchSuite('expert')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>👥 Tax Filing from Experts</span>
+        </button>
         <button class="suite-pill" id="btnSuiteGst" onclick="switchSuite('gst')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
           <span>📊 GST Registers & Reports</span>
         </button>
+        <button class="suite-pill" id="btnSuiteStartup" onclick="switchSuite('startup')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>
+          <span>🚀 Startup Express</span>
+        </button>
+        <button class="suite-pill" id="btnSuiteCompliance" onclick="switchSuite('compliance')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>📈 Health Score</span>
+        </button>
         <div class="more-services-dropdown" style="position: relative; display: inline-block;">
           <button class="suite-pill" id="btnSuiteMoreServices" onclick="toggleMoreServicesMenu(event)">
-            <span>⚡ More Services ▾</span>
+            <span>⚡ Quick Tools ▾</span>
           </button>
           <div id="moreServicesMenu" class="dropdown-menu hidden" style="position: absolute; top: calc(100% + 6px); left: 0; min-width: 240px; background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 1000; padding: 6px 0;">
-            <a href="#" class="profile-menu-link" onclick="switchSuite('startup'); toggleMoreServicesMenu();">🚀 Startup Express (New Business)</a>
-            <a href="#" class="profile-menu-link" onclick="switchSuite('compliance'); toggleMoreServicesMenu();">📊 Statutory Health Score</a>
-            <a href="#" class="profile-menu-link" onclick="openMcaModal(); toggleMoreServicesMenu();">🏛️ MCA Corporate Lookup</a>
             <a href="#" class="profile-menu-link" onclick="openDueDatesModal(); toggleMoreServicesMenu();">📅 Statutory Due Dates</a>
+            <a href="#" class="profile-menu-link" onclick="openMcaModal(); toggleMoreServicesMenu();">🏛️ MCA Corporate Lookup</a>
             <a href="#" class="profile-menu-link" onclick="openReferralModal(); toggleMoreServicesMenu();">🎁 Referral Program (₹500)</a>
             <a href="#" class="profile-menu-link" onclick="toggleKioskMode(true); toggleMoreServicesMenu();">🖥️ Touch-friendly Kiosk Mode</a>
           </div>
