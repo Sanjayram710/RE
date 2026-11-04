@@ -3354,6 +3354,207 @@
       </div>
 
       <!-- 5-Step Stepper Bar -->
+      <!-- Layman Guided Path Hero: "Experience, Not an App" -->
+      <div class="guiding-path-hero mt-3">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px;">🧭</span>
+              <h3 style="margin: 0; font-size: 18px; color: #1E3A8A; font-weight: 800;">
+                GST Filing Guide: Did your business have any transactions this month?
+              </h3>
+            </div>
+            <p style="margin: 6px 0 0 0; font-size: 14px; color: #475569;">
+              Choose your path below. Our AI will guide you step-by-step with zero accounting jargon.
+            </p>
+          </div>
+          <span class="status-chip success-chip" style="font-size: 12px; font-weight: 700;">🟢 Layman Mode Active</span>
+        </div>
+
+        <div class="guiding-choices-grid">
+          <!-- Choice A: NIL Return -->
+          <div class="guiding-choice-card" id="cardGuidingNil" onclick="selectGuidingMode('nil')">
+            <div>
+              <div class="guiding-choice-icon">🍃</div>
+              <div class="guiding-choice-title">Option 1: A Nil Return (Zero Business)</div>
+              <div class="guiding-choice-desc">
+                I made <strong>₹0 in sales</strong> and received <strong>₹0 in purchase bills</strong> in October 2026. My business had zero activity.
+              </div>
+            </div>
+            <div>
+              <button class="btn btn-outline btn-sm" style="width: 100%; font-weight: 700; color: #059669; border-color: #A7F3D0; background: #ECFDF5;" onclick="openNilFilingModal(event)">
+                ⚡ 1-Click File Nil Return (₹0 Tax)
+              </button>
+            </div>
+          </div>
+
+          <!-- Choice B: Active Invoices -->
+          <div class="guiding-choice-card selected" id="cardGuidingActive" onclick="selectGuidingMode('transactions')">
+            <div>
+              <div class="guiding-choice-icon">📦</div>
+              <div class="guiding-choice-title">Option 2: I Have Invoices & Transactions</div>
+              <div class="guiding-choice-desc">
+                I have <strong>customer sales bills</strong>, <strong>supplier purchase bills</strong>, or <strong>bank statement entries</strong> to report.
+              </div>
+            </div>
+            <div>
+              <button class="btn btn-primary btn-sm" style="width: 100%; font-weight: 700;" onclick="focusAiIngestion(event)">
+                🤖 Upload Bills with AI Auto-Fetch →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Document Ingestion Zone ("One-by-One" Upload) -->
+      <div id="aiDocumentIngestSection" class="ai-intake-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #E2E8F0; padding-bottom: 14px; margin-bottom: 16px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">🤖</span>
+              <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0F172A;">
+                AI Document Intake: Upload One-by-One
+              </h4>
+            </div>
+            <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748B;">
+              Upload your bill or bank statement. Our AI auto-reads party details, GSTIN, and tax amounts.
+            </p>
+          </div>
+          <span class="ai-extracted-badge" id="aiModelBadge">Gemini Vision OCR Active</span>
+        </div>
+
+        <!-- 3 Ingestion Tabs -->
+        <div class="ai-tab-pills">
+          <button class="ai-tab-pill active" id="btnAiTabSales" onclick="switchAiTab('sales_invoice')">
+            <span>🧾 Sales Invoice</span>
+            <span style="font-size: 11px; opacity: 0.8;">(Customer Bills)</span>
+          </button>
+          <button class="ai-tab-pill" id="btnAiTabPurchases" onclick="switchAiTab('purchase_bill')">
+            <span>🛒 Purchase Bill</span>
+            <span style="font-size: 11px; opacity: 0.8;">(Supplier Invoices)</span>
+          </button>
+          <button class="ai-tab-pill" id="btnAiTabBank" onclick="switchAiTab('bank_statement')">
+            <span>🏦 Bank Statement</span>
+            <span style="font-size: 11px; opacity: 0.8;">(Current Account)</span>
+          </button>
+        </div>
+
+        <!-- Dropzone -->
+        <div class="ai-dropzone" id="aiDropzone" onclick="document.getElementById('inputAiDocFile').click()">
+          <input type="file" id="inputAiDocFile" style="display: none;" onchange="handleAiFileSelect(event)">
+          <div style="font-size: 32px; margin-bottom: 8px;">📤</div>
+          <div style="font-size: 15px; font-weight: 700; color: #1E40AF;" id="aiDropzoneTitle">
+            Drop your Sales Bill here, or click to browse
+          </div>
+          <div style="font-size: 12.5px; color: #64748B; margin-top: 4px;">
+            Supports PDF, JPG, PNG photos from your phone, or Excel bills
+          </div>
+        </div>
+
+        <!-- One-Click Sample Ingestion Buttons -->
+        <div class="ai-sample-pills-row">
+          <span style="font-size: 12px; color: #64748B; align-self: center;">Try 1-Click Demo Samples:</span>
+          <button class="ai-sample-btn" onclick="loadSampleAiDoc('sales_invoice')">
+            📄 Calicut Kirana Sales Bill (₹85,000)
+          </button>
+          <button class="ai-sample-btn" onclick="loadSampleAiDoc('purchase_bill')">
+            📄 Cochin Spices Supplier Bill (₹1,50,000)
+          </button>
+          <button class="ai-sample-btn" onclick="loadSampleAiDoc('bank_statement')">
+            📄 HDFC Bank Statement (Oct 2026)
+          </button>
+        </div>
+
+        <!-- Real-Time AI Extraction Result Card -->
+        <div id="aiExtractionResultCard" class="hidden mt-3" style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 12px; padding: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="ai-extracted-badge" id="aiExtractConfidence">✓ Extracted (99.4% confidence)</span>
+              <span style="font-size: 13px; font-weight: 700; color: #0F172A;" id="aiExtractedDocName">Document</span>
+            </div>
+            <button class="btn btn-outline btn-xs" onclick="document.getElementById('aiExtractionResultCard').classList.add('hidden')">✕ Close</button>
+          </div>
+
+          <div class="form-grid-3 mt-3" id="aiExtractedFieldsGrid">
+            <!-- Dynamic Extraction Data Populated here -->
+          </div>
+
+          <div id="aiSec16SafetyBanner" class="hidden mt-2" style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #065F46;">
+            <!-- Safety status -->
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #CBD5E1;">
+            <span style="font-size: 13px; color: #475569;" id="aiPlainSentenceFeedback">Ready to include in October return.</span>
+            <button class="btn btn-primary btn-sm" onclick="addExtractedDocToReturn()">
+              + Add to Monthly Return Summary
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statutory Cadence Sequence (1st, 3rd, 5th, 7th, 9th) & Fine Escalation -->
+      <div class="fine-calc-box mt-3">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">📅</span>
+              <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #92400E;">
+                Statutory Sequence & Fine Escalation Protection
+              </h4>
+            </div>
+            <p style="margin: 4px 0 0 0; font-size: 13px; color: #B45309;">
+              GSTR-1 is due before the 10th/11th. GSTR-3B is due before the 20th. Track your timeline below.
+            </p>
+          </div>
+          <span class="status-chip" id="cadenceCurrentBadge" style="background: #FEE2E2; color: #DC2626; font-weight: 800;">
+            🚨 Day 7: 3-Day GSTR-1 Countdown
+          </span>
+        </div>
+
+        <!-- Horizontal Cadence Cards -->
+        <div class="cadence-steps-row mt-3" id="cadenceStepsRow">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Interactive Delay Fine Escalation Slider -->
+        <div style="background: #FFFFFF; border: 1px solid #FDE68A; border-radius: 10px; padding: 16px; margin-top: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="font-size: 14px; font-weight: 700; color: #0F172A;">
+              ⚡ Delay Penalty Simulator: What happens if filing is delayed past the 20th?
+            </div>
+            <span id="fineSummaryBadge" class="status-chip success-chip">✓ Filing Today: ₹0 Fine</span>
+          </div>
+
+          <div class="fine-slider-row">
+            <span style="font-size: 13px; font-weight: 600; color: #475569;">Delayed by:</span>
+            <input type="range" min="0" max="65" value="0" class="fine-slider" id="inputDelayDaysSlider" oninput="onDelaySliderChange(this.value)">
+            <span class="font-mono" style="font-size: 15px; font-weight: 800; color: #B45309; min-width: 70px;" id="textDelayDaysCount">0 Days</span>
+          </div>
+
+          <div class="form-grid-3 mt-2" style="background: #F8FAFC; padding: 12px; border-radius: 8px; border: 1px solid #E2E8F0;">
+            <div>
+              <div class="text-xs text-muted">Late Fee (Sec 47)</div>
+              <div class="font-mono" style="font-size: 17px; font-weight: 800; color: #0F172A;" id="calcLateFeeText">₹0</div>
+              <div class="text-xs text-muted">₹50/day (₹20 for Nil)</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted">Statutory Interest (Sec 50)</div>
+              <div class="font-mono" style="font-size: 17px; font-weight: 800; color: #DC2626;" id="calcInterestText">₹0</div>
+              <div class="text-xs text-muted">18% p.a. on unpaid tax</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted">E-Way Bill Rule 138E</div>
+              <div class="font-mono" style="font-size: 16px; font-weight: 800; color: #10B981;" id="calcEwayStatusText">ACTIVE (Compliant)</div>
+              <div class="text-xs text-muted">Blocked if > 60 days</div>
+            </div>
+          </div>
+          <div style="font-size: 12.5px; color: #475569; margin-top: 10px;" id="calcAdvisoryNote">
+            ✓ Your return for October 2026 is on-time. File before the 20th to pay ₹0 in statutory late fees.
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-Step Stepper Bar -->
       <div class="copilot-steps-bar mt-3">
         <button class="copilot-step-btn active" id="btnCopilotStep1" onclick="viewCopilotStep(1)">
           <div class="step-number">Step 1</div>
@@ -3966,6 +4167,87 @@
 
       <div class="modal-footer" style="display: flex; justify-content: flex-end;">
         <button class="btn btn-outline" onclick="closeMcaModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: 1-CLICK NIL GST RETURN FILING (Zero Jargon)                         -->
+  <!-- ========================================================================= -->
+  <div id="modalNilFiling" class="modal-overlay hidden" style="display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;" onclick="if (event.target === this) closeNilFilingModal()">
+    <div class="modal-dialog modal-dialog-md" style="margin: auto; max-width: 540px; width: 100%; background: #FFFFFF; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); position: relative; z-index: 100000; overflow: hidden;">
+      <div class="modal-header" style="background: #F0FDF4; border-bottom: 1px solid #BBF7D0;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 24px;">🍃</span>
+          <div>
+            <h3 class="modal-title" style="color: #166534; font-size: 18px; margin: 0;">1-Click NIL GST Return Filing</h3>
+            <p class="text-xs" style="color: #15803D; margin: 2px 0 0 0;">October 2026 • Form GSTR-3B (NIL)</p>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeNilFilingModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px;">
+          <div style="font-size: 13px; font-weight: 700; color: #0F172A;">Entity Declaration:</div>
+          <div style="font-size: 14px; color: #334155; margin-top: 4px;">
+            <strong>Malabar Spice Traders</strong> • GSTIN: <code class="font-mono">32ABCDE1234F1Z5</code>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;">
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; padding: 10px; border-radius: 6px; text-align: center;">
+              <div class="text-xs text-muted">Outward Sales</div>
+              <div class="font-mono" style="font-size: 18px; font-weight: 800; color: #059669;">₹0.00</div>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; padding: 10px; border-radius: 6px; text-align: center;">
+              <div class="text-xs text-muted">Purchase Bills</div>
+              <div class="font-mono" style="font-size: 18px; font-weight: 800; color: #059669;">₹0.00</div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px dashed #CBD5E1;">
+            <span style="font-size: 13px; font-weight: 700; color: #0F172A;">Total Net Tax Payable:</span>
+            <span class="font-mono" style="font-size: 18px; font-weight: 800; color: #10B981;">₹0.00</span>
+          </div>
+        </div>
+
+        <!-- Statutory OTP Authorization -->
+        <div style="margin-top: 16px;">
+          <label class="field-label" style="font-weight: 700;">Mobile OTP for Authorisation (Aadhaar / GSTN EVC)</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="inputNilOtp" class="text-input font-mono text-center" style="letter-spacing: 4px; font-size: 16px; font-weight: 700;" value="749201" maxlength="6">
+            <button class="btn btn-outline" onclick="alert('Resent 6-digit OTP to registered mobile: +91 98*** **294');">Resend OTP</button>
+          </div>
+          <div style="font-size: 11.5px; color: #64748B; margin-top: 4px;">
+            ✓ OTP sent to registered mobile ending in 294. Pre-filled for instant verification.
+          </div>
+        </div>
+
+        <!-- Instant Result / Certificate -->
+        <div id="nilFilingSuccessBox" class="hidden mt-3" style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 10px; padding: 16px; text-align: center;">
+          <div style="font-size: 28px;">🎉</div>
+          <div style="font-size: 16px; font-weight: 800; color: #065F46; margin-top: 4px;">
+            NIL GSTR-3B Return Successfully Filed!
+          </div>
+          <div class="font-mono" style="font-size: 14px; font-weight: 700; color: #047857; margin-top: 6px;" id="textNilArn">
+            ARN: NIL-AA321026849201
+          </div>
+          <div style="font-size: 12px; color: #065F46; margin-top: 4px;">
+            Timestamp: Today, Just Now • ₹0 Tax • ₹0 Late Fee
+          </div>
+          <div style="margin-top: 14px;">
+            <button class="btn btn-primary btn-sm" onclick="downloadNilCertificate()">
+              📄 Download Official Nil Filing Certificate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="btn btn-outline" onclick="closeNilFilingModal()">Cancel</button>
+        <button class="btn btn-success" id="btnSubmitNilFiling" onclick="submitNilFiling()" style="font-weight: 700; background: #059669; border-color: #059669;">
+          ✓ Confirm & File Nil Return
+        </button>
       </div>
     </div>
   </div>

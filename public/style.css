@@ -3045,3 +3045,236 @@ body {
   margin: 12px 0;
   line-height: 1.5;
 }
+
+/* ========================================================================= */
+/* LAYMAN GUIDING PATH EXPERIENCE & AI INGESTION                             */
+/* ========================================================================= */
+.guiding-path-hero {
+  background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+  border: 1px solid #BFDBFE;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
+}
+
+.guiding-choices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+@media (max-width: 768px) {
+  .guiding-choices-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.guiding-choice-card {
+  background: #FFFFFF;
+  border: 2px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.guiding-choice-card:hover {
+  border-color: #3B82F6;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.12);
+  transform: translateY(-2px);
+}
+
+.guiding-choice-card.selected {
+  border-color: #2563EB;
+  background: #F0F7FF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.guiding-choice-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.guiding-choice-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 6px;
+}
+
+.guiding-choice-desc {
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+/* AI Document Ingestion Tabs & Box */
+.ai-intake-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.ai-tab-pills {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.ai-tab-pill {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #CBD5E1;
+  background: #F8FAFC;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.ai-tab-pill.active {
+  background: #2563EB;
+  color: #FFFFFF;
+  border-color: #2563EB;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.ai-dropzone {
+  border: 2px dashed #93C5FD;
+  background: #F0F7FF;
+  border-radius: 12px;
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ai-dropzone:hover {
+  background: #E0E7FF;
+  border-color: #6366F1;
+}
+
+.ai-sample-pills-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.ai-sample-btn {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1E40AF;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ai-sample-btn:hover {
+  background: #EFF6FF;
+  border-color: #3B82F6;
+}
+
+.ai-extracted-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Statutory Sequence & Escalation */
+.cadence-steps-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin: 16px 0;
+}
+
+.cadence-step-card {
+  min-width: 170px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 14px;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.cadence-step-card.active {
+  border-color: #EF4444;
+  background: #FEF2F2;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.cadence-step-card.past {
+  opacity: 0.8;
+  background: #F8FAFC;
+}
+
+.cadence-day-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #2563EB;
+  background: #DBEAFE;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.cadence-step-card.active .cadence-day-badge {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+/* Escalation Fine Calculator Box */
+.fine-calc-box {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 18px;
+}
+
+.fine-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 14px 0;
+  flex-wrap: wrap;
+}
+
+.fine-slider {
+  flex: 1;
+  min-width: 200px;
+  height: 8px;
+  border-radius: 4px;
+  accent-color: #D97706;
+  cursor: pointer;
+}

@@ -42,7 +42,9 @@ import { calculateComplianceScore } from "./lib/complianceScoreEngine.js";
 import { getStatutoryDueDates, generateNotificationPayload } from "./lib/dueDateEngine.js";
 import { getOrCreateReferralCode, redeemReferralCredit } from "./lib/referralEngine.js";
 import { validateStartupApplication, BUSINESS_TYPES } from "./lib/startupExpressEngine.js";
-import { getCopilotPipelineData, answerCopilotQuestion } from "./lib/gstCopilotEngine.js";
+import { getCopilotPipelineData, answerCopilotQuestion, fileNilGstReturn } from "./lib/gstCopilotEngine.js";
+import { extractDocumentData, SAMPLE_DOCUMENTS } from "./lib/aiDocumentExtractorEngine.js";
+import { getCadenceSchedule, calculateDelayEscalation, STATUTORY_SEQUENCE } from "./lib/statutoryCadenceEngine.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -802,11 +804,15 @@ export async function handleRequest(req, res) {
     // MCA Corporate Registry Lookup (/api/mca/lookup)
     // ---------------------------------------------------------
     if (pathname === "/api/mca/lookup") {
-      const cin = query.cin || (method === "POST" ? (await readBody(req)).cin : null);
-      if (!cin) {
-        return sendJson(res, 400, { success: false, error: "Query parameter 'cin' is required." });
+      try {
+        const cin = query.cin || (method === "POST" ? (await readBody(req)).cin : null);
+        if (!cin) {
+          return sendJson(res, 400, { success: false, error: "Query parameter 'cin' is required." });
+        }
+        return sendJson(res, 200, lookupMcaCompany(cin));
+      } catch (err) {
+        return sendJson(res, 200, { success: false, error: err.message || "Failed to process MCA CIN lookup" });
       }
-      return sendJson(res, 200, lookupMcaCompany(cin));
     }
 
     // ---------------------------------------------------------
@@ -870,6 +876,43 @@ export async function handleRequest(req, res) {
     if (pathname === "/api/copilot/ask" && method === "POST") {
       const body = await readBody(req);
       return sendJson(res, 200, { success: true, result: answerCopilotQuestion(body.question) });
+    }
+
+    // ---------------------------------------------------------
+    // 1-Click Nil GST Return Filing (/api/gst/nil-file)
+    // ---------------------------------------------------------
+    if (pathname === "/api/gst/nil-file" && method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, fileNilGstReturn(body));
+    }
+
+    // ---------------------------------------------------------
+    // AI Document Extraction Engine (/api/ai/extract-doc & sample-docs)
+    // ---------------------------------------------------------
+    if (pathname === "/api/ai/extract-doc" && method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, extractDocumentData(body));
+    }
+
+    if (pathname === "/api/ai/sample-docs" && method === "GET") {
+      return sendJson(res, 200, { success: true, samples: SAMPLE_DOCUMENTS });
+    }
+
+    // ---------------------------------------------------------
+    // Statutory Cadence Sequence & Escalation Calculator
+    // ---------------------------------------------------------
+    if (pathname === "/api/compliance/cadence" && method === "GET") {
+      const day = parseInt(query.day || "7", 10);
+      return sendJson(res, 200, { success: true, schedule: getCadenceSchedule(day), statutoryMilestones: STATUTORY_SEQUENCE });
+    }
+
+    if (pathname === "/api/compliance/escalation") {
+      const params = method === "POST" ? await readBody(req) : query;
+      return sendJson(res, 200, calculateDelayEscalation({
+        delayDays: params.delayDays || params.days,
+        isNil: params.isNil === true || params.isNil === "true",
+        netTaxLiability: params.netTaxLiability || params.tax
+      }));
     }
 
     // ---------------------------------------------------------
