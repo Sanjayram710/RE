@@ -41,24 +41,20 @@
         <div class="navbar-filing-for">
           <span class="filing-label">Filing for:</span>
           <div class="filing-dropdown-trigger" id="filingDropdownTrigger" onclick="toggleFilingDropdown(event)">
-            <span class="filing-pan" id="currentFilingPan">Guest / New Filing</span>
+            <span class="filing-pan" id="currentFilingPan">32ABCDE1234F1Z5</span>
             <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </div>
           <!-- Filing for Dropdown Menu -->
           <div class="filing-dropdown-menu" id="filingDropdownMenu">
-            <div class="filing-menu-item" onclick="quickDemoLogin('sanjay')">
-              <div class="entity-pan">CVBBC4433W</div>
-              <div class="entity-name">Sanjay Harshi (Demo) • AY 2025-26</div>
-            </div>
-            <div class="filing-menu-item" onclick="quickDemoLogin('priya')">
-              <div class="entity-pan">AAPCS1234F</div>
-              <div class="entity-name">Priya Sharma (Demo) • AY 2025-26</div>
-            </div>
             <div class="filing-menu-item" onclick="selectFilingEntity('32ABCDE1234F1Z5', 'Malabar Spice Traders', 'GST & Business')">
               <div class="entity-pan">32ABCDE1234F1Z5</div>
-              <div class="entity-name">Malabar Spice Traders • Oct 2026</div>
+              <div class="entity-name">Malabar Spice Traders • Kerala (Main Branch)</div>
+            </div>
+            <div class="filing-menu-item" onclick="selectFilingEntity('29AAACB1234F1Z5', 'Bangalore Spice Mart', 'GST & Business')">
+              <div class="entity-pan">29AAACB1234F1Z5</div>
+              <div class="entity-name">Bangalore Spice Mart • Karnataka Branch</div>
             </div>
           </div>
         </div>
@@ -66,21 +62,6 @@
 
       <!-- Right Header Actions -->
       <div class="navbar-actions">
-        <!-- Header Quick Tools Cluster -->
-        <div class="header-quick-tools" style="display: flex; gap: 6px; align-items: center; margin-right: 8px;">
-          <button class="btn btn-sm btn-outline" style="border-radius: 9999px; padding: 4px 10px; font-size: 12px; font-weight: 600;" onclick="openDueDatesModal()" title="View Statutory Deadlines">
-            📅 Due Dates
-          </button>
-          <button class="btn btn-sm btn-outline" style="border-radius: 9999px; padding: 4px 10px; font-size: 12px; font-weight: 600; color: #10B981; border-color: #A7F3D0;" onclick="openReferralModal()" title="Refer & Earn ₹500">
-            🎁 Referral (₹500)
-          </button>
-          <button class="btn btn-sm btn-outline" style="border-radius: 9999px; padding: 4px 10px; font-size: 12px; font-weight: 600;" onclick="openMcaModal()" title="MCA CIN Lookup">
-            🏛️ MCA Lookup
-          </button>
-          <button class="btn btn-sm" style="border-radius: 9999px; padding: 4px 12px; font-size: 12px; font-weight: 700; background: #0F172A; color: #38BDF8; border: 1px solid #1E293B;" onclick="toggleKioskMode(true)" title="Touch-friendly Kiosk Mode">
-            🖥️ Kiosk Mode
-          </button>
-        </div>
         <!-- Mode Badge -->
         <span class="mode-badge" id="appModeBadge">
           <span class="pulse-dot"></span> <span id="appModeText">Active</span>
@@ -110,7 +91,7 @@
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
               </svg>
             </div>
-            <span id="navUserName" class="nav-user-name" style="font-size: 13.5px; font-weight: 600; color: var(--text-main); margin-left: 2px;">Guest</span>
+            <span id="navUserName" class="nav-user-name" style="font-size: 13.5px; font-weight: 600; color: var(--text-main); margin-left: 2px;">Leo</span>
             <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
@@ -120,21 +101,18 @@
           <div class="profile-dropdown-menu" id="profileDropdownMenu">
             <div style="padding: 10px 14px; border-bottom: 1px solid var(--border-light); background: #F8FAFC; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
               <div>
-                <div style="font-weight: 700; color: var(--text-main); font-size: 13px;" id="menuUserFullName">User</div>
-                <div style="font-size: 11.5px; color: var(--text-muted);" id="menuUserEmail">user@example.com</div>
+                <div style="font-weight: 700; color: var(--text-main); font-size: 13px;" id="menuUserFullName">Leo Das</div>
+                <div style="font-size: 11.5px; color: var(--text-muted);" id="menuUserEmail">leodas@gmail.com</div>
               </div>
               <button class="btn btn-outline btn-xs" onclick="logoutAction()" style="color: #DC2626; border-color: #FCA5A5; background: #FEF2F2; font-weight: 700; padding: 4px 10px; border-radius: 6px; white-space: nowrap;">
                 Log Out
               </button>
             </div>
             <div style="padding: 4px 0;">
-              <a href="#" class="profile-menu-link" onclick="openProfileModal()">👤 Profile & PAN Details</a>
-              <a href="#" class="profile-menu-link" onclick="viewMyReturns()">📋 My Tax Returns</a>
-              <a href="#" class="profile-menu-link" onclick="openOrdersModal()">🎁 My Orders & Rewards</a>
-              <a href="#" class="profile-menu-link" onclick="openPrefillModal()">📥 Import Prefill JSON</a>
-              <a href="#" class="profile-menu-link" onclick="checkItrStatusModal()">🔍 Check ITR Status</a>
-              <a href="#" class="profile-menu-link" onclick="openAdvancedModal()">⚙️ Advanced Options u/s 139(9)</a>
-              <a href="#" class="profile-menu-link" onclick="openSupportDrawer()">💬 Need Help & Support</a>
+              <a href="#" class="profile-menu-link" onclick="openProfileModal()">👤 Profile & GSTIN Details</a>
+              <a href="#" class="profile-menu-link" onclick="viewMyReturns()">📋 My GST Returns & History</a>
+              <a href="#" class="profile-menu-link" onclick="openOrdersModal()">🎁 Rewards & Wallet (₹1,500)</a>
+              <a href="#" class="profile-menu-link" onclick="openSupportDrawer()">💬 Need Help? CA Support</a>
             </div>
             <div style="border-top: 1px solid var(--border-light); padding: 4px 0; background: #FFF5F5; border-radius: 0 0 10px 10px;">
               <a href="#" class="profile-menu-link text-danger" onclick="logoutAction()" style="color: #DC2626; font-weight: 700; display: flex; align-items: center; gap: 6px; padding: 8px 16px;">
@@ -149,50 +127,39 @@
     </div>
   </header>
 
-  <!-- Suite Navigation Strip (Sleek Segmented Control) -->
+  <!-- Suite Navigation Strip (Sleek Clean Segmented Control) -->
   <nav class="suite-nav-strip">
     <div class="suite-nav-container">
       <div class="suite-switch-pills">
-        <button class="suite-pill active" id="btnSuiteItr" onclick="switchSuite('itr')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          <span>Income Tax (ITR)</span>
-        </button>
-        <button class="suite-pill" id="btnSuiteExpert" onclick="switchSuite('expert')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <span>Tax Filing from Experts</span>
-        </button>
-        <button class="suite-pill" id="btnSuiteCopilot" onclick="switchSuite('copilot')">
+        <button class="suite-pill active" id="btnSuiteCopilot" onclick="switchSuite('copilot')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><rect x="4" y="8" width="16" height="12" rx="2"/><circle cx="9" cy="13" r="1.5"/><circle cx="15" cy="13" r="1.5"/><path d="M10 17h4"/></svg>
-          <span>GST Copilot</span>
-        </button>
-        <button class="suite-pill" id="btnSuiteStartup" onclick="switchSuite('startup')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>
-          <span>Startup Express</span>
-        </button>
-        <button class="suite-pill" id="btnSuiteCompliance" onclick="switchSuite('compliance')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          <span>Health Score</span>
+          <span>🧭 GST Return Assistant (Guiding Path)</span>
         </button>
         <button class="suite-pill" id="btnSuiteGst" onclick="switchSuite('gst')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-          <span>GST & Reports</span>
+          <span>📊 GST Registers & Reports</span>
         </button>
-        <button class="suite-pill" id="btnSuiteNotice" onclick="switchSuite('notice')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span>Notice Defense Board</span>
-        </button>
-        <button class="suite-pill" id="btnSuiteVault" onclick="switchSuite('vault')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-          <span>Tax Document Vault</span>
-        </button>
+        <div class="more-services-dropdown" style="position: relative; display: inline-block;">
+          <button class="suite-pill" id="btnSuiteMoreServices" onclick="toggleMoreServicesMenu(event)">
+            <span>⚡ More Services ▾</span>
+          </button>
+          <div id="moreServicesMenu" class="dropdown-menu hidden" style="position: absolute; top: calc(100% + 6px); left: 0; min-width: 240px; background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 1000; padding: 6px 0;">
+            <a href="#" class="profile-menu-link" onclick="switchSuite('startup'); toggleMoreServicesMenu();">🚀 Startup Express (New Business)</a>
+            <a href="#" class="profile-menu-link" onclick="switchSuite('compliance'); toggleMoreServicesMenu();">📊 Statutory Health Score</a>
+            <a href="#" class="profile-menu-link" onclick="openMcaModal(); toggleMoreServicesMenu();">🏛️ MCA Corporate Lookup</a>
+            <a href="#" class="profile-menu-link" onclick="openDueDatesModal(); toggleMoreServicesMenu();">📅 Statutory Due Dates</a>
+            <a href="#" class="profile-menu-link" onclick="openReferralModal(); toggleMoreServicesMenu();">🎁 Referral Program (₹500)</a>
+            <a href="#" class="profile-menu-link" onclick="toggleKioskMode(true); toggleMoreServicesMenu();">🖥️ Touch-friendly Kiosk Mode</a>
+          </div>
+        </div>
       </div>
-      </div>
+    </div>
   </nav>
 
   <!-- ========================================================================= -->
-  <!-- SUITE 1: ITR E-FILING FLOW (Exact Screenshots 1-9 Layout)                 -->
+  <!-- SUITE 1: ITR E-FILING FLOW (Hidden from default navigation)                -->
   <!-- ========================================================================= -->
-  <div id="viewItrSuite" class="app-suite-container active">
+  <div id="viewItrSuite" class="app-suite-container hidden" style="display: none;">
     
     <!-- 4-Step Horizontal Pill Stepper -->
     <div class="stepper-wrapper">
@@ -3336,7 +3303,7 @@
   <!-- ========================================================================= -->
   <!-- GST COPILOT SUITE (Plain-English 5-Step Hero Workflow)                    -->
   <!-- ========================================================================= -->
-  <div id="viewCopilotSuite" class="app-suite-container hidden">
+  <div id="viewCopilotSuite" class="app-suite-container active">
     <div class="form-card">
       <div class="form-card-header" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
         <div>

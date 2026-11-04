@@ -3278,3 +3278,43 @@ body {
   accent-color: #D97706;
   cursor: pointer;
 }
+
+/* ========================================================================= */
+/* MORE SERVICES DROPDOWN                                                    */
+/* ========================================================================= */
+.more-services-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.more-services-dropdown .dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 260px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  padding: 6px 0;
+}
+
+.more-services-dropdown .dropdown-menu.hidden {
+  display: none !important;
+}
+
+.more-services-dropdown .profile-menu-link {
+  display: block;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.more-services-dropdown .profile-menu-link:hover {
+  background: #EFF6FF;
+  color: #2563EB;
+}

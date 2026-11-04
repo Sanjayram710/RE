@@ -109,10 +109,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   await fetchAppMode();
   await loadGstDemoData();
   
-  // Initialize ITR Step 1 & Computation
-  updatePersonalInfoState();
-  await recalculateItrTax();
-  goToItrStep(1); // Ensure Option 1 (Personal Info) is active on load
+  // Default to GST Return Assistant (Guiding Path) on load
+  switchSuite('copilot');
+  selectFilingEntity('32ABCDE1234F1Z5', 'Malabar Spice Traders', 'GST & Business');
   
   // Close dropdowns on outside click
   document.addEventListener("click", (e) => {
@@ -121,6 +120,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     if (!e.target.closest("#profileDropdownBtn") && !e.target.closest("#profileDropdownMenu")) {
       document.getElementById("profileDropdownMenu")?.classList.remove("active");
+    }
+    if (!e.target.closest("#btnSuiteMoreServices") && !e.target.closest("#moreServicesMenu")) {
+      document.getElementById("moreServicesMenu")?.classList.add("hidden");
     }
   });
 });
@@ -834,12 +836,7 @@ function toggleFilingDropdown(e) {
 function selectFilingEntity(pan, name, subtitle) {
   document.getElementById("currentFilingPan").textContent = pan;
   document.getElementById("filingDropdownMenu")?.classList.remove("active");
-  if (pan.startsWith("32")) {
-    switchSuite("gst");
-  } else {
-    appState.itr.personalInfo.pan = pan;
-    switchSuite("itr");
-  }
+  switchSuite("copilot");
 }
 
 function toggleProfileDropdown(e) {
@@ -847,16 +844,24 @@ function toggleProfileDropdown(e) {
   document.getElementById("profileDropdownMenu")?.classList.toggle("active");
 }
 
+window.toggleMoreServicesMenu = function(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById("moreServicesMenu");
+  menu?.classList.toggle("hidden");
+};
+
 function viewMyReturns() {
-  alert("My Tax Returns: Viewing filed ITR-1 Sahaj for AY 2024-25 and draft AY 2025-26.");
+  alert("📋 My GST Returns:\n• October 2026: GSTR-3B Ready to File (₹70,200)\n• September 2026: Filed & Verified (ARN: AA320926019284A)\n• August 2026: Filed & Verified (ARN: AA320826982104A)");
 }
-function openProfileModal() { alert("Assessee Profile: Sanjay Harshi (CVBBC4433W). Contact and KYC verified."); }
-function openOrdersModal() { alert("My Orders: No pending paid orders. Active tier connected."); }
+function openProfileModal() {
+  alert("🏢 Business Profile:\nLegal Name: Malabar Spice Traders\nGSTIN: 32ABCDE1234F1Z5\nState: 32-Kerala\nFiling Frequency: Monthly (GSTR-1 & GSTR-3B)\nStatus: Active (100% Compliant)");
+}
+function openOrdersModal() { alert("🎁 Referral Rewards & Credits:\nAvailable Wallet: ₹1,500\nReferral Code: MALABAR500\nCashback: ₹500 instant discount on filings."); }
 function openRewardsModal() { alert("My Rewards: ₹500 Referral voucher available with code REWARD500."); }
-function openAdvancedModal() { alert("Advanced Options: NRI residency check, schedule FA disclosures, AIS cross-check enabled."); }
-function openRectificationModal() { alert("Rectification u/s 139(9): Select defective notice number to generate correction JSON."); }
-function openPrefillModal() { fetchIncomeDetailsDemo(); }
-function checkItrStatusModal() { alert("ITR Status: Return processed with zero outstanding demand."); }
+function openAdvancedModal() { alert("Advanced Options: Statutory 182-API live inspection and deterministic engine controls."); }
+function openRectificationModal() { alert("Rectification: Defect notices can be cleared under the GST compliance tab."); }
+function openPrefillModal() { alert("Auto-Sync: Connected to GSTN sandbox for automated GSTR-2B credit sync."); }
+function checkItrStatusModal() { alert("GST Status: Return processed with zero outstanding statutory demand."); }
 // ============================================================================
 // Authentication & Session Management (Sign In, Register, Logout)
 // ============================================================================
@@ -3510,29 +3515,50 @@ window.switchSuite = function(suite) {
 
   // Reset all
   [viewItr, viewExpert, viewNotice, viewVault, viewGst, viewCopilot, viewStartup, viewCompliance].forEach(v => {
-    v?.classList.remove("active");
-    v?.classList.add("hidden");
+    if (v) {
+      v.classList.remove("active");
+      v.classList.add("hidden");
+      v.style.display = "none";
+    }
   });
   [btnItr, btnExpert, btnNotice, btnVault, btnGst, btnCopilot, btnStartup, btnCompliance].forEach(b => b?.classList.remove("active"));
 
   if (suite === "copilot") {
-    viewCopilot?.classList.add("active");
-    viewCopilot?.classList.remove("hidden");
+    if (viewCopilot) {
+      viewCopilot.classList.add("active");
+      viewCopilot.classList.remove("hidden");
+      viewCopilot.style.display = "block";
+    }
     btnCopilot?.classList.add("active");
     fetchCopilotPipeline();
     renderCadenceTimeline();
     onDelaySliderChange(0);
+  } else if (suite === "gst") {
+    if (viewGst) {
+      viewGst.classList.add("active");
+      viewGst.classList.remove("hidden");
+      viewGst.style.display = "block";
+    }
+    btnGst?.classList.add("active");
   } else if (suite === "startup") {
-    viewStartup?.classList.add("active");
-    viewStartup?.classList.remove("hidden");
+    if (viewStartup) {
+      viewStartup.classList.add("active");
+      viewStartup.classList.remove("hidden");
+      viewStartup.style.display = "block";
+    }
     btnStartup?.classList.add("active");
     selectStartupType(cdaState.selectedStartupType || 'proprietorship');
   } else if (suite === "compliance") {
-    viewCompliance?.classList.add("active");
-    viewCompliance?.classList.remove("hidden");
+    if (viewCompliance) {
+      viewCompliance.classList.add("active");
+      viewCompliance.classList.remove("hidden");
+      viewCompliance.style.display = "block";
+    }
     btnCompliance?.classList.add("active");
     loadComplianceScore();
   } else if (typeof originalSwitchSuite === "function") {
+    originalSwitchSuite(suite);
+  }
     originalSwitchSuite(suite);
   }
 };
