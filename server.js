@@ -45,6 +45,14 @@ import { validateStartupApplication, BUSINESS_TYPES } from "./lib/startupExpress
 import { getCopilotPipelineData, answerCopilotQuestion, fileNilGstReturn } from "./lib/gstCopilotEngine.js";
 import { extractDocumentData, SAMPLE_DOCUMENTS } from "./lib/aiDocumentExtractorEngine.js";
 import { getCadenceSchedule, calculateDelayEscalation, STATUTORY_SEQUENCE } from "./lib/statutoryCadenceEngine.js";
+import { computeRule88aSetoff } from "./lib/rule88aEngine.js";
+import { processRcmInwardSupply, aggregateRcmBatch, NOTIFIED_RCM_CATEGORIES } from "./lib/rcmEngine.js";
+import { analyzeInvoice180Days, auditPurchaseRegister180Days } from "./lib/supplier180DayTracker.js";
+import { classifyOutwardInvoice, classifySalesRegisterForGstr1, B2CL_STATUTORY_THRESHOLD } from "./lib/gstr1StatutoryClassifier.js";
+import { validateGstr1Prerequisites, validateGstr3bPrerequisites, simulateReturnFiling } from "./lib/gstrReturnLifecycleEngine.js";
+import { createEmptyCashLedger, createEmptyCreditLedger, generatePmt06Challan, executePmt09Transfer } from "./lib/electronicLedgerEngine.js";
+import { getPracticeDashboardSummary, getPracticeComplianceMatrix, generateClientReminder, PRACTICE_CLIENTS } from "./lib/caPracticeManager.js";
+import { STATUTORY_RULES } from "./lib/statutoryRulesConfig.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -913,6 +921,112 @@ export async function handleRequest(req, res) {
         isNil: params.isNil === true || params.isNil === "true",
         netTaxLiability: params.netTaxLiability || params.tax
       }));
+    }
+
+    // ---------------------------------------------------------
+    // Statutory Rules & CA Audit Engine Endpoints
+    // ---------------------------------------------------------
+    if (pathname === "/api/statutory/rules-config" && method === "GET") {
+      return sendJson(res, 200, { success: true, config: STATUTORY_RULES });
+    }
+
+    if (pathname === "/api/statutory/rule88a-setoff" && method === "POST") {
+      const body = await readBody(req);
+      const liabilities = body.liabilities || { igst: 100000, cgst: 50000, sgst: 50000 };
+      const itc = body.itc || { igst: 120000, cgst: 40000, sgst: 40000 };
+      const setoff = computeRule88aSetoff(liabilities, itc, body.options);
+      return sendJson(res, 200, { success: true, ...setoff });
+    }
+
+    if (pathname === "/api/statutory/rcm-process" && (method === "POST" || method === "GET")) {
+      const body = method === "POST" ? await readBody(req) : {};
+      const supplies = body.inwardSupplies || DEMO_PURCHASES;
+      const result = aggregateRcmBatch(supplies);
+      return sendJson(res, 200, { success: true, ...result, notifiedCategories: NOTIFIED_RCM_CATEGORIES });
+    }
+
+    if (pathname === "/api/statutory/180-day-tracker" && (method === "POST" || method === "GET")) {
+      const body = method === "POST" ? await readBody(req) : {};
+      const invoices = body.invoices || DEMO_PURCHASES;
+      const asOfDate = body.asOfDate || query.asOfDate;
+      const result = auditPurchaseRegister180Days(invoices, asOfDate);
+      return sendJson(res, 200, { success: true, ...result });
+    }
+
+    if (pathname === "/api/statutory/gstr1-classify" && (method === "POST" || method === "GET")) {
+      const body = method === "POST" ? await readBody(req) : {};
+      const invoices = body.invoices || DEMO_SALES;
+      const gstin = body.gstin || DEMO_BUSINESS.gstin;
+      const result = classifySalesRegisterForGstr1(invoices, gstin);
+      return sendJson(res, 200, { success: true, ...result });
+    }
+
+    if (pathname === "/api/statutory/lifecycle/validate-gstr1" && method === "POST") {
+      const body = await readBody(req);
+      const result = validateGstr1Prerequisites(body);
+      return sendJson(res, 200, { success: true, ...result });
+    }
+
+    if (pathname === "/api/statutory/lifecycle/validate-gstr3b" && method === "POST") {
+      const body = await readBody(req);
+      const result = validateGstr3bPrerequisites(body);
+      return sendJson(res, 200, { success: true, ...result });
+    }
+
+    if (pathname === "/api/statutory/lifecycle/simulate-filing" && method === "POST") {
+      const body = await readBody(req);
+      const result = simulateReturnFiling(body.returnType || "GSTR3B", body);
+      return sendJson(res, 200, { success: true, ...result });
+    }
+
+    if (pathname === "/api/statutory/ledgers" && method === "GET") {
+      const gstin = query.gstin || DEMO_BUSINESS.gstin;
+      return sendJson(res, 200, {
+        success: true,
+        gstin,
+        cashLedger: createEmptyCashLedger(gstin),
+        creditLedger: createEmptyCreditLedger(gstin)
+      });
+    }
+
+    if (pathname === "/api/statutory/pmt06/generate" && method === "POST") {
+      const body = await readBody(req);
+      const gstin = body.gstin || DEMO_BUSINESS.gstin;
+      const amounts = body.amounts || { cgstTax: 1000, sgstTax: 1000 };
+      const challan = generatePmt06Challan(gstin, amounts, body.mode || "NET_BANKING", true);
+      return sendJson(res, 200, { success: true, challan });
+    }
+
+    if (pathname === "/api/statutory/pmt09/transfer" && method === "POST") {
+      const body = await readBody(req);
+      const ledger = body.cashLedger || createEmptyCashLedger(body.gstin);
+      ledger.majorHeads.IGST.tax = 10000;
+      ledger.majorHeads.IGST.total = 10000;
+      const result = executePmt09Transfer(ledger, body.transferRequest || {
+        fromMajor: "IGST",
+        fromMinor: "tax",
+        toMajor: "CGST",
+        toMinor: "tax",
+        amount: 2500
+      });
+      return sendJson(res, 200, { success: true, result });
+    }
+
+    // ---------------------------------------------------------
+    // CA Multi-Client Practice Management Endpoints
+    // ---------------------------------------------------------
+    if (pathname === "/api/practice/summary" && method === "GET") {
+      return sendJson(res, 200, { success: true, ...getPracticeDashboardSummary() });
+    }
+
+    if (pathname === "/api/practice/compliance-matrix" && method === "GET") {
+      return sendJson(res, 200, { success: true, matrix: getPracticeComplianceMatrix() });
+    }
+
+    if (pathname === "/api/practice/reminder" && method === "POST") {
+      const body = await readBody(req);
+      const reminder = generateClientReminder(body.clientId || "CLI-001");
+      return sendJson(res, 200, { success: true, reminder });
     }
 
     // ---------------------------------------------------------

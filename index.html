@@ -151,11 +151,19 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           <span>📈 Health Score</span>
         </button>
+        <button class="suite-pill" id="btnSuitePractice" onclick="openPracticeModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>🏛️ CA Practice Hub</span>
+        </button>
         <div class="more-services-dropdown" style="position: relative; display: inline-block;">
           <button class="suite-pill" id="btnSuiteMoreServices" onclick="toggleMoreServicesMenu(event)">
             <span>⚡ Quick Tools ▾</span>
           </button>
-          <div id="moreServicesMenu" class="dropdown-menu hidden" style="position: absolute; top: calc(100% + 6px); left: 0; min-width: 240px; background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 1000; padding: 6px 0;">
+          <div id="moreServicesMenu" class="dropdown-menu hidden" style="position: absolute; top: calc(100% + 6px); left: 0; min-width: 270px; background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 1000; padding: 6px 0;">
+            <a href="#" class="profile-menu-link" onclick="openPracticeModal(); toggleMoreServicesMenu();">🏛️ CA Multi-Client Practice Hub</a>
+            <a href="#" class="profile-menu-link" onclick="openStatutoryEngineModal(); toggleMoreServicesMenu();">⚖️ Rule 88A & Ledgers (PMT-01/02/05/06)</a>
+            <a href="#" class="profile-menu-link" onclick="open180DaysModal(); toggleMoreServicesMenu();">⏳ 180-Day Rule 37 Supplier Aging</a>
+            <a href="#" class="profile-menu-link" onclick="openRcmModal(); toggleMoreServicesMenu();">🔄 RCM 100% Cash Settlement</a>
             <a href="#" class="profile-menu-link" onclick="openDueDatesModal(); toggleMoreServicesMenu();">📅 Statutory Due Dates</a>
             <a href="#" class="profile-menu-link" onclick="openMcaModal(); toggleMoreServicesMenu();">🏛️ MCA Corporate Lookup</a>
             <a href="#" class="profile-menu-link" onclick="openReferralModal(); toggleMoreServicesMenu();">🎁 Referral Program (₹500)</a>
@@ -4225,6 +4233,238 @@
         <button class="btn btn-success" id="btnSubmitNilFiling" onclick="submitNilFiling()" style="font-weight: 700; background: #059669; border-color: #059669;">
           ✓ Confirm & File Nil Return
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: CA MULTI-CLIENT PRACTICE HUB                                       -->
+  <!-- ========================================================================= -->
+  <div id="modalPracticeHub" class="modal-overlay hidden" style="display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;" onclick="if (event.target === this) closePracticeModal()">
+    <div class="modal-dialog modal-dialog-lg" style="margin: auto; max-width: 900px; width: 100%; background: #FFFFFF; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); position: relative; z-index: 100000; overflow: hidden;">
+      <div class="modal-header" style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
+        <div>
+          <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+            <span>🏛️</span> CA Multi-Client Practice Management Workspace
+          </h3>
+          <p class="text-xs text-muted">Client-wise GSTIN portfolio, compliance matrix, Section 39(10) prerequisite locks & ITC reconciliations</p>
+        </div>
+        <button class="modal-close" onclick="closePracticeModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+          <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px;">
+            <div class="text-xs text-muted font-bold">Total Clients</div>
+            <div id="practiceTotalClients" style="font-size: 20px; font-weight: 800; color: #1D4ED8;">3 Active</div>
+          </div>
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 12px;">
+            <div class="text-xs text-muted font-bold">Filed / On Schedule</div>
+            <div id="practiceFiledCount" style="font-size: 20px; font-weight: 800; color: #15803D;">2 Clients</div>
+          </div>
+          <div style="background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px; padding: 12px;">
+            <div class="text-xs text-muted font-bold">Pending Returns</div>
+            <div id="practicePendingCount" style="font-size: 20px; font-weight: 800; color: #B45309;">1 Pending</div>
+          </div>
+          <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 12px;">
+            <div class="text-xs text-muted font-bold">High ITC Risk</div>
+            <div id="practiceRiskCount" style="font-size: 20px; font-weight: 800; color: #B91C1C;">1 Mismatch</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Compliance Matrix & Filing Queue (Period: October 2026)</h4>
+          <div class="table-responsive" style="max-height: 260px; overflow-y: auto; border: 1px solid #E2E8F0; border-radius: 8px;">
+            <table class="data-table" style="width: 100%; font-size: 12px;">
+              <thead>
+                <tr style="background: #F1F5F9; text-align: left;">
+                  <th style="padding: 8px 10px;">Client & Trade Name</th>
+                  <th style="padding: 8px 10px;">GSTIN & State</th>
+                  <th style="padding: 8px 10px;">GSTR-1 Status</th>
+                  <th style="padding: 8px 10px;">GSTR-3B Status</th>
+                  <th style="padding: 8px 10px;">ITC Mismatch</th>
+                  <th style="padding: 8px 10px;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="practiceClientsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="practiceReminderPreviewBox" style="display: none; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 14px; margin-top: 14px;">
+          <div style="font-weight: 700; font-size: 13px; color: #1E293B; margin-bottom: 6px;">Draft Statutory Client Reminder</div>
+          <pre id="practiceReminderText" style="white-space: pre-wrap; font-family: monospace; font-size: 11px; color: #334155; margin: 0;"></pre>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between;">
+        <button class="btn btn-outline" onclick="closePracticeModal()">Close</button>
+        <button class="btn btn-primary" onclick="loadPracticeData()">🔄 Refresh Matrix</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: RULE 88A & ELECTRONIC LEDGERS HUB                                  -->
+  <!-- ========================================================================= -->
+  <div id="modalStatutoryLedgers" class="modal-overlay hidden" style="display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;" onclick="if (event.target === this) closeStatutoryEngineModal()">
+    <div class="modal-dialog modal-dialog-lg" style="margin: auto; max-width: 860px; width: 100%; background: #FFFFFF; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); position: relative; z-index: 100000; overflow: hidden;">
+      <div class="modal-header" style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
+        <div>
+          <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+            <span>⚖️</span> Rule 88A Optimization & Electronic Ledgers (PMT-01/02/05/06)
+          </h3>
+          <p class="text-xs text-muted">Statutory ITC utilization sequence, CGST/SGST firewall, Form GST PMT-05 Cash Ledger & 14-digit CPIN challan</p>
+        </div>
+        <button class="modal-close" onclick="closeStatutoryEngineModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <!-- Rule 88A Optimization Card -->
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; margin-bottom: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div style="font-weight: 700; font-size: 13px; color: #1E293B;">Deterministic Rule 88A ITC Set-off Simulator</div>
+            <span class="badge" style="background: #DCFCE7; color: #15803D; font-weight: 700; font-size: 11px;">Statutory Firewall Active</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label class="text-xs text-muted">IGST Output Liability</label>
+              <input type="number" id="simRule88aLIgst" class="text-input text-sm" value="100000">
+            </div>
+            <div>
+              <label class="text-xs text-muted">CGST Output Liability</label>
+              <input type="number" id="simRule88aLCgst" class="text-input text-sm" value="50000">
+            </div>
+            <div>
+              <label class="text-xs text-muted">SGST Output Liability</label>
+              <input type="number" id="simRule88aLSgst" class="text-input text-sm" value="50000">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label class="text-xs text-muted">IGST ITC Available</label>
+              <input type="number" id="simRule88aItcIgst" class="text-input text-sm" value="120000">
+            </div>
+            <div>
+              <label class="text-xs text-muted">CGST ITC Available</label>
+              <input type="number" id="simRule88aItcCgst" class="text-input text-sm" value="40000">
+            </div>
+            <div>
+              <label class="text-xs text-muted">SGST ITC Available</label>
+              <input type="number" id="simRule88aItcSgst" class="text-input text-sm" value="40000">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="calculateRule88aPreview()">Calculate Optimal Rule 88A Setoff</button>
+
+          <div id="rule88aOutputBox" style="margin-top: 14px; display: none;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Electronic Ledgers Section -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <!-- Cash Ledger PMT-05 -->
+          <div style="border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px;">
+            <div style="font-weight: 700; font-size: 13px; margin-bottom: 6px; color: #0F172A;">Form GST PMT-05 (Cash Ledger)</div>
+            <div class="text-xs text-muted" style="margin-bottom: 8px;">20 Major/Minor sub-heads. Strict PMT-09 transfer required to re-allocate funds.</div>
+            <div id="cashLedgerPreview" style="font-size: 11px; font-family: monospace; background: #F1F5F9; padding: 8px; border-radius: 6px;">
+              Loading ledger...
+            </div>
+          </div>
+
+          <!-- PMT-06 Challan Generator -->
+          <div style="border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px;">
+            <div style="font-weight: 700; font-size: 13px; margin-bottom: 6px; color: #0F172A;">Form GST PMT-06 Challan Generator</div>
+            <div class="text-xs text-muted" style="margin-bottom: 8px;">Generates statutory 14-digit CPIN valid for 15 days.</div>
+            <button class="btn btn-outline btn-sm" style="width: 100%; margin-bottom: 8px;" onclick="generateStatutoryChallan()">
+              💳 Generate Form GST PMT-06 (14-Digit CPIN)
+            </button>
+            <div id="challanOutputBox" style="font-size: 11px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px; padding: 8px; display: none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+        <button class="btn btn-outline" onclick="closeStatutoryEngineModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: 180-DAY RULE 37 SUPPLIER AGING LEDGER                              -->
+  <!-- ========================================================================= -->
+  <div id="modal180DaysTracker" class="modal-overlay hidden" style="display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;" onclick="if (event.target === this) close180DaysModal()">
+    <div class="modal-dialog modal-dialog-lg" style="margin: auto; max-width: 820px; width: 100%; background: #FFFFFF; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); position: relative; z-index: 100000; overflow: hidden;">
+      <div class="modal-header" style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
+        <div>
+          <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+            <span>⏳</span> Section 16(2) 180-Day Rule 37 Supplier Aging Matrix
+          </h3>
+          <p class="text-xs text-muted">Proportionate ITC reversal in Table 4(B)(2) & Section 50(1) 18% p.a. interest calculation</p>
+        </div>
+        <button class="modal-close" onclick="close180DaysModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <div id="agingBucketsSummary" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px;">
+          <!-- Populated dynamically -->
+        </div>
+
+        <h4 style="font-size: 13px; font-weight: 700; margin-bottom: 8px;">Invoice-Level Aging & Reversal Schedulers</h4>
+        <div class="table-responsive" style="max-height: 280px; overflow-y: auto; border: 1px solid #E2E8F0; border-radius: 8px;">
+          <table class="data-table" style="width: 100%; font-size: 12px;">
+            <thead>
+              <tr style="background: #F1F5F9; text-align: left;">
+                <th style="padding: 8px 10px;">Invoice & Date</th>
+                <th style="padding: 8px 10px;">Supplier</th>
+                <th style="padding: 8px 10px;">Days Elapsed</th>
+                <th style="padding: 8px 10px;">Unpaid Amount</th>
+                <th style="padding: 8px 10px;">Reversal Obligation</th>
+                <th style="padding: 8px 10px;">Sec 50 Interest</th>
+              </tr>
+            </thead>
+            <tbody id="agingInvoicesTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+        <button class="btn btn-outline" onclick="close180DaysModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: REVERSE CHARGE MECHANISM (RCM) CASH SETTLEMENT                      -->
+  <!-- ========================================================================= -->
+  <div id="modalRcmSettlement" class="modal-overlay hidden" style="display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;" onclick="if (event.target === this) closeRcmModal()">
+    <div class="modal-dialog modal-dialog-md" style="margin: auto; max-width: 650px; width: 100%; background: #FFFFFF; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); position: relative; z-index: 100000; overflow: hidden;">
+      <div class="modal-header" style="background: #FFFBEB; border-bottom: 1px solid #FDE68A;">
+        <div>
+          <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px; color: #92400E;">
+            <span>🔄</span> Reverse Charge Mechanism (RCM) 100% Cash Obligation
+          </h3>
+          <p class="text-xs text-muted">Section 49(4) read with Section 2(82) Cash Settlement & Section 31(3)(f) Self-Invoicing</p>
+        </div>
+        <button class="modal-close" onclick="closeRcmModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 12px; margin-bottom: 16px; color: #991B1B; font-size: 12px;">
+          <strong>⚠️ Statutory Cash Rule:</strong> Under Section 2(82) of the CGST Act, "output tax" specifically excludes tax payable under reverse charge. Electronic Credit Ledger (ITC) CANNOT be used to discharge Table 3.1(d) liability. It must be paid 100% in CASH.
+        </div>
+
+        <div id="rcmSummaryContent" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px;">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+        <button class="btn btn-outline" onclick="closeRcmModal()">Close</button>
       </div>
     </div>
   </div>

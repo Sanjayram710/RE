@@ -4402,3 +4402,354 @@ window.onDelaySliderChange = async function(days) {
     console.error(e);
   }
 };
+
+// =========================================================================
+// 12. CA Multi-Client Practice Management Workspace
+// =========================================================================
+window.openPracticeModal = function() {
+  const modal = document.getElementById('modalPracticeHub');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+  loadPracticeData();
+};
+
+window.closePracticeModal = function() {
+  const modal = document.getElementById('modalPracticeHub');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+};
+
+window.loadPracticeData = async function() {
+  try {
+    const [summaryRes, matrixRes] = await Promise.all([
+      fetch('/api/practice/summary').then(r => r.json()),
+      fetch('/api/practice/compliance-matrix').then(r => r.json())
+    ]);
+
+    if (summaryRes.success) {
+      const tot = document.getElementById('practiceTotalClients');
+      const fld = document.getElementById('practiceFiledCount');
+      const pnd = document.getElementById('practicePendingCount');
+      const rsk = document.getElementById('practiceRiskCount');
+      if (tot) tot.textContent = `${summaryRes.totalClients} Active`;
+      if (fld) fld.textContent = `${summaryRes.filedCount} Clients`;
+      if (pnd) pnd.textContent = `${summaryRes.pendingCount} Pending`;
+      if (rsk) rsk.textContent = `${summaryRes.highRiskMismatches} High Risk`;
+    }
+
+    if (matrixRes.success && matrixRes.matrix) {
+      const tbody = document.getElementById('practiceClientsTableBody');
+      if (tbody) {
+        tbody.innerHTML = matrixRes.matrix.map(c => `
+          <tr style="border-bottom: 1px solid #F1F5F9;">
+            <td style="padding: 8px 10px;">
+              <strong>${c.tradeName}</strong>
+              <div class="text-xs text-muted">${c.clientId} • ${c.filingCategory}</div>
+            </td>
+            <td style="padding: 8px 10px; font-family: monospace;">
+              ${c.gstin}
+              <div class="text-xs text-muted">${c.state}</div>
+            </td>
+            <td style="padding: 8px 10px;">
+              <span class="badge ${c.october2026Status.gstr1 === 'FILED' ? 'status-chip success-chip' : 'status-chip warning-chip'}">
+                ${c.october2026Status.gstr1}
+              </span>
+            </td>
+            <td style="padding: 8px 10px;">
+              <span class="badge ${c.october2026Status.gstr3b === 'FILED' ? 'status-chip success-chip' : 'status-chip danger-chip'}">
+                ${c.october2026Status.gstr3b}
+              </span>
+            </td>
+            <td style="padding: 8px 10px;">
+              ${c.itcStatus.unmatchedExcess > 0 
+                ? `<span style="color: #DC2626; font-weight: 700;">+₹${c.itcStatus.unmatchedExcess.toLocaleString("en-IN")} Excess</span>` 
+                : `<span style="color: #16A34A; font-weight: 700;">✓ 100% Matched</span>`}
+            </td>
+            <td style="padding: 8px 10px;">
+              <button class="btn btn-outline btn-xs" onclick="sendClientReminder('${c.clientId}')">
+                📩 Send Reminder
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+  } catch(err) {
+    console.error('Practice data load error:', err);
+  }
+};
+
+window.sendClientReminder = async function(clientId) {
+  try {
+    const res = await fetch('/api/practice/reminder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId })
+    });
+    const json = await res.json();
+    if (json.success && json.reminder) {
+      const box = document.getElementById('practiceReminderPreviewBox');
+      const text = document.getElementById('practiceReminderText');
+      if (box && text) {
+        box.style.display = 'block';
+        text.textContent = `Subject: ${json.reminder.subject}\n\nTo: ${json.reminder.recipientEmail}\n\n${json.reminder.body}`;
+      }
+    }
+  } catch(err) {
+    console.error(err);
+  }
+};
+
+// =========================================================================
+// 13. Rule 88A & Electronic Ledgers (PMT-01/02/05/06)
+// =========================================================================
+window.openStatutoryEngineModal = function() {
+  const modal = document.getElementById('modalStatutoryLedgers');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+  calculateRule88aPreview();
+  loadLedgersPreview();
+};
+
+window.closeStatutoryEngineModal = function() {
+  const modal = document.getElementById('modalStatutoryLedgers');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+};
+
+window.calculateRule88aPreview = async function() {
+  const lIgst = parseFloat(document.getElementById('simRule88aLIgst')?.value) || 0;
+  const lCgst = parseFloat(document.getElementById('simRule88aLCgst')?.value) || 0;
+  const lSgst = parseFloat(document.getElementById('simRule88aLSgst')?.value) || 0;
+
+  const itcIgst = parseFloat(document.getElementById('simRule88aItcIgst')?.value) || 0;
+  const itcCgst = parseFloat(document.getElementById('simRule88aItcCgst')?.value) || 0;
+  const itcSgst = parseFloat(document.getElementById('simRule88aItcSgst')?.value) || 0;
+
+  try {
+    const res = await fetch('/api/statutory/rule88a-setoff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        liabilities: { igst: lIgst, cgst: lCgst, sgst: lSgst },
+        itc: { igst: itcIgst, cgst: itcCgst, sgst: itcSgst }
+      })
+    });
+    const json = await res.json();
+    if (json.success) {
+      const box = document.getElementById('rule88aOutputBox');
+      if (box) {
+        box.style.display = 'block';
+        box.innerHTML = `
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 12px; font-size: 12px;">
+            <div style="font-weight: 700; color: #166534; margin-bottom: 6px;">Rule 88A Setoff Matrix Results:</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+              <div>IGST Credit Utilized: <strong>₹${json.utilizationMatrix.igstCreditUtilized.total.toLocaleString("en-IN")}</strong></div>
+              <div>CGST Credit Utilized: <strong>₹${json.utilizationMatrix.cgstCreditUtilized.total.toLocaleString("en-IN")}</strong></div>
+              <div>SGST Credit Utilized: <strong>₹${json.utilizationMatrix.sgstCreditUtilized.total.toLocaleString("en-IN")}</strong></div>
+            </div>
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #BBF7D0; display: flex; justify-content: space-between; align-items: center;">
+              <div>Net Cash Payable: <strong style="color: #DC2626; font-size: 14px;">₹${json.netCashPayable.total.toLocaleString("en-IN")}</strong> (IGST: ₹${json.netCashPayable.igst}, CGST: ₹${json.netCashPayable.cgst}, SGST: ₹${json.netCashPayable.sgst})</div>
+              <div>ITC Carry Forward: <strong style="color: #16A34A; font-size: 14px;">₹${json.itcCarryForward.total.toLocaleString("en-IN")}</strong></div>
+            </div>
+          </div>
+        `;
+      }
+    }
+  } catch(err) {
+    console.error(err);
+  }
+};
+
+window.loadLedgersPreview = async function() {
+  try {
+    const res = await fetch('/api/statutory/ledgers');
+    const json = await res.json();
+    if (json.success) {
+      const box = document.getElementById('cashLedgerPreview');
+      if (box) {
+        box.innerHTML = `
+          GSTIN: ${json.gstin} | Major Heads Total: ₹${json.cashLedger.grandTotal}
+          IGST [Tax: ₹${json.cashLedger.majorHeads.IGST.tax}, Fee: ₹${json.cashLedger.majorHeads.IGST.fee}]
+          CGST [Tax: ₹${json.cashLedger.majorHeads.CGST.tax}, Fee: ₹${json.cashLedger.majorHeads.CGST.fee}]
+          SGST [Tax: ₹${json.cashLedger.majorHeads.SGST.tax}, Fee: ₹${json.cashLedger.majorHeads.SGST.fee}]
+        `;
+      }
+    }
+  } catch(err) {
+    console.error(err);
+  }
+};
+
+window.generateStatutoryChallan = async function() {
+  try {
+    const res = await fetch('/api/statutory/pmt06/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amounts: { cgstTax: 1250, sgstTax: 1250, igstTax: 2500 }
+      })
+    });
+    const json = await res.json();
+    if (json.success && json.challan) {
+      const ch = json.challan;
+      const box = document.getElementById('challanOutputBox');
+      if (box) {
+        box.style.display = 'block';
+        box.innerHTML = `
+          <div style="font-weight: 700; color: #1E40AF; margin-bottom: 4px;">Form GST PMT-06 Challan Generated:</div>
+          <div><strong>14-Digit CPIN:</strong> <span class="font-mono" style="font-weight: 700; color: #0F172A;">${ch.cpin}</span></div>
+          <div><strong>Total Amount:</strong> ₹${ch.totalChallanAmount.toLocaleString("en-IN")}</div>
+          <div><strong>Statutory Validity:</strong> 15 Days (Expires: ${new Date(ch.expiryDate).toLocaleDateString()})</div>
+          <div style="font-size: 10px; color: #64748B; margin-top: 4px;">${ch.watermark}</div>
+        `;
+      }
+    }
+  } catch(err) {
+    console.error(err);
+  }
+};
+
+// =========================================================================
+// 14. 180-Day Rule 37 Supplier Aging Matrix
+// =========================================================================
+window.open180DaysModal = function() {
+  const modal = document.getElementById('modal180DaysTracker');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+  load180DaysData();
+};
+
+window.close180DaysModal = function() {
+  const modal = document.getElementById('modal180DaysTracker');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+};
+
+window.load180DaysData = async function() {
+  try {
+    const res = await fetch('/api/statutory/180-day-tracker');
+    const json = await res.json();
+    if (json.success) {
+      const sum = json.summary;
+      const summaryBox = document.getElementById('agingBucketsSummary');
+      if (summaryBox) {
+        summaryBox.innerHTML = `
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 10px;">
+            <div class="text-xs text-muted">0-90 Days (Normal)</div>
+            <div style="font-size: 16px; font-weight: 800; color: #166534;">${sum.current0To90Count} Invoices</div>
+          </div>
+          <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 10px;">
+            <div class="text-xs text-muted">91-150 Days (Aging)</div>
+            <div style="font-size: 16px; font-weight: 800; color: #1D4ED8;">${sum.watchlist91To150Count} Invoices</div>
+          </div>
+          <div style="background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px; padding: 10px;">
+            <div class="text-xs text-muted">151-179 Days (Critical)</div>
+            <div style="font-size: 16px; font-weight: 800; color: #B45309;">${sum.critical151To179Count} Invoices</div>
+          </div>
+          <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 10px;">
+            <div class="text-xs text-muted">>=180 Days (Reversal)</div>
+            <div style="font-size: 16px; font-weight: 800; color: #B91C1C;">${sum.overdue180PlusCount} Invoices</div>
+          </div>
+        `;
+      }
+
+      const allInvoices = [
+        ...json.buckets.overdue180Plus,
+        ...json.buckets.critical151To179,
+        ...json.buckets.watchlist91To150,
+        ...json.buckets.current0To90,
+        ...json.buckets.fullyPaid
+      ];
+
+      const tbody = document.getElementById('agingInvoicesTableBody');
+      if (tbody) {
+        tbody.innerHTML = allInvoices.slice(0, 10).map(inv => `
+          <tr style="border-bottom: 1px solid #F1F5F9;">
+            <td style="padding: 8px 10px;">
+              <strong>${inv.invoiceNumber}</strong>
+              <div class="text-xs text-muted">${inv.invoiceDate}</div>
+            </td>
+            <td style="padding: 8px 10px;">${inv.supplierName}</td>
+            <td style="padding: 8px 10px;"><strong>${inv.daysElapsed} days</strong></td>
+            <td style="padding: 8px 10px;">₹${inv.financials.unpaidAmount.toLocaleString("en-IN")}</td>
+            <td style="padding: 8px 10px;">
+              ${inv.status.isReversalMandatory
+                ? `<span style="color: #DC2626; font-weight: 700;">Reversal: ₹${inv.financials.proportionateItcToReverse.toLocaleString("en-IN")}</span>`
+                : `<span style="color: #16A34A;">Compliant</span>`}
+            </td>
+            <td style="padding: 8px 10px;">
+              ${inv.interest.interestPayable > 0 ? `₹${inv.interest.interestPayable}` : '₹0'}
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+  } catch(err) {
+    console.error(err);
+  }
+};
+
+// =========================================================================
+// 15. Reverse Charge Mechanism (RCM) Hub
+// =========================================================================
+window.openRcmModal = function() {
+  const modal = document.getElementById('modalRcmSettlement');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+  loadRcmData();
+};
+
+window.closeRcmModal = function() {
+  const modal = document.getElementById('modalRcmSettlement');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+};
+
+window.loadRcmData = async function() {
+  try {
+    const res = await fetch('/api/statutory/rcm-process');
+    const json = await res.json();
+    if (json.success) {
+      const box = document.getElementById('rcmSummaryContent');
+      if (box) {
+        box.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <div style="font-size: 14px; font-weight: 800; color: #1E293B;">GSTR-3B Table 3.1(d) Inward Supplies Liable to RCM</div>
+              <div class="text-xs text-muted">Total Taxable Value: ₹${json.gstr3bTable3_1_d.taxableValue.toLocaleString("en-IN")}</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="text-xs text-muted">Mandatory Cash Payment:</div>
+              <div style="font-size: 18px; font-weight: 800; color: #DC2626;">₹${json.gstr3bTable3_1_d.totalTax.toLocaleString("en-IN")}</div>
+            </div>
+          </div>
+          <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px; font-size: 12px; margin-bottom: 10px;">
+            <strong>Subsequent ITC Claim (Table 4(A)(3)):</strong> Eligible ₹${json.gstr3bTable4_A_3.eligibleTotal.toLocaleString("en-IN")} will be unlocked in your Electronic Credit Ledger <em>immediately after</em> Table 3.1(d) is paid in cash.
+          </div>
+          <div class="text-xs text-muted">
+            <strong>Self-Invoicing u/s 31(3)(f):</strong> Automatically enforced for all unregistered GTA, legal and sponsorship supplies.
+          </div>
+        `;
+      }
+    }
+  } catch(err) {
+    console.error(err);
+  }
+};
