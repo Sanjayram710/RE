@@ -5,4 +5,6 @@ yarn-debug.log*
 yarn-error.log*
 .DS_Store
 Thumbs.db
+*.zip
+stitch_simplegst_compliance_platform/
 
