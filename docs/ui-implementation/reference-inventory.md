@@ -174,3 +174,4 @@ This inventory documents all 13 reference design packages reverse-engineered fro
 ## 13. Stitch Design System Specification
 - **Directory / Files**: `simplegst_design_system/DESIGN.md`
 - **Specifications**: Defines complete color tokens, typography scales (`Plus Jakarta Sans` for displays/headings, `Inter` for body and labels, monospace for tabular numbers), border radii (4px, 8px, 12px, 16px, 9999px), elevations, and responsive breakpoints (390px, 768px, 1280px, 1440px).
+

@@ -594,3 +594,4 @@ console.log('index.html written successfully, length:', finalHtml.length);
 
 fs.writeFileSync(path.join(rootDir, 'public/index.html'), finalHtml, 'utf8');
 console.log('public/index.html written successfully, length:', finalHtml.length);
+

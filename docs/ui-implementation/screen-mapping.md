@@ -32,3 +32,4 @@ This document maps all existing application routes, containers, modals, and stat
 - **Chartered Accountant (CA) Experience**:
   - Primary access to CA Practice Hub with multi-client portfolio management, period-wise compliance status, authorized signing, and audit trails.
   - Client context switcher allows a CA to inspect a specific client's books in read-only or filing mode under strict tenant isolation.
+

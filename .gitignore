@@ -7,4 +7,9 @@ yarn-error.log*
 Thumbs.db
 *.zip
 stitch_simplegst_compliance_platform/
+*.db-wal
+*.db-shm
+data/simplegst.db
+data/uploads/*
+!data/uploads/.gitkeep
 

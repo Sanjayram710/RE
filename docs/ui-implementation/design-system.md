@@ -101,3 +101,4 @@ SimpleGST utilizes a dual-font system pairing **Plus Jakarta Sans** for headline
   - Fixed 256px (`w-64`) left sidebar.
   - 12-column grid with 24px gutters.
   - Dedicated side trays for contextual actions (GST Copilot, Split-View OCR Review).
+

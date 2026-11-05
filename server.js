@@ -1,3 +1,4 @@
+import { handleFunctionalApi } from "./lib/functionalApi.js";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -138,6 +139,20 @@ export async function handleRequest(req, res) {
     if (method === "OPTIONS") {
       res.writeHead(204);
       res.end();
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // 0. FUNCTIONAL API ROUTER (Database-backed Multi-GSTIN, Invoices, Documents, OCR, Ledgers)
+    // ---------------------------------------------------------
+    let requestBody = {};
+    if (method === "POST" || method === "PUT" || method === "PATCH") {
+      requestBody = await readBody(req);
+      req.body = requestBody; // Cache parsed body for downstream handlers
+    }
+
+    const isHandled = await handleFunctionalApi(req, res, pathname, method, query, requestBody);
+    if (isHandled !== false) {
       return;
     }
 

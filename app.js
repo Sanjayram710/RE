@@ -349,13 +349,19 @@ window.closeMobileSidebar = closeMobileSidebar;
 
 function openPmt06Modal() {
   const m = document.getElementById('pmt-06-modal');
-  if (m) m.classList.remove('hidden');
+  if (m) {
+    m.classList.remove('hidden');
+    m.style.display = 'flex';
+  }
 }
 window.openPmt06Modal = openPmt06Modal;
 
 function closePmt06Modal() {
   const m = document.getElementById('pmt-06-modal');
-  if (m) m.classList.add('hidden');
+  if (m) {
+    m.classList.add('hidden');
+    m.style.display = 'none';
+  }
 }
 window.closePmt06Modal = closePmt06Modal;
 

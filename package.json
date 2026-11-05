@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/index.test.js test/api182.test.js test/panGstin2tier.test.js test/expertClearTax.test.js test/cdaPdfModules.test.js test/laymanExperience.test.js test/statutoryGstValidation.test.js test/statutoryHardening.test.js"
+    "test": "node --test test/index.test.js test/api182.test.js test/panGstin2tier.test.js test/expertClearTax.test.js test/cdaPdfModules.test.js test/laymanExperience.test.js test/statutoryGstValidation.test.js test/statutoryHardening.test.js test/functionalPlatform.test.js",
+    "db:seed": "node -e 'import(\"./lib/db.js\").then(m => m.seedDevelopmentData())'"
   },
   "dependencies": {
     "xlsx": "^0.18.5"
