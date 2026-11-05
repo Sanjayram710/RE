@@ -51,12 +51,17 @@ async function runAcceptanceVerification() {
     };
   }
 
+  let authToken = null;
   async function req(urlPath, method = "GET", postBody = null) {
     const res = createMockRes();
     const reqObj = new EventEmitter();
     reqObj.url = urlPath;
     reqObj.method = method;
     reqObj.headers = postBody ? { "content-type": "application/json" } : {};
+    if (authToken) {
+      reqObj.headers["authorization"] = `Bearer ${authToken}`;
+      reqObj.headers["cookie"] = `simplegst_session=${authToken}`;
+    }
 
     const promise = handleRequest(reqObj, res);
     process.nextTick(() => {
@@ -72,6 +77,15 @@ async function runAcceptanceVerification() {
   }
 
   try {
+    // Authenticate via official login endpoint
+    const loginRes = await req("/api/auth/login", "POST", {
+      email: "rajesh.sharma@apexretail.com",
+      password: "password"
+    });
+    assert.strictEqual(loginRes.status, 200);
+    const loginData = JSON.parse(loginRes.body);
+    authToken = loginData.sessionToken;
+
     // 3. Dashboard loads with live data
     const dashRes = await req("/api/dashboard/summary");
     assert.strictEqual(dashRes.status, 200);

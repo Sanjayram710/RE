@@ -15,6 +15,7 @@ import {
   userRepo,
   orgRepo,
   gstinRepo,
+  sessionRepo,
   salesRepo,
   purchaseRepo,
   documentRepo,
@@ -47,6 +48,35 @@ function createMockRes() {
   };
 }
 
+let defaultTestSessionToken = null;
+function getAuthReq(extraHeaders = {}) {
+  if (!defaultTestSessionToken) {
+    seedDevelopmentData();
+    const existing = db.prepare("SELECT token FROM sessions WHERE token = ? AND is_revoked = 0").get("tok-test-apex-valid-token");
+    if (existing) {
+      defaultTestSessionToken = existing.token;
+    } else {
+      const user = userRepo.findByEmail("rajesh.sharma@apexretail.com") || db.prepare("SELECT * FROM users LIMIT 1").get();
+      const org = db.prepare("SELECT * FROM organizations LIMIT 1").get();
+      const gstin = db.prepare("SELECT * FROM gst_registrations WHERE org_id = ? LIMIT 1").get(org.id);
+      const session = sessionRepo.create({
+        userId: user.id,
+        activeOrgId: org.id,
+        activeGstinId: gstin.id,
+        activePeriod: "102026",
+        token: "tok-test-apex-valid-token"
+      });
+      defaultTestSessionToken = session.token;
+    }
+  }
+  return {
+    headers: {
+      authorization: `Bearer ${defaultTestSessionToken}`,
+      ...extraHeaders
+    }
+  };
+}
+
 test("Functional DB: Initialize and Seed Development Data", () => {
   seedDevelopmentData();
   const orgCount = db.prepare("SELECT COUNT(*) as count FROM organizations").get();
@@ -62,7 +92,7 @@ test("Multi-GSTIN: Format validation and branch creation", async () => {
 
   const validGstin = `27AAACA${Math.floor(1000 + Math.random() * 8999)}A1Z${Math.floor(1 + Math.random() * 8)}`; // Branch 2 in Maharashtra
   const res = createMockRes();
-  await handleFunctionalApi({}, res, "/api/gstins", "POST", {}, {
+  await handleFunctionalApi(getAuthReq(), res, "/api/gstins", "POST", {}, {
     gstin: validGstin,
     tradeName: "Apex Retailers - Pune Branch",
     stateCode: "27",
@@ -77,7 +107,7 @@ test("Multi-GSTIN: Format validation and branch creation", async () => {
 
   // Invalid GSTIN should fail
   const badRes = createMockRes();
-  await handleFunctionalApi({}, badRes, "/api/gstins", "POST", {}, {
+  await handleFunctionalApi(getAuthReq(), badRes, "/api/gstins", "POST", {}, {
     gstin: "INVALID_GSTIN_123",
     tradeName: "Bad Branch"
   });
@@ -90,12 +120,12 @@ test("Multi-GSTIN: Switching active GSTIN scopes all queries", async () => {
   assert.ok(kaGstin, "Karnataka branch must exist");
 
   const res = createMockRes();
-  await handleFunctionalApi({}, res, `/api/gstins/${kaGstin.id}/activate`, "POST", {}, {});
+  await handleFunctionalApi(getAuthReq(), res, `/api/gstins/${kaGstin.id}/activate`, "POST", {}, {});
   assert.equal(res.statusCode, 200);
 
   // Now query dashboard summary for Karnataka
   const dashRes = createMockRes();
-  await handleFunctionalApi({}, dashRes, "/api/dashboard/summary", "GET", { period: "102026" }, {});
+  await handleFunctionalApi(getAuthReq(), dashRes, "/api/dashboard/summary", "GET", { period: "102026" }, {});
   assert.equal(dashRes.statusCode, 200);
   const dashData = JSON.parse(dashRes.body);
   assert.equal(dashData.entity.gstin, "29AAACB1234F1Z5");
@@ -104,7 +134,7 @@ test("Multi-GSTIN: Switching active GSTIN scopes all queries", async () => {
   // Switch back to Maharashtra Main
   const mhGstin = gstinRepo.findByGstin("27AAACA1234A1Z5");
   const switchRes = createMockRes();
-  await handleFunctionalApi({}, switchRes, `/api/gstins/${mhGstin.id}/activate`, "POST", {}, {});
+  await handleFunctionalApi(getAuthReq(), switchRes, `/api/gstins/${mhGstin.id}/activate`, "POST", {}, {});
   assert.equal(switchRes.statusCode, 200);
 });
 
@@ -112,7 +142,7 @@ test("Sales Invoices: Create and deterministic tax computation", async () => {
   const mhGstin = gstinRepo.findByGstin("27AAACA1234A1Z5");
   const res = createMockRes();
 
-  await handleFunctionalApi({}, res, "/api/sales", "POST", { period: "102026" }, {
+  await handleFunctionalApi(getAuthReq(), res, "/api/sales", "POST", { period: "102026" }, {
     invoiceNumber: "TEST-INV-999",
     invoiceDate: "2026-10-25",
     customerName: "Tata Consumer Products Ltd",
@@ -139,7 +169,7 @@ test("Purchase Bills & 180-Day Rule 37 Tracking", async () => {
   const mhGstin = gstinRepo.findByGstin("27AAACA1234A1Z5");
   const res = createMockRes();
 
-  await handleFunctionalApi({}, res, "/api/purchases", "POST", { period: "102026" }, {
+  await handleFunctionalApi(getAuthReq(), res, "/api/purchases", "POST", { period: "102026" }, {
     invoiceNumber: `TEST-PUR-${Date.now()}`,
     invoiceDate: "2026-03-01", // Old invoice > 180 days
     supplierName: "Vintage Packaging Supplies",
@@ -156,7 +186,7 @@ test("Purchase Bills & 180-Day Rule 37 Tracking", async () => {
 
   // Make partial payment after 180 days
   const payRes = createMockRes();
-  await handleFunctionalApi({}, payRes, `/api/purchases/${purId}/payment`, "POST", {}, {
+  await handleFunctionalApi(getAuthReq(), payRes, `/api/purchases/${purId}/payment`, "POST", {}, {
     amountPaid: 25000,
     paymentDate: "2026-10-15"
   });
@@ -173,7 +203,7 @@ test("Purchase Bills & 180-Day Rule 37 Tracking", async () => {
 
 test("File Upload & Secure Storage", async () => {
   const res = createMockRes();
-  await handleFunctionalApi({}, res, "/api/documents/upload", "POST", {}, {
+  await handleFunctionalApi(getAuthReq(), res, "/api/documents/upload", "POST", {}, {
     filename: "Audit_Proof_Oct2026.pdf",
     category: "purchase_bill",
     rawText: "TAX INVOICE 32AAACB1234F1Z5 INV-2026-881 Taxable: 85000 CGST: 7650 SGST: 7650"
@@ -188,7 +218,7 @@ test("File Upload & Secure Storage", async () => {
 
 test("OCR Approval: Posts verified fields to purchase register", async () => {
   const res = createMockRes();
-  await handleFunctionalApi({}, res, "/api/ocr/approve", "POST", {}, {
+  await handleFunctionalApi(getAuthReq(), res, "/api/ocr/approve", "POST", {}, {
     invoiceType: "purchase_bill",
     fields: {
       invoiceNumber: "OCR-APPROVED-001",
@@ -213,7 +243,7 @@ test("OCR Approval: Posts verified fields to purchase register", async () => {
 
 test("GSTR-2B Reconciliation Summary: Matches books against 2B", async () => {
   const res = createMockRes();
-  await handleFunctionalApi({}, res, "/api/reconciliation/summary", "GET", { period: "102026" }, {});
+  await handleFunctionalApi(getAuthReq(), res, "/api/reconciliation/summary", "GET", { period: "102026" }, {});
   assert.equal(res.statusCode, 200);
   const data = JSON.parse(res.body);
   assert.ok(data.summary.matched.count >= 2);
@@ -222,7 +252,7 @@ test("GSTR-2B Reconciliation Summary: Matches books against 2B", async () => {
 
 test("Tax Calculation & Rule 88A Matrix Execution", async () => {
   const res = createMockRes();
-  await handleFunctionalApi({}, res, "/api/returns/tax-calc", "GET", { period: "102026" }, {});
+  await handleFunctionalApi(getAuthReq(), res, "/api/returns/tax-calc", "GET", { period: "102026" }, {});
   assert.equal(res.statusCode, 200);
   const data = JSON.parse(res.body);
   assert.ok(data.liability);
@@ -233,7 +263,7 @@ test("Tax Calculation & Rule 88A Matrix Execution", async () => {
 
 test("GST Copilot: Context grounded on real database records", async () => {
   const res = createMockRes();
-  await handleFunctionalApi({}, res, "/api/copilot/ask", "POST", {}, {
+  await handleFunctionalApi(getAuthReq(), res, "/api/copilot/ask", "POST", {}, {
     question: "How much GST do I need to pay for October 2026?"
   });
   assert.equal(res.statusCode, 200);
@@ -245,7 +275,7 @@ test("GST Copilot: Context grounded on real database records", async () => {
 
 test("PMT-06 Challan: Enforces Rule 87(4) Over-The-Counter ₹10,000 limit", async () => {
   const res = createMockRes();
-  await handleFunctionalApi({}, res, "/api/challans/generate-pmt06", "POST", {}, {
+  await handleFunctionalApi(getAuthReq(), res, "/api/challans/generate-pmt06", "POST", {}, {
     amount: 15000,
     paymentMode: "OVER_THE_COUNTER"
   });
@@ -257,7 +287,7 @@ test("PMT-06 Challan: Enforces Rule 87(4) Over-The-Counter ₹10,000 limit", asy
 
 test("PMT-06 Challan: Net Banking payment credits cash ledger", async () => {
   const genRes = createMockRes();
-  await handleFunctionalApi({}, genRes, "/api/challans/generate-pmt06", "POST", {}, {
+  await handleFunctionalApi(getAuthReq(), genRes, "/api/challans/generate-pmt06", "POST", {}, {
     amount: 20000,
     paymentMode: "NET_BANKING"
   });
@@ -265,7 +295,7 @@ test("PMT-06 Challan: Net Banking payment credits cash ledger", async () => {
   const genData = JSON.parse(genRes.body);
 
   const payRes = createMockRes();
-  await handleFunctionalApi({}, payRes, "/api/challans/simulate-payment", "POST", {}, {
+  await handleFunctionalApi(getAuthReq(), payRes, "/api/challans/simulate-payment", "POST", {}, {
     cpin: genData.cpin,
     amount: 20000
   });
@@ -278,7 +308,7 @@ test("PMT-06 Challan: Net Banking payment credits cash ledger", async () => {
 test("Document Management: List and delete uploaded files", async () => {
   // 1. Upload a temp document
   const uploadRes = createMockRes();
-  await handleFunctionalApi({}, uploadRes, "/api/documents/upload", "POST", {}, {
+  await handleFunctionalApi(getAuthReq(), uploadRes, "/api/documents/upload", "POST", {}, {
     filename: "Doc_For_Deletion.pdf",
     category: "purchase_bill",
     content: "Dummy Content for Deletion Test"
@@ -288,31 +318,31 @@ test("Document Management: List and delete uploaded files", async () => {
 
   // 2. List documents
   const listRes = createMockRes();
-  await handleFunctionalApi({}, listRes, "/api/documents", "GET", {}, {});
+  await handleFunctionalApi(getAuthReq(), listRes, "/api/documents", "GET", {}, {});
   assert.equal(listRes.statusCode, 200);
   const listData = JSON.parse(listRes.body);
   assert.ok(listData.documents.some(d => d.id === doc.id));
 
   // 3. Delete document
   const delRes = createMockRes();
-  await handleFunctionalApi({}, delRes, `/api/documents/${doc.id}`, "DELETE", {}, {});
+  await handleFunctionalApi(getAuthReq(), delRes, `/api/documents/${doc.id}`, "DELETE", {}, {});
   assert.equal(delRes.statusCode, 200);
 
   // 4. Verify removed from list
   const verifyRes = createMockRes();
-  await handleFunctionalApi({}, verifyRes, "/api/documents", "GET", {}, {});
+  await handleFunctionalApi(getAuthReq(), verifyRes, "/api/documents", "GET", {}, {});
   const verifyData = JSON.parse(verifyRes.body);
   assert.ok(!verifyData.documents.some(d => d.id === doc.id));
 });
 
 test("Reports & Exports: Generate CSV files for Sales and Purchases", async () => {
   const salesCsvRes = createMockRes();
-  await handleFunctionalApi({}, salesCsvRes, "/api/reports/sales/csv", "GET", {}, {});
+  await handleFunctionalApi(getAuthReq(), salesCsvRes, "/api/reports/sales/csv", "GET", {}, {});
   assert.equal(salesCsvRes.statusCode, 200);
   assert.ok(salesCsvRes.body.includes("Invoice Number,Invoice Date"));
 
   const purCsvRes = createMockRes();
-  await handleFunctionalApi({}, purCsvRes, "/api/reports/purchases/csv", "GET", {}, {});
+  await handleFunctionalApi(getAuthReq(), purCsvRes, "/api/reports/purchases/csv", "GET", {}, {});
   assert.equal(purCsvRes.statusCode, 200);
   assert.ok(purCsvRes.body.includes("Invoice Number,Invoice Date,Supplier Name"));
 });
@@ -331,7 +361,7 @@ test("GST Copilot: Answers all 8 core statutory queries grounded in live databas
 
   for (const item of queries) {
     const res = createMockRes();
-    await handleFunctionalApi({}, res, "/api/copilot/ask", "POST", {}, { question: item.q });
+    await handleFunctionalApi(getAuthReq(), res, "/api/copilot/ask", "POST", {}, { question: item.q });
     assert.equal(res.statusCode, 200);
     const data = JSON.parse(res.body);
     assert.ok(data.answer.includes(item.expectedText), `Query '${item.q}' failed to include '${item.expectedText}'`);
@@ -496,7 +526,7 @@ test("UX Simplification: File GST 2-Card Decision, Nil Pre-Check & Dynamic Perio
   const { gstinRepo } = await import("../lib/db.js");
 
   function mockApiCall(method, pathname, query = {}, body = null) {
-    const req = { method, url: pathname, headers: {} };
+    const req = { method, url: pathname, headers: getAuthReq().headers };
     let statusCode = 200;
     let data = "";
     const res = {
@@ -565,7 +595,7 @@ test("Data Integrity & Period Cleanup: Dynamic period switching, Nil verificatio
   const fs = await import("fs");
 
   function mockApiCall(method, pathname, query = {}, body = null) {
-    const req = { method, url: pathname, headers: {} };
+    const req = { method, url: pathname, headers: getAuthReq().headers };
     let statusCode = 200;
     let data = "";
     const res = {
@@ -662,7 +692,7 @@ test("Backend Integrity: Nil Return Declaration Enforcement (Missing, Null, Fals
   const kaBranch = gstinRepo.findByGstin("29AAACB1234F1Z5");
   db.prepare("DELETE FROM tax_returns WHERE gstin_id = ? AND period = ?").run(kaBranch.id, "082026");
 
-  const sessHeaders = { "x-session-id": "sess-test-decl-enforcement" };
+  const sessHeaders = getAuthReq().headers;
   await mockApiCall(sessHeaders, "POST", `/api/gstins/${kaBranch.id}/activate`).run();
 
   // 1. Missing declarationConfirmed -> 400
@@ -715,7 +745,7 @@ test("Backend Integrity: Rule 67A Nil Form GSTR-3B Eligibility with Ineligible P
 
   const kaBranch = gstinRepo.findByGstin("29AAACB1234F1Z5");
   const testPeriod = "042026";
-  const sessHeaders = { "x-session-id": "sess-test-rule67a" };
+  const sessHeaders = getAuthReq().headers;
 
   // Clean test period records
   db.prepare("DELETE FROM sales_invoices WHERE gstin_id = ? AND period = ?").run(kaBranch.id, testPeriod);
@@ -820,7 +850,7 @@ test("Backend Integrity: Rule 67A Nil Form GSTR-3B Eligibility with Ineligible P
 
 test("Backend Integrity: Per-Session Multi-Tenant Context Isolation & Cross-Tenant 403 Forbidden", async () => {
   const { handleFunctionalApi } = await import("../lib/functionalApi.js");
-  const { orgRepo, gstinRepo } = await import("../lib/db.js");
+  const { orgRepo, gstinRepo, userRepo, sessionRepo, db } = await import("../lib/db.js");
 
   function mockApiCall(headers, method, pathname, query = {}, body = null) {
     const req = { method, url: pathname, headers: headers || {} };
@@ -838,8 +868,19 @@ test("Backend Integrity: Per-Session Multi-Tenant Context Isolation & Cross-Tena
     };
   }
 
-  const sessionA = { "x-session-id": "sess-tenant-user-alpha" };
-  const sessionB = { "x-session-id": "sess-tenant-user-beta" };
+  const orgA = db.prepare("SELECT id FROM organizations LIMIT 1").get();
+  const userA = userRepo.create({ email: `alpha.${Date.now()}@apexretail.com`, passwordHash: "hashA", fullName: "User Alpha", role: "OWNER" });
+  orgRepo.addMember(orgA.id, userA.id, "OWNER");
+  const tokenA = "tok-tenant-alpha-" + Date.now();
+  sessionRepo.create({ userId: userA.id, activeOrgId: orgA.id, token: tokenA, activePeriod: "102026" });
+
+  const userB = userRepo.create({ email: `beta.${Date.now()}@apexretail.com`, passwordHash: "hashB", fullName: "User Beta", role: "ACCOUNTANT" });
+  orgRepo.addMember(orgA.id, userB.id, "ACCOUNTANT");
+  const tokenB = "tok-tenant-beta-" + Date.now();
+  sessionRepo.create({ userId: userB.id, activeOrgId: orgA.id, token: tokenB, activePeriod: "102026" });
+
+  const sessionA = { authorization: `Bearer ${tokenA}` };
+  const sessionB = { authorization: `Bearer ${tokenB}` };
 
   // Session A switches period to 052026
   await mockApiCall(sessionA, "POST", "/api/context/period", {}, { period: "052026" }).run();
@@ -893,7 +934,7 @@ test("Statutory Compliance: Monthly vs QRMP Deadlines, Category 1/2 Staggering &
 
   // Period API rejects invalid period format with HTTP 400
   function mockApiCall(method, pathname, query = {}, body = null) {
-    const req = { method, url: pathname, headers: { "x-session-id": "sess-statutory-deadlines" } };
+    const req = { method, url: pathname, headers: getAuthReq().headers };
     let statusCode = 200;
     let data = "";
     const res = {
@@ -978,4 +1019,209 @@ test("Security & Simulation Integrity: XSS Escaping and SIMULATED_NOT_TRANSMITTE
   assert.equal(copilotNil.arn, null);
   assert.equal(copilotNil.officialArn, null);
   assert.ok(copilotNil.simulationReference.startsWith("SIM-NIL-"));
+});
+
+test("Security Audit: Authentication & Session Token Handling (Reject Unknown, Expired, Revoked, Invalid)", async () => {
+  const { handleFunctionalApi } = await import("../lib/functionalApi.js");
+  const { sessionRepo, userRepo, orgRepo, db } = await import("../lib/db.js");
+
+  function mockApiCall(headers, method, pathname, query = {}, body = null) {
+    const req = { method, url: pathname, headers: headers || {} };
+    let statusCode = 200;
+    let data = "";
+    const res = {
+      writeHead(code) { statusCode = code; },
+      end(payload) { data = payload; },
+      setHeader() {}
+    };
+    return {
+      run: async () => {
+        await handleFunctionalApi(req, res, pathname, method, query, body);
+        return { statusCode, body: data ? JSON.parse(data) : null };
+      }
+    };
+  }
+
+  const user = userRepo.findByEmail("rajesh.sharma@apexretail.com") || db.prepare("SELECT * FROM users LIMIT 1").get();
+  const org = db.prepare("SELECT * FROM organizations LIMIT 1").get();
+
+  // 1. Unknown session tokens rejected (HTTP 401)
+  const unknownCall = await mockApiCall(
+    { authorization: "Bearer tok-completely-unknown-token-9999" },
+    "GET",
+    "/api/dashboard/summary"
+  ).run();
+  assert.equal(unknownCall.statusCode, 401, "Unknown session token must return 401");
+  assert.ok(unknownCall.body.error.includes("Unauthorized"));
+
+  // 2. Expired session tokens rejected (HTTP 401)
+  const expiredToken = "tok-expired-test-" + Date.now();
+  sessionRepo.create({
+    userId: user.id,
+    token: expiredToken,
+    activeOrgId: org.id,
+    expiresAt: new Date(Date.now() - 3600000).toISOString() // 1 hour ago
+  });
+  const expiredCall = await mockApiCall(
+    { authorization: `Bearer ${expiredToken}` },
+    "GET",
+    "/api/dashboard/summary"
+  ).run();
+  assert.equal(expiredCall.statusCode, 401, "Expired session token must return 401");
+
+  // 3. Revoked session tokens rejected (HTTP 401)
+  const revokedToken = "tok-revoked-test-" + Date.now();
+  const activeSess = sessionRepo.create({
+    userId: user.id,
+    token: revokedToken,
+    activeOrgId: org.id,
+    expiresAt: new Date(Date.now() + 86400000).toISOString()
+  });
+  sessionRepo.revoke(revokedToken);
+  const revokedCall = await mockApiCall(
+    { authorization: `Bearer ${revokedToken}` },
+    "GET",
+    "/api/dashboard/summary"
+  ).run();
+  assert.equal(revokedCall.statusCode, 401, "Revoked session token must return 401");
+
+  // 4. Invalid session tokens rejected (HTTP 401)
+  const invalidCall = await mockApiCall(
+    { authorization: "Bearer " },
+    "GET",
+    "/api/dashboard/summary"
+  ).run();
+  assert.equal(invalidCall.statusCode, 401, "Empty/malformed token must return 401");
+
+  // 5. Forged query or body session IDs must be IGNORED (HTTP 401)
+  const forgedQueryCall = await mockApiCall(
+    {}, // No auth header
+    "GET",
+    "/api/dashboard/summary",
+    { sessionId: activeSess.id, sessionToken: activeSess.token }
+  ).run();
+  assert.equal(forgedQueryCall.statusCode, 401, "Query param sessionId must not grant authentication");
+
+  const forgedBodyCall = await mockApiCall(
+    {}, // No auth header
+    "POST",
+    "/api/sales",
+    {},
+    { sessionId: activeSess.id, invoiceNumber: "FORGED-INV-001" }
+  ).run();
+  assert.equal(forgedBodyCall.statusCode, 401, "Body sessionId must not grant authentication");
+
+  // 6. Tenant-scoped endpoints all reject unauthenticated access (HTTP 401)
+  const unauthEndpoints = [
+    { method: "GET", path: "/api/gstins" },
+    { method: "GET", path: "/api/sales" },
+    { method: "GET", path: "/api/purchases" },
+    { method: "GET", path: "/api/documents" },
+    { method: "GET", path: "/api/reconciliation/summary" },
+    { method: "GET", path: "/api/returns/tax-calc" },
+    { method: "GET", path: "/api/ledgers/balances" },
+    { method: "POST", path: "/api/challans/generate-pmt06", body: { amount: 1000 } }
+  ];
+
+  for (const ep of unauthEndpoints) {
+    const res = await mockApiCall({}, ep.method, ep.path, {}, ep.body || {}).run();
+    assert.equal(res.statusCode, 401, `Unauthenticated ${ep.method} ${ep.path} must return 401`);
+  }
+});
+
+test("Security Audit: Multi-Tenant Authorization, Cross-Tenant Gating & Credential Login/Logout", async () => {
+  const { handleFunctionalApi } = await import("../lib/functionalApi.js");
+  const { userRepo, orgRepo, gstinRepo, sessionRepo, db } = await import("../lib/db.js");
+
+  function mockApiCall(headers, method, pathname, query = {}, body = null) {
+    const req = { method, url: pathname, headers: headers || {} };
+    let statusCode = 200;
+    let data = "";
+    const resHeaders = {};
+    const res = {
+      writeHead(code, h = {}) { statusCode = code; Object.assign(resHeaders, h); },
+      end(payload) { data = payload; },
+      setHeader(k, v) { resHeaders[k] = v; }
+    };
+    return {
+      run: async () => {
+        await handleFunctionalApi(req, res, pathname, method, query, body);
+        return { statusCode, headers: resHeaders, body: data ? JSON.parse(data) : null };
+      }
+    };
+  }
+
+  // 1. Two separate organizations with distinct users
+  const randA = Math.floor(1000 + Math.random() * 9000);
+  const randB = Math.floor(1000 + Math.random() * 9000);
+
+  const orgA = orgRepo.create({ name: `Tenant A Corp ${randA}`, pan: `AAAAP${randA}A` });
+  const userA = userRepo.create({ email: `ceo@tenant-a-${randA}.com`, passwordHash: "pbkdf2$development_hash_apex", fullName: "Alice CEO", role: "OWNER" });
+  orgRepo.addMember(orgA.id, userA.id, "OWNER");
+  const gstinA = gstinRepo.create({ orgId: orgA.id, gstin: `27AAAAP${randA}A1Z1`, tradeName: "Branch A", stateCode: "27", stateName: "Maharashtra", isPrimary: 1 });
+
+  const orgB = orgRepo.create({ name: `Tenant B Corp ${randB}`, pan: `BBBBB${randB}B` });
+  const userB = userRepo.create({ email: `cfo@tenant-b-${randB}.com`, passwordHash: "pbkdf2$development_hash_apex", fullName: "Bob CFO", role: "OWNER" });
+  orgRepo.addMember(orgB.id, userB.id, "OWNER");
+  const gstinB = gstinRepo.create({ orgId: orgB.id, gstin: `29BBBBB${randB}B1Z2`, tradeName: "Branch B", stateCode: "29", stateName: "Karnataka", isPrimary: 1 });
+
+  // 2. Legitimate Login for User A
+  const loginA = await mockApiCall({}, "POST", "/api/auth/login", {}, { email: userA.email, password: "password" }).run();
+  assert.equal(loginA.statusCode, 200, "User A login must succeed");
+  assert.ok(loginA.body.sessionToken, "Login must return cryptographic sessionToken");
+  assert.ok(loginA.headers["Set-Cookie"].includes("simplegst_session="), "Login must set HTTP-only cookie");
+
+  const tokenA = loginA.body.sessionToken;
+  const authHeadersA = { authorization: `Bearer ${tokenA}` };
+
+  // 3. Legitimate Login for User B
+  const loginB = await mockApiCall({}, "POST", "/api/auth/login", {}, { email: userB.email, password: "password" }).run();
+  assert.equal(loginB.statusCode, 200, "User B login must succeed");
+  const tokenB = loginB.body.sessionToken;
+  const authHeadersB = { authorization: `Bearer ${tokenB}` };
+
+  // 4. User A accesses own GSTINs -> sees only Org A
+  const gstinsA = await mockApiCall(authHeadersA, "GET", "/api/gstins").run();
+  assert.equal(gstinsA.statusCode, 200);
+  assert.equal(gstinsA.body.gstins.length, 1);
+  assert.equal(gstinsA.body.gstins[0].id, gstinA.id);
+
+  // 5. User B accesses own GSTINs -> sees only Org B
+  const gstinsB = await mockApiCall(authHeadersB, "GET", "/api/gstins").run();
+  assert.equal(gstinsB.statusCode, 200);
+  assert.equal(gstinsB.body.gstins.length, 1);
+  assert.equal(gstinsB.body.gstins[0].id, gstinB.id);
+
+  // 6. Cross-Tenant GSTIN access rejected (HTTP 403 Forbidden)
+  // User A attempts to query dashboard with User B's GSTIN
+  const crossDash = await mockApiCall(authHeadersA, "GET", "/api/dashboard/summary", { gstinId: gstinB.id }).run();
+  assert.equal(crossDash.statusCode, 403, "Cross-tenant GSTIN access must return 403 Forbidden");
+
+  // 7. Unauthorized GSTIN switching rejected (HTTP 403 Forbidden)
+  // User A attempts to activate User B's GSTIN
+  const crossSwitch = await mockApiCall(authHeadersA, "POST", `/api/gstins/${gstinB.id}/activate`).run();
+  assert.equal(crossSwitch.statusCode, 403, "Switching to another organization's GSTIN must return 403 Forbidden");
+
+  // User A attempts to switch organization context to Org B
+  const crossOrgSwitch = await mockApiCall(authHeadersA, "POST", "/api/auth/switch-context", {}, { orgId: orgB.id }).run();
+  assert.equal(crossOrgSwitch.statusCode, 403, "Switching to unauthorized organization must return 403 Forbidden");
+
+  // 8. Session validation endpoint /api/auth/session
+  const checkSessA = await mockApiCall(authHeadersA, "GET", "/api/auth/session").run();
+  assert.equal(checkSessA.statusCode, 200);
+  assert.equal(checkSessA.body.authenticated, true);
+  assert.equal(checkSessA.body.user.email, userA.email);
+
+  // 9. Logout flow revokes session
+  const logoutA = await mockApiCall(authHeadersA, "POST", "/api/auth/logout").run();
+  assert.equal(logoutA.statusCode, 200, "Logout must succeed");
+  assert.ok(logoutA.headers["Set-Cookie"].includes("Expires="), "Logout must clear cookie");
+
+  // After logout, token is revoked -> returns 401
+  const postLogoutCall = await mockApiCall(authHeadersA, "GET", "/api/dashboard/summary").run();
+  assert.equal(postLogoutCall.statusCode, 401, "Revoked session after logout must return 401");
+
+  // Invalid login credentials rejected (HTTP 401)
+  const badLogin = await mockApiCall({}, "POST", "/api/auth/login", {}, { email: userA.email, password: "wrong-password" }).run();
+  assert.equal(badLogin.statusCode, 401, "Bad password must return 401");
 });
