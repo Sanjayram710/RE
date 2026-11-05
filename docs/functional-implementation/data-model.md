@@ -250,3 +250,4 @@ CREATE TABLE IF NOT EXISTS copilot_conversations (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
+

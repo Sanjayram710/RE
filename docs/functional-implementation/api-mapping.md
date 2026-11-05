@@ -115,3 +115,4 @@ This document maps all backend REST API endpoints, HTTP methods, authorization r
 | `/api/reports/purchase-register`| GET | Bearer | Scoped Purchase Register export (JSON / Excel / CSV) |
 | `/api/reports/gstr1-prep` | GET | Bearer | Statutory GSTR-1 preparation summary (Tables 4, 5, 6, 7, 8, 9, 12) |
 | `/api/reports/gstr3b-prep` | GET | Bearer | Statutory GSTR-3B preparation summary (Tables 3.1, 3.2, 4, 5, 6.1) |
+

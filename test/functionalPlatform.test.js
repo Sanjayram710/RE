@@ -274,3 +274,67 @@ test("PMT-06 Challan: Net Banking payment credits cash ledger", async () => {
   assert.equal(payData.creditedAmount, 20000);
   assert.ok(payData.bankReference);
 });
+
+test("Document Management: List and delete uploaded files", async () => {
+  // 1. Upload a temp document
+  const uploadRes = createMockRes();
+  await handleFunctionalApi({}, uploadRes, "/api/documents/upload", "POST", {}, {
+    filename: "Doc_For_Deletion.pdf",
+    category: "purchase_bill",
+    content: "Dummy Content for Deletion Test"
+  });
+  assert.equal(uploadRes.statusCode, 201);
+  const doc = JSON.parse(uploadRes.body).document;
+
+  // 2. List documents
+  const listRes = createMockRes();
+  await handleFunctionalApi({}, listRes, "/api/documents", "GET", {}, {});
+  assert.equal(listRes.statusCode, 200);
+  const listData = JSON.parse(listRes.body);
+  assert.ok(listData.documents.some(d => d.id === doc.id));
+
+  // 3. Delete document
+  const delRes = createMockRes();
+  await handleFunctionalApi({}, delRes, `/api/documents/${doc.id}`, "DELETE", {}, {});
+  assert.equal(delRes.statusCode, 200);
+
+  // 4. Verify removed from list
+  const verifyRes = createMockRes();
+  await handleFunctionalApi({}, verifyRes, "/api/documents", "GET", {}, {});
+  const verifyData = JSON.parse(verifyRes.body);
+  assert.ok(!verifyData.documents.some(d => d.id === doc.id));
+});
+
+test("Reports & Exports: Generate CSV files for Sales and Purchases", async () => {
+  const salesCsvRes = createMockRes();
+  await handleFunctionalApi({}, salesCsvRes, "/api/reports/sales/csv", "GET", {}, {});
+  assert.equal(salesCsvRes.statusCode, 200);
+  assert.ok(salesCsvRes.body.includes("Invoice Number,Invoice Date"));
+
+  const purCsvRes = createMockRes();
+  await handleFunctionalApi({}, purCsvRes, "/api/reports/purchases/csv", "GET", {}, {});
+  assert.equal(purCsvRes.statusCode, 200);
+  assert.ok(purCsvRes.body.includes("Invoice Number,Invoice Date,Supplier Name"));
+});
+
+test("GST Copilot: Answers all 8 core statutory queries grounded in live database", async () => {
+  const queries = [
+    { q: "What is my total sales for this month?", expectedText: "total recorded sales", expectedCite: "Section 31" },
+    { q: "How much ITC can I claim?", expectedText: "eligible Input Tax Credit", expectedCite: "Section 16(2)(aa)" },
+    { q: "Which purchase invoices are missing from GSTR-2B?", expectedText: "Reconciliation", expectedCite: "Section 16(2)(aa)" },
+    { q: "What is my estimated tax liability?", expectedText: "liability", expectedCite: "Section 49 & Rule 88A" },
+    { q: "Which invoices are approaching the 180-day payment limit?", expectedText: "Section 16(2) 2nd Proviso", expectedCite: "Rule 37" },
+    { q: "Explain my GSTR-3B calculation.", expectedText: "Rule 88A", expectedCite: "Rule 88A" },
+    { q: "What should I complete before filing?", expectedText: "Pre-Filing Compliance Checklist", expectedCite: "Section 39(10)" },
+    { q: "Show my current cash ledger balance.", expectedText: "Electronic Cash Ledger", expectedCite: "PMT-05" }
+  ];
+
+  for (const item of queries) {
+    const res = createMockRes();
+    await handleFunctionalApi({}, res, "/api/copilot/ask", "POST", {}, { question: item.q });
+    assert.equal(res.statusCode, 200);
+    const data = JSON.parse(res.body);
+    assert.ok(data.answer.includes(item.expectedText), `Query '${item.q}' failed to include '${item.expectedText}'`);
+    assert.ok(data.citations.some(c => c.includes(item.expectedCite)), `Query '${item.q}' missing citation '${item.expectedCite}'`);
+  }
+});

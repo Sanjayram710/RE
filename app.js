@@ -207,6 +207,8 @@ function executeSwitchSuite(suite) {
     b.classList.add('text-secondary');
   });
 
+  const viewFileGst = document.getElementById("viewFileGstSuite");
+
   if (suite === "home") {
     if (viewHome) {
       viewHome.classList.add("active");
@@ -215,11 +217,19 @@ function executeSwitchSuite(suite) {
     }
     highlightSidebarNav('nav-link-home');
     highlightBottomNav('bottom-nav-home');
-  } else if (suite === "copilot" || suite === "guided" || suite === "file-gst") {
+  } else if (suite === "copilot" || suite === "ai" || suite === "assistant") {
     if (viewCopilot) {
       viewCopilot.classList.add("active");
       viewCopilot.classList.remove("hidden");
       viewCopilot.style.display = "block";
+    }
+    highlightSidebarNav('nav-link-copilot');
+  } else if (suite === "file-gst" || suite === "guided" || suite === "nil") {
+    const target = viewFileGst || viewCopilot;
+    if (target) {
+      target.classList.add("active");
+      target.classList.remove("hidden");
+      target.style.display = "block";
     }
     highlightSidebarNav('nav-link-file-gst');
     highlightBottomNav('bottom-nav-file-gst');

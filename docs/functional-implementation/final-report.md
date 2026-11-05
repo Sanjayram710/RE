@@ -137,3 +137,4 @@ The platform test suite runs with Node.js built-in test runner across 9 test sui
    - `index.html` and `public/index.html` maintain exact SHA-256 hash equality (`2C900A58...`).
    - `app.js` and `public/app.js` maintain exact SHA-256 hash equality (`28ACD69E...`).
    - The approved Google Stitch visual design, typography, spacing, and micro-interactions remain 100% intact.
+

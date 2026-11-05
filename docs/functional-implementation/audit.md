@@ -57,3 +57,4 @@ This audit evaluates the codebase of the **SimpleGST Indian GST Compliance Platf
 
 ### I. Integration Testing
 - 108 existing automated tests all pass. New comprehensive integration tests will cover database CRUD, file upload/download, multi-GSTIN scoping, Copilot context retrieval, and demo filing safety.
+
