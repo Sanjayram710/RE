@@ -4,6 +4,20 @@
    Vanilla ES6, zero external UI framework, fast, responsive, and mobile-ready
 */
 
+/**
+ * Utility to escape untrusted HTML entities for secure DOM rendering (XSS Protection)
+ */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+window.escapeHtml = escapeHtml;
+
 // ============================================================================
 // Global Application State
 // ============================================================================
@@ -1668,10 +1682,10 @@ function renderReportPreview() {
       totTx += Number(inv.taxableAmount || 0);
       totAmt += Number(inv.totalAmount || 0);
       tbody.innerHTML += `<tr>
-        <td><strong>${inv.invoiceNumber}</strong></td>
-        <td>${inv.date}</td>
-        <td>${inv.partyName}</td>
-        <td><code>${inv.partyGstin}</code></td>
+        <td><strong>${escapeHtml(inv.invoiceNumber)}</strong></td>
+        <td>${escapeHtml(inv.date)}</td>
+        <td>${escapeHtml(inv.partyName)}</td>
+        <td><code>${escapeHtml(inv.partyGstin)}</code></td>
         <td>₹ ${Number(inv.taxableAmount).toLocaleString("en-IN")}</td>
         <td>₹ ${Number(inv.igst).toLocaleString("en-IN")}</td>
         <td>₹ ${Number(inv.cgst).toLocaleString("en-IN")}</td>
@@ -1684,10 +1698,10 @@ function renderReportPreview() {
     thead.innerHTML = `<tr><th>Bill No</th><th>Date</th><th>Supplier</th><th>GSTIN</th><th>Taxable</th><th>Eligible ITC</th><th>Total</th></tr>`;
     appState.gst.purchaseInvoices.forEach(inv => {
       tbody.innerHTML += `<tr>
-        <td><strong>${inv.invoiceNumber}</strong></td>
-        <td>${inv.date}</td>
-        <td>${inv.partyName}</td>
-        <td><code>${inv.partyGstin}</code></td>
+        <td><strong>${escapeHtml(inv.invoiceNumber)}</strong></td>
+        <td>${escapeHtml(inv.date)}</td>
+        <td>${escapeHtml(inv.partyName)}</td>
+        <td><code>${escapeHtml(inv.partyGstin)}</code></td>
         <td>₹ ${Number(inv.taxableAmount).toLocaleString("en-IN")}</td>
         <td>₹ ${Number(inv.totalTax).toLocaleString("en-IN")}</td>
         <td>₹ ${Number(inv.totalAmount).toLocaleString("en-IN")}</td>
@@ -1697,13 +1711,13 @@ function renderReportPreview() {
     thead.innerHTML = `<tr><th>Inv No</th><th>Supplier</th><th>GSTIN</th><th>Books Tax</th><th>2B Tax</th><th>Status</th><th>Action</th></tr>`;
     (appState.gst.reconciliation.items || []).forEach(item => {
       tbody.innerHTML += `<tr>
-        <td><strong>${item.invoiceNo}</strong></td>
-        <td>${item.supplier}</td>
-        <td><code>${item.gstin}</code></td>
+        <td><strong>${escapeHtml(item.invoiceNo)}</strong></td>
+        <td>${escapeHtml(item.supplier)}</td>
+        <td><code>${escapeHtml(item.gstin)}</code></td>
         <td>₹ ${Number(item.booksTax).toLocaleString("en-IN")}</td>
         <td>₹ ${Number(item.gstr2bTax).toLocaleString("en-IN")}</td>
-        <td><span class="status-chip ${item.status === 'Matched' ? 'success-chip' : 'danger-chip'}">${item.status}</span></td>
-        <td><strong>${item.action}</strong></td>
+        <td><span class="status-chip ${item.status === 'Matched' ? 'success-chip' : 'danger-chip'}">${escapeHtml(item.status)}</span></td>
+        <td><strong>${escapeHtml(item.action)}</strong></td>
       </tr>`;
     });
   } else {
@@ -4346,7 +4360,7 @@ async function loadDashboardData(period) {
         tableBody.innerHTML = `
           <tr>
             <td colspan="4" class="py-8 text-center text-secondary text-xs">
-              No transactions recorded for ${details.short}. Click <strong>+ New Invoice</strong> to add sales invoices or file a Nil Return.
+              No transactions recorded for ${escapeHtml(details.short)}. Click <strong>+ New Invoice</strong> to add sales invoices or file a Nil Return.
             </td>
           </tr>
         `;
@@ -4354,8 +4368,8 @@ async function loadDashboardData(period) {
         tableBody.innerHTML = allRecent.map(item => `
           <tr class="hover:bg-surface transition-colors">
             <td class="py-3 px-5">
-              <div class="font-label-md font-semibold text-on-surface font-mono">${item.ref}</div>
-              <div class="font-body-sm text-secondary">${item.entity}</div>
+              <div class="font-label-md font-semibold text-on-surface font-mono">${escapeHtml(item.ref)}</div>
+              <div class="font-body-sm text-secondary">${escapeHtml(item.entity)}</div>
             </td>
             <td class="py-3 px-4">
               <span class="px-2 py-0.5 rounded text-xs ${item.isSale ? 'bg-surface-container text-secondary font-medium' : 'bg-blue-50 text-blue-800 font-medium'}">
@@ -4394,13 +4408,13 @@ async function renderCopilotWorkspace(period) {
 
     const entityDisplay = document.getElementById("copilotActiveGstinDisplay");
     if (entityDisplay && data.activeEntity) {
-      entityDisplay.innerHTML = `${data.activeEntity.tradeName} (${data.activeEntity.gstin}) • ${data.periodLabel || details.full}`;
+      entityDisplay.innerHTML = `${escapeHtml(data.activeEntity.tradeName)} (${escapeHtml(data.activeEntity.gstin)}) • ${escapeHtml(data.periodLabel || details.full)}`;
     }
 
     const chatContainer = document.getElementById("copilotChatMessages");
     if (chatContainer) {
-      const activeName = data.activeOrg?.name || data.activeEntity?.tradeName || "Apex Retailers Pvt Ltd";
-      const gstin = data.activeEntity?.gstin || "27AAACA1234A1Z5";
+      const activeName = escapeHtml(data.activeOrg?.name || data.activeEntity?.tradeName || "Apex Retailers Pvt Ltd");
+      const gstin = escapeHtml(data.activeEntity?.gstin || "27AAACA1234A1Z5");
       const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const grossOut = fmt(data.summary?.outputLiability || 0);
       const eligibleItc = fmt(data.summary?.inputTaxCredit || 0);
@@ -4413,7 +4427,7 @@ async function renderCopilotWorkspace(period) {
           </div>
           <div class="space-y-2 max-w-2xl bg-surface p-4 rounded-2xl rounded-tl-none border border-outline-variant/80 text-on-surface shadow-xs">
             <p class="font-body-md text-sm leading-relaxed">
-              Hello! I am your <strong>SimpleGST Copilot</strong>. I am grounded directly in active database records for <strong>${activeName} (${gstin})</strong> for <strong>${data.periodLabel || details.full}</strong>.
+              Hello! I am your <strong>SimpleGST Copilot</strong>. I am grounded directly in active database records for <strong>${activeName} (${gstin})</strong> for <strong>${escapeHtml(data.periodLabel || details.full)}</strong>.
             </p>
             <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/50 text-xs space-y-1 font-mono">
               <div class="flex justify-between"><span>Gross Output Liability (Table 3.1):</span> <strong class="text-on-surface">${grossOut}</strong></div>
@@ -4421,7 +4435,7 @@ async function renderCopilotWorkspace(period) {
               <div class="flex justify-between border-t border-outline-variant pt-1 text-red-600"><span>Net Cash Shortfall (PMT-06):</span> <strong>${netCash}</strong></div>
             </div>
             <p class="text-xs text-secondary">
-              Ask me anything about your active invoices, Rule 88A setoff rules, GSTR-2B reconciliation mismatches, or Nil return eligibility for ${data.periodLabel || details.full}.
+              Ask me anything about your active invoices, Rule 88A setoff rules, GSTR-2B reconciliation mismatches, or Nil return eligibility for ${escapeHtml(data.periodLabel || details.full)}.
             </p>
           </div>
         </div>

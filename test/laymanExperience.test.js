@@ -15,12 +15,13 @@ test("Layman Experience: 1-Click Nil GST Return Filing", () => {
 
   assert.equal(res.success, true);
   assert.equal(res.isNil, true);
-  assert.match(res.arn, /^NIL-AA32/);
+  assert.equal(res.arn, null);
+  assert.match(res.simulationReference, /^SIM-NIL-AA32/);
   assert.equal(res.statutorySummary.outwardTaxableSales, 0);
   assert.equal(res.statutorySummary.netTaxPaidInCash, 0);
   assert.equal(res.statutorySummary.lateFeePaid, 0);
-  assert.equal(res.status, "FILED_AND_CONFIRMED");
-  assert.ok(res.downloadCertificate.certificateNumber.startsWith("CERT-NIL-"));
+  assert.equal(res.status, "SIMULATED_NOT_TRANSMITTED");
+  assert.ok(res.downloadCertificate.certificateNumber.startsWith("CERT-SIM-NIL-"));
 });
 
 test("Layman Experience: AI Ingestion extracts Sales Invoices accurately", () => {

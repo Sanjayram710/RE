@@ -459,8 +459,10 @@ test("Regression & Defect Audit: Five-step filing navigation integrity & Nil Ret
   assert.equal(nilRes.success, true);
   assert.equal(nilRes.isNil, true);
   assert.equal(nilRes.isSimulation, true);
-  assert.ok(nilRes.arn.startsWith("NIL-"), "Nil ARN must have standard prefix");
-  assert.ok(nilRes.watermark.includes("SIMULATION MODE"), "Nil ARN receipt must carry simulation watermark");
+  assert.equal(nilRes.arn, null, "Official ARN must be null for simulations");
+  assert.ok(nilRes.simulationReference.startsWith("SIM-NIL-"), "Returns simulation reference ID");
+  assert.equal(nilRes.status, "SIMULATED_NOT_TRANSMITTED", "Simulation status must be SIMULATED_NOT_TRANSMITTED");
+  assert.ok(nilRes.watermark.includes("NOT TRANSMITTED"), "Nil ARN receipt must carry simulation watermark");
 });
 
 test("UX Simplification: File GST 2-Card Decision, Nil Pre-Check & Dynamic Period Sync", async () => {
@@ -519,7 +521,7 @@ test("UX Simplification: File GST 2-Card Decision, Nil Pre-Check & Dynamic Perio
   assert.equal(verifyMh.body.hasTransactions, true, "hasTransactions flag must be true");
   assert.ok(verifyMh.body.verification.salesCount > 0, "Must report actual sales invoices found");
 
-  const fileMh = await mockApiCall("POST", "/api/gst/nil-file", {}, { period: "102026" }).run();
+  const fileMh = await mockApiCall("POST", "/api/gst/nil-file", {}, { period: "102026", declarationConfirmed: true }).run();
   assert.equal(fileMh.statusCode, 400, "POST /api/gst/nil-file must reject with HTTP 400 when transactions exist");
   assert.equal(fileMh.body.success, false);
 
@@ -532,15 +534,27 @@ test("UX Simplification: File GST 2-Card Decision, Nil Pre-Check & Dynamic Perio
 
   const verifyKa = await mockApiCall("GET", "/api/gst/nil-verify", { period: "102026" }).run();
   assert.equal(verifyKa.body.eligible, true, "Zero transactions entity must be eligible for Nil");
-  assert.equal(verifyKa.body.hasTransactions, false);
-  assert.equal(verifyKa.body.verification.salesCount, 0);
+  assert.equal(verifyKa.body.breakdown.outwardSuppliesCount, 0);
 
-  const fileKa = await mockApiCall("POST", "/api/gst/nil-file", {}, { period: "102026", authorisedPerson: "Rajesh Sharma" }).run();
+  // Verify declaration enforcement on backend: missing, null, and false MUST be rejected with HTTP 400
+  const missingDecl = await mockApiCall("POST", "/api/gst/nil-file", {}, { period: "102026", authorisedPerson: "Rajesh Sharma" }).run();
+  assert.equal(missingDecl.statusCode, 400, "Must reject missing declarationConfirmed");
+
+  const nullDecl = await mockApiCall("POST", "/api/gst/nil-file", {}, { period: "102026", declarationConfirmed: null }).run();
+  assert.equal(nullDecl.statusCode, 400, "Must reject null declarationConfirmed");
+
+  const falseDecl = await mockApiCall("POST", "/api/gst/nil-file", {}, { period: "102026", declarationConfirmed: false }).run();
+  assert.equal(falseDecl.statusCode, 400, "Must reject false declarationConfirmed");
+
+  // Valid declarationConfirmed: true -> Succeeds
+  const fileKa = await mockApiCall("POST", "/api/gst/nil-file", {}, { period: "102026", authorisedPerson: "Rajesh Sharma", declarationConfirmed: true }).run();
   assert.equal(fileKa.statusCode, 200);
   assert.equal(fileKa.body.success, true);
   assert.equal(fileKa.body.isNil, true);
   assert.equal(fileKa.body.isSimulation, true);
-  assert.ok(fileKa.body.arn.startsWith("NIL-AA29"));
+  assert.equal(fileKa.body.arn, null, "Official ARN must be null in simulation mode");
+  assert.ok(fileKa.body.simulationReference.startsWith("SIM-NIL-AA29"), "Returns simulation reference ID");
+  assert.equal(fileKa.body.status, "SIMULATED_NOT_TRANSMITTED");
 
   // Reset back to MH primary
   await mockApiCall("POST", `/api/gstins/${mhBranch.id}/activate`).run();
@@ -623,4 +637,345 @@ test("Data Integrity & Period Cleanup: Dynamic period switching, Nil verificatio
   assert.ok(html.includes('id="globalPeriodTrigger"'), "Interactive top-bar period selector trigger present");
   assert.ok(html.includes('id="globalPeriodDropdownMenu"'), "Interactive period dropdown menu present");
   assert.ok(html.includes('[SIMULATION / DEMO MODE — NOT TRANSMITTED TO GSTN COMMON PORTAL]'), "ARN modal has transparent simulation disclosure");
+});
+
+test("Backend Integrity: Nil Return Declaration Enforcement (Missing, Null, False, String, True)", async () => {
+  const { handleFunctionalApi } = await import("../lib/functionalApi.js");
+  const { gstinRepo, db } = await import("../lib/db.js");
+
+  function mockApiCall(headers, method, pathname, query = {}, body = null) {
+    const req = { method, url: pathname, headers: headers || {} };
+    let statusCode = 200;
+    let data = "";
+    const res = {
+      writeHead(code) { statusCode = code; },
+      end(payload) { data = payload; }
+    };
+    return {
+      run: async () => {
+        await handleFunctionalApi(req, res, pathname, method, query, body);
+        return { statusCode, body: data ? JSON.parse(data) : null };
+      }
+    };
+  }
+
+  const kaBranch = gstinRepo.findByGstin("29AAACB1234F1Z5");
+  db.prepare("DELETE FROM tax_returns WHERE gstin_id = ? AND period = ?").run(kaBranch.id, "082026");
+
+  const sessHeaders = { "x-session-id": "sess-test-decl-enforcement" };
+  await mockApiCall(sessHeaders, "POST", `/api/gstins/${kaBranch.id}/activate`).run();
+
+  // 1. Missing declarationConfirmed -> 400
+  const missing = await mockApiCall(sessHeaders, "POST", "/api/gst/nil-file", {}, { period: "082026" }).run();
+  assert.equal(missing.statusCode, 400, "Missing declarationConfirmed must reject with 400");
+  assert.equal(missing.body.success, false);
+
+  // 2. Null declarationConfirmed -> 400
+  const nullVal = await mockApiCall(sessHeaders, "POST", "/api/gst/nil-file", {}, { period: "082026", declarationConfirmed: null }).run();
+  assert.equal(nullVal.statusCode, 400, "Null declarationConfirmed must reject with 400");
+  assert.equal(nullVal.body.success, false);
+
+  // 3. False declarationConfirmed -> 400
+  const falseVal = await mockApiCall(sessHeaders, "POST", "/api/gst/nil-file", {}, { period: "082026", declarationConfirmed: false }).run();
+  assert.equal(falseVal.statusCode, 400, "False declarationConfirmed must reject with 400");
+  assert.equal(falseVal.body.success, false);
+
+  // 4. Truthy non-boolean declarationConfirmed (e.g., string "true") -> 400
+  const stringVal = await mockApiCall(sessHeaders, "POST", "/api/gst/nil-file", {}, { period: "082026", declarationConfirmed: "true" }).run();
+  assert.equal(stringVal.statusCode, 400, "String 'true' declarationConfirmed must reject with 400");
+
+  // 5. Explicit boolean true -> 200 Success
+  const trueVal = await mockApiCall(sessHeaders, "POST", "/api/gst/nil-file", {}, { period: "082026", declarationConfirmed: true }).run();
+  assert.equal(trueVal.statusCode, 200, "Strict true declarationConfirmed succeeds");
+  assert.equal(trueVal.body.success, true);
+  assert.equal(trueVal.body.status, "SIMULATED_NOT_TRANSMITTED");
+  assert.equal(trueVal.body.arn, null);
+  assert.ok(trueVal.body.simulationReference.startsWith("SIM-NIL-AA29"));
+});
+
+test("Backend Integrity: Rule 67A Nil Form GSTR-3B Eligibility with Ineligible Purchase vs Outward Supplies & RCM", async () => {
+  const { handleFunctionalApi } = await import("../lib/functionalApi.js");
+  const { gstinRepo, purchaseRepo, salesRepo, db } = await import("../lib/db.js");
+
+  function mockApiCall(headers, method, pathname, query = {}, body = null) {
+    const req = { method, url: pathname, headers: headers || {} };
+    let statusCode = 200;
+    let data = "";
+    const res = {
+      writeHead(code) { statusCode = code; },
+      end(payload) { data = payload; }
+    };
+    return {
+      run: async () => {
+        await handleFunctionalApi(req, res, pathname, method, query, body);
+        return { statusCode, body: data ? JSON.parse(data) : null };
+      }
+    };
+  }
+
+  const kaBranch = gstinRepo.findByGstin("29AAACB1234F1Z5");
+  const testPeriod = "042026";
+  const sessHeaders = { "x-session-id": "sess-test-rule67a" };
+
+  // Clean test period records
+  db.prepare("DELETE FROM sales_invoices WHERE gstin_id = ? AND period = ?").run(kaBranch.id, testPeriod);
+  db.prepare("DELETE FROM purchase_invoices WHERE gstin_id = ? AND period = ?").run(kaBranch.id, testPeriod);
+  db.prepare("DELETE FROM tax_returns WHERE gstin_id = ? AND period = ?").run(kaBranch.id, testPeriod);
+
+  await mockApiCall(sessHeaders, "POST", `/api/gstins/${kaBranch.id}/activate`).run();
+
+  // Case A: Ordinary purchase invoice exists but ITC eligibility is INELIGIBLE (e.g. Sec 17(5) blocked)
+  // Under Rule 67A, taxpayer is NOT claiming ITC, so Nil Return IS ELIGIBLE!
+  purchaseRepo.create({
+    orgId: kaBranch.org_id,
+    gstinId: kaBranch.id,
+    period: testPeriod,
+    invoiceNumber: "PUR-BLOCKED-01",
+    invoiceDate: "2026-04-10",
+    supplierName: "Car Dealership Pvt Ltd",
+    supplierGstin: "29AABCC1234D1Z9",
+    pos: "29",
+    isInterstate: false,
+    isRcm: false,
+    taxableAmount: 100000,
+    gstRate: 18,
+    cgst: 9000,
+    sgst: 9000,
+    igst: 0,
+    cess: 0,
+    totalTax: 18000,
+    totalAmount: 118000,
+    itcEligibility: "INELIGIBLE_17_5",
+    blockedReason: "17(5)(a) Motor Vehicles",
+    paymentStatus: "UNPAID"
+  });
+
+  const verifyWithIneligiblePur = await mockApiCall(sessHeaders, "GET", "/api/gst/nil-verify", { period: testPeriod }).run();
+  assert.equal(verifyWithIneligiblePur.body.eligible, true, "Ineligible ITC purchase does NOT disqualify Nil Form GSTR-3B under Rule 67A");
+  assert.equal(verifyWithIneligiblePur.body.breakdown.eligibleItcClaimed, 0);
+  assert.equal(verifyWithIneligiblePur.body.breakdown.ineligiblePurchasesCount, 1);
+
+  // Case B: Inward purchase with RCM (Reverse Charge) -> MUST BE INELIGIBLE
+  const rcmPurchase = purchaseRepo.create({
+    orgId: kaBranch.org_id,
+    gstinId: kaBranch.id,
+    period: testPeriod,
+    invoiceNumber: "PUR-RCM-01",
+    invoiceDate: "2026-04-12",
+    supplierName: "Advocate Legal Services",
+    supplierGstin: "29AADCL1234D1Z2",
+    pos: "29",
+    isInterstate: false,
+    isRcm: true,
+    taxableAmount: 20000,
+    gstRate: 18,
+    cgst: 1800,
+    sgst: 1800,
+    igst: 0,
+    cess: 0,
+    totalTax: 3600,
+    totalAmount: 23600,
+    itcEligibility: "ELIGIBLE",
+    paymentStatus: "UNPAID"
+  });
+
+  const verifyWithRcm = await mockApiCall(sessHeaders, "GET", "/api/gst/nil-verify", { period: testPeriod }).run();
+  assert.equal(verifyWithRcm.body.eligible, false, "RCM liability must disqualify Nil Return");
+  assert.ok(verifyWithRcm.body.ineligibilityReasons.some(r => r.includes("Reverse charge") || r.includes("RCM")));
+
+  // Clean up RCM purchase
+  db.prepare("DELETE FROM purchase_invoices WHERE id = ?").run(rcmPurchase.id);
+
+  // Case C: Outward supply (Sales invoice) -> MUST BE INELIGIBLE
+  const sale = salesRepo.create({
+    orgId: kaBranch.org_id,
+    gstinId: kaBranch.id,
+    period: testPeriod,
+    invoiceNumber: "INV-SALE-01",
+    invoiceDate: "2026-04-15",
+    customerName: "Buyer Enterprise",
+    customerGstin: "29AAACB9999F1Z1",
+    pos: "29",
+    isInterstate: false,
+    supplyType: "B2B",
+    taxableAmount: 10000,
+    gstRate: 18,
+    cgst: 900,
+    sgst: 900,
+    igst: 0,
+    cess: 0,
+    totalTax: 1800,
+    totalAmount: 11800,
+    status: "VALIDATED"
+  });
+
+  const verifyWithSale = await mockApiCall(sessHeaders, "GET", "/api/gst/nil-verify", { period: testPeriod }).run();
+  assert.equal(verifyWithSale.body.eligible, false, "Outward supplies must disqualify Nil Return");
+  assert.ok(verifyWithSale.body.ineligibilityReasons.some(r => r.includes("Outward supplies")));
+
+  // Clean up
+  db.prepare("DELETE FROM sales_invoices WHERE id = ?").run(sale.id);
+  db.prepare("DELETE FROM purchase_invoices WHERE gstin_id = ? AND period = ?").run(kaBranch.id, testPeriod);
+});
+
+test("Backend Integrity: Per-Session Multi-Tenant Context Isolation & Cross-Tenant 403 Forbidden", async () => {
+  const { handleFunctionalApi } = await import("../lib/functionalApi.js");
+  const { orgRepo, gstinRepo } = await import("../lib/db.js");
+
+  function mockApiCall(headers, method, pathname, query = {}, body = null) {
+    const req = { method, url: pathname, headers: headers || {} };
+    let statusCode = 200;
+    let data = "";
+    const res = {
+      writeHead(code) { statusCode = code; },
+      end(payload) { data = payload; }
+    };
+    return {
+      run: async () => {
+        await handleFunctionalApi(req, res, pathname, method, query, body);
+        return { statusCode, body: data ? JSON.parse(data) : null };
+      }
+    };
+  }
+
+  const sessionA = { "x-session-id": "sess-tenant-user-alpha" };
+  const sessionB = { "x-session-id": "sess-tenant-user-beta" };
+
+  // Session A switches period to 052026
+  await mockApiCall(sessionA, "POST", "/api/context/period", {}, { period: "052026" }).run();
+
+  // Session B switches period to 082026
+  await mockApiCall(sessionB, "POST", "/api/context/period", {}, { period: "082026" }).run();
+
+  // Verify concurrent isolation: User A's period is untouched by User B
+  const periodA = await mockApiCall(sessionA, "GET", "/api/context/period").run();
+  assert.equal(periodA.body.activePeriod, "052026", "Session A active period remains 052026");
+
+  const periodB = await mockApiCall(sessionB, "GET", "/api/context/period").run();
+  assert.equal(periodB.body.activePeriod, "082026", "Session B active period remains 082026");
+
+  // Create a separate organization and GSTIN
+  const randDigits = Math.floor(1000 + Math.random() * 9000);
+  const roguePan = `BBBCB${randDigits}Z`;
+  const rogueOrg = orgRepo.create({
+    name: "Foreign Competitor Corp",
+    pan: roguePan,
+    legalType: "Private Limited Company"
+  });
+  const rogueGstin = gstinRepo.create({
+    orgId: rogueOrg.id,
+    gstin: `33${roguePan}1Z5`,
+    tradeName: "Foreign Branch TN",
+    stateCode: "33",
+    stateName: "Tamil Nadu",
+    isPrimary: 1
+  });
+
+  // Session A (belongs to Apex Retailers) tries to activate rogue GSTIN -> MUST BE 403 Forbidden!
+  const rogueActivate = await mockApiCall(sessionA, "POST", `/api/gstins/${rogueGstin.id}/activate`).run();
+  assert.equal(rogueActivate.statusCode, 403, "Activating another organization's GSTIN must return 403 Forbidden");
+
+  // Session A tries to query dashboard with unauthorized gstinId -> MUST BE 403 Forbidden!
+  const rogueDash = await mockApiCall(sessionA, "GET", "/api/dashboard/summary", { gstinId: rogueGstin.id }).run();
+  assert.equal(rogueDash.statusCode, 403, "Accessing another organization's GSTIN must return 403 Forbidden");
+});
+
+test("Statutory Compliance: Monthly vs QRMP Deadlines, Category 1/2 Staggering & Period Format Validation", async () => {
+  const { formatPeriodDetails, validateAndNormalizePeriod, handleFunctionalApi } = await import("../lib/functionalApi.js");
+
+  // 1. Period Validation
+  assert.equal(validateAndNormalizePeriod("102026").valid, true);
+  assert.equal(validateAndNormalizePeriod("002026").valid, false);
+  assert.equal(validateAndNormalizePeriod("132026").valid, false);
+  assert.equal(validateAndNormalizePeriod("992026").valid, false);
+  assert.equal(validateAndNormalizePeriod("2026").valid, false);
+  assert.equal(validateAndNormalizePeriod("invalid").valid, false);
+
+  // Period API rejects invalid period format with HTTP 400
+  function mockApiCall(method, pathname, query = {}, body = null) {
+    const req = { method, url: pathname, headers: { "x-session-id": "sess-statutory-deadlines" } };
+    let statusCode = 200;
+    let data = "";
+    const res = {
+      writeHead(code) { statusCode = code; },
+      end(payload) { data = payload; }
+    };
+    return {
+      run: async () => {
+        await handleFunctionalApi(req, res, pathname, method, query, body);
+        return { statusCode, body: data ? JSON.parse(data) : null };
+      }
+    };
+  }
+
+  const badPeriodPost = await mockApiCall("POST", "/api/context/period", {}, { period: "132026" }).run();
+  assert.equal(badPeriodPost.statusCode, 400, "POST /api/context/period with month 13 must return 400");
+
+  const badPeriodDash = await mockApiCall("GET", "/api/dashboard/summary", { period: "992026" }).run();
+  assert.equal(badPeriodDash.statusCode, 400, "GET /api/dashboard/summary with invalid period must return 400");
+
+  // 2. Regular Monthly Filer: GSTR-1 due 11th, GSTR-3B due 20th
+  const monthly = formatPeriodDetails("102026", "MONTHLY", "27");
+  assert.equal(monthly.filingFrequency, "MONTHLY");
+  assert.equal(monthly.gstr1Deadline, "November 11, 2026");
+  assert.equal(monthly.gstr3bDeadline, "November 20, 2026");
+
+  // 3. QRMP M1 (e.g. October 2026 in Q3 Oct-Dec):
+  // Optional IFF B2B by 13th, Mandatory PMT-06 challan deposit by 25th, GSTR-3B deferred
+  const qrmpM1 = formatPeriodDetails("102026", "QRMP", "27");
+  assert.equal(qrmpM1.filingFrequency, "QRMP");
+  assert.equal(qrmpM1.isQuarterEnd, false);
+  assert.equal(qrmpM1.quarterMonth, "M1");
+  assert.equal(qrmpM1.iffDeadline, "November 13, 2026");
+  assert.equal(qrmpM1.pmt06Deadline, "November 25, 2026");
+  assert.ok(qrmpM1.gstr3bDeadline.includes("Deferred to Quarter End"));
+
+  // 4. QRMP Quarter End (M3: December 2026, Q3 End):
+  // Quarterly GSTR-1 by 13th
+  // Category 1 States (e.g., 27 Maharashtra, 29 Karnataka, 32 Kerala, 33 Tamil Nadu) -> Due 22nd
+  const qrmpM3Cat1 = formatPeriodDetails("122026", "QRMP", "27");
+  assert.equal(qrmpM3Cat1.isQuarterEnd, true);
+  assert.equal(qrmpM3Cat1.quarterMonth, "M3");
+  assert.equal(qrmpM3Cat1.gstr1Deadline, "January 13, 2027");
+  assert.ok(qrmpM3Cat1.gstr3bDeadline.includes("January 22, 2027"));
+
+  // Category 2 States (e.g., 07 Delhi, 09 Uttar Pradesh, 08 Rajasthan, 19 West Bengal) -> Due 24th
+  const qrmpM3Cat2 = formatPeriodDetails("122026", "QRMP", "07");
+  assert.equal(qrmpM3Cat2.isQuarterEnd, true);
+  assert.ok(qrmpM3Cat2.gstr3bDeadline.includes("January 24, 2027"));
+});
+
+test("Security & Simulation Integrity: XSS Escaping and SIMULATED_NOT_TRANSMITTED Status", async () => {
+  const fs = await import("fs");
+  const js = fs.readFileSync("app.js", "utf8");
+
+  // 1. Verify escapeHtml exists in app.js and functions correctly
+  assert.ok(js.includes("function escapeHtml(str)"), "escapeHtml defined in app.js");
+
+  // Test escapeHtml implementation directly
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  const dangerousPayload = "<img src=x onerror=alert('xss')>";
+  const escaped = escapeHtml(dangerousPayload);
+  assert.ok(!escaped.includes("<img"), "Must not contain unescaped tag open");
+  assert.equal(escaped, "&lt;img src=x onerror=alert(&#39;xss&#39;)&gt;");
+
+  const scriptPayload = "<script>alert(document.cookie)</script>";
+  assert.equal(escapeHtml(scriptPayload), "&lt;script&gt;alert(document.cookie)&lt;/script&gt;");
+
+  // 2. Verify all simulation submissions use SIMULATED_NOT_TRANSMITTED and arn: null
+  const { fileNilGstReturn } = await import("../lib/gstCopilotEngine.js");
+  const copilotNil = fileNilGstReturn({ gstin: "27AAACA1234A1Z5", period: "102026" });
+  assert.equal(copilotNil.status, "SIMULATED_NOT_TRANSMITTED");
+  assert.equal(copilotNil.arn, null);
+  assert.equal(copilotNil.officialArn, null);
+  assert.ok(copilotNil.simulationReference.startsWith("SIM-NIL-"));
 });
