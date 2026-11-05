@@ -280,13 +280,35 @@
         </div>
       </div>
 
-      <!-- Active Filing Period Badge -->
-      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-label-md">
-        <span class="material-symbols-outlined text-secondary text-[16px]">calendar_month</span>
-        <span id="global-filing-period" class="font-medium text-xs sm:text-sm">Oct 2026</span>
-        <span class="text-xs text-error font-semibold flex items-center gap-1 hidden xs:inline-flex">
-          <span class="w-1.5 h-1.5 rounded-full bg-error"></span>Due Nov 20
-        </span>
+      <!-- Active Filing Period Selector Dropdown -->
+      <div class="relative">
+        <button id="globalPeriodTrigger" onclick="togglePeriodDropdown(event)" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface font-label-md transition-colors cursor-pointer" title="Change Filing Period">
+          <span class="material-symbols-outlined text-secondary text-[16px]">calendar_month</span>
+          <span id="global-filing-period" class="font-medium text-xs sm:text-sm">Oct 2026</span>
+          <span id="global-period-due-badge" class="text-xs text-error font-semibold flex items-center gap-1 hidden xs:inline-flex">
+            <span class="w-1.5 h-1.5 rounded-full bg-error"></span>Due Nov 20
+          </span>
+          <span class="material-symbols-outlined text-[16px] text-secondary">expand_more</span>
+        </button>
+        <div id="globalPeriodDropdownMenu" class="hidden absolute left-0 mt-2 w-56 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-50 p-2">
+          <div class="px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-secondary border-b border-outline-variant mb-1">Select Filing Period</div>
+          <button onclick="switchFilingPeriod('102026')" class="w-full text-left px-3 py-2 rounded-lg text-xs hover:bg-surface-container text-on-surface flex items-center justify-between cursor-pointer font-medium">
+            <span>October 2026</span>
+            <span class="font-mono text-[10px] text-secondary">102026</span>
+          </button>
+          <button onclick="switchFilingPeriod('092026')" class="w-full text-left px-3 py-2 rounded-lg text-xs hover:bg-surface-container text-on-surface flex items-center justify-between cursor-pointer font-medium">
+            <span>September 2026</span>
+            <span class="font-mono text-[10px] text-secondary">092026</span>
+          </button>
+          <button onclick="switchFilingPeriod('082026')" class="w-full text-left px-3 py-2 rounded-lg text-xs hover:bg-surface-container text-on-surface flex items-center justify-between cursor-pointer font-medium">
+            <span>August 2026</span>
+            <span class="font-mono text-[10px] text-secondary">082026</span>
+          </button>
+          <button onclick="switchFilingPeriod('112026')" class="w-full text-left px-3 py-2 rounded-lg text-xs hover:bg-surface-container text-on-surface flex items-center justify-between cursor-pointer font-medium">
+            <span>November 2026</span>
+            <span class="font-mono text-[10px] text-secondary">112026</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -365,15 +387,15 @@
     <div id="viewHomeSuite" class="app-suite-container active">
       <main class="p-6 md:p-8 space-y-6 max-w-[1600px] w-full mx-auto">
 <!-- 1. GREETING & STATUS STRIP -->
-<section class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-outline-variant"><div><div class="flex items-center gap-3"><h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">Good morning, Rajesh</h1><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>Live GSTN Sync</span></div><p class="font-body-md text-secondary mt-1">Oct 2026 return window is open. Statutory filing <strong class="text-on-surface font-semibold">GSTR-3B is due in 6 days</strong>.</p></div><div class="flex items-center gap-3 shrink-0"><button onclick="syncPortalData()" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface font-label-md font-medium transition-colors cursor-pointer"><span class="material-symbols-outlined text-[18px]">sync</span><span class="">Sync Portal</span></button><button onclick="openNewInvoiceModal()" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-container font-label-md font-semibold transition-colors shadow-sm cursor-pointer"><span class="material-symbols-outlined text-[18px]">add</span><span class="">New Invoice</span></button></div></section>
+<section class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-outline-variant"><div><div class="flex items-center gap-3"><h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">Good morning, Rajesh</h1><span id="liveGstnSyncBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>Live GSTN Sync</span></div><p class="font-body-md text-secondary mt-1"><span class="dynamic-period-short">Oct 2026</span> return window is open. Statutory filing <strong class="text-on-surface font-semibold">GSTR-3B is due in 6 days</strong>.</p></div><div class="flex items-center gap-3 shrink-0"><button onclick="syncPortalData()" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface font-label-md font-medium transition-colors cursor-pointer"><span class="material-symbols-outlined text-[18px]">sync</span><span class="">Sync Portal</span></button><button onclick="openNewInvoiceModal()" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-container font-label-md font-semibold transition-colors shadow-sm cursor-pointer"><span class="material-symbols-outlined text-[18px]">add</span><span class="">New Invoice</span></button></div></section>
 <!-- 2. HERO "NEXT ACTION" & FILING PROGRESS BANNER -->
-<section class="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm relative overflow-hidden"><div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6"><div class="space-y-2 max-w-2xl"><div class="flex items-center gap-2"><span class="px-2.5 py-0.5 rounded-full font-label-sm font-bold bg-amber-50 text-amber-800 border border-amber-200">Action Required</span><span class="font-label-sm text-secondary">Statutory Deadline: Nov 20, 2026</span></div><h2 class="font-headline-md text-headline-md text-on-surface font-bold">Step 2: Purchases — Add inward invoices for Oct 2026</h2><p class="font-body-md text-secondary">14 Sales invoices recorded (₹8,42,500). Reconcile purchase bills to confirm eligible Input Tax Credit (ITC) before submission.</p></div><div class="flex items-center gap-3 shrink-0"><button onclick="switchSuite('bills')" class="flex items-center gap-2 px-5 py-3 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg font-semibold shadow-sm transition-all cursor-pointer"><span class="">Continue Filing Purchases</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span></button><button onclick="switchSuite('gst')" class="px-4 py-3 rounded-lg bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface font-label-md font-medium transition-colors cursor-pointer"><span class="">Review Step 1 Sales</span></button></div></div><div class="mt-8 pt-6 border-t border-outline-variant"><div class="flex items-center justify-between mb-4"><span class="font-label-sm uppercase tracking-wider font-semibold text-secondary">Filing Flow</span><span class="font-label-md font-bold text-primary">Step 2 of 5</span></div><div class="grid grid-cols-1 md:grid-cols-5 gap-3"><div onclick="switchSuite('gst')" class="flex items-center gap-2.5 p-3 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 cursor-pointer"><span class="material-symbols-outlined text-emerald-700 text-[18px]">check_circle</span><div><p class="font-label-md font-bold">1. Sales</p><p class="font-label-sm text-emerald-700">Completed</p></div></div><div onclick="switchSuite('bills')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface-container-high border-2 border-primary cursor-pointer"><span class="w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs">2</span><div><p class="font-label-md font-bold text-primary">2. Purchases</p><p class="font-label-sm text-on-surface-variant font-medium">In Progress</p></div></div><div onclick="switchSuite('recon')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">3</span><div><p class="font-label-md font-medium text-secondary">3. Input Tax Credit</p><p class="font-label-sm text-secondary">Pending</p></div></div><div onclick="switchSuite('taxcalc')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">4</span><div><p class="font-label-md font-medium text-secondary">4. Tax Calc</p><p class="font-label-sm text-secondary">Pending</p></div></div><div onclick="switchSuite('file-gst')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">5</span><div><p class="font-label-md font-medium text-secondary">5. File GSTR-3B</p><p class="font-label-sm text-secondary">Pending</p></div></div></div></div></section>
+<section class="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm relative overflow-hidden"><div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6"><div class="space-y-2 max-w-2xl"><div class="flex items-center gap-2"><span class="px-2.5 py-0.5 rounded-full font-label-sm font-bold bg-amber-50 text-amber-800 border border-amber-200">Action Required</span><span class="font-label-sm text-secondary" id="homeHeroDeadline">Statutory Deadline: Nov 20, 2026</span></div><h2 class="font-headline-md text-headline-md text-on-surface font-bold" id="homeHeroStepTitle">Step 2: Purchases — Add inward invoices for Oct 2026</h2><p class="font-body-md text-secondary" id="homeHeroDescription">14 Sales invoices recorded (₹8,42,500). Reconcile purchase bills to confirm eligible Input Tax Credit (ITC) before submission.</p></div><div class="flex items-center gap-3 shrink-0"><button onclick="switchSuite('bills')" class="flex items-center gap-2 px-5 py-3 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg font-semibold shadow-sm transition-all cursor-pointer"><span class="">Continue Filing Purchases</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span></button><button onclick="switchSuite('gst')" class="px-4 py-3 rounded-lg bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface font-label-md font-medium transition-colors cursor-pointer"><span class="">Review Step 1 Sales</span></button></div></div><div class="mt-8 pt-6 border-t border-outline-variant"><div class="flex items-center justify-between mb-4"><span class="font-label-sm uppercase tracking-wider font-semibold text-secondary">Filing Flow</span><span class="font-label-md font-bold text-primary">Step 2 of 5</span></div><div class="grid grid-cols-1 md:grid-cols-5 gap-3"><div onclick="switchSuite('gst')" class="flex items-center gap-2.5 p-3 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 cursor-pointer"><span class="material-symbols-outlined text-emerald-700 text-[18px]">check_circle</span><div><p class="font-label-md font-bold">1. Sales</p><p class="font-label-sm text-emerald-700">Completed</p></div></div><div onclick="switchSuite('bills')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface-container-high border-2 border-primary cursor-pointer"><span class="w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs">2</span><div><p class="font-label-md font-bold text-primary">2. Purchases</p><p class="font-label-sm text-on-surface-variant font-medium">In Progress</p></div></div><div onclick="switchSuite('recon')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">3</span><div><p class="font-label-md font-medium text-secondary">3. Input Tax Credit</p><p class="font-label-sm text-secondary">Pending</p></div></div><div onclick="switchSuite('taxcalc')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">4</span><div><p class="font-label-md font-medium text-secondary">4. Tax Calc</p><p class="font-label-sm text-secondary">Pending</p></div></div><div onclick="switchSuite('file-gst')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">5</span><div><p class="font-label-md font-medium text-secondary">5. File GSTR-3B</p><p class="font-label-sm text-secondary">Pending</p></div></div></div></div></section>
 <!-- 4. FOUR FINANCIAL OVERVIEW CARDS -->
 <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"><div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm"><div class="flex items-center justify-between"><span class="font-label-md text-secondary">Sales (Oct)</span><span class="font-label-sm px-2 py-0.5 rounded bg-surface-container text-secondary font-medium">14 Invoices</span></div><div class="mt-3"><span class="font-numeric-lg text-numeric-lg font-bold text-on-surface font-mono" id="dashSalesTotal">₹8,42,500.00</span></div><p class="font-body-sm text-secondary mt-3 border-t border-outline-variant pt-2">Outward taxable supplies</p></div><div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm"><div class="flex items-center justify-between"><span class="font-label-md text-secondary">Purchases</span><span class="font-label-sm px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-semibold border border-amber-200">8 Bills</span></div><div class="mt-3"><span class="font-numeric-lg text-numeric-lg font-bold text-on-surface font-mono" id="dashPurchasesTotal">₹4,12,300.00</span></div><p class="font-body-sm text-secondary mt-3 border-t border-outline-variant pt-2">3 pending GSTR-2B match</p></div><div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm"><div class="flex items-center justify-between"><span class="font-label-md text-secondary">Net Tax Payable</span><span class="font-label-sm px-2 py-0.5 rounded bg-surface-container text-secondary font-medium">GSTR-3B</span></div><div class="mt-3"><span class="font-numeric-lg text-numeric-lg font-bold text-error font-mono" id="dashNetTaxPayable">₹77,436.00</span></div><p class="font-body-sm text-secondary mt-3 border-t border-outline-variant pt-2">Estimated cash liability</p></div><div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm"><div class="flex items-center justify-between"><span class="font-label-md text-secondary">Eligible ITC</span><span class="font-label-sm px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">Available</span></div><div class="mt-3"><span class="font-numeric-lg text-numeric-lg font-bold text-primary font-mono" id="dashEligibleItc">₹74,214.00</span></div><p class="font-body-sm text-secondary mt-3 border-t border-outline-variant pt-2">₹68,100 auto-drafted</p></div></section>
 <!-- 5. TWO-COLUMN ACTIVITY & INTELLIGENCE GRID -->
 <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 <!-- LEFT COLUMN: Recent Activity & Documents (7 Cols) -->
-<div class="lg:col-span-7 space-y-6"><div class="rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm"><div class="p-5 border-b border-outline-variant flex items-center justify-between"><div><h3 class="font-headline-sm font-semibold text-on-surface">Recent Activity &amp; Documents</h3><p class="font-body-sm text-secondary">Latest outward invoices and uploaded vouchers</p></div><button onclick="switchSuite('gst')" class="font-label-sm text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer">View Ledger<span class="material-symbols-outlined text-[14px]">arrow_forward</span></button></div><div class="overflow-x-auto"><table class="w-full text-left border-collapse"><tbody class="divide-y divide-outline-variant font-body-sm"><tr class="hover:bg-surface transition-colors"><td class="py-3 px-5"><div class="font-label-md font-semibold text-on-surface font-mono">INV-2026-089</div><div class="font-body-sm text-secondary">Zenith Logistics Hub</div></td><td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs bg-surface-container text-secondary font-medium">B2B Sales</span></td><td class="py-3 px-4 text-right font-mono font-medium text-on-surface">₹1,24,000.00</td><td class="py-3 px-5 text-right"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm bg-emerald-50 text-emerald-800 font-semibold">Approved</span></td></tr><tr class="hover:bg-surface transition-colors"><td class="py-3 px-5"><div class="font-label-md font-semibold text-on-surface font-mono">PUR-OCT-042</div><div class="font-body-sm text-secondary">Cloudflare India Pvt Ltd</div></td><td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs bg-blue-50 text-blue-800 font-medium">Purchase Bill</span></td><td class="py-3 px-4 text-right font-mono font-medium text-on-surface">₹14,200.00</td><td class="py-3 px-5 text-right"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm bg-blue-50 text-blue-800 font-semibold">OCR Verified</span></td></tr><tr class="hover:bg-surface transition-colors"><td class="py-3 px-5"><div class="font-label-md font-semibold text-error font-mono">PUR-OCT-039</div><div class="font-body-sm text-secondary">Reliance Digital Retail</div></td><td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs bg-red-50 text-error font-medium">Purchase Bill</span></td><td class="py-3 px-4 text-right font-mono font-medium text-on-surface">₹45,000.00</td><td class="py-3 px-5 text-right"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm bg-red-50 text-error font-semibold">Ineligible ITC</span></td></tr></tbody></table></div><div class="p-4 bg-surface border-t border-outline-variant flex items-center justify-between"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-[20px]">upload_file</span><span class="font-label-md text-secondary">Drop bills (PDF, Excel, Tally XML) or</span></div><button class="px-3.5 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-primary font-label-md font-semibold transition-colors cursor-pointer">Browse Files</button></div></div><div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest flex items-center justify-between gap-4"><div class="flex items-center gap-3.5"><span class="material-symbols-outlined text-primary text-[24px]">sync_saved_locally</span><div><h4 class="font-label-lg font-bold text-on-surface">GSTR-2B Auto-Reconciliation</h4><p class="font-body-sm text-secondary">11 of 14 supplier returns synced. 3 invoices need vendor follow-up.</p></div></div><button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md font-semibold hover:bg-primary-container transition-colors shrink-0">Reconcile</button></div></div>
+<div class="lg:col-span-7 space-y-6"><div class="rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm"><div class="p-5 border-b border-outline-variant flex items-center justify-between"><div><h3 class="font-headline-sm font-semibold text-on-surface">Recent Activity &amp; Documents</h3><p class="font-body-sm text-secondary">Latest outward invoices and uploaded vouchers</p></div><button onclick="switchSuite('gst')" class="font-label-sm text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer">View Ledger<span class="material-symbols-outlined text-[14px]">arrow_forward</span></button></div><div class="overflow-x-auto"><table class="w-full text-left border-collapse"><tbody id="dashRecentActivityBody" class="divide-y divide-outline-variant font-body-sm"><tr class="hover:bg-surface transition-colors"><td class="py-3 px-5"><div class="font-label-md font-semibold text-on-surface font-mono">INV-2026-089</div><div class="font-body-sm text-secondary">Zenith Logistics Hub</div></td><td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs bg-surface-container text-secondary font-medium">B2B Sales</span></td><td class="py-3 px-4 text-right font-mono font-medium text-on-surface">₹1,24,000.00</td><td class="py-3 px-5 text-right"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm bg-emerald-50 text-emerald-800 font-semibold">Approved</span></td></tr><tr class="hover:bg-surface transition-colors"><td class="py-3 px-5"><div class="font-label-md font-semibold text-on-surface font-mono">PUR-OCT-042</div><div class="font-body-sm text-secondary">Cloudflare India Pvt Ltd</div></td><td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs bg-blue-50 text-blue-800 font-medium">Purchase Bill</span></td><td class="py-3 px-4 text-right font-mono font-medium text-on-surface">₹14,200.00</td><td class="py-3 px-5 text-right"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm bg-blue-50 text-blue-800 font-semibold">OCR Verified</span></td></tr><tr class="hover:bg-surface transition-colors"><td class="py-3 px-5"><div class="font-label-md font-semibold text-error font-mono">PUR-OCT-039</div><div class="font-body-sm text-secondary">Reliance Digital Retail</div></td><td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs bg-red-50 text-error font-medium">Purchase Bill</span></td><td class="py-3 px-4 text-right font-mono font-medium text-on-surface">₹45,000.00</td><td class="py-3 px-5 text-right"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm bg-red-50 text-error font-semibold">Ineligible ITC</span></td></tr></tbody></table></div><div class="p-4 bg-surface border-t border-outline-variant flex items-center justify-between"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-[20px]">upload_file</span><span class="font-label-md text-secondary">Drop bills (PDF, Excel, Tally XML) or</span></div><button class="px-3.5 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-primary font-label-md font-semibold transition-colors cursor-pointer">Browse Files</button></div></div><div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest flex items-center justify-between gap-4"><div class="flex items-center gap-3.5"><span class="material-symbols-outlined text-primary text-[24px]">sync_saved_locally</span><div><h4 class="font-label-lg font-bold text-on-surface">GSTR-2B Auto-Reconciliation</h4><p class="font-body-sm text-secondary">11 of 14 supplier returns synced. 3 invoices need vendor follow-up.</p></div></div><button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md font-semibold hover:bg-primary-container transition-colors shrink-0">Reconcile</button></div></div>
 <!-- RIGHT COLUMN: Compliance, Health & Copilot (5 Cols) -->
 <div class="lg:col-span-5 space-y-6"><div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm space-y-4 cursor-pointer hover:border-primary/50 transition-colors" onclick="openHealthScoreModal()"><div class="flex items-center justify-between"><div><h3 class="font-headline-sm font-semibold text-on-surface flex items-center gap-1.5">GST Compliance Health <span class="material-symbols-outlined text-[16px] text-primary">open_in_new</span></h3><p class="font-body-sm text-secondary">Filing accuracy &amp; audit health (Click for full diagnostic report)</p></div><span class="px-2.5 py-0.5 rounded-full font-label-sm bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">94 / 100</span></div><div class="space-y-2.5 pt-2 border-t border-outline-variant"><div class="flex justify-between font-label-sm"><span class="text-secondary">On-time filing record</span><span class="font-bold font-mono">100%</span></div><div class="flex justify-between font-label-sm"><span class="text-secondary">2B ITC Reconciliation accuracy</span><span class="font-bold font-mono">91%</span></div><div class="flex justify-between font-label-sm"><span class="text-secondary">E-way Bill to Invoice Match</span><span class="font-bold font-mono">98%</span></div></div></div><div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm space-y-3"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[20px]">smart_toy</span><span class="font-label-md font-bold text-on-surface">SimpleGST Assistant</span></div><p class="font-body-md text-secondary leading-relaxed bg-surface p-3 rounded-lg border border-outline-variant">3 invoices totaling <strong class="font-mono text-error">₹18,400</strong> do not match supplier filings. Ready to send supplier reminders?</p><div class="flex items-center gap-2 pt-1"><button class="flex-1 py-2 px-3 rounded-lg bg-primary text-on-primary font-label-md font-semibold hover:bg-primary-container transition-colors cursor-pointer" onclick="switchSuite('copilot')">Open Copilot</button><button class="py-2 px-3 rounded-lg hover:bg-surface-container text-secondary font-label-md font-medium transition-colors cursor-pointer" onclick="this.closest('.space-y-3').style.display='none'">Dismiss</button></div></div><div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm space-y-3"><h3 class="font-headline-sm font-semibold text-on-surface">Statutory Deadlines</h3><div class="space-y-2 font-body-sm"><div class="flex items-center justify-between p-2.5 rounded-lg bg-surface"><div><p class="font-label-md font-bold text-on-surface">GSTR-3B (Oct 2026)</p><p class="font-label-sm text-error font-medium">Due Nov 20 • 6 days left</p></div><span class="font-label-sm px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">Upcoming</span></div><div class="flex items-center justify-between p-2.5 rounded-lg bg-surface"><div><p class="font-label-md font-medium text-on-surface">GSTR-1 (Oct 2026)</p><p class="font-label-sm text-secondary">Filed on Nov 11</p></div><span class="font-label-sm text-emerald-800 font-bold">Filed</span></div></div></div></div>
 </section>
@@ -5960,7 +5982,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
                 Generate Form GST PMT-06 Challan
               </h2>
 <p class="text-body-sm font-body-sm text-on-surface-variant mt-1">
-                Create and verify statutory payment challan for October 2026 GSTR-3B tax offset (Section 49 &amp; Rule 87(6))
+                Create and verify statutory payment challan for <span class="dynamic-period-label">October 2026</span> GSTR-3B tax offset (Section 49 &amp; Rule 87(6))
               </p>
 </div>
 </div>
@@ -5977,7 +5999,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 <span class="material-symbols-outlined text-primary text-[20px]">calculate</span>
                 Statutory Cash Liability Computation
               </h3>
-<span class="text-label-sm font-label-sm text-on-surface-variant">Tax Period: Oct 2026</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Tax Period: <span class="dynamic-period-short">Oct 2026</span></span>
 </div>
 <!-- Bento Layout Summary Cards -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
@@ -6227,16 +6249,16 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 <!-- 6. Modal Action Footer -->
 <footer class="p-4 sm:p-6 border-t border-outline-variant bg-surface-container-lowest flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
 <div class="flex items-center gap-2 w-full sm:w-auto">
-<button class="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors cursor-pointer active:scale-98" type="button">
+<button onclick="closePmt06Modal()" class="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors cursor-pointer active:scale-98" type="button">
               Cancel &amp; Return to Return Review
             </button>
-<button class="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 transition-colors cursor-pointer active:scale-98" type="button">
+<button onclick="closePmt06Modal(); showToast('Draft PMT-06 PDF generated (Demo Sandbox).', 'info');" class="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 transition-colors cursor-pointer active:scale-98" type="button">
 <span class="material-symbols-outlined text-[18px]">download</span>
 <span>Download Draft PMT-06 PDF</span>
 </button>
 </div>
 <div class="w-full sm:w-auto">
-<button class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer active:scale-98" onclick="alert('Sandbox Transaction Approved: ₹62,436.00 successfully credited to Form GST PMT-05 Cash Ledger (CIN: HDFC2410270081). Return to GSTR-3B offset unlocked.')" type="button">
+<button onclick="submitChallanPayment()" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer active:scale-98" type="button">
 <span class="material-symbols-outlined text-[20px]" data-weight="fill" style="font-variation-settings: 'FILL' 1;">verified_user</span>
 <span>Pay ₹62,436 &amp; Credit Cash Ledger (Sandbox)</span>
 </button>
@@ -6275,6 +6297,9 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 </nav>
 <!-- SECTION 1: STATUTORY SUBMISSION HERO STATUS BANNER -->
 <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm relative overflow-hidden">
+<div class="p-3 bg-amber-50 border border-amber-300 rounded-lg text-xs font-semibold text-amber-900 mb-4 text-center">
+  [SIMULATION / DEMO MODE — NOT TRANSMITTED TO GSTN COMMON PORTAL]
+</div>
 <!-- Ambient accent watermark -->
 <div class="absolute right-0 top-0 translate-x-12 -translate-y-8 opacity-5 pointer-events-none select-none">
 <span class="material-symbols-outlined text-[240px] text-primary">verified</span>
@@ -6289,36 +6314,36 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 <div class="flex flex-wrap items-center gap-2.5 mb-1.5">
 <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-label-md font-label-md bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold">
 <span class="w-2 h-2 rounded-full bg-emerald-600 animate-ping mr-1"></span>
-                    GSTR-3B Return Filed Successfully &amp; Verified
+                    GSTR-3B Return Simulated &amp; Recorded Locally
                   </span>
 <span class="text-label-sm font-label-sm bg-surface-container-low text-secondary px-2.5 py-0.5 rounded border border-outline-variant">
-                    FY 2026-27 | October
+                    <span class="dynamic-fy-label">FY 2026-27</span> | <span class="dynamic-period-short">October</span>
                   </span>
 <span class="text-label-sm font-label-sm bg-surface-container-low text-secondary px-2.5 py-0.5 rounded border border-outline-variant">
-                    Form Rule 61(5) CGST
+                    Form Rule 61(5) CGST (Demo Sandbox)
                   </span>
 </div>
 <h2 class="text-headline-lg font-headline-lg text-on-surface font-bold tracking-tight mt-1">
-                  Statutory Filing Acknowledgment Received
+                  Statutory Filing Simulated Acknowledgment
                 </h2>
 <p class="text-body-md font-body-md text-on-surface-variant mt-1 max-w-3xl">
-                  Filing confirmed by connected GSP (Clear / Masters India GSP Gateway). Simulated sandbox acknowledgement. Electronic Cash &amp; Credit Ledgers updated in accordance with CGST Rules.
+                  Local sandbox test execution. Electronic Cash &amp; Credit Ledgers updated in local database. This return was NOT submitted to the live GSTN Common Portal.
                 </p>
 </div>
 </div>
-<!-- Right Hero Key Stat: Official ARN Display -->
+<!-- Right Hero Key Stat: Simulated ARN Display -->
 <div class="w-full lg:w-auto bg-surface-container-low border border-outline-variant rounded-lg p-4 lg:min-w-[340px]">
 <div class="flex items-center justify-between mb-1.5">
-<span class="text-label-sm font-label-sm text-secondary font-semibold uppercase tracking-wider">Official Simulated ARN</span>
-<span class="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline cursor-pointer">
+<span class="text-label-sm font-label-sm text-secondary font-semibold uppercase tracking-wider">Simulated ARN (Sandbox Mode)</span>
+<span onclick="copyText('SIM-AA271026098124B'); showToast('Simulated ARN copied!', 'info');" class="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline cursor-pointer">
 <span class="material-symbols-outlined text-sm">content_copy</span> Copy ARN
                 </span>
 </div>
-<div class="text-headline-md font-mono font-bold text-on-surface bg-surface-container-lowest px-3 py-1.5 rounded border border-outline-variant tracking-wider text-center select-all">
-                AA271024098124B
+<div class="text-headline-md font-mono font-bold text-on-surface bg-surface-container-lowest px-3 py-1.5 rounded border border-outline-variant tracking-wider text-center select-all" id="arnDisplayVal">
+                SIM-AA271026098124B
               </div>
 <div class="mt-2 text-label-sm font-label-sm text-secondary flex items-center justify-between">
-<span>Status: <strong class="text-emerald-700">Valid &amp; Synced</strong></span>
+<span>Status: <strong class="text-emerald-700">Sandbox Simulated</strong></span>
 <span>Type: <strong class="text-on-surface">Monthly Regular</strong></span>
 </div>
 </div>
@@ -6329,29 +6354,29 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 <span class="material-symbols-outlined text-secondary text-2xl">event_available</span>
 <div>
 <p class="text-label-sm font-label-sm text-secondary">Filing Date &amp; Timestamp</p>
-<p class="text-label-md font-label-md text-on-surface font-semibold">20-Oct-2026 at 16:42:18 IST</p>
+<p class="text-label-md font-label-md text-on-surface font-semibold" id="arnTimestampDisplay">20-Oct-2026 at 16:42:18 IST</p>
 </div>
 </div>
 <div class="flex items-center gap-3">
 <span class="material-symbols-outlined text-secondary text-2xl">verified</span>
 <div>
 <p class="text-label-sm font-label-sm text-secondary">Verification Mode</p>
-<p class="text-label-md font-label-md text-on-surface font-semibold">DSC (Class 3 USB Token - Rajesh Sharma) &amp; EVC OTP</p>
+<p class="text-label-md font-label-md text-on-surface font-semibold">Sandbox EVC Confirmation</p>
 </div>
 </div>
 <div class="flex items-center gap-3">
 <span class="material-symbols-outlined text-secondary text-2xl">hub</span>
 <div>
-<p class="text-label-sm font-label-sm text-secondary">GSP Gateway Gateway ID</p>
-<p class="text-label-md font-label-md text-on-surface font-mono font-semibold">GSP-MH-PROD-98120</p>
+<p class="text-label-sm font-label-sm text-secondary">GSP Gateway Status</p>
+<p class="text-label-md font-label-md text-on-surface font-mono font-semibold">Sandbox Simulator (Offline)</p>
 </div>
 </div>
 <div class="flex items-center gap-3">
 <span class="material-symbols-outlined text-secondary text-2xl">shield_lock</span>
 <div>
-<p class="text-label-sm font-label-sm text-secondary">Digital Signature Hash</p>
-<p class="text-label-md font-label-md text-on-surface font-mono text-xs truncate max-w-[180px]" title="SHA-256: 9e4f2081ab716c90d64fa09e3204d1">
-                  SHA256: 9e4f2081ab7...
+<p class="text-label-sm font-label-sm text-secondary">Simulation Reference</p>
+<p class="text-label-md font-label-md text-on-surface font-mono text-xs truncate max-w-[180px]" title="SIM-SHA256: DEMO-ENV-ONLY">
+                  SIM-REF: DEMO-LOCAL-TEST
                 </p>
 </div>
 </div>

@@ -114,6 +114,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   switchSuite('home');
   selectFilingEntity('27AAACA1234A1Z5', 'Apex Retailers Pvt Ltd', 'Main Branch');
   
+  // Hydrate dynamic period, live dashboard, and copilot
+  if (typeof syncPeriodAcrossUi === "function") syncPeriodAcrossUi();
+  if (typeof loadDashboardData === "function") loadDashboardData();
+  if (typeof renderCopilotWorkspace === "function") renderCopilotWorkspace();
+
   // Close dropdowns on outside click
   document.addEventListener("click", (e) => {
     if (!e.target.closest("#filingDropdownTrigger") && !e.target.closest("#filingDropdownMenu")) {
@@ -122,8 +127,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!e.target.closest("#profileDropdownBtn") && !e.target.closest("#profileDropdownMenu")) {
       document.getElementById("profileDropdownMenu")?.classList.remove("active");
     }
+    if (!e.target.closest("#globalPeriodTrigger") && !e.target.closest("#globalPeriodDropdownMenu")) {
+      document.getElementById("globalPeriodDropdownMenu")?.classList.add("hidden");
+    }
+    if (!e.target.closest("#roleDropdownMenu") && !e.target.closest("button[onclick*='toggleRoleMenu']")) {
+      document.getElementById("roleDropdownMenu")?.classList.add("hidden");
+    }
     if (!e.target.closest("#btnSuiteMoreServices") && !e.target.closest("#moreServicesMenu")) {
       document.getElementById("moreServicesMenu")?.classList.add("hidden");
+    }
+  });
+
+  // Global escape key handler to smoothly dismiss open modals without alerts
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (typeof closePmt06Modal === "function") closePmt06Modal();
+      if (typeof closeArnModal === "function") closeArnModal();
+      if (typeof closeHealthScoreModal === "function") closeHealthScoreModal();
+      if (typeof closeNewInvoiceModal === "function") closeNewInvoiceModal();
+      document.getElementById("globalPeriodDropdownMenu")?.classList.add("hidden");
+      document.getElementById("roleDropdownMenu")?.classList.add("hidden");
+      document.getElementById("filingDropdownMenu")?.classList.remove("active");
+      document.getElementById("profileDropdownMenu")?.classList.remove("active");
     }
   });
 });
@@ -1076,6 +1101,8 @@ function selectFilingEntity(pan, name, subtitle) {
         fetch(`/api/gstins/${g.id}/activate`, { method: "POST" })
           .then(() => {
             if (typeof syncPeriodAcrossUi === "function") syncPeriodAcrossUi();
+            if (typeof loadDashboardData === "function") loadDashboardData();
+            if (typeof renderCopilotWorkspace === "function") renderCopilotWorkspace();
           })
           .catch(() => {});
       }
@@ -1700,7 +1727,8 @@ async function generateReportAction() {
       if (pBox) pBox.style.display = "none";
       if (rCard) {
         rCard.style.display = "flex";
-        document.getElementById("resultFilename").textContent = `${appState.gst.currentReportType}_102026.xlsx`;
+        const p = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
+        document.getElementById("resultFilename").textContent = `${appState.gst.currentReportType}_${p}.xlsx`;
       }
     }, 300);
   }, 400);
@@ -1716,7 +1744,8 @@ async function downloadCurrentReport(format = "xlsx") {
     const blob = await res.blob();
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${reportType}_102026.${format}`;
+    const p = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
+    a.download = `${reportType}_${p}.${format}`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -4172,11 +4201,71 @@ function getPeriodDetails(periodStr = "102026") {
 }
 window.getPeriodDetails = getPeriodDetails;
 
+function getActivePeriod() {
+  return appState.activePeriod || appState.gst?.business?.filingPeriod || "102026";
+}
+window.getActivePeriod = getActivePeriod;
+
+function setActivePeriod(newPeriod) {
+  const p = String(newPeriod || "102026").trim();
+  appState.activePeriod = p;
+  if (!appState.gst) appState.gst = {};
+  if (!appState.gst.business) appState.gst.business = {};
+  appState.gst.business.filingPeriod = p;
+}
+window.setActivePeriod = setActivePeriod;
+
+function togglePeriodDropdown(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById("globalPeriodDropdownMenu");
+  if (menu) menu.classList.toggle("hidden");
+}
+window.togglePeriodDropdown = togglePeriodDropdown;
+
+async function switchFilingPeriod(periodStr) {
+  const p = String(periodStr || "102026").trim();
+  setActivePeriod(p);
+  syncPeriodAcrossUi(p);
+
+  const menu = document.getElementById("globalPeriodDropdownMenu");
+  if (menu) menu.classList.add("hidden");
+
+  try {
+    await fetch("/api/context/period", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ period: p })
+    });
+  } catch (err) {
+    console.warn("Could not persist active period context:", err);
+  }
+
+  // Reload dashboard and copilot for new period
+  if (typeof loadDashboardData === "function") {
+    loadDashboardData(p);
+  }
+  if (typeof renderCopilotWorkspace === "function") {
+    renderCopilotWorkspace(p);
+  }
+  if (typeof resetFileGstChoice === "function") {
+    resetFileGstChoice();
+  }
+
+  const details = getPeriodDetails(p);
+  if (typeof showToast === "function") {
+    showToast(`Filing period switched to ${details.full}`, "info");
+  }
+}
+window.switchFilingPeriod = switchFilingPeriod;
+
 function syncPeriodAcrossUi(periodStr = "102026") {
-  const details = getPeriodDetails(periodStr || appState.gst?.business?.filingPeriod || "102026");
+  const details = getPeriodDetails(periodStr || getActivePeriod());
 
   const globalPeriod = document.getElementById("global-filing-period");
   if (globalPeriod) globalPeriod.textContent = details.short;
+
+  const dueBadge = document.getElementById("global-period-due-badge");
+  if (dueBadge) dueBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-error"></span>Due ${details.gstr3bDeadlineShort}`;
 
   document.querySelectorAll(".dynamic-period-label").forEach(el => {
     el.textContent = details.full;
@@ -4197,6 +4286,280 @@ function syncPeriodAcrossUi(periodStr = "102026") {
   if (homeStepHeader) homeStepHeader.textContent = `Step 2: Purchases — Add inward invoices for ${details.short}`;
 }
 window.syncPeriodAcrossUi = syncPeriodAcrossUi;
+
+// ============================================================================
+// Dashboard Dynamic Data Loader & Table Hydration
+// ============================================================================
+async function loadDashboardData(period) {
+  const p = period || getActivePeriod();
+  const details = getPeriodDetails(p);
+
+  try {
+    const res = await fetch(`/api/dashboard/summary?period=${p}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.empty) return;
+
+    cachedDashboardMetrics = data.metrics || {};
+
+    const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const dashSalesTotal = document.getElementById("dashSalesTotal");
+    const dashPurchasesTotal = document.getElementById("dashPurchasesTotal");
+    const dashNetTaxPayable = document.getElementById("dashNetTaxPayable");
+    const dashEligibleItc = document.getElementById("dashEligibleItc");
+
+    if (dashSalesTotal && data.metrics) dashSalesTotal.textContent = fmt(data.metrics.taxableSales);
+    if (dashPurchasesTotal && data.metrics) dashPurchasesTotal.textContent = fmt(data.metrics.taxablePurchases);
+    if (dashNetTaxPayable && data.metrics) dashNetTaxPayable.textContent = fmt(data.metrics.netCashPayable);
+    if (dashEligibleItc && data.metrics) dashEligibleItc.textContent = fmt(data.metrics.totalEligibleItc);
+
+    // Update hero banner texts
+    const heroDesc = document.getElementById("homeHeroDescription");
+    if (heroDesc && data.metrics) {
+      heroDesc.innerHTML = `<span id="dashSalesCountText">${data.metrics.salesCount}</span> Sales invoices recorded (${fmt(data.metrics.taxableSales)}). Reconcile purchase bills to confirm eligible Input Tax Credit (ITC) before submission.`;
+    }
+
+    // Update sync badge
+    const syncBadge = document.getElementById("liveGstnSyncBadge");
+    if (syncBadge) {
+      if (data.environment && data.environment.isLive) {
+        syncBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>Live GSTN Sync`;
+        syncBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200";
+      } else {
+        syncBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Sandbox Simulation (Demo Data)`;
+        syncBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label-sm font-medium bg-amber-50 text-amber-800 border border-amber-200";
+      }
+    }
+
+    // Populate recent activity table
+    const tableBody = document.getElementById("dashRecentActivityBody");
+    if (tableBody) {
+      const sales = data.recentSales || [];
+      const purchases = data.recentPurchases || [];
+      const allRecent = [
+        ...sales.map(s => ({ ...s, isSale: true, date: s.invoice_date, ref: s.invoice_number, entity: s.customer_name })),
+        ...purchases.map(p => ({ ...p, isSale: false, date: p.bill_date, ref: p.bill_number, entity: p.supplier_name }))
+      ].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 5);
+
+      if (allRecent.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="py-8 text-center text-secondary text-xs">
+              No transactions recorded for ${details.short}. Click <strong>+ New Invoice</strong> to add sales invoices or file a Nil Return.
+            </td>
+          </tr>
+        `;
+      } else {
+        tableBody.innerHTML = allRecent.map(item => `
+          <tr class="hover:bg-surface transition-colors">
+            <td class="py-3 px-5">
+              <div class="font-label-md font-semibold text-on-surface font-mono">${item.ref}</div>
+              <div class="font-body-sm text-secondary">${item.entity}</div>
+            </td>
+            <td class="py-3 px-4">
+              <span class="px-2 py-0.5 rounded text-xs ${item.isSale ? 'bg-surface-container text-secondary font-medium' : 'bg-blue-50 text-blue-800 font-medium'}">
+                ${item.isSale ? 'B2B Sales' : 'Purchase Bill'}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right font-mono font-medium text-on-surface">
+              ${fmt(item.taxable_amount)}
+            </td>
+            <td class="py-3 px-5 text-right">
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm ${item.isSale ? 'bg-emerald-50 text-emerald-800' : 'bg-blue-50 text-blue-800'} font-semibold">
+                ${item.isSale ? 'Approved' : 'Verified'}
+              </span>
+            </td>
+          </tr>
+        `).join("");
+      }
+    }
+  } catch (err) {
+    console.warn("Could not load dashboard data:", err);
+  }
+}
+window.loadDashboardData = loadDashboardData;
+
+// ============================================================================
+// GST Copilot Workspace Renderer (Dynamic Grounding)
+// ============================================================================
+async function renderCopilotWorkspace(period) {
+  const p = period || getActivePeriod();
+  const details = getPeriodDetails(p);
+
+  try {
+    const res = await fetch(`/api/copilot/status?period=${p}`);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const entityDisplay = document.getElementById("copilotActiveGstinDisplay");
+    if (entityDisplay && data.activeEntity) {
+      entityDisplay.innerHTML = `${data.activeEntity.tradeName} (${data.activeEntity.gstin}) • ${data.periodLabel || details.full}`;
+    }
+
+    const chatContainer = document.getElementById("copilotChatMessages");
+    if (chatContainer) {
+      const activeName = data.activeOrg?.name || data.activeEntity?.tradeName || "Apex Retailers Pvt Ltd";
+      const gstin = data.activeEntity?.gstin || "27AAACA1234A1Z5";
+      const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const grossOut = fmt(data.summary?.outputLiability || 0);
+      const eligibleItc = fmt(data.summary?.inputTaxCredit || 0);
+      const netCash = fmt(Math.max(0, (data.summary?.outputLiability || 0) - (data.summary?.inputTaxCredit || 0)));
+
+      chatContainer.innerHTML = `
+        <div class="flex items-start gap-3.5">
+          <div class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-xs">
+            <span class="material-symbols-outlined text-[18px]">smart_toy</span>
+          </div>
+          <div class="space-y-2 max-w-2xl bg-surface p-4 rounded-2xl rounded-tl-none border border-outline-variant/80 text-on-surface shadow-xs">
+            <p class="font-body-md text-sm leading-relaxed">
+              Hello! I am your <strong>SimpleGST Copilot</strong>. I am grounded directly in active database records for <strong>${activeName} (${gstin})</strong> for <strong>${data.periodLabel || details.full}</strong>.
+            </p>
+            <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/50 text-xs space-y-1 font-mono">
+              <div class="flex justify-between"><span>Gross Output Liability (Table 3.1):</span> <strong class="text-on-surface">${grossOut}</strong></div>
+              <div class="flex justify-between"><span>Eligible Inward ITC (Table 4):</span> <strong class="text-emerald-700">${eligibleItc}</strong></div>
+              <div class="flex justify-between border-t border-outline-variant pt-1 text-red-600"><span>Net Cash Shortfall (PMT-06):</span> <strong>${netCash}</strong></div>
+            </div>
+            <p class="text-xs text-secondary">
+              Ask me anything about your active invoices, Rule 88A setoff rules, GSTR-2B reconciliation mismatches, or Nil return eligibility for ${data.periodLabel || details.full}.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+  } catch (err) {
+    console.warn("Could not render Copilot workspace:", err);
+  }
+}
+window.renderCopilotWorkspace = renderCopilotWorkspace;
+
+// ============================================================================
+// Modal Controllers: New Sales Invoice Modal
+// ============================================================================
+function openNewInvoiceModal() {
+  const m = document.getElementById('modalNewInvoice');
+  if (m) {
+    m.classList.remove('hidden');
+    m.style.display = 'flex';
+  }
+  const dateInput = document.getElementById('newInvDate');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+  const numInput = document.getElementById('newInvNumber');
+  if (numInput && !numInput.value) {
+    numInput.value = `INV-${Date.now().toString().slice(-4)}`;
+  }
+  calculateNewInvoiceTax();
+}
+window.openNewInvoiceModal = openNewInvoiceModal;
+
+function closeNewInvoiceModal() {
+  const m = document.getElementById('modalNewInvoice');
+  if (m) {
+    m.classList.add('hidden');
+    m.style.display = 'none';
+  }
+}
+window.closeNewInvoiceModal = closeNewInvoiceModal;
+
+function calculateNewInvoiceTax() {
+  const taxable = parseFloat(document.getElementById('newInvTaxable')?.value) || 0;
+  const rate = parseFloat(document.getElementById('newInvGstRate')?.value) || 0;
+  const custGstin = (document.getElementById('newInvCustomerGstin')?.value || "").trim().toUpperCase();
+  const activeGstin = appState.gst?.business?.gstin || "27AAACA1234A1Z5";
+  const activeState = activeGstin.slice(0, 2);
+  const custState = custGstin.length >= 2 ? custGstin.slice(0, 2) : activeState;
+  const isInter = custGstin.length >= 2 && custState !== activeState;
+
+  const totalTax = taxable * (rate / 100);
+  let cgst = 0, sgst = 0, igst = 0;
+  let cgstRate = 0, sgstRate = 0, igstRate = 0;
+
+  if (isInter) {
+    igst = totalTax;
+    igstRate = rate;
+    const stEl = document.getElementById('newInvSupplyType');
+    if (stEl) stEl.textContent = `Inter-State (IGST) — Place of Supply: ${custState}`;
+  } else {
+    cgst = totalTax / 2;
+    sgst = totalTax / 2;
+    cgstRate = rate / 2;
+    sgstRate = rate / 2;
+    const stEl = document.getElementById('newInvSupplyType');
+    if (stEl) stEl.textContent = `Intra-State (CGST + SGST)`;
+  }
+
+  const fmt = (n) => "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (document.getElementById('newInvCgstRate')) document.getElementById('newInvCgstRate').textContent = cgstRate;
+  if (document.getElementById('newInvSgstRate')) document.getElementById('newInvSgstRate').textContent = sgstRate;
+  if (document.getElementById('newInvIgstRate')) document.getElementById('newInvIgstRate').textContent = igstRate;
+
+  if (document.getElementById('newInvCgstAmount')) document.getElementById('newInvCgstAmount').textContent = fmt(cgst);
+  if (document.getElementById('newInvSgstAmount')) document.getElementById('newInvSgstAmount').textContent = fmt(sgst);
+  if (document.getElementById('newInvIgstAmount')) document.getElementById('newInvIgstAmount').textContent = fmt(igst);
+  if (document.getElementById('newInvTotalAmount')) document.getElementById('newInvTotalAmount').textContent = fmt(taxable + totalTax);
+}
+window.calculateNewInvoiceTax = calculateNewInvoiceTax;
+
+async function submitNewInvoice(event) {
+  if (event) event.preventDefault();
+  const invoiceNumber = document.getElementById('newInvNumber')?.value?.trim();
+  const invoiceDate = document.getElementById('newInvDate')?.value;
+  const customerName = document.getElementById('newInvCustomerName')?.value?.trim();
+  const customerGstin = document.getElementById('newInvCustomerGstin')?.value?.trim().toUpperCase();
+  const taxableAmount = parseFloat(document.getElementById('newInvTaxable')?.value) || 0;
+  const gstRate = parseFloat(document.getElementById('newInvGstRate')?.value) || 0;
+
+  if (!invoiceNumber || !invoiceDate || !customerName || taxableAmount <= 0) {
+    if (typeof showToast === "function") {
+      showToast("Please enter all required invoice fields.", "warning");
+    }
+    return;
+  }
+
+  const period = getActivePeriod();
+  const activeGstin = appState.gst?.business?.gstin || "27AAACA1234A1Z5";
+  const pos = customerGstin && customerGstin.length >= 2 ? customerGstin.slice(0, 2) : activeGstin.slice(0, 2);
+
+  try {
+    const res = await fetch(`/api/sales?period=${period}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        invoiceNumber,
+        invoiceDate,
+        customerName,
+        customerGstin,
+        pos,
+        taxableAmount,
+        gstRate,
+        supplyType: customerGstin ? "B2B" : "B2C"
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      closeNewInvoiceModal();
+      if (typeof showToast === "function") {
+        showToast(`Invoice ${invoiceNumber} created and saved to database!`, "success");
+      }
+      if (typeof loadDashboardData === "function") {
+        loadDashboardData(period);
+      }
+      const form = document.querySelector("#modalNewInvoice form");
+      if (form) form.reset();
+    } else {
+      if (typeof showToast === "function") {
+        showToast(data.error || "Failed to create invoice", "error");
+      }
+    }
+  } catch (err) {
+    if (typeof showToast === "function") {
+      showToast("Network error creating invoice: " + err.message, "error");
+    }
+  }
+}
+window.submitNewInvoice = submitNewInvoice;
 
 // ============================================================================
 // File GST Screen Controller (Simplified 2-Choice, Nil Verify, 5-Step Stepper)
@@ -4379,27 +4742,35 @@ async function executeNilFilingSubmission() {
   }
 
   try {
-    const period = appState.gst?.business?.filingPeriod || "102026";
+    const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
     const res = await fetch("/api/gst/nil-file", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         period,
-        authorisedPerson: "Rajesh Sharma",
+        declarationConfirmed: true,
+        authorisedPerson: appState.gst?.business?.authorisedPerson || "Rajesh Sharma",
         verificationMode: "EVC_OTP"
       })
     });
     const data = await res.json();
     if (data.success) {
-      showToast("Nil Return Form GSTR-3B filed successfully!", "success");
-      const arnEl = document.querySelector("#arn-success-modal .font-mono.font-bold");
-      if (arnEl && data.arn) {
-        arnEl.textContent = data.arn;
+      showToast("Nil Return Form GSTR-3B recorded successfully (Demo Mode)!", "success");
+      const arnEl = document.getElementById("arnDisplayVal") || document.querySelector("#arn-success-modal .font-mono.font-bold");
+      if (arnEl && (data.simulationReference || data.arn)) {
+        arnEl.textContent = data.simulationReference || data.arn;
+      }
+      const timeEl = document.getElementById("arnTimestampDisplay");
+      if (timeEl && data.filedAt) {
+        timeEl.textContent = new Date(data.filedAt).toLocaleString("en-IN") + " IST";
       }
       if (typeof openArnModal === "function") {
         openArnModal();
       }
       resetFileGstChoice();
+      if (typeof loadDashboardData === "function") {
+        loadDashboardData(period);
+      }
     } else {
       showToast(data.error || "Filing failed", "error");
       if (btn) {
@@ -5041,22 +5412,23 @@ window.submitNilFiling = async function() {
   }
 
   try {
+    const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
     const res = await fetch("/api/gst/nil-file", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        gstin: "32ABCDE1234F1Z5",
-        period: "102026",
-        authorisedPerson: "Leo Das",
+        period,
+        declarationConfirmed: true,
+        authorisedPerson: appState.gst?.business?.authorisedPerson || "Rajesh Sharma",
         mobileOtp: otp
       })
     });
     const json = await res.json();
     if (json.success) {
-      if (arnText) arnText.textContent = "Statutory ARN: " + json.arn;
+      if (arnText) arnText.textContent = "Simulated ARN: " + (json.simulationReference || json.arn);
       if (successBox) successBox.classList.remove("hidden");
-      if (submitBtn) submitBtn.textContent = "✓ Filed with GSTN";
-      showToast("🎉 Nil return successfully filed! ARN: " + json.arn, "success");
+      if (submitBtn) submitBtn.textContent = "✓ Filed (Sandbox Mode)";
+      showToast("🎉 Nil return recorded successfully in sandbox! Ref: " + (json.simulationReference || json.arn), "success");
     } else {
       showToast("Failed to file Nil return: " + (json.error || "Unknown error"), "error");
       if (submitBtn) {
@@ -5065,10 +5437,10 @@ window.submitNilFiling = async function() {
       }
     }
   } catch(e) {
-    const fallbackArn = "NIL-AA321026" + Math.floor(100000 + Math.random() * 900000);
-    if (arnText) arnText.textContent = "Statutory ARN: " + fallbackArn;
+    const fallbackArn = "SIM-NIL-AA321026" + Math.floor(100000 + Math.random() * 900000);
+    if (arnText) arnText.textContent = "Simulated ARN: " + fallbackArn;
     if (successBox) successBox.classList.remove("hidden");
-    showToast("🎉 Nil return filed! ARN: " + fallbackArn, "success");
+    showToast("🎉 Nil return recorded (Sandbox): " + fallbackArn, "success");
   }
 };
 

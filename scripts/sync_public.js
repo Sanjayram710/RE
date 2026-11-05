@@ -33,3 +33,4 @@ if (!allMatch) {
 } else {
   console.log('All public/ files are 100% byte-for-byte identical.');
 }
+

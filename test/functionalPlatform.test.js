@@ -545,3 +545,82 @@ test("UX Simplification: File GST 2-Card Decision, Nil Pre-Check & Dynamic Perio
   // Reset back to MH primary
   await mockApiCall("POST", `/api/gstins/${mhBranch.id}/activate`).run();
 });
+
+test("Data Integrity & Period Cleanup: Dynamic period switching, Nil verification & transparent disclosures", async () => {
+  const { handleFunctionalApi, formatPeriodDetails } = await import("../lib/functionalApi.js");
+  const fs = await import("fs");
+
+  function mockApiCall(method, pathname, query = {}, body = null) {
+    const req = { method, url: pathname, headers: {} };
+    let statusCode = 200;
+    let data = "";
+    const res = {
+      writeHead(code) { statusCode = code; },
+      end(payload) { data = payload; }
+    };
+    return {
+      run: async () => {
+        await handleFunctionalApi(req, res, pathname, method, query, body);
+        return { statusCode, body: data ? JSON.parse(data) : null };
+      }
+    };
+  }
+
+  // 1. Period formatting helper computes correct statutory deadlines without inventing dates
+  const oct = formatPeriodDetails("102026");
+  assert.equal(oct.full, "October 2026");
+  assert.equal(oct.short, "Oct 2026");
+  assert.equal(oct.gstr1Deadline, "November 11, 2026");
+  assert.equal(oct.gstr3bDeadline, "November 20, 2026");
+  assert.equal(oct.fy, "FY 2026-27");
+
+  const sep = formatPeriodDetails("092026");
+  assert.equal(sep.full, "September 2026");
+  assert.equal(sep.gstr3bDeadline, "October 20, 2026");
+
+  // 2. Dynamic Period Switching API
+  const switchPeriod = await mockApiCall("POST", "/api/context/period", {}, { period: "092026" }).run();
+  assert.equal(switchPeriod.statusCode, 200);
+  assert.equal(switchPeriod.body.activePeriod, "092026");
+  assert.equal(switchPeriod.body.details.full, "September 2026");
+
+  const getPeriod = await mockApiCall("GET", "/api/context/period").run();
+  assert.equal(getPeriod.body.activePeriod, "092026");
+  assert.equal(getPeriod.body.details.short, "Sep 2026");
+
+  // 3. Dynamic Dashboard Summary reads selected period
+  const dashSep = await mockApiCall("GET", "/api/dashboard/summary", { period: "092026" }).run();
+  assert.equal(dashSep.statusCode, 200);
+  assert.equal(dashSep.body.period, "092026");
+  assert.equal(dashSep.body.periodLabel, "September 2026");
+  assert.equal(dashSep.body.statutoryDeadlines.gstr3b, "October 20, 2026");
+  assert.equal(dashSep.body.environment.name, "Sandbox Simulation");
+
+  // Reset back to 102026
+  await mockApiCall("POST", "/api/context/period", {}, { period: "102026" }).run();
+
+  // 4. Copilot returns dynamic active context and period label
+  const copilotStatus = await mockApiCall("GET", "/api/copilot/status", { period: "112026" }).run();
+  assert.equal(copilotStatus.statusCode, 200);
+  assert.equal(copilotStatus.body.periodLabel, "November 2026");
+  assert.equal(copilotStatus.body.aiEngine.provider, "Local Grounded Engine");
+
+  const copilotAsk = await mockApiCall("POST", "/api/copilot/ask", {}, { question: "What is my total sales?", period: "102026" }).run();
+  assert.equal(copilotAsk.statusCode, 200);
+  assert.equal(copilotAsk.body.activeContext.period, "October 2026");
+
+  // 5. Nil return requires explicit confirmation declaration
+  const unconfirmed = await mockApiCall("POST", "/api/gst/nil-file", {}, { period: "102026", declarationConfirmed: false }).run();
+  assert.equal(unconfirmed.statusCode, 400);
+  assert.ok(unconfirmed.body.error.includes("declaration"));
+
+  // 6. UI & Modals: No alert('Modal dismissal simulation.') or broken handlers in codebase
+  const html = fs.readFileSync("index.html", "utf8");
+  const js = fs.readFileSync("app.js", "utf8");
+
+  assert.ok(!html.includes("Modal dismissal simulation"), "No dismissal simulation alerts in index.html");
+  assert.ok(!js.includes("Modal dismissal simulation"), "No dismissal simulation alerts in app.js");
+  assert.ok(html.includes('id="globalPeriodTrigger"'), "Interactive top-bar period selector trigger present");
+  assert.ok(html.includes('id="globalPeriodDropdownMenu"'), "Interactive period dropdown menu present");
+  assert.ok(html.includes('[SIMULATION / DEMO MODE — NOT TRANSMITTED TO GSTN COMMON PORTAL]'), "ARN modal has transparent simulation disclosure");
+});

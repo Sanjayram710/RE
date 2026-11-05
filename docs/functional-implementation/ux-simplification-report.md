@@ -91,13 +91,43 @@ When the user selects **YES** or clicks **Continue Filing Purchases**:
 
 ---
 
+---
+
+### 2.5 Modal Dismissal Fix & Interactive Period Selector Dropdown
+
+1. **Modal Dismissal Simulation Alert Removal:**
+   - Root Cause: In mock templates generated from Stitch, the modal close button had a mock inline handler `onclick="alert('Modal dismissal simulation.')"`.
+   - Resolution: Removed all mock alert handlers. Connected clean dismiss methods (`closePmt06Modal()`, `closeArnModal()`, `closeHealthScoreModal()`, `closeNewInvoiceModal()`).
+   - Attached a global `Escape` key listener and background backdrop click listener to dismiss any open modals and dropdowns smoothly without popping up browser alerts.
+   - Connected `submitChallanPayment()` to PMT-06 modal payment action to credit the electronic cash ledger and notify via subtle in-app toast instead of modal alerts.
+
+2. **Top-Nav Interactive Period Selector (`#globalPeriodTrigger`, `#globalPeriodDropdownMenu`):**
+   - Transformed the static period badge into an active interactive dropdown with selectable periods (`102026`, `092026`, `082026`, `112026`).
+   - Selecting a period updates the active context via `POST /api/context/period`, re-computes statutory return deadlines per the CGST Act, and re-hydrates live dashboard data and Copilot context.
+
+3. **Database-Backed Home Dashboard Hydration (`loadDashboardData`):**
+   - Implemented dynamic fetching from `GET /api/dashboard/summary?period=${period}`.
+   - Dynamically renders recorded invoices in `#dashRecentActivityBody` from SQLite records, or displays a clean empty state with "+ New Invoice" prompt.
+   - Replaced static live GSTN sync claim with transparent `Sandbox Simulation (Demo Data)` badge.
+
+4. **Transparent Simulation Disclosures:**
+   - Clearly labeled all simulated ARNs with `[SIMULATION / DEMO MODE — NOT TRANSMITTED TO GSTN COMMON PORTAL]`.
+   - Formatted simulated reference IDs as `SIM-NIL-...` and `SIM-AA...`.
+   - Replaced fake DSC token strings with transparent "Sandbox EVC Confirmation" labels.
+
+---
+
 ## 3. Parity & Test Evidence
 
 ### 3.1 SHA-256 Byte-for-Byte Parity
 Root files and `public/` distribution files are strictly synchronized:
-- `index.html` $\equiv$ `public/index.html` (SHA-256: `fbe7576cbfad0c3e...`)
-- `app.js` $\equiv$ `public/app.js` (SHA-256: `a1977341929bc9de...`)
+- `index.html` $\equiv$ `public/index.html` (SHA-256: `f8865d162c8bd321...`)
+- `app.js` $\equiv$ `public/app.js` (SHA-256: `407b26bb9534ffc6...`)
 - `style.css` $\equiv$ `public/style.css` (SHA-256: `66bf0f2aa2edd0fc...`)
+
+### 3.2 Automated Test Execution
+- **`npm test`**: **130 / 130 PASSING** (0 failures, duration: ~1.0s).
+- **`node scripts/verifyAcceptance.js`**: **12 / 12 CRITERIA SATISFIED WITH 100% SUCCESS**.
 
 ### 3.2 Automated Test Coverage
 - **Total Tests:** 129 passing (0 failing, 0 skipped).
@@ -108,3 +138,4 @@ Root files and `public/` distribution files are strictly synchronized:
   - Validates Nil filing acceptance on entities with zero transactions.
   - Validates removal of technical marketing clutter.
 - **Acceptance Script:** `node scripts/verifyAcceptance.js` — All 12 criteria passed with 100% success.
+
