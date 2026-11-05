@@ -89,3 +89,4 @@ A floating pill is pinned at the top-center (`fixed top-4 left-1/2 -translate-x-
 1. **Zero Session Mutation:** Kiosk Mode mutates only visual layout classes. It does not alter active organization IDs, active GSTINs, tax period selections, or user privilege tiers.
 2. **Permission Boundary:** Switching to Kiosk Mode does not unlock restricted administrative tabs or allow cross-tenant data inspection.
 3. **No Private Data Exposure:** Data rendered in Kiosk Mode is strictly scoped to the active tenant session.
+

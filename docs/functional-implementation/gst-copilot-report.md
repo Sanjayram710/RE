@@ -75,3 +75,4 @@ The Copilot suite (`#viewCopilotSuite`) provides an expansive 12-column assistan
 1. **Server-Side API Key Storage:** External LLM keys (`GEMINI_API_KEY` / `OPENAI_API_KEY`) remain strictly server-side in environment variables and are never bundled in frontend JavaScript.
 2. **Deterministic Fallback Transparency:** When no external LLM is configured, the Copilot explicitly displays its `deterministic_statutory` operational mode. It never falsely claims an active AI connection when running deterministically.
 3. **Tenant & GSTIN Isolation:** All queries are filtered through `getActiveGstin()`. The Copilot will never leak financial data from another state branch or organization.
+

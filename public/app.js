@@ -106,6 +106,7 @@ function showToast(message, type = "info") {
 document.addEventListener("DOMContentLoaded", async () => {
   setupSidebarCountdown();
   initAuth();
+  initKioskEventListeners();
   await fetchAppMode();
   await loadGstDemoData();
   
@@ -176,6 +177,7 @@ function executeSwitchSuite(suite) {
   const viewTaxCalc = document.getElementById("viewTaxCalcSuite");
   const viewPractice = document.getElementById("viewPracticeSuite");
   const viewVendor = document.getElementById("viewVendorSuite");
+  const viewFileGst = document.getElementById("viewFileGstSuite");
 
   // Always close dropdowns & mobile drawer when switching
   document.getElementById("filingDropdownMenu")?.classList.add("hidden");
@@ -187,7 +189,7 @@ function executeSwitchSuite(suite) {
   const allSuites = [
     viewItr, viewExpert, viewNotice, viewVault, viewGst, viewCopilot, 
     viewStartup, viewCompliance, viewHome, viewBills, viewRecon, 
-    viewTaxCalc, viewPractice, viewVendor
+    viewTaxCalc, viewPractice, viewVendor, viewFileGst
   ];
   allSuites.forEach(v => {
     if (v) {
@@ -206,8 +208,6 @@ function executeSwitchSuite(suite) {
     b.classList.remove('text-primary', 'font-bold');
     b.classList.add('text-secondary');
   });
-
-  const viewFileGst = document.getElementById("viewFileGstSuite");
 
   if (suite === "home") {
     if (viewHome) {
@@ -269,7 +269,7 @@ function executeSwitchSuite(suite) {
       viewCompliance.classList.remove("hidden");
       viewCompliance.style.display = "block";
     }
-    highlightSidebarNav('nav-link-health');
+    highlightSidebarNav('nav-link-copilot');
   } else if (suite === "vendor" || suite === "vendor-hub") {
     if (viewVendor) {
       viewVendor.classList.add("active");
@@ -3971,17 +3971,146 @@ window.resolveScoreMismatch = function() {
   showToast("ITC discrepancies accepted in 2B! Compliance score boosted to 100/100.", "success");
 };
 
-// 5. Kiosk Mode Operator Screen
-window.toggleKioskMode = function(enable) {
-  const overlay = document.getElementById('kioskOverlay');
-  if (enable) {
-    overlay?.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+// 5. UNIFIED KIOSK MODE CONTROLLER
+let isKioskModeActive = false;
+
+function toggleKioskMode(forceState) {
+  const nextState = typeof forceState === 'boolean' ? forceState : !isKioskModeActive;
+  if (nextState) {
+    enterKioskMode();
   } else {
-    overlay?.classList.add('hidden');
-    document.body.style.overflow = 'auto';
+    exitKioskMode();
   }
-};
+}
+
+function enterKioskMode() {
+  if (isKioskModeActive) return;
+  isKioskModeActive = true;
+  document.body.classList.add('kiosk-mode');
+
+  const banner = document.getElementById('kioskExitBanner');
+  if (banner) {
+    banner.classList.remove('hidden');
+    banner.style.display = 'flex';
+  }
+
+  const btn = document.getElementById('btnToggleKiosk');
+  if (btn) {
+    btn.innerHTML = `
+      <span class="material-symbols-outlined text-[16px] text-emerald-600">fullscreen_exit</span>
+      <span class="hidden sm:inline font-semibold text-emerald-700">Exit Kiosk</span>
+    `;
+    btn.setAttribute('title', 'Exit Kiosk Mode');
+  }
+
+  if (document.documentElement && !document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  }
+}
+
+function exitKioskMode() {
+  if (!isKioskModeActive && !document.body.classList.contains('kiosk-mode')) return;
+  isKioskModeActive = false;
+  document.body.classList.remove('kiosk-mode');
+
+  const banner = document.getElementById('kioskExitBanner');
+  if (banner) {
+    banner.classList.add('hidden');
+    banner.style.display = 'none';
+  }
+
+  const btn = document.getElementById('btnToggleKiosk');
+  if (btn) {
+    btn.innerHTML = `
+      <span class="material-symbols-outlined text-[16px] text-primary">fullscreen</span>
+      <span class="hidden sm:inline font-semibold">Kiosk Mode</span>
+    `;
+    btn.setAttribute('title', 'Enter Kiosk Mode (Distraction-Free Fullscreen)');
+  }
+
+  if (document.fullscreenElement) {
+    document.exitFullscreen?.().catch(() => {});
+  }
+}
+
+function initKioskEventListeners() {
+  if (window.__kioskListenersAttached) return;
+  window.__kioskListenersAttached = true;
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isKioskModeActive) {
+      exitKioskMode();
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && isKioskModeActive) {
+      exitKioskMode();
+    }
+  });
+}
+
+window.toggleKioskMode = toggleKioskMode;
+window.enterKioskMode = enterKioskMode;
+window.exitKioskMode = exitKioskMode;
+window.initKioskEventListeners = initKioskEventListeners;
+window.isKioskModeActive = () => isKioskModeActive;
+
+// 5b. Health Score Modal Controller
+function openHealthScoreModal() {
+  const m = document.getElementById('modalHealthScore');
+  if (m) {
+    m.classList.remove('hidden');
+    m.style.display = 'flex';
+  }
+}
+window.openHealthScoreModal = openHealthScoreModal;
+
+function closeHealthScoreModal() {
+  const m = document.getElementById('modalHealthScore');
+  if (m) {
+    m.classList.add('hidden');
+    m.style.display = 'none';
+  }
+}
+window.closeHealthScoreModal = closeHealthScoreModal;
+
+// 5c. Nil GST Return Submission
+async function submitNilReturn() {
+  const checkbox = document.getElementById("nil-confirm");
+  if (checkbox && !checkbox.checked) {
+    showToast("Please check the confirmation declaration first.", "warning");
+    return;
+  }
+  try {
+    const res = await fetch("/api/gst/nil-file", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        gstin: typeof getActiveGstin === 'function' ? getActiveGstin() : '27AAACA1234A1Z5',
+        period: "102026",
+        authorisedPerson: "Rajesh Sharma",
+        verificationMode: "EVC_OTP"
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast("Nil Return Form GSTR-3B filed successfully!", "success");
+      const arnEl = document.querySelector("#arn-success-modal .font-mono.font-bold");
+      if (arnEl && data.arn) {
+        arnEl.textContent = data.arn;
+      }
+      if (typeof openArnModal === 'function') {
+        openArnModal();
+      }
+    } else {
+      showToast(data.error || "Filing failed", "error");
+    }
+  } catch (err) {
+    showToast("Failed to submit Nil Return: " + err.message, "error");
+  }
+}
+window.submitNilReturn = submitNilReturn;
 
 // 6. Due-Dates & Notifications Simulator
 window.openDueDatesModal = async function() {

@@ -52,3 +52,4 @@ All layout tests passed across all 9 targeted breakpoints with **zero clipping, 
 - **Sizing Rule:** `max-w-2xl` / `max-w-4xl` with `w-full my-auto max-h-[90vh] overflow-y-auto`.
 - **Mobile Experience:** Modals expand to fill screen margins cleanly with `p-4 sm:p-6` padding, avoiding clipped buttons or out-of-reach save actions.
 - **Dismissal:** Tap on backdrop or click on the top-right `close` button immediately closes the modal without alert interruptions.
+

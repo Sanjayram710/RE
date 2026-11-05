@@ -162,3 +162,4 @@ Every visible interactive element across the entire SimpleGST application has be
 | **Backdrop Tap to Dismiss** | < 1024px | Tap outside sidebar to close drawer | `WORKING` | Dismisses drawer immediately without accidental clicks. |
 | **Horizontal Table Scroll** | 320px–430px | Prevent page horizontal scroll on tables | `WORKING` | Wrapped in `overflow-x-auto` with sticky headers. |
 | **Modal Viewport Bounds** | 320px–430px | Keep modals within screen bounds | `WORKING` | Modals sized `max-w-full max-h-[90vh] overflow-y-auto`. |
+

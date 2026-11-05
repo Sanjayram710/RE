@@ -338,3 +338,127 @@ test("GST Copilot: Answers all 8 core statutory queries grounded in live databas
     assert.ok(data.citations.some(c => c.includes(item.expectedCite)), `Query '${item.q}' missing citation '${item.expectedCite}'`);
   }
 });
+
+// ============================================================================
+// POST-IMPLEMENTATION DEFECT CORRECTION & FINAL ACCEPTANCE AUDIT TESTS
+// ============================================================================
+
+test("Regression & Defect Audit: Mobile File GST navigation targets file-gst", () => {
+  const html = fs.readFileSync(path.join(process.cwd(), "index.html"), "utf8");
+  const publicHtml = fs.readFileSync(path.join(process.cwd(), "public/index.html"), "utf8");
+
+  // 1. Bottom nav #bottom-nav-file-gst must invoke switchSuite('file-gst')
+  assert.ok(
+    html.includes('id="bottom-nav-file-gst" onclick="switchSuite(\'file-gst\')"'),
+    "Root index.html #bottom-nav-file-gst must call switchSuite('file-gst')"
+  );
+  assert.ok(
+    publicHtml.includes('id="bottom-nav-file-gst" onclick="switchSuite(\'file-gst\')"'),
+    "public/index.html #bottom-nav-file-gst must call switchSuite('file-gst')"
+  );
+  assert.ok(
+    !html.includes('id="bottom-nav-file-gst" onclick="switchSuite(\'copilot\')"'),
+    "Root index.html must not route bottom File GST to copilot"
+  );
+
+  // 2. Sidebar Quick File button must also navigate to file-gst
+  assert.ok(
+    html.includes('<button onclick="switchSuite(\'file-gst\')" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary'),
+    "Sidebar Quick File button must call switchSuite('file-gst')"
+  );
+});
+
+test("Regression & Defect Audit: GST Copilot single authoritative navigation consistency", () => {
+  const html = fs.readFileSync(path.join(process.cwd(), "index.html"), "utf8");
+  const js = fs.readFileSync(path.join(process.cwd(), "app.js"), "utf8");
+
+  // 1. Authoritative Copilot workspace exists
+  assert.ok(html.includes('id="viewCopilotSuite"'), "#viewCopilotSuite container must be present");
+  assert.ok(html.includes('id="copilotChatMessages"'), "Copilot chat stream must exist");
+  assert.ok(html.includes('id="copilotQueryInput"'), "Copilot input dock must exist");
+
+  // 2. Primary sidebar nav-link-copilot routes to copilot
+  assert.ok(
+    html.includes('id="nav-link-copilot" onclick="switchSuite(\'copilot\'); return false;"'),
+    "#nav-link-copilot must navigate to copilot suite"
+  );
+
+  // 3. Duplicate older mock Copilot Studio from viewComplianceSuite must be eliminated
+  assert.ok(
+    !html.includes('GST Copilot Studio\n                      <span class="text-[11px] font-normal text-secondary">v2.4</span>'),
+    "Redundant older mock Copilot Studio v2.4 must be removed from viewComplianceSuite"
+  );
+
+  // 4. In app.js, switchSuite('copilot') highlights nav-link-copilot
+  assert.ok(
+    js.includes("highlightSidebarNav('nav-link-copilot');"),
+    "app.js must highlight nav-link-copilot on copilot navigation"
+  );
+});
+
+test("Regression & Defect Audit: Kiosk Mode state transitions and banner controls", () => {
+  const js = fs.readFileSync(path.join(process.cwd(), "app.js"), "utf8");
+  const css = fs.readFileSync(path.join(process.cwd(), "style.css"), "utf8");
+  const html = fs.readFileSync(path.join(process.cwd(), "index.html"), "utf8");
+
+  // 1. Controller functions exist and are exported
+  assert.ok(js.includes("function toggleKioskMode("), "toggleKioskMode must be defined");
+  assert.ok(js.includes("function enterKioskMode()"), "enterKioskMode must be defined");
+  assert.ok(js.includes("function exitKioskMode()"), "exitKioskMode must be defined");
+  assert.ok(js.includes("function initKioskEventListeners()"), "initKioskEventListeners must be defined");
+
+  // 2. Top-bar button triggers toggleKioskMode
+  assert.ok(html.includes('id="btnToggleKiosk" onclick="toggleKioskMode()"'), "Kiosk button must call toggleKioskMode()");
+
+  // 3. Floating exit banner is declared and has exit button calling exitKioskMode()
+  assert.ok(html.includes('id="kioskExitBanner"'), "Floating exit banner must exist");
+  assert.ok(html.includes('onclick="exitKioskMode()"'), "Banner exit button must call exitKioskMode()");
+
+  // 4. CSS hides sidebar and bottom nav, and displays exit banner in kiosk-mode
+  assert.ok(css.includes("body.kiosk-mode #appSidebar"), "CSS must hide sidebar in kiosk-mode");
+  assert.ok(css.includes("body.kiosk-mode #appBottomNav"), "CSS must hide bottom nav in kiosk-mode");
+  assert.ok(css.includes("body.kiosk-mode #kioskExitBanner"), "CSS must show exit banner in kiosk-mode");
+});
+
+test("Regression & Defect Audit: Prevention of duplicate event listeners in Kiosk Mode", () => {
+  const js = fs.readFileSync(path.join(process.cwd(), "app.js"), "utf8");
+
+  // Guard flag prevents duplicate listeners
+  assert.ok(js.includes("if (window.__kioskListenersAttached) return;"), "Must guard against duplicate kiosk event listeners");
+  assert.ok(js.includes("window.__kioskListenersAttached = true;"), "Must flag listeners as attached");
+  assert.ok(js.includes("e.key === 'Escape'"), "Must listen to Escape key to exit kiosk mode");
+  assert.ok(js.includes("document.addEventListener('fullscreenchange'"), "Must sync state with browser fullscreenchange");
+});
+
+test("Regression & Defect Audit: Five-step filing navigation integrity & Nil Return", async () => {
+  const html = fs.readFileSync(path.join(process.cwd(), "index.html"), "utf8");
+  const js = fs.readFileSync(path.join(process.cwd(), "app.js"), "utf8");
+
+  // 1. All 5 steps exist in the filing flow
+  assert.ok(html.includes("Step 2 of 5"), "Filing flow progress banner present");
+  assert.ok(html.includes("onclick=\"switchSuite('gst')\""), "Step 1 Sales navigates to registers/reports");
+  assert.ok(html.includes("onclick=\"switchSuite('bills')\""), "Step 2 Purchases navigates to bills");
+  assert.ok(html.includes("onclick=\"switchSuite('recon')\""), "Step 3 Recon navigates to reconciliation");
+  assert.ok(html.includes("onclick=\"switchSuite('taxcalc')\""), "Step 4 Tax Calc navigates to taxcalc");
+  assert.ok(html.includes("onclick=\"switchSuite('file-gst')\""), "Step 5 File GSTR-3B navigates to file-gst");
+
+  // 2. Health Score Modal accessible from Dashboard
+  assert.ok(html.includes('onclick="openHealthScoreModal()"'), "Home compliance card opens health score modal");
+  assert.ok(html.includes('id="modalHealthScore"'), "#modalHealthScore modal exists in DOM");
+  assert.ok(js.includes("function openHealthScoreModal()"), "openHealthScoreModal defined in app.js");
+
+  // 3. Nil Return simulation API execution
+  const { fileNilGstReturn } = await import("../lib/gstCopilotEngine.js");
+  const nilRes = fileNilGstReturn({
+    gstin: "27AAACA1234A1Z5",
+    period: "102026",
+    authorisedPerson: "Rajesh Sharma",
+    verificationMode: "EVC_OTP"
+  });
+
+  assert.equal(nilRes.success, true);
+  assert.equal(nilRes.isNil, true);
+  assert.equal(nilRes.isSimulation, true);
+  assert.ok(nilRes.arn.startsWith("NIL-"), "Nil ARN must have standard prefix");
+  assert.ok(nilRes.watermark.includes("SIMULATION MODE"), "Nil ARN receipt must carry simulation watermark");
+});

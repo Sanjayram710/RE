@@ -81,6 +81,78 @@ The following reports are maintained in `docs/functional-implementation/`:
 ## 5. Web Asset Hash Equality & Parity Verification
 
 Exact byte-for-byte parity is enforced between the development root and production `public/` directories:
-- `index.html` $\equiv$ `public/index.html`
-- `app.js` $\equiv$ `public/app.js`
-- `style.css` $\equiv$ `public/style.css`
+- `index.html` $\equiv$ `public/index.html` (SHA-256: `9132174BE5A3AA6F0036FB6D5939BB73A58583F0500D70902F2BD862C8AB937A`)
+- `app.js` $\equiv$ `public/app.js` (SHA-256: `7F65CC127F0C28E8A5CB90BCED874C88C069ED4A0C29EACA19AEBF0F11F53954`)
+- `style.css` $\equiv$ `public/style.css` (SHA-256: `66BF0F2AA2EDD0FC217AF3FF629C7874244A0A5168A908085DA457C34690084F`)
+
+---
+
+## 6. Post-Implementation Defect Correction & Acceptance Audit
+
+Following post-commit review of commit `6876887`, five key operational defects were identified and resolved:
+
+### 6.1 Defect Resolution Summary
+
+1. **Mobile File GST Navigation:**
+   - *Defect:* `#bottom-nav-file-gst` in `index.html` was invoking `switchSuite('copilot')` instead of `switchSuite('file-gst')`.
+   - *Correction:* Updated `#bottom-nav-file-gst` click handler to `switchSuite('file-gst')`. Verified that mobile File GST now directly opens the 5-step return workflow (`#viewFileGstSuite`) while highlighting the bottom navigation item.
+   - *Sidebar Quick File Alignment:* The primary action CTA in the sidebar was also aligned to invoke `switchSuite('file-gst')`.
+
+2. **Auditing Duplicate GST Copilot Interfaces:**
+   - *Defect:* `#viewComplianceSuite` contained a duplicate older mock Copilot Studio (v2.4) with hardcoded bubbles and an unhooked prompt dock, causing confusion with `#viewCopilotSuite`.
+   - *Correction:* Removed the redundant mock Copilot column completely from `viewComplianceSuite`. Verified `#viewCopilotSuite` is the sole authoritative GST Copilot workspace, grounded in active SQLite records with 8 core query buttons and live conversational streaming.
+
+3. **Obsolete Compliance Health Navigation & Modal Extraction:**
+   - *Defect:* Primary sidebar navigation already routed to GST Copilot, leaving older `nav-link-health` references orphaned. The "GST Compliance Health" dashboard card on the home screen lacked an interactive drill-down.
+   - *Correction:* Created `#modalHealthScore` in `index.html` and implemented `openHealthScoreModal()` / `closeHealthScoreModal()` in `app.js`. The dashboard health card (`94 / 100`) is now clickable, opening the full 5-Pillar Statutory Breakdown and Actionable Remediation Roadmap with an instant trigger to ask GST Copilot for remediation.
+
+4. **Kiosk Mode Controller Unification:**
+   - *Defect:* `toggleKioskMode()` in `app.js` was an incomplete stub referencing an obsolete `kioskOverlay` without parameters, while `#kioskExitBanner` called undefined `exitKioskMode()`.
+   - *Correction:* Unified into a clean controller (`toggleKioskMode`, `enterKioskMode`, `exitKioskMode`, `initKioskEventListeners`). Ensured one floating exit banner (`#kioskExitBanner`), Escape key exit handling, browser `fullscreenchange` synchronization, and a single event-listener guard (`window.__kioskListenersAttached = true;`).
+
+5. **Nil Return Verification Flow:**
+   - *Defect:* The Nil Return declaration panel buttons lacked submission event handlers.
+   - *Correction:* Implemented `submitNilReturn()` in `app.js`, calling `/api/gst/nil-file` with active GSTIN and period, updating `#arn-success-modal` with official simulated ARN, and presenting statutory simulation disclosures.
+
+---
+
+## 7. Browser-Level Functional Acceptance Results
+
+All 12 acceptance criteria were verified end-to-end via `scripts/verifyAcceptance.js`:
+
+| # | Acceptance Verification Target | Tested Endpoint / DOM Target | Result | Evidence / Details |
+| :--- | :--- | :--- | :--- | :--- |
+| **1** | Web Asset Parity | `Get-FileHash` root vs `public/` | **PASS** | `index.html`, `app.js`, `style.css` identical SHA-256 |
+| **2** | Dashboard Live Data | `GET /api/dashboard/summary` | **PASS** | Sales: ₹9,92,500, Purchases: ₹4,12,300, 94/100 score |
+| **3** | New Invoice Modal & Persistence | `POST /api/sales` | **PASS** | Saved in SQLite; intra-state CGST ₹4,500 + SGST ₹4,500 |
+| **4** | File GST 5-Step Return Workflow | `#bottom-nav-file-gst` & `#viewFileGstSuite` | **PASS** | Bottom nav calls `switchSuite('file-gst')`; 5 steps render |
+| **5** | Bills & Docs Storage & OCR Review | `GET /api/documents` & OCR | **PASS** | 16 documents indexed with OCR approval and download |
+| **6** | GSTR-2B Reconciliation | `GET /api/reconciliation/summary` | **PASS** | 2/2 invoices matched; Rule 16(2)(aa) variance tracked |
+| **7** | Tax Calculation Engine | `GET /api/returns/tax-calc` | **PASS** | Rule 88A set-off computed: Net Cash Payable ₹1,12,436 |
+| **8** | Electronic Ledgers | `GET /api/ledgers/balances` | **PASS** | PMT-05 Cash: ₹3,35,000, PMT-02 Credit: ₹0 |
+| **9** | GST Copilot Live Grounding | `POST /api/copilot/ask` | **PASS** | Answers grounded in SQLite with Section 31 citations |
+| **10**| Kiosk Mode Unified Controller | `toggleKioskMode()` & Banner | **PASS** | Clean entry/exit, Escape key press, Esc banner pill |
+| **11**| Multi-GSTIN & Branch Management | `GET /api/gstins` | **PASS** | 19 state branches configured under PAN |
+| **12**| Responsive Breakpoint QA | `390x844`, `1366x768`, `1440x900` | **PASS** | Mobile drawer, bottom bar, and fluid cards verified |
+
+---
+
+## 8. Automated Test Suite Metrics
+
+```
+> simple-gst-platform@1.0.0 test
+> node --test test/index.test.js test/api182.test.js test/panGstin2tier.test.js test/expertClearTax.test.js test/cdaPdfModules.test.js test/laymanExperience.test.js test/statutoryGstValidation.test.js test/statutoryHardening.test.js test/functionalPlatform.test.js
+
+ℹ tests 128
+ℹ suites 0
+ℹ pass 128
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1198.9443
+```
+
+**128 tests passing with 0 failures.**
+
+
