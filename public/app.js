@@ -110,8 +110,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadGstDemoData();
   
   // Default to GST Return Assistant (Guiding Path) on load
-  switchSuite('copilot');
-  selectFilingEntity('32ABCDE1234F1Z5', 'Malabar Spice Traders', 'GST & Business');
+  switchSuite('home');
+  selectFilingEntity('27AAACA1234A1Z5', 'Apex Retailers Pvt Ltd', 'Main Branch');
   
   // Close dropdowns on outside click
   document.addEventListener("click", (e) => {
@@ -177,13 +177,10 @@ function executeSwitchSuite(suite) {
   const viewPractice = document.getElementById("viewPracticeSuite");
   const viewVendor = document.getElementById("viewVendorSuite");
 
-  const btnCopilot = document.getElementById("btnSuiteCopilot");
-  const btnGst = document.getElementById("btnSuiteGst");
-  const btnMore = document.getElementById("btnSuiteMoreServices");
-  const moreServicesMenu = document.getElementById("moreServicesMenu");
-
-  // Always close dropdown menu & mobile drawer when switching
-  moreServicesMenu?.classList.add("hidden");
+  // Always close dropdowns & mobile drawer when switching
+  document.getElementById("filingDropdownMenu")?.classList.add("hidden");
+  document.getElementById("roleDropdownMenu")?.classList.add("hidden");
+  document.getElementById("profileDropdownMenu")?.classList.remove("active");
   closeMobileSidebar();
 
   // Reset all suites
@@ -201,9 +198,9 @@ function executeSwitchSuite(suite) {
   });
 
   // Reset nav highlights
-  [btnCopilot, btnGst, btnMore].forEach(b => b?.classList.remove("active"));
   document.querySelectorAll('.sidebar-nav-link').forEach(l => {
     l.classList.remove('bg-surface-container-high', 'text-primary', 'font-bold', 'border-l-4', 'border-primary');
+    l.classList.add('text-on-surface-variant');
   });
   document.querySelectorAll('.bottom-nav-btn').forEach(b => {
     b.classList.remove('text-primary', 'font-bold');
@@ -218,6 +215,14 @@ function executeSwitchSuite(suite) {
     }
     highlightSidebarNav('nav-link-home');
     highlightBottomNav('bottom-nav-home');
+  } else if (suite === "copilot" || suite === "guided" || suite === "file-gst") {
+    if (viewCopilot) {
+      viewCopilot.classList.add("active");
+      viewCopilot.classList.remove("hidden");
+      viewCopilot.style.display = "block";
+    }
+    highlightSidebarNav('nav-link-file-gst');
+    highlightBottomNav('bottom-nav-file-gst');
   } else if (suite === "bills" || suite === "bills-docs") {
     if (viewBills) {
       viewBills.classList.add("active");
@@ -232,106 +237,74 @@ function executeSwitchSuite(suite) {
       viewRecon.classList.remove("hidden");
       viewRecon.style.display = "block";
     }
-    btnGst?.classList.add("active");
-    highlightSidebarNav('nav-link-reports');
-  } else if (suite === "tax-calc") {
+    highlightSidebarNav('nav-link-recon');
+  } else if (suite === "tax-calc" || suite === "taxcalc") {
     if (viewTaxCalc) {
       viewTaxCalc.classList.add("active");
       viewTaxCalc.classList.remove("hidden");
       viewTaxCalc.style.display = "block";
     }
-    btnCopilot?.classList.add("active");
-    highlightSidebarNav('nav-link-file-gst');
+    highlightSidebarNav('nav-link-taxcalc');
   } else if (suite === "gst" || suite === "reports") {
     if (viewGst) {
       viewGst.classList.add("active");
       viewGst.classList.remove("hidden");
       viewGst.style.display = "block";
     }
-    btnGst?.classList.add("active");
     highlightSidebarNav('nav-link-reports');
     highlightBottomNav('bottom-nav-reports');
-    if (document.getElementById("currentFilingPan")) {
-      document.getElementById("currentFilingPan").textContent = appState.gst?.business?.gstin || "27AAACA1234A1Z5";
-    }
-    if (typeof showGstScreen === "function") {
-      showGstScreen(appState?.gst?.currentScreen || "reports");
-    }
-  } else if (suite === "expert" || suite === "tax-experts") {
-    if (viewExpert) {
-      viewExpert.classList.add("active");
-      viewExpert.classList.remove("hidden");
-      viewExpert.style.display = "block";
-    }
-    btnMore?.classList.add("active");
-    highlightSidebarNav('nav-link-experts');
-    highlightBottomNav('bottom-nav-experts');
-    if (typeof loadExpertPlans === "function") loadExpertPlans();
-    if (typeof recalculateSavingsEstimator === "function") recalculateSavingsEstimator();
   } else if (suite === "compliance" || suite === "health") {
     if (viewCompliance) {
       viewCompliance.classList.add("active");
       viewCompliance.classList.remove("hidden");
       viewCompliance.style.display = "block";
     }
-    btnMore?.classList.add("active");
     highlightSidebarNav('nav-link-health');
-    if (typeof loadComplianceScore === "function") loadComplianceScore();
-  } else if (suite === "practice" || suite === "ca-hub") {
-    if (viewPractice) {
-      viewPractice.classList.add("active");
-      viewPractice.classList.remove("hidden");
-      viewPractice.style.display = "block";
-    }
-    btnMore?.classList.add("active");
-    highlightSidebarNav('nav-link-ca-hub');
   } else if (suite === "vendor" || suite === "vendor-hub") {
     if (viewVendor) {
       viewVendor.classList.add("active");
       viewVendor.classList.remove("hidden");
       viewVendor.style.display = "block";
     }
-    highlightSidebarNav('nav-link-bills');
-  } else if (suite === "startup" || suite === "settings") {
+    highlightSidebarNav('nav-link-vendor');
+  } else if (suite === "practice" || suite === "ca") {
+    if (viewPractice) {
+      viewPractice.classList.add("active");
+      viewPractice.classList.remove("hidden");
+      viewPractice.style.display = "block";
+    }
+    highlightSidebarNav('nav-link-practice');
+  } else if (suite === "expert" || suite === "tax-experts") {
+    if (viewExpert) {
+      viewExpert.classList.add("active");
+      viewExpert.classList.remove("hidden");
+      viewExpert.style.display = "block";
+    }
+    highlightSidebarNav('nav-link-experts');
+    highlightBottomNav('bottom-nav-experts');
+  } else if (suite === "startup" || suite === "settings" || suite === "multigstin") {
     if (viewStartup) {
       viewStartup.classList.add("active");
       viewStartup.classList.remove("hidden");
       viewStartup.style.display = "block";
     }
-    btnMore?.classList.add("active");
     highlightSidebarNav('nav-link-settings');
-    if (typeof selectStartupType === "function") {
-      selectStartupType(window.cdaState?.selectedStartupType || 'proprietorship');
-    }
   } else if (suite === "notice") {
     if (viewNotice) {
       viewNotice.classList.add("active");
       viewNotice.classList.remove("hidden");
       viewNotice.style.display = "block";
     }
-    btnMore?.classList.add("active");
   } else if (suite === "vault") {
     if (viewVault) {
       viewVault.classList.add("active");
       viewVault.classList.remove("hidden");
       viewVault.style.display = "block";
     }
-    btnMore?.classList.add("active");
-    if (typeof loadVaultDocuments === "function") loadVaultDocuments("all");
-  } else {
-    // Default: 'copilot' / 'file-gst' (Guiding Path)
-    if (viewCopilot) {
-      viewCopilot.classList.add("active");
-      viewCopilot.classList.remove("hidden");
-      viewCopilot.style.display = "block";
-    }
-    btnCopilot?.classList.add("active");
-    highlightSidebarNav('nav-link-file-gst');
-    highlightBottomNav('bottom-nav-file-gst');
-    if (typeof fetchCopilotPipeline === "function") fetchCopilotPipeline();
-    if (typeof renderCadenceTimeline === "function") renderCadenceTimeline();
-    if (typeof onDelaySliderChange === "function") onDelaySliderChange(0);
   }
+
+  // Scroll smoothly to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 window.switchSuite = executeSwitchSuite;
 
@@ -1034,9 +1007,16 @@ function toggleFilingDropdown(e) {
 }
 
 function selectFilingEntity(pan, name, subtitle) {
-  document.getElementById("currentFilingPan").textContent = pan;
+  const panEl = document.getElementById("currentFilingPan");
+  if (panEl) panEl.textContent = pan;
+  const nameEl = document.getElementById("currentFilingEntityName");
+  if (nameEl) nameEl.textContent = name;
+  const sidePan = document.getElementById("sidebarGstinDisplay");
+  if (sidePan) sidePan.textContent = pan;
+  const sideEntity = document.getElementById("sidebarEntityDisplay");
+  if (sideEntity) sideEntity.textContent = name;
+  document.getElementById("filingDropdownMenu")?.classList.add("hidden");
   document.getElementById("filingDropdownMenu")?.classList.remove("active");
-  switchSuite("copilot");
 }
 
 function toggleProfileDropdown(e) {
