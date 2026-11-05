@@ -52,6 +52,7 @@ async function runAcceptanceVerification() {
   }
 
   let authToken = null;
+  let csrfToken = null;
   async function req(urlPath, method = "GET", postBody = null) {
     const res = createMockRes();
     const reqObj = new EventEmitter();
@@ -61,6 +62,9 @@ async function runAcceptanceVerification() {
     if (authToken) {
       reqObj.headers["authorization"] = `Bearer ${authToken}`;
       reqObj.headers["cookie"] = `simplegst_session=${authToken}`;
+    }
+    if (csrfToken) {
+      reqObj.headers["x-csrf-token"] = csrfToken;
     }
 
     const promise = handleRequest(reqObj, res);
@@ -78,13 +82,29 @@ async function runAcceptanceVerification() {
 
   try {
     // Authenticate via official login endpoint
-    const loginRes = await req("/api/auth/login", "POST", {
+    let loginRes = await req("/api/auth/login", "POST", {
       email: "rajesh.sharma@apexretail.com",
-      password: "password"
+      password: "ApexAdmin@2026"
     });
+    if (loginRes.status === 401) {
+      const bodyJson = JSON.parse(loginRes.body);
+      if (bodyJson.requiresReset) {
+        // Execute secure password reset migration path
+        const resetReq = await req("/api/auth/request-reset", "POST", { email: "rajesh.sharma@apexretail.com" });
+        assert.strictEqual(resetReq.status, 200);
+        const resetToken = JSON.parse(resetReq.body).resetToken;
+        const resetConfirm = await req("/api/auth/reset-password", "POST", { token: resetToken, newPassword: "ApexAdmin@2026" });
+        assert.strictEqual(resetConfirm.status, 200);
+        loginRes = await req("/api/auth/login", "POST", {
+          email: "rajesh.sharma@apexretail.com",
+          password: "ApexAdmin@2026"
+        });
+      }
+    }
     assert.strictEqual(loginRes.status, 200);
     const loginData = JSON.parse(loginRes.body);
     authToken = loginData.sessionToken;
+    csrfToken = loginData.csrfToken;
 
     // 3. Dashboard loads with live data
     const dashRes = await req("/api/dashboard/summary");

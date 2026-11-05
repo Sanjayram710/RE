@@ -55,21 +55,41 @@ All vulnerabilities have been resolved. The platform now implements strict crypt
 
 ### 3.3 Endpoint Gating & Flow Protection
 - **Public Routes**:
-  - `POST /api/auth/login`: Validates user credentials, creates session, and issues `Set-Cookie: simplegst_session=<token>; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`.
-  - `GET /api/auth/session`: Returns `{ authenticated: false, user: null }` for unauthenticated callers, or full authenticated session details for valid sessions.
+  - `POST /api/auth/login`: Validates user credentials, creates session, and issues `Set-Cookie` with `simplegst_session` and `simplegst_csrf` cookies.
+  - `GET /api/auth/session`: Returns `{ authenticated: false, user: null }` for unauthenticated callers, or authenticated context details WITHOUT raw session tokens or IDs.
+  - `POST /api/auth/request-reset` & `POST /api/auth/reset-password`: Implements a secure tokenized password reset flow with automated session revocation.
 - **Tenant-Scoped Routes**:
   - Any request with `!context.authenticated` returns **HTTP 401 Unauthorized**.
   - Any request with `context.forbiddenOrg` or `context.forbiddenGstin` returns **HTTP 403 Forbidden**.
+  - Any state-changing cookie-authenticated call without a matching `X-CSRF-Token` header returns **HTTP 403 Forbidden**.
+- **Role-Based Access Control (RBAC)**:
+  - `AUDITOR`: Strictly read-only on all tenant records. Any `POST`, `PUT`, `DELETE`, or `PATCH` request returns **HTTP 403 Forbidden**.
+  - `ACCOUNTANT`: Restricted from filing final statutory returns (`POST /api/gst/nil-file`), registering GSTINs (`POST /api/gstins`), and executing challan payments (`POST /api/challans/simulate-payment`).
 - **Logout Flow**:
-  - `POST /api/auth/logout`: Revokes active session and clears cookie (`Expires=Thu, 01 Jan 1970 00:00:00 GMT`).
+  - `POST /api/auth/logout`: Revokes active session and clears both `simplegst_session` and `simplegst_csrf` cookies (`Expires=Thu, 01 Jan 1970 00:00:00 GMT`).
 - **Context Switch Endpoint**:
   - `POST /api/auth/switch-context`: Strictly checks that caller is an authorized member of `orgId` and that `gstinId` belongs to that organization before updating context.
 
 ---
 
-## 4. Test Suite & Verification Results
+## 4. Final Authentication Security Hardening
 
-A comprehensive test suite of **137 test cases** was executed across 9 test modules:
+| Security Area | Hardening Specification | Implementation |
+|---|---|---|
+| **Password Verification** | Remove all development shortcuts, plaintext, and simple SHA-256 acceptance. Require salted PBKDF2 (`pbkdf2$salt$iterations$derivedKey`). | Hardened `userRepo.verifyPassword()` with `crypto.pbkdf2Sync` and `crypto.timingSafeEqual`. Explicitly rejected `development_hash_apex`. |
+| **Legacy Password Migration** | Never silently migrate using a known default password. Flag legacy passwords during login and require reset. | `userRepo.isLegacyPassword()` detects non-PBKDF2 passwords and returns `HTTP 401` with `requiresReset: true`. |
+| **Password Reset Flow** | Tokenized reset mechanism with expiration, single-use enforcement, and session revocation. | `password_resets` table, `passwordResetRepo`, `POST /api/auth/request-reset`, and `POST /api/auth/reset-password`. |
+| **Session Token Redaction** | Raw session tokens and internal session IDs must never be exposed via session status endpoints. | Redacted `sessionToken` and `sessionId` from `GET /api/auth/session` response payload. |
+| **Secure Cookies** | `HttpOnly`, `SameSite=Lax`, `Path=/`, lifetime parity, and dynamic `; Secure` over HTTPS. | `buildSessionCookie` and `buildCsrfCookie` check `x-forwarded-proto === "https"` or `NODE_ENV === "production"`. |
+| **CSRF Defense** | Strict Origin/Referer allowlist and double-submit token pattern for cookie mutations. | Validated incoming `Origin` against allowlist; enforced `X-CSRF-Token` match against `session.csrf_token` for cookie requests. |
+| **CORS Hardening** | Replace wildcard `*` with explicit allowed origin echo and `Access-Control-Allow-Credentials: true`. Untrusted preflights rejected. | Updated `server.js` to echo allowed origins, set credentials, and reject untrusted `OPTIONS` with `403 Forbidden`. |
+| **Role-Based Gating** | Segregate permissions for `OWNER`, `CA`, `ACCOUNTANT`, and `AUDITOR`. | Gated mutation routes against `AUDITOR` and statutory filing / registration / payments against `ACCOUNTANT`. |
+
+---
+
+## 5. Test Suite & Verification Results
+
+A comprehensive test suite of **138 test cases** was executed across 9 test modules:
 
 ```bash
 npm test
@@ -99,12 +119,13 @@ npm test
 ✔ Security & Simulation Integrity: XSS Escaping and SIMULATED_NOT_TRANSMITTED Status
 ✔ Security Audit: Authentication & Session Token Handling (Reject Unknown, Expired, Revoked, Invalid)
 ✔ Security Audit: Multi-Tenant Authorization, Cross-Tenant Gating & Credential Login/Logout
+✔ Security Audit: Authentication Security Final Hardening Suite
 
-ℹ tests 137
+ℹ tests 138
 ℹ suites 0
-ℹ pass 137
+ℹ pass 138
 ℹ fail 0
-ℹ duration_ms 851.4425
+ℹ duration_ms 2147.3555
 ```
 
 ### Full Acceptance Audit Verification:
@@ -116,17 +137,18 @@ node scripts/verifyAcceptance.js
 | ITEM                                    | STATUS | DETAILS                  |
 +-----------------------------------------------------------------------------+
 | 1. Asset Parity                          | PASS   | index.html, app.js, and style.css have i |
-| 2. Dashboard Live Data                   | PASS   | Sales: ₹13,92,500, Purchases: ₹4,12,300  |
-| 3. New Invoice Modal & Persistence       | PASS   | Invoice INV-TEST-5784 stored in SQLite w |
+| 2. Dashboard Live Data                   | PASS   | Sales: ₹14,92,500, Purchases: ₹4,12,300  |
+| 3. New Invoice Modal & Persistence       | PASS   | Invoice INV-TEST-6781 stored in SQLite w |
 | 4. File GST 5-Step Return Workflow       | PASS   | Mobile bottom nav points to file-gst and |
-| 5. Bills & Docs Storage & OCR Review     | PASS   | 41 documents indexed with OCR approval a |
+| 5. Bills & Docs Storage & OCR Review     | PASS   | 45 documents indexed with OCR approval a |
 | 6. GSTR-2B Reconciliation                | PASS   | 2/2 matched; ₹0 at risk u/s 16(2)(aa)    |
-| 7. Tax Calculation Engine                | PASS   | Rule 88A computed: Net Cash Payable ₹1,8 |
-| 8. Electronic Ledgers (PMT-05/06/09)     | PASS   | Cash: ₹8,35,000, Credit: ₹0              |
+| 7. Tax Calculation Engine                | PASS   | Rule 88A computed: Net Cash Payable ₹2,0 |
+| 8. Electronic Ledgers (PMT-05/06/09)     | PASS   | Cash: ₹9,15,000, Credit: ₹0              |
 | 9. GST Copilot Live Grounding            | PASS   | Answer grounded in live SQLite database  |
 | 10. Kiosk Mode Unified Controller        | PASS   | Single controller, Escape key listener,  |
-| 11. Multi-GSTIN & Branch Management      | PASS   | 44 state branches registered in platform |
+| 11. Multi-GSTIN & Branch Management      | PASS   | 48 state branches registered in platform |
 | 12. Responsive Breakpoint QA             | PASS   | Verified layout density and controls acr |
 +-----------------------------------------------------------------------------+
 ALL 12 ACCEPTANCE AUDIT CRITERIA SATISFIED WITH 100% SUCCESS.
 ```
+

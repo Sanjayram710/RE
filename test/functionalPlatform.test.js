@@ -52,8 +52,11 @@ let defaultTestSessionToken = null;
 function getAuthReq(extraHeaders = {}) {
   if (!defaultTestSessionToken) {
     seedDevelopmentData();
-    const existing = db.prepare("SELECT token FROM sessions WHERE token = ? AND is_revoked = 0").get("tok-test-apex-valid-token");
+    const existing = db.prepare("SELECT * FROM sessions WHERE token = ?").get("tok-test-apex-valid-token");
     if (existing) {
+      if (existing.is_revoked) {
+        db.prepare("UPDATE sessions SET is_revoked = 0, revoked_at = NULL WHERE id = ?").run(existing.id);
+      }
       defaultTestSessionToken = existing.token;
     } else {
       const user = userRepo.findByEmail("rajesh.sharma@apexretail.com") || db.prepare("SELECT * FROM users LIMIT 1").get();
@@ -1156,12 +1159,12 @@ test("Security Audit: Multi-Tenant Authorization, Cross-Tenant Gating & Credenti
   const randB = Math.floor(1000 + Math.random() * 9000);
 
   const orgA = orgRepo.create({ name: `Tenant A Corp ${randA}`, pan: `AAAAP${randA}A` });
-  const userA = userRepo.create({ email: `ceo@tenant-a-${randA}.com`, passwordHash: "pbkdf2$development_hash_apex", fullName: "Alice CEO", role: "OWNER" });
+  const userA = userRepo.create({ email: `ceo@tenant-a-${randA}.com`, passwordHash: userRepo.hashPassword("password"), fullName: "Alice CEO", role: "OWNER" });
   orgRepo.addMember(orgA.id, userA.id, "OWNER");
   const gstinA = gstinRepo.create({ orgId: orgA.id, gstin: `27AAAAP${randA}A1Z1`, tradeName: "Branch A", stateCode: "27", stateName: "Maharashtra", isPrimary: 1 });
 
   const orgB = orgRepo.create({ name: `Tenant B Corp ${randB}`, pan: `BBBBB${randB}B` });
-  const userB = userRepo.create({ email: `cfo@tenant-b-${randB}.com`, passwordHash: "pbkdf2$development_hash_apex", fullName: "Bob CFO", role: "OWNER" });
+  const userB = userRepo.create({ email: `cfo@tenant-b-${randB}.com`, passwordHash: userRepo.hashPassword("password"), fullName: "Bob CFO", role: "OWNER" });
   orgRepo.addMember(orgB.id, userB.id, "OWNER");
   const gstinB = gstinRepo.create({ orgId: orgB.id, gstin: `29BBBBB${randB}B1Z2`, tradeName: "Branch B", stateCode: "29", stateName: "Karnataka", isPrimary: 1 });
 
@@ -1169,7 +1172,8 @@ test("Security Audit: Multi-Tenant Authorization, Cross-Tenant Gating & Credenti
   const loginA = await mockApiCall({}, "POST", "/api/auth/login", {}, { email: userA.email, password: "password" }).run();
   assert.equal(loginA.statusCode, 200, "User A login must succeed");
   assert.ok(loginA.body.sessionToken, "Login must return cryptographic sessionToken");
-  assert.ok(loginA.headers["Set-Cookie"].includes("simplegst_session="), "Login must set HTTP-only cookie");
+  const cookieStrA = Array.isArray(loginA.headers["Set-Cookie"]) ? loginA.headers["Set-Cookie"].join("; ") : (loginA.headers["Set-Cookie"] || "");
+  assert.ok(cookieStrA.includes("simplegst_session="), "Login must set HTTP-only cookie");
 
   const tokenA = loginA.body.sessionToken;
   const authHeadersA = { authorization: `Bearer ${tokenA}` };
@@ -1215,7 +1219,8 @@ test("Security Audit: Multi-Tenant Authorization, Cross-Tenant Gating & Credenti
   // 9. Logout flow revokes session
   const logoutA = await mockApiCall(authHeadersA, "POST", "/api/auth/logout").run();
   assert.equal(logoutA.statusCode, 200, "Logout must succeed");
-  assert.ok(logoutA.headers["Set-Cookie"].includes("Expires="), "Logout must clear cookie");
+  const logoutCookieStr = Array.isArray(logoutA.headers["Set-Cookie"]) ? logoutA.headers["Set-Cookie"].join("; ") : (logoutA.headers["Set-Cookie"] || "");
+  assert.ok(logoutCookieStr.includes("Expires="), "Logout must clear cookie");
 
   // After logout, token is revoked -> returns 401
   const postLogoutCall = await mockApiCall(authHeadersA, "GET", "/api/dashboard/summary").run();
@@ -1224,4 +1229,269 @@ test("Security Audit: Multi-Tenant Authorization, Cross-Tenant Gating & Credenti
   // Invalid login credentials rejected (HTTP 401)
   const badLogin = await mockApiCall({}, "POST", "/api/auth/login", {}, { email: userA.email, password: "wrong-password" }).run();
   assert.equal(badLogin.statusCode, 401, "Bad password must return 401");
+});
+
+test("Security Audit: Authentication Security Final Hardening Suite", async () => {
+  const { handleFunctionalApi, isHttpsRequest, isAllowedOrigin, buildSessionCookie, buildCsrfCookie, buildClearCookies } = await import("../lib/functionalApi.js");
+  const { userRepo, orgRepo, gstinRepo, sessionRepo, passwordResetRepo, db } = await import("../lib/db.js");
+  const { handleRequest } = await import("../server.js");
+
+  function mockApiCall(headers, method, pathname, query = {}, body = null) {
+    const req = { method, url: pathname, headers: headers || {} };
+    let statusCode = 200;
+    let data = "";
+    const resHeaders = {};
+    const res = {
+      writeHead(code, h = {}) { statusCode = code; Object.assign(resHeaders, h); },
+      end(payload) { data = payload; },
+      setHeader(k, v) { resHeaders[k] = v; }
+    };
+    return {
+      run: async () => {
+        await handleFunctionalApi(req, res, pathname, method, query, body);
+        return { statusCode, headers: resHeaders, body: data ? JSON.parse(data) : null };
+      }
+    };
+  }
+
+  // 1. Remove development password bypasses
+  assert.equal(userRepo.verifyPassword("pbkdf2$development_hash_apex", "admin123"), false);
+  assert.equal(userRepo.verifyPassword("pbkdf2$development_hash_apex", "password"), false);
+  assert.equal(userRepo.verifyPassword("pbkdf2$development_hash_apex", "apex123"), false);
+  assert.equal(userRepo.verifyPassword("pbkdf2$development_hash_apex", "development_hash_apex"), false);
+  assert.equal(userRepo.verifyPassword("plainpassword123", "plainpassword123"), false);
+  assert.equal(userRepo.verifyPassword("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", ""), false);
+
+  // 2. Reject legacy credentials with migration notification
+  const randSec = Math.floor(1000 + Math.random() * 9000);
+  const legacyUser = userRepo.create({
+    email: `legacy-${randSec}@apexretail.com`,
+    passwordHash: "plaintext_legacy_pass",
+    fullName: "Legacy User",
+    role: "OWNER"
+  });
+  const legacyLogin = await mockApiCall({}, "POST", "/api/auth/login", {}, { email: legacyUser.email, password: "plaintext_legacy_pass" }).run();
+  assert.equal(legacyLogin.statusCode, 401);
+  assert.equal(legacyLogin.body.requiresReset, true);
+
+  // 3. Secure password-reset flow
+  const resetReq = await mockApiCall({}, "POST", "/api/auth/request-reset", {}, { email: legacyUser.email }).run();
+  assert.equal(resetReq.statusCode, 200);
+  assert.ok(resetReq.body.resetToken, "Reset token must be returned");
+
+  // Invalid/short password rejected
+  const shortPassRes = await mockApiCall({}, "POST", "/api/auth/reset-password", {}, { token: resetReq.body.resetToken, newPassword: "short" }).run();
+  assert.equal(shortPassRes.statusCode, 400);
+
+  // Valid password reset
+  const resetConfirm = await mockApiCall({}, "POST", "/api/auth/reset-password", {}, { token: resetReq.body.resetToken, newPassword: "StrongPassword@2026" }).run();
+  assert.equal(resetConfirm.statusCode, 200);
+
+  // Token cannot be reused
+  const reusedReset = await mockApiCall({}, "POST", "/api/auth/reset-password", {}, { token: resetReq.body.resetToken, newPassword: "AnotherPassword@2026" }).run();
+  assert.equal(reusedReset.statusCode, 400);
+
+  // Login succeeds with new salted PBKDF2 credentials
+  const freshLogin = await mockApiCall({}, "POST", "/api/auth/login", {}, { email: legacyUser.email, password: "StrongPassword@2026" }).run();
+  assert.equal(freshLogin.statusCode, 200);
+  assert.ok(freshLogin.body.sessionToken);
+  assert.ok(freshLogin.body.csrfToken);
+
+  const freshToken = freshLogin.body.sessionToken;
+  const freshCsrf = freshLogin.body.csrfToken;
+
+  // 4. Raw session token never returned from GET /api/auth/session
+  const sessStatus = await mockApiCall({ authorization: `Bearer ${freshToken}` }, "GET", "/api/auth/session").run();
+  assert.equal(sessStatus.statusCode, 200);
+  assert.equal(sessStatus.body.authenticated, true);
+  assert.equal(sessStatus.body.sessionToken, undefined, "Raw sessionToken must NOT be exposed in GET /api/auth/session");
+  assert.equal(sessStatus.body.sessionId, undefined, "Raw sessionId must NOT be exposed in GET /api/auth/session");
+  assert.ok(sessStatus.body.csrfToken, "CSRF token must be present");
+
+  // 5. Secure cookie generation & HTTPS Secure flag
+  const devCookie = buildSessionCookie("sample-token", { headers: {} });
+  assert.ok(devCookie.includes("HttpOnly"));
+  assert.ok(devCookie.includes("SameSite=Lax"));
+  assert.ok(devCookie.includes("Max-Age=604800"));
+  assert.ok(!devCookie.includes("Secure"), "Local dev cookie must not enforce Secure without HTTPS");
+
+  const prodCookie = buildSessionCookie("sample-token", { headers: { "x-forwarded-proto": "https" } });
+  assert.ok(prodCookie.includes("; Secure"), "HTTPS cookie must enforce ; Secure");
+
+  const clearCookies = buildClearCookies({ headers: { "x-forwarded-proto": "https" } });
+  assert.equal(clearCookies.length, 2);
+  assert.ok(clearCookies[0].includes("Expires=Thu, 01 Jan 1970"));
+  assert.ok(clearCookies[1].includes("Expires=Thu, 01 Jan 1970"));
+
+  // 6. CSRF Protection: Cookie auth without X-CSRF-Token rejected on state-changing call
+  const orgSec = orgRepo.create({ name: `Security Org ${randSec}`, pan: `SECO${randSec}P` });
+  orgRepo.addMember(orgSec.id, legacyUser.id, "OWNER");
+  const gstinSec = gstinRepo.create({ orgId: orgSec.id, gstin: `27SECO${randSec}P1Z1`, tradeName: "Sec Branch", stateCode: "27", stateName: "Maharashtra", isPrimary: 1 });
+  const validSessObj = sessionRepo.findValidSession(freshToken);
+  sessionRepo.updateContext(validSessObj.id, { orgId: orgSec.id, gstinId: gstinSec.id });
+
+  const cookieHeadersNoCsrf = {
+    cookie: `simplegst_session=${freshToken}`
+  };
+  const csrfBlocked = await mockApiCall(cookieHeadersNoCsrf, "POST", "/api/sales", { period: "102026" }, {
+    invoiceNumber: `INV-CSRF-${randSec}`,
+    invoiceDate: "2026-10-10",
+    customerGstin: "27AAAAA0000A1Z5",
+    customerName: "CSRF Customer",
+    pos: "27",
+    taxableAmount: 10000,
+    gstRate: 18,
+    cgstAmount: 900,
+    sgstAmount: 900,
+    igstAmount: 0,
+    totalInvoiceValue: 11800,
+    supplyType: "B2B"
+  }).run();
+  assert.equal(csrfBlocked.statusCode, 403, "Cookie-authenticated mutation without CSRF token must return 403 Forbidden");
+
+  // Cookie auth WITH valid X-CSRF-Token succeeds
+  const cookieHeadersWithCsrf = {
+    cookie: `simplegst_session=${freshToken}`,
+    "x-csrf-token": freshCsrf
+  };
+  const csrfAllowed = await mockApiCall(cookieHeadersWithCsrf, "POST", "/api/sales", { period: "102026" }, {
+    invoiceNumber: `INV-CSRF-${randSec}`,
+    invoiceDate: "2026-10-10",
+    customerGstin: "27AAAAA0000A1Z5",
+    customerName: "CSRF Customer",
+    pos: "27",
+    taxableAmount: 10000,
+    gstRate: 18,
+    cgstAmount: 900,
+    sgstAmount: 900,
+    igstAmount: 0,
+    totalInvoiceValue: 11800,
+    supplyType: "B2B"
+  }).run();
+  assert.equal(csrfAllowed.statusCode, 201, "Cookie-authenticated mutation with valid CSRF token must succeed");
+
+  // Untrusted Origin rejected
+  const untrustedOriginCall = await mockApiCall({
+    authorization: `Bearer ${freshToken}`,
+    origin: "https://malicious-attacker-site.com"
+  }, "POST", "/api/sales", { period: "102026" }, {}).run();
+  assert.equal(untrustedOriginCall.statusCode, 403, "Untrusted Origin must return 403 Forbidden");
+
+  // 7. CORS in server.js: untrusted preflight OPTIONS rejected with 403
+  async function testServerRequest(reqObj) {
+    const resHeaders = {};
+    let code = 200;
+    let data = "";
+    const res = {
+      writeHead(c, h = {}) { code = c; Object.assign(resHeaders, h); },
+      end(d = "") { data = d; },
+      setHeader(k, v) { resHeaders[k] = v; }
+    };
+    await handleRequest(reqObj, res);
+    return { statusCode: code, headers: resHeaders, body: data ? JSON.parse(data) : null };
+  }
+
+  const badCors = await testServerRequest({
+    method: "OPTIONS",
+    url: "/api/sales",
+    headers: { origin: "https://evil-site.com", host: "localhost:3000" }
+  });
+  assert.equal(badCors.statusCode, 403, "Untrusted CORS preflight must return 403 Forbidden");
+
+  const goodCors = await testServerRequest({
+    method: "OPTIONS",
+    url: "/api/sales",
+    headers: { origin: "https://simplegst.onrender.com", host: "simplegst.onrender.com" }
+  });
+  assert.equal(goodCors.statusCode, 204, "Trusted CORS preflight must return 204 No Content");
+  assert.equal(goodCors.headers["Access-Control-Allow-Origin"], "https://simplegst.onrender.com");
+  assert.equal(goodCors.headers["Access-Control-Allow-Credentials"], "true");
+
+  // 8. RBAC: AUDITOR role is strictly read-only on tenant records
+  const auditorUser = userRepo.create({
+    email: `auditor-${randSec}@apexretail.com`,
+    passwordHash: userRepo.hashPassword("AuditorPass@2026"),
+    fullName: "Audit Lead",
+    role: "AUDITOR"
+  });
+  orgRepo.addMember(orgSec.id, auditorUser.id, "AUDITOR");
+  const auditorSess = sessionRepo.create({
+    userId: auditorUser.id,
+    activeOrgId: orgSec.id,
+    activeGstinId: gstinSec.id,
+    activePeriod: "102026"
+  });
+  const auditorHeaders = { authorization: `Bearer ${auditorSess.token}` };
+
+  // Auditor can read
+  const audRead = await mockApiCall(auditorHeaders, "GET", "/api/sales", { period: "102026" }).run();
+  assert.equal(audRead.statusCode, 200, "Auditor must be allowed to read sales");
+
+  // Auditor cannot mutate
+  const audMutate = await mockApiCall(auditorHeaders, "POST", "/api/sales", { period: "102026" }, {
+    invoiceNumber: `INV-AUD-${randSec}`,
+    invoiceDate: "2026-10-10",
+    customerGstin: "27AAAAA0000A1Z5",
+    taxableAmount: 5000,
+    gstRate: 18,
+    cgstAmount: 450,
+    sgstAmount: 450,
+    igstAmount: 0,
+    totalInvoiceValue: 5900
+  }).run();
+  assert.equal(audMutate.statusCode, 403, "Auditor mutation must be rejected with 403 Forbidden");
+  assert.ok(audMutate.body.error.includes("Auditor role is strictly read-only"));
+
+  // 9. RBAC: ACCOUNTANT role restrictions
+  const accountantUser = userRepo.create({
+    email: `acct-${randSec}@apexretail.com`,
+    passwordHash: userRepo.hashPassword("AcctPass@2026"),
+    fullName: "Accountant User",
+    role: "ACCOUNTANT"
+  });
+  orgRepo.addMember(orgSec.id, accountantUser.id, "ACCOUNTANT");
+  const acctSess = sessionRepo.create({
+    userId: accountantUser.id,
+    activeOrgId: orgSec.id,
+    activeGstinId: gstinSec.id,
+    activePeriod: "102026"
+  });
+  const acctHeaders = { authorization: `Bearer ${acctSess.token}` };
+
+  // Accountant can create sales
+  const acctSale = await mockApiCall(acctHeaders, "POST", "/api/sales", { period: "102026" }, {
+    invoiceNumber: `INV-ACCT-${randSec}`,
+    invoiceDate: "2026-10-10",
+    customerGstin: "27AAAAA0000A1Z5",
+    customerName: "Accountant Client",
+    pos: "27",
+    taxableAmount: 10000,
+    gstRate: 18,
+    cgstAmount: 900,
+    sgstAmount: 900,
+    igstAmount: 0,
+    totalInvoiceValue: 11800,
+    supplyType: "B2B"
+  }).run();
+  assert.equal(acctSale.statusCode, 201, "Accountant can create invoices");
+
+  // Accountant CANNOT register new GSTINs
+  const acctGstin = await mockApiCall(acctHeaders, "POST", "/api/gstins", {}, {
+    gstin: `27SECO${randSec}P1Z9`,
+    tradeName: "Rogue Branch"
+  }).run();
+  assert.equal(acctGstin.statusCode, 403, "Accountant cannot register GSTINs");
+
+  // Accountant CANNOT file returns
+  const acctNil = await mockApiCall(acctHeaders, "POST", "/api/gst/nil-file", {}, {
+    period: "102026",
+    declarationConfirmed: true
+  }).run();
+  assert.equal(acctNil.statusCode, 403, "Accountant cannot file returns");
+
+  // Accountant CANNOT simulate payments
+  const acctPay = await mockApiCall(acctHeaders, "POST", "/api/challans/simulate-payment", {}, {
+    amount: 5000
+  }).run();
+  assert.equal(acctPay.statusCode, 403, "Accountant cannot execute challan payments");
 });

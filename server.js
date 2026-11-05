@@ -1,4 +1,4 @@
-import { handleFunctionalApi } from "./lib/functionalApi.js";
+import { handleFunctionalApi, isAllowedOrigin } from "./lib/functionalApi.js";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -131,10 +131,24 @@ export async function handleRequest(req, res) {
     const method = req.method;
     const query = Object.assign({}, Object.fromEntries(parsedUrl.searchParams.entries()), req.query || {});
 
-    // Enable CORS
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, client-id");
+    // Hardened CORS & Origin Verification
+    const origin = req.headers["origin"];
+    const host = req.headers.host;
+    const isOriginAllowed = isAllowedOrigin(origin, host);
+
+    if (origin) {
+      if (isOriginAllowed) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Session-Token, X-CSRF-Token, X-Period, X-GSTIN-ID, client-id");
+      } else if (method === "OPTIONS") {
+        // Reject untrusted cross-origin preflight immediately with 403 Forbidden
+        res.writeHead(403, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ error: "Forbidden: Untrusted Origin in preflight" }));
+        return;
+      }
+    }
 
     if (method === "OPTIONS") {
       res.writeHead(204);
