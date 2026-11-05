@@ -20,7 +20,30 @@ function getPmt06Modal() {
   if (idx < 0) return '';
   const start = html.lastIndexOf('<div', idx);
   const endModal = html.indexOf('</body>', idx);
-  return endModal > 0 ? html.substring(start, endModal) : html.substring(start);
+  let modalHtml = endModal > 0 ? html.substring(start, endModal) : html.substring(start);
+
+  // 1. Ensure modal is hidden by default and backdrop dismisses
+  modalHtml = modalHtml.replace(
+    'class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm" id="pmt-06-modal"',
+    'class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm hidden" id="pmt-06-modal" onclick="if (event.target === this) closePmt06Modal()"'
+  );
+
+  // 2. Fix the X close button to call closePmt06Modal()
+  modalHtml = modalHtml.replace('onclick="alert(\'Modal dismissal simulation.\')"', 'onclick="closePmt06Modal()"');
+
+  // 3. Fix the Cancel button
+  modalHtml = modalHtml.replace(
+    'class="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors cursor-pointer active:scale-98" type="button">\\n              Cancel',
+    'class="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors cursor-pointer active:scale-98" onclick="closePmt06Modal()" type="button">\\n              Cancel'
+  );
+
+  // 4. Fix the Pay button
+  modalHtml = modalHtml.replace(
+    /onclick="alert\('Sandbox Transaction Approved[^"]+"\)/,
+    'onclick="submitChallanPayment()"'
+  );
+
+  return modalHtml;
 }
 
 function getArnModal() {

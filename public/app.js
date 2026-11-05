@@ -386,6 +386,14 @@ function closePmt06Modal() {
 }
 window.closePmt06Modal = closePmt06Modal;
 
+function submitChallanPayment() {
+  closePmt06Modal();
+  if (typeof showToast === "function") {
+    showToast("Form GST PMT-06 Payment Approved: ₹62,436 credited to Cash Ledger (CIN: HDFC2410270081)", "success");
+  }
+}
+window.submitChallanPayment = submitChallanPayment;
+
 function openArnModal() {
   const m = document.getElementById('arn-success-modal');
   if (m) m.classList.remove('hidden');

@@ -96,3 +96,4 @@ if (!styleContent.includes('STITCH FINTECH DESIGN SYSTEM UTILITIES')) {
 } else {
   console.log('Stitch CSS already present in style.css');
 }
+
