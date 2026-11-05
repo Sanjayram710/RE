@@ -315,3 +315,4 @@ test('Statutory Config: Late fee slabs, interest rates, and blocked credits matc
   assert.equal(STATUTORY_RULES.interestRates.wrongfulItcAvailedAndUtilized.ratePercentPerAnnum, 24);
   assert.ok(STATUTORY_RULES.blockedCredits.clauses['17(5)(fa)']); // CSR expense
 });
+

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "AUD-0001",
+    "timestamp": "2026-11-04T10:00:00.000Z",
+    "caId": "CA_SANJAY",
+    "actor": "sanjay",
+    "role": "SENIOR_CA",
+    "action": "INIT_PRACTICE_WORKSPACE",
+    "details": "Apex Practice workspace initialized with 2 clients and 4 state GSTINs",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793848265574-221",
+    "timestamp": "2026-11-05T03:11:05.574Z",
+    "caId": "CA_SANJAY",
+    "actor": "system",
+    "role": "SENIOR_CA",
+    "action": "DISPATCH_REMINDER",
+    "details": "Sent GSTR-1 compliance reminder to Apex Hypermarkets Pvt Ltd (32AAACB1234F1Z5)",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793848341792-795",
+    "timestamp": "2026-11-05T03:12:21.792Z",
+    "caId": "CA_SANJAY",
+    "actor": "system",
+    "role": "SENIOR_CA",
+    "action": "DISPATCH_REMINDER",
+    "details": "Sent GSTR-1 compliance reminder to Apex Hypermarkets Pvt Ltd (32AAACB1234F1Z5)",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793848435298-379",
+    "timestamp": "2026-11-05T03:13:55.298Z",
+    "caId": "CA_SANJAY",
+    "actor": "system",
+    "role": "SENIOR_CA",
+    "action": "DISPATCH_REMINDER",
+    "details": "Sent GSTR-1 compliance reminder to Apex Hypermarkets Pvt Ltd (32AAACB1234F1Z5)",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793848569834-338",
+    "timestamp": "2026-11-05T03:16:09.834Z",
+    "caId": "CA_SANJAY",
+    "actor": "system",
+    "role": "SENIOR_CA",
+    "action": "DISPATCH_REMINDER",
+    "details": "Sent GSTR-1 compliance reminder to Apex Hypermarkets Pvt Ltd (32AAACB1234F1Z5)",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793848728392-126",
+    "timestamp": "2026-11-05T03:18:48.392Z",
+    "caId": "CA_SANJAY",
+    "actor": "system",
+    "role": "SENIOR_CA",
+    "action": "DISPATCH_REMINDER",
+    "details": "Sent GSTR-1 compliance reminder to Apex Hypermarkets Pvt Ltd (32AAACB1234F1Z5)",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793848779996-431",
+    "timestamp": "2026-11-05T03:19:39.996Z",
+    "caId": "CA_SANJAY",
+    "actor": "system",
+    "role": "SENIOR_CA",
+    "action": "DISPATCH_REMINDER",
+    "details": "Sent GSTR-1 compliance reminder to Apex Hypermarkets Pvt Ltd (32AAACB1234F1Z5)",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793848780136-406",
+    "timestamp": "2026-11-05T03:19:40.136Z",
+    "caId": "CA_SANJAY",
+    "actor": "sanjay",
+    "role": "SENIOR_CA",
+    "action": "UNIT_TEST_ACTION",
+    "details": "Testing audit trail persistence",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793848959332-435",
+    "timestamp": "2026-11-05T03:22:39.332Z",
+    "caId": "CA_SANJAY",
+    "actor": "system",
+    "role": "SENIOR_CA",
+    "action": "DISPATCH_REMINDER",
+    "details": "Sent GSTR-1 compliance reminder to Apex Hypermarkets Pvt Ltd (32AAACB1234F1Z5)",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793848959661-138",
+    "timestamp": "2026-11-05T03:22:39.661Z",
+    "caId": "CA_SANJAY",
+    "actor": "sanjay",
+    "role": "SENIOR_CA",
+    "action": "UNIT_TEST_ACTION",
+    "details": "Testing audit trail persistence",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793849141993-888",
+    "timestamp": "2026-11-05T03:25:41.993Z",
+    "caId": "CA_SANJAY",
+    "actor": "system",
+    "role": "SENIOR_CA",
+    "action": "DISPATCH_REMINDER",
+    "details": "Sent GSTR-1 compliance reminder to Apex Hypermarkets Pvt Ltd (32AAACB1234F1Z5)",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793849142476-471",
+    "timestamp": "2026-11-05T03:25:42.476Z",
+    "caId": "CA_SANJAY",
+    "actor": "sanjay",
+    "role": "SENIOR_CA",
+    "action": "UNIT_TEST_ACTION",
+    "details": "Testing audit trail persistence",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793849213391-96",
+    "timestamp": "2026-11-05T03:26:53.391Z",
+    "caId": "CA_SANJAY",
+    "actor": "system",
+    "role": "SENIOR_CA",
+    "action": "DISPATCH_REMINDER",
+    "details": "Sent GSTR-1 compliance reminder to Apex Hypermarkets Pvt Ltd (32AAACB1234F1Z5)",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793849213536-547",
+    "timestamp": "2026-11-05T03:26:53.536Z",
+    "caId": "CA_SANJAY",
+    "actor": "sanjay",
+    "role": "SENIOR_CA",
+    "action": "UNIT_TEST_ACTION",
+    "details": "Testing audit trail persistence",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793849249947-351",
+    "timestamp": "2026-11-05T03:27:29.947Z",
+    "caId": "CA_SANJAY",
+    "actor": "system",
+    "role": "SENIOR_CA",
+    "action": "DISPATCH_REMINDER",
+    "details": "Sent GSTR-1 compliance reminder to Apex Hypermarkets Pvt Ltd (32AAACB1234F1Z5)",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793849250128-109",
+    "timestamp": "2026-11-05T03:27:30.128Z",
+    "caId": "CA_SANJAY",
+    "actor": "sanjay",
+    "role": "SENIOR_CA",
+    "action": "UNIT_TEST_ACTION",
+    "details": "Testing audit trail persistence",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793849592808-206",
+    "timestamp": "2026-11-05T03:33:12.808Z",
+    "caId": "CA_SANJAY",
+    "actor": "system",
+    "role": "SENIOR_CA",
+    "action": "DISPATCH_REMINDER",
+    "details": "Sent GSTR-1 compliance reminder to Apex Hypermarkets Pvt Ltd (32AAACB1234F1Z5)",
+    "ip": "127.0.0.1"
+  },
+  {
+    "id": "AUD-1793849592957-654",
+    "timestamp": "2026-11-05T03:33:12.957Z",
+    "caId": "CA_SANJAY",
+    "actor": "sanjay",
+    "role": "SENIOR_CA",
+    "action": "UNIT_TEST_ACTION",
+    "details": "Testing audit trail persistence",
+    "ip": "127.0.0.1"
+  }
+]

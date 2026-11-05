@@ -1,0 +1,115 @@
+{
+  "tenants": {
+    "CA_SANJAY": {
+      "caId": "CA_SANJAY",
+      "firmName": "Sanjay Ram & Associates, Chartered Accountants",
+      "membershipNo": "FCA-402918",
+      "principalCA": "CA Sanjay Ram, FCA",
+      "roles": {
+        "sanjay": "SENIOR_CA",
+        "staff1": "STAFF_AUDITOR"
+      },
+      "clients": [
+        {
+          "clientId": "CLI-001",
+          "tradeName": "Apex Hypermarkets Pvt Ltd",
+          "pan": "AAACB1234F",
+          "legalName": "Apex Hypermarkets Private Limited",
+          "category": "REGULAR_MONTHLY",
+          "status": "ACTIVE",
+          "assignedStaff": "CA Sanjay Ram, FCA",
+          "gstins": [
+            {
+              "gstin": "32AAACB1234F1Z5",
+              "state": "Kerala",
+              "branchType": "HEAD_OFFICE",
+              "filingHistory": {
+                "082026": { "gstr1": "FILED", "gstr1Arn": "AA3208260011999", "gstr3b": "FILED", "gstr3bArn": "AB3208260055111" },
+                "092026": { "gstr1": "FILED", "gstr1Arn": "AA3209260012345", "gstr3b": "FILED", "gstr3bArn": "AB3209260054321" },
+                "102026": { "gstr1": "READY_TO_FILE", "gstr1Arn": null, "gstr3b": "PENDING_PREREQUISITE", "gstr3bArn": null }
+              },
+              "itcMismatch": { "booksItc": 245000, "gstr2bItc": 240000, "difference": 5000, "risk": "MEDIUM" }
+            },
+            {
+              "gstin": "29AAACB1234F1Z3",
+              "state": "Karnataka",
+              "branchType": "BRANCH_WAREHOUSE",
+              "filingHistory": {
+                "082026": { "gstr1": "FILED", "gstr1Arn": "AA2908260011222", "gstr3b": "FILED", "gstr3bArn": "AB2908260055444" },
+                "092026": { "gstr1": "FILED", "gstr1Arn": "AA2909260087654", "gstr3b": "FILED", "gstr3bArn": "AB2909260043210" },
+                "102026": { "gstr1": "DOCS_PENDING", "gstr1Arn": null, "gstr3b": "LOCKED", "gstr3bArn": null }
+              },
+              "itcMismatch": { "booksItc": 112000, "gstr2bItc": 112000, "difference": 0, "risk": "LOW" }
+            },
+            {
+              "gstin": "33AAACB1234F1Z1",
+              "state": "Tamil Nadu",
+              "branchType": "REGIONAL_STORE",
+              "filingHistory": {
+                "082026": { "gstr1": "FILED", "gstr1Arn": "AA3308260099887", "gstr3b": "FILED", "gstr3bArn": "AB3308260077665" },
+                "092026": { "gstr1": "FILED", "gstr1Arn": "AA3309260033445", "gstr3b": "FILED", "gstr3bArn": "AB3309260077889" },
+                "102026": { "gstr1": "READY_TO_FILE", "gstr1Arn": null, "gstr3b": "PENDING_PREREQUISITE", "gstr3bArn": null }
+              },
+              "itcMismatch": { "booksItc": 88000, "gstr2bItc": 86500, "difference": 1500, "risk": "LOW" }
+            }
+          ]
+        },
+        {
+          "clientId": "CLI-003",
+          "tradeName": "Greenfield Agri Ventures",
+          "pan": "CCCCB9012H",
+          "legalName": "Greenfield Agriculture Ventures LLP",
+          "category": "REGULAR_MONTHLY",
+          "status": "ACTIVE",
+          "assignedStaff": "CA Sanjay Ram, FCA",
+          "gstins": [
+            {
+              "gstin": "33CCCCB9012H1Z9",
+              "state": "Tamil Nadu",
+              "branchType": "HEAD_OFFICE",
+              "filingHistory": {
+                "082026": { "gstr1": "FILED", "gstr1Arn": "AA3308260044556", "gstr3b": "FILED", "gstr3bArn": "AB3308260066778" },
+                "092026": { "gstr1": "FILED", "gstr1Arn": "AA3309260011223", "gstr3b": "FILED", "gstr3bArn": "AB3309260033221" },
+                "102026": { "gstr1": "PENDING_DOCS", "gstr1Arn": null, "gstr3b": "LOCKED", "gstr3bArn": null }
+              },
+              "itcMismatch": { "booksItc": 120000, "gstr2bItc": 90000, "difference": 30000, "risk": "HIGH" }
+            }
+          ]
+        }
+      ]
+    },
+    "CA_RAMESH": {
+      "caId": "CA_RAMESH",
+      "firmName": "Ramesh Kumar & Co, Chartered Accountants",
+      "membershipNo": "ACA-519820",
+      "principalCA": "CA Ramesh Kumar, ACA",
+      "roles": {
+        "ramesh": "SENIOR_CA"
+      },
+      "clients": [
+        {
+          "clientId": "CLI-002",
+          "tradeName": "Zenith Logistics LLP",
+          "pan": "BBBCB5678G",
+          "legalName": "Zenith Logistics Limited Liability Partnership",
+          "category": "QRMP_QUARTERLY",
+          "status": "ACTIVE",
+          "assignedStaff": "CA Ramesh Kumar, ACA",
+          "gstins": [
+            {
+              "gstin": "29BBBCB5678G1Z2",
+              "state": "Karnataka",
+              "branchType": "HEAD_OFFICE",
+              "filingHistory": {
+                "Q1-2026": { "gstr1": "FILED", "gstr1Arn": "AA2906260011223", "gstr3b": "FILED", "gstr3bArn": "AB2906260033445" },
+                "Q2-2026": { "gstr1": "FILED", "gstr1Arn": "AA2909260098765", "gstr3b": "FILED", "gstr3bArn": "AB2909260067890" },
+                "102026": { "pmt06": "PAID", "iff": "OPTIONAL_PENDING" }
+              },
+              "itcMismatch": { "booksItc": 82000, "gstr2bItc": 82000, "difference": 0, "risk": "LOW" }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

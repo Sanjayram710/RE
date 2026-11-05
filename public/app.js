@@ -151,60 +151,113 @@ async function fetchAppMode() {
 }
 
 // ============================================================================
-// Suite Switching: ITR vs Expert Filing vs Notice Defense vs Vault vs GST
+// Suite Switching: Copilot (Guiding Path) vs Registers & Reports vs More Services
 // ============================================================================
 function switchSuite(suite) {
+  if (typeof window.switchSuite === "function" && window.switchSuite !== switchSuite) {
+    return window.switchSuite(suite);
+  }
+  executeSwitchSuite(suite);
+}
+
+function executeSwitchSuite(suite) {
   appState.currentSuite = suite;
   const viewItr = document.getElementById("viewItrSuite");
   const viewExpert = document.getElementById("viewExpertSuite");
   const viewNotice = document.getElementById("viewNoticeSuite");
   const viewVault = document.getElementById("viewVaultSuite");
   const viewGst = document.getElementById("viewGstSuite");
+  const viewCopilot = document.getElementById("viewCopilotSuite");
+  const viewStartup = document.getElementById("viewStartupSuite");
+  const viewCompliance = document.getElementById("viewComplianceSuite");
 
-  const btnItr = document.getElementById("btnSuiteItr");
-  const btnExpert = document.getElementById("btnSuiteExpert");
-  const btnNotice = document.getElementById("btnSuiteNotice");
-  const btnVault = document.getElementById("btnSuiteVault");
+  const btnCopilot = document.getElementById("btnSuiteCopilot");
   const btnGst = document.getElementById("btnSuiteGst");
+  const btnMore = document.getElementById("btnSuiteMoreServices");
+  const moreServicesMenu = document.getElementById("moreServicesMenu");
+
+  // Always close dropdown menu when switching
+  moreServicesMenu?.classList.add("hidden");
 
   // Reset all suites
-  [viewItr, viewExpert, viewNotice, viewVault, viewGst].forEach(v => {
-    v?.classList.remove("active");
-    v?.classList.add("hidden");
+  [viewItr, viewExpert, viewNotice, viewVault, viewGst, viewCopilot, viewStartup, viewCompliance].forEach(v => {
+    if (v) {
+      v.classList.remove("active");
+      v.classList.add("hidden");
+      v.style.display = "none";
+    }
   });
-  [btnItr, btnExpert, btnNotice, btnVault, btnGst].forEach(b => b?.classList.remove("active"));
+  [btnCopilot, btnGst, btnMore].forEach(b => b?.classList.remove("active"));
 
-  if (suite === "itr") {
-    viewItr?.classList.add("active");
-    viewItr?.classList.remove("hidden");
-    btnItr?.classList.add("active");
-    document.getElementById("currentFilingPan").textContent = appState.itr.personalInfo.pan;
-  } else if (suite === "expert") {
-    viewExpert?.classList.add("active");
-    viewExpert?.classList.remove("hidden");
-    btnExpert?.classList.add("active");
-    document.getElementById("currentFilingPan").textContent = appState.itr.personalInfo.pan;
-    loadExpertPlans();
-    recalculateSavingsEstimator();
-  } else if (suite === "notice") {
-    viewNotice?.classList.add("active");
-    viewNotice?.classList.remove("hidden");
-    btnNotice?.classList.add("active");
-    document.getElementById("currentFilingPan").textContent = appState.itr.personalInfo.pan;
-  } else if (suite === "vault") {
-    viewVault?.classList.add("active");
-    viewVault?.classList.remove("hidden");
-    btnVault?.classList.add("active");
-    document.getElementById("currentFilingPan").textContent = appState.itr.personalInfo.pan;
-    loadVaultDocuments("all");
-  } else {
-    viewGst?.classList.add("active");
-    viewGst?.classList.remove("hidden");
+  if (suite === "gst") {
+    if (viewGst) {
+      viewGst.classList.add("active");
+      viewGst.classList.remove("hidden");
+      viewGst.style.display = "block";
+    }
     btnGst?.classList.add("active");
-    document.getElementById("currentFilingPan").textContent = appState.gst.business.gstin;
-    showGstScreen(appState.gst.currentScreen || "reports");
+    if (document.getElementById("currentFilingPan")) {
+      document.getElementById("currentFilingPan").textContent = appState.gst?.business?.gstin || "32ABCDE1234F1Z5";
+    }
+    if (typeof showGstScreen === "function") {
+      showGstScreen(appState?.gst?.currentScreen || "reports");
+    }
+  } else if (suite === "expert") {
+    if (viewExpert) {
+      viewExpert.classList.add("active");
+      viewExpert.classList.remove("hidden");
+      viewExpert.style.display = "block";
+    }
+    btnMore?.classList.add("active");
+    if (typeof loadExpertPlans === "function") loadExpertPlans();
+    if (typeof recalculateSavingsEstimator === "function") recalculateSavingsEstimator();
+  } else if (suite === "startup") {
+    if (viewStartup) {
+      viewStartup.classList.add("active");
+      viewStartup.classList.remove("hidden");
+      viewStartup.style.display = "block";
+    }
+    btnMore?.classList.add("active");
+    if (typeof selectStartupType === "function") {
+      selectStartupType(window.cdaState?.selectedStartupType || 'proprietorship');
+    }
+  } else if (suite === "compliance") {
+    if (viewCompliance) {
+      viewCompliance.classList.add("active");
+      viewCompliance.classList.remove("hidden");
+      viewCompliance.style.display = "block";
+    }
+    btnMore?.classList.add("active");
+    if (typeof loadComplianceScore === "function") loadComplianceScore();
+  } else if (suite === "notice") {
+    if (viewNotice) {
+      viewNotice.classList.add("active");
+      viewNotice.classList.remove("hidden");
+      viewNotice.style.display = "block";
+    }
+    btnMore?.classList.add("active");
+  } else if (suite === "vault") {
+    if (viewVault) {
+      viewVault.classList.add("active");
+      viewVault.classList.remove("hidden");
+      viewVault.style.display = "block";
+    }
+    btnMore?.classList.add("active");
+    if (typeof loadVaultDocuments === "function") loadVaultDocuments("all");
+  } else {
+    // Default to GST Return Assistant (Guiding Path)
+    if (viewCopilot) {
+      viewCopilot.classList.add("active");
+      viewCopilot.classList.remove("hidden");
+      viewCopilot.style.display = "block";
+    }
+    btnCopilot?.classList.add("active");
+    if (typeof fetchCopilotPipeline === "function") fetchCopilotPipeline();
+    if (typeof renderCadenceTimeline === "function") renderCadenceTimeline();
+    if (typeof onDelaySliderChange === "function") onDelaySliderChange(0);
   }
 }
+window.switchSuite = executeSwitchSuite;
 
 // ============================================================================
 // ITR 4-Step Stepper Navigation
@@ -3492,91 +3545,8 @@ const cdaState = {
   referralBalance: 1500
 };
 
-// 1. Extended Suite Switcher
-const originalSwitchSuite = window.switchSuite;
-window.switchSuite = function(suite) {
-  const viewItr = document.getElementById("viewItrSuite");
-  const viewExpert = document.getElementById("viewExpertSuite");
-  const viewNotice = document.getElementById("viewNoticeSuite");
-  const viewVault = document.getElementById("viewVaultSuite");
-  const viewGst = document.getElementById("viewGstSuite");
-  const viewCopilot = document.getElementById("viewCopilotSuite");
-  const viewStartup = document.getElementById("viewStartupSuite");
-  const viewCompliance = document.getElementById("viewComplianceSuite");
-
-  const btnItr = document.getElementById("btnSuiteItr");
-  const btnExpert = document.getElementById("btnSuiteExpert");
-  const btnNotice = document.getElementById("btnSuiteNotice");
-  const btnVault = document.getElementById("btnSuiteVault");
-  const btnGst = document.getElementById("btnSuiteGst");
-  const btnCopilot = document.getElementById("btnSuiteCopilot");
-  const btnStartup = document.getElementById("btnSuiteStartup");
-  const btnCompliance = document.getElementById("btnSuiteCompliance");
-
-  // Reset all
-  [viewItr, viewExpert, viewNotice, viewVault, viewGst, viewCopilot, viewStartup, viewCompliance].forEach(v => {
-    if (v) {
-      v.classList.remove("active");
-      v.classList.add("hidden");
-      v.style.display = "none";
-    }
-  });
-  [btnItr, btnExpert, btnNotice, btnVault, btnGst, btnCopilot, btnStartup, btnCompliance].forEach(b => b?.classList.remove("active"));
-
-  if (suite === "copilot") {
-    if (viewCopilot) {
-      viewCopilot.classList.add("active");
-      viewCopilot.classList.remove("hidden");
-      viewCopilot.style.display = "block";
-    }
-    btnCopilot?.classList.add("active");
-    fetchCopilotPipeline();
-    renderCadenceTimeline();
-    onDelaySliderChange(0);
-  } else if (suite === "expert") {
-    if (viewExpert) {
-      viewExpert.classList.add("active");
-      viewExpert.classList.remove("hidden");
-      viewExpert.style.display = "block";
-    }
-    btnExpert?.classList.add("active");
-    if (typeof loadExpertPlans === "function") loadExpertPlans();
-    if (typeof recalculateSavingsEstimator === "function") recalculateSavingsEstimator();
-  } else if (suite === "gst") {
-    if (viewGst) {
-      viewGst.classList.add("active");
-      viewGst.classList.remove("hidden");
-      viewGst.style.display = "block";
-    }
-    btnGst?.classList.add("active");
-    if (typeof showGstScreen === "function") {
-      showGstScreen(appState?.gst?.currentScreen || "reports");
-    }
-  } else if (suite === "startup") {
-    if (viewStartup) {
-      viewStartup.classList.add("active");
-      viewStartup.classList.remove("hidden");
-      viewStartup.style.display = "block";
-    }
-    btnStartup?.classList.add("active");
-    selectStartupType(cdaState.selectedStartupType || 'proprietorship');
-  } else if (suite === "compliance") {
-    if (viewCompliance) {
-      viewCompliance.classList.add("active");
-      viewCompliance.classList.remove("hidden");
-      viewCompliance.style.display = "block";
-    }
-    btnCompliance?.classList.add("active");
-    loadComplianceScore();
-  } else if (suite === "itr") {
-    if (viewItr) {
-      viewItr.classList.add("active");
-      viewItr.classList.remove("hidden");
-      viewItr.style.display = "block";
-    }
-    btnItr?.classList.add("active");
-  }
-};
+// 1. Extended Suite Switcher routed through unified executeSwitchSuite
+// window.switchSuite is declared as the single authoritative switcher above.
 
 // 2. GST Copilot 5-Step Logic
 window.viewCopilotStep = function(stepNum) {

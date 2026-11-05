@@ -51,7 +51,7 @@ import { analyzeInvoice180Days, auditPurchaseRegister180Days } from "./lib/suppl
 import { classifyOutwardInvoice, classifySalesRegisterForGstr1, B2CL_STATUTORY_THRESHOLD } from "./lib/gstr1StatutoryClassifier.js";
 import { validateGstr1Prerequisites, validateGstr3bPrerequisites, simulateReturnFiling } from "./lib/gstrReturnLifecycleEngine.js";
 import { createEmptyCashLedger, createEmptyCreditLedger, generatePmt06Challan, executePmt09Transfer } from "./lib/electronicLedgerEngine.js";
-import { getPracticeDashboardSummary, getPracticeComplianceMatrix, generateClientReminder, PRACTICE_CLIENTS } from "./lib/caPracticeManager.js";
+import { getPracticeDashboardSummary, getPracticeComplianceMatrix, generateClientReminder, getPracticeAuditLogs, PRACTICE_CLIENTS } from "./lib/caPracticeManager.js";
 import { STATUTORY_RULES } from "./lib/statutoryRulesConfig.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -1013,20 +1013,28 @@ export async function handleRequest(req, res) {
     }
 
     // ---------------------------------------------------------
-    // CA Multi-Client Practice Management Endpoints
+    // CA Multi-Client Practice Management Endpoints (Multi-Tenant & Isolated)
     // ---------------------------------------------------------
     if (pathname === "/api/practice/summary" && method === "GET") {
-      return sendJson(res, 200, { success: true, ...getPracticeDashboardSummary() });
+      const caId = query?.caId || "CA_SANJAY";
+      return sendJson(res, 200, { success: true, ...getPracticeDashboardSummary(caId) });
     }
 
     if (pathname === "/api/practice/compliance-matrix" && method === "GET") {
-      return sendJson(res, 200, { success: true, matrix: getPracticeComplianceMatrix() });
+      const caId = query?.caId || "CA_SANJAY";
+      return sendJson(res, 200, { success: true, matrix: getPracticeComplianceMatrix(caId) });
     }
 
     if (pathname === "/api/practice/reminder" && method === "POST") {
       const body = await readBody(req);
-      const reminder = generateClientReminder(body.clientId || "CLI-001");
+      const caId = body.caId || "CA_SANJAY";
+      const reminder = generateClientReminder(body.clientId || "CLI-001", caId);
       return sendJson(res, 200, { success: true, reminder });
+    }
+
+    if (pathname === "/api/practice/audit-logs" && method === "GET") {
+      const caId = query?.caId || "CA_SANJAY";
+      return sendJson(res, 200, { success: true, logs: getPracticeAuditLogs(caId) });
     }
 
     // ---------------------------------------------------------
