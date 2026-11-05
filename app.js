@@ -233,6 +233,16 @@ function executeSwitchSuite(suite) {
     }
     highlightSidebarNav('nav-link-file-gst');
     highlightBottomNav('bottom-nav-file-gst');
+    if (suite === "nil") {
+      startNilFilingFlow();
+    } else if (suite === "guided") {
+      startGuidedFiling(1);
+    } else {
+      resetFileGstChoice();
+    }
+    if (typeof syncPeriodAcrossUi === "function") {
+      syncPeriodAcrossUi();
+    }
   } else if (suite === "bills" || suite === "bills-docs") {
     if (viewBills) {
       viewBills.classList.add("active");
@@ -1031,8 +1041,46 @@ function selectFilingEntity(pan, name, subtitle) {
   if (sidePan) sidePan.textContent = pan;
   const sideEntity = document.getElementById("sidebarEntityDisplay");
   if (sideEntity) sideEntity.textContent = name;
+  const fileBadge = document.getElementById("fileGstActiveEntityBadge");
+  if (fileBadge) fileBadge.textContent = `${name} (${pan})`;
+  const reviewEntity = document.getElementById("reviewEntityDisplay");
+  if (reviewEntity) reviewEntity.textContent = `${name} (${pan})`;
+  const copilotBadge = document.getElementById("copilotActiveGstinDisplay");
+  if (copilotBadge) copilotBadge.textContent = `${name} (${pan})`;
+
+  // Clear metric caches so views re-fetch for new entity
+  if (typeof cachedDashboardMetrics !== "undefined") {
+    cachedDashboardMetrics = null;
+  }
+
   document.getElementById("filingDropdownMenu")?.classList.add("hidden");
   document.getElementById("filingDropdownMenu")?.classList.remove("active");
+
+  // Sync Period and backend state
+  if (typeof syncPeriodAcrossUi === "function") {
+    syncPeriodAcrossUi();
+  }
+
+  // If Nil section is currently open, re-run verification for new GSTIN
+  const nilSec = document.getElementById("fileGstNilSection");
+  if (nilSec && !nilSec.classList.contains("hidden") && typeof startNilFilingFlow === "function") {
+    startNilFilingFlow();
+  }
+
+  // Activate on backend if API is reachable
+  fetch("/api/gstins")
+    .then(r => r.json())
+    .then(data => {
+      const g = (data.gstins || []).find(x => x.gstin === pan);
+      if (g) {
+        fetch(`/api/gstins/${g.id}/activate`, { method: "POST" })
+          .then(() => {
+            if (typeof syncPeriodAcrossUi === "function") syncPeriodAcrossUi();
+          })
+          .catch(() => {});
+      }
+    })
+    .catch(() => {});
 }
 
 function toggleProfileDropdown(e) {
@@ -4075,20 +4123,268 @@ function closeHealthScoreModal() {
 }
 window.closeHealthScoreModal = closeHealthScoreModal;
 
-// 5c. Nil GST Return Submission
-async function submitNilReturn() {
-  const checkbox = document.getElementById("nil-confirm");
+// ============================================================================
+// Period & Filing Date Synchronization Engine
+// ============================================================================
+function getPeriodDetails(periodStr = "102026") {
+  const p = String(periodStr || "102026").padStart(6, "0");
+  const month = parseInt(p.slice(0, 2), 10) || 10;
+  const year = parseInt(p.slice(2), 10) || 2026;
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const monthShort = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  const fullMonth = monthNames[month - 1] || "October";
+  const shortMonth = monthShort[month - 1] || "Oct";
+
+  const nextMonthIdx = month === 12 ? 0 : month;
+  const nextYear = month === 12 ? year + 1 : year;
+  const nextMonthFull = monthNames[nextMonthIdx];
+  const nextMonthShort = monthShort[nextMonthIdx];
+
+  const gstr1Deadline = `${nextMonthFull} 11, ${nextYear}`;
+  const gstr1DeadlineShort = `${nextMonthShort} 11`;
+  const gstr3bDeadline = `${nextMonthFull} 20, ${nextYear}`;
+  const gstr3bDeadlineShort = `${nextMonthShort} 20`;
+
+  const fyStart = month >= 4 ? year : year - 1;
+  const fyEnd = fyStart + 1;
+  const fy = `FY ${fyStart}-${String(fyEnd).slice(2)}`;
+
+  return {
+    raw: p,
+    month,
+    year,
+    full: `${fullMonth} ${year}`,
+    short: `${shortMonth} ${year}`,
+    gstr1Deadline,
+    gstr1DeadlineShort,
+    gstr3bDeadline,
+    gstr3bDeadlineShort,
+    fy
+  };
+}
+window.getPeriodDetails = getPeriodDetails;
+
+function syncPeriodAcrossUi(periodStr = "102026") {
+  const details = getPeriodDetails(periodStr || appState.gst?.business?.filingPeriod || "102026");
+
+  const globalPeriod = document.getElementById("global-filing-period");
+  if (globalPeriod) globalPeriod.textContent = details.short;
+
+  document.querySelectorAll(".dynamic-period-label").forEach(el => {
+    el.textContent = details.full;
+  });
+  document.querySelectorAll(".dynamic-period-short").forEach(el => {
+    el.textContent = details.short;
+  });
+  document.querySelectorAll(".dynamic-deadline-label").forEach(el => {
+    el.textContent = details.gstr3bDeadline;
+  });
+  document.querySelectorAll(".dynamic-fy-label").forEach(el => {
+    el.textContent = details.fy;
+  });
+
+  const homeDeadline = document.getElementById("homeHeroDeadline");
+  if (homeDeadline) homeDeadline.textContent = `Statutory Deadline: ${details.gstr3bDeadlineShort}, ${details.year}`;
+  const homeStepHeader = document.getElementById("homeHeroStepTitle");
+  if (homeStepHeader) homeStepHeader.textContent = `Step 2: Purchases — Add inward invoices for ${details.short}`;
+}
+window.syncPeriodAcrossUi = syncPeriodAcrossUi;
+
+// ============================================================================
+// File GST Screen Controller (Simplified 2-Choice, Nil Verify, 5-Step Stepper)
+// ============================================================================
+let currentGuidedStep = 1;
+let cachedDashboardMetrics = null;
+
+function resetFileGstChoice() {
+  const choiceSec = document.getElementById("fileGstChoiceSection");
+  const nilSec = document.getElementById("fileGstNilSection");
+  const guidedSec = document.getElementById("fileGstGuidedSection");
+
+  if (choiceSec) choiceSec.classList.remove("hidden");
+  if (nilSec) nilSec.classList.add("hidden");
+  if (guidedSec) guidedSec.classList.add("hidden");
+}
+window.resetFileGstChoice = resetFileGstChoice;
+
+async function startNilFilingFlow() {
+  const choiceSec = document.getElementById("fileGstChoiceSection");
+  const nilSec = document.getElementById("fileGstNilSection");
+  const guidedSec = document.getElementById("fileGstGuidedSection");
+  const content = document.getElementById("nilVerificationContent");
+
+  if (choiceSec) choiceSec.classList.add("hidden");
+  if (guidedSec) guidedSec.classList.add("hidden");
+  if (nilSec) nilSec.classList.remove("hidden");
+
+  if (!content) return;
+  content.innerHTML = `
+    <div class="p-8 text-center space-y-3">
+      <div class="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <p class="font-body-md text-secondary">Verifying active ledger records and checking for transactions...</p>
+    </div>
+  `;
+
+  try {
+    const period = appState.gst?.business?.filingPeriod || "102026";
+    const res = await fetch(`/api/gst/nil-verify?period=${period}`);
+    const data = await res.json();
+
+    if (data.hasTransactions) {
+      const salesCount = data.verification?.salesCount || 0;
+      const purchasesCount = data.verification?.purchasesCount || 0;
+      const salesTaxable = data.verification?.salesTaxable || 0;
+      const purchasesTaxable = data.verification?.purchasesTaxable || 0;
+
+      content.innerHTML = `
+        <div class="p-6 md:p-8 rounded-xl border-2 border-amber-300 bg-amber-50/60 space-y-5">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[28px]">warning</span>
+            </div>
+            <div class="space-y-1.5">
+              <h3 class="font-headline-sm text-headline-sm font-bold text-amber-950">
+                Cannot File Nil Return: Recorded Transactions Found
+              </h3>
+              <p class="font-body-md text-amber-900 leading-relaxed">
+                We found active transaction records for <strong>${data.tradeName || "your business"} (${data.gstin})</strong> for <strong>${data.periodLabel}</strong>:
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+            <div class="p-4 rounded-lg bg-surface border border-amber-200 shadow-xs space-y-1">
+              <span class="text-xs font-semibold uppercase tracking-wider text-secondary">Sales Invoices</span>
+              <div class="font-numeric-lg text-lg font-bold text-on-surface">${salesCount} Invoices (₹${salesTaxable.toLocaleString("en-IN")})</div>
+              <p class="text-xs text-secondary">Outward supplies must be filed in regular return</p>
+            </div>
+            <div class="p-4 rounded-lg bg-surface border border-amber-200 shadow-xs space-y-1">
+              <span class="text-xs font-semibold uppercase tracking-wider text-secondary">Purchase Bills</span>
+              <div class="font-numeric-lg text-lg font-bold text-on-surface">${purchasesCount} Bills (₹${purchasesTaxable.toLocaleString("en-IN")})</div>
+              <p class="text-xs text-secondary">Inward purchases eligible for ITC reconciliation</p>
+            </div>
+          </div>
+
+          <p class="font-body-sm text-amber-800 bg-amber-100/70 p-3.5 rounded-lg border border-amber-200">
+            <strong>Statutory Rule:</strong> Under the CGST Act, a Nil return can only be submitted if you have <strong>zero</strong> outward sales, <strong>zero</strong> inward purchases, <strong>zero</strong> reverse charge liability, and <strong>zero</strong> ITC claims for the entire month.
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center gap-3 pt-3 border-t border-amber-200">
+            <button onclick="startGuidedFiling(1)" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+              <span>Proceed with Standard Filing</span>
+              <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+            <button onclick="resetFileGstChoice()" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-secondary font-label-md hover:bg-surface-container transition-colors cursor-pointer">
+              ← Change Choice
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      content.innerHTML = `
+        <div class="space-y-6">
+          <div class="p-5 rounded-xl border border-emerald-300 bg-emerald-50/70 space-y-1.5">
+            <div class="flex items-center gap-2 text-emerald-900 font-headline-sm font-bold">
+              <span class="material-symbols-outlined text-emerald-700 text-[24px]">verified</span>
+              <span>Eligibility Verified: Ready to File Nil Return</span>
+            </div>
+            <p class="font-body-md text-emerald-800">
+              ${data.message}
+            </p>
+            <div class="pt-1 flex items-center gap-4 text-xs font-medium text-emerald-900">
+              <span>GSTIN: <strong class="font-mono">${data.gstin}</strong></span>
+              <span>•</span>
+              <span>Filing Period: <strong>${data.periodLabel}</strong></span>
+              <span>•</span>
+              <span>Status: <strong class="text-emerald-700">Zero Ledger Verified ✓</strong></span>
+            </div>
+          </div>
+
+          <div class="p-6 rounded-xl border border-outline-variant bg-surface space-y-4 shadow-xs">
+            <h4 class="font-headline-sm font-bold text-on-surface">Confirm Nil Return</h4>
+            <p class="font-body-md text-secondary">
+              Please confirm that your business had no sales, purchases or other reportable transactions during this period.
+            </p>
+
+            <div class="flex items-start gap-3 p-4 rounded-lg bg-surface-container-low border border-outline-variant">
+              <input type="checkbox" id="nilConfirmCheckbox" class="w-5 h-5 rounded text-primary focus:ring-primary border-outline cursor-pointer mt-0.5" onchange="toggleNilSubmitBtn(this.checked)">
+              <label for="nilConfirmCheckbox" class="font-body-md text-on-surface cursor-pointer select-none">
+                I confirm that <strong>${data.tradeName || "Apex Retailers"} (${data.gstin})</strong> had no sales, purchases, or other reportable transactions during <strong>${data.periodLabel}</strong>. I declare that this information is complete and accurate.
+              </label>
+            </div>
+
+            <div class="p-3.5 rounded-lg bg-surface-container text-xs text-secondary flex items-start gap-2.5">
+              <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">info</span>
+              <span><strong>Notice:</strong> Submitting updates your compliance status and generates a simulated statutory acknowledgement receipt. It does not transmit live data to the GSTN portal without live credentials.</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-outline-variant">
+            <button onclick="resetFileGstChoice()" class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant text-secondary font-label-md hover:bg-surface-container cursor-pointer">
+              ← Change Choice
+            </button>
+            <button id="btnSubmitNilReturn" onclick="executeNilFilingSubmission()" disabled class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold opacity-40 cursor-not-allowed hover:bg-primary-container transition-all flex items-center justify-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">verified</span>
+              <span>Submit Nil Return (Simulated)</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+  } catch (err) {
+    content.innerHTML = `
+      <div class="p-6 rounded-xl border border-red-300 bg-red-50 text-red-900 space-y-3">
+        <h4 class="font-bold">Verification Error</h4>
+        <p class="text-sm">Unable to verify transactions: ${err.message}</p>
+        <button onclick="resetFileGstChoice()" class="px-4 py-2 rounded-lg bg-surface border text-sm font-medium">← Go Back</button>
+      </div>
+    `;
+  }
+}
+window.startNilFilingFlow = startNilFilingFlow;
+
+function toggleNilSubmitBtn(isChecked) {
+  const btn = document.getElementById("btnSubmitNilReturn");
+  if (!btn) return;
+  if (isChecked) {
+    btn.disabled = false;
+    btn.classList.remove("opacity-40", "cursor-not-allowed");
+    btn.classList.add("cursor-pointer");
+  } else {
+    btn.disabled = true;
+    btn.classList.add("opacity-40", "cursor-not-allowed");
+    btn.classList.remove("cursor-pointer");
+  }
+}
+window.toggleNilSubmitBtn = toggleNilSubmitBtn;
+
+async function executeNilFilingSubmission() {
+  const checkbox = document.getElementById("nilConfirmCheckbox");
   if (checkbox && !checkbox.checked) {
     showToast("Please check the confirmation declaration first.", "warning");
     return;
   }
+  const btn = document.getElementById("btnSubmitNilReturn");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Filing...`;
+  }
+
   try {
+    const period = appState.gst?.business?.filingPeriod || "102026";
     const res = await fetch("/api/gst/nil-file", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        gstin: typeof getActiveGstin === 'function' ? getActiveGstin() : '27AAACA1234A1Z5',
-        period: "102026",
+        period,
         authorisedPerson: "Rajesh Sharma",
         verificationMode: "EVC_OTP"
       })
@@ -4100,15 +4396,377 @@ async function submitNilReturn() {
       if (arnEl && data.arn) {
         arnEl.textContent = data.arn;
       }
-      if (typeof openArnModal === 'function') {
+      if (typeof openArnModal === "function") {
         openArnModal();
       }
+      resetFileGstChoice();
     } else {
       showToast(data.error || "Filing failed", "error");
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">verified</span> Submit Nil Return (Simulated)`;
+      }
     }
   } catch (err) {
     showToast("Failed to submit Nil Return: " + err.message, "error");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">verified</span> Submit Nil Return (Simulated)`;
+    }
   }
+}
+window.executeNilFilingSubmission = executeNilFilingSubmission;
+
+function startGuidedFiling(step = 1) {
+  const choiceSec = document.getElementById("fileGstChoiceSection");
+  const nilSec = document.getElementById("fileGstNilSection");
+  const guidedSec = document.getElementById("fileGstGuidedSection");
+
+  if (choiceSec) choiceSec.classList.add("hidden");
+  if (nilSec) nilSec.classList.add("hidden");
+  if (guidedSec) guidedSec.classList.remove("hidden");
+
+  setGuidedStep(step);
+}
+window.startGuidedFiling = startGuidedFiling;
+
+async function setGuidedStep(step = 1) {
+  currentGuidedStep = step;
+
+  const pills = document.querySelectorAll("#guidedStepperPills .stepper-pill");
+  pills.forEach((p, idx) => {
+    const pStep = idx + 1;
+    const numSpan = p.querySelector("span:first-child");
+    if (pStep === step) {
+      p.className = "stepper-pill flex items-center gap-2 p-2.5 rounded-lg border text-left cursor-pointer transition-all active border-primary bg-surface-container-high text-primary font-semibold";
+      if (numSpan) numSpan.className = "w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-bold shrink-0";
+    } else if (pStep < step) {
+      p.className = "stepper-pill flex items-center gap-2 p-2.5 rounded-lg border text-left cursor-pointer transition-all border-emerald-300 bg-emerald-50/70 text-emerald-900 font-medium";
+      if (numSpan) numSpan.className = "w-6 h-6 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs font-bold shrink-0";
+    } else {
+      p.className = "stepper-pill flex items-center gap-2 p-2.5 rounded-lg border text-left cursor-pointer transition-all border-outline-variant bg-surface text-secondary";
+      if (numSpan) numSpan.className = "w-6 h-6 rounded-full bg-surface-container-highest text-secondary flex items-center justify-center text-xs font-bold shrink-0";
+    }
+  });
+
+  const stepTitles = [
+    "Step 1: Sales",
+    "Step 2: Purchases",
+    "Step 3: Input Tax Credit",
+    "Step 4: Tax Summary",
+    "Step 5: Review & File"
+  ];
+  const titleEl = document.getElementById("guidedStepHeaderTitle");
+  if (titleEl) titleEl.textContent = stepTitles[step - 1] || "Step 1: Sales";
+
+  const badgeEl = document.getElementById("guidedStepBadge");
+  if (badgeEl) badgeEl.textContent = `Step ${step} of 5`;
+
+  const container = document.getElementById("guidedStepContent");
+  if (!container) return;
+
+  try {
+    const period = appState.gst?.business?.filingPeriod || "102026";
+    if (!cachedDashboardMetrics) {
+      const res = await fetch(`/api/dashboard/summary?period=${period}`);
+      const data = await res.json();
+      cachedDashboardMetrics = data.metrics || {};
+    }
+  } catch (err) {
+    console.warn("Could not fetch dashboard metrics for stepper:", err);
+  }
+
+  const m = cachedDashboardMetrics || {
+    salesCount: 14,
+    taxableSales: 842500,
+    totalOutputLiability: 151650,
+    purchasesCount: 8,
+    taxablePurchases: 412300,
+    totalEligibleItc: 74214,
+    blockedItc: 0,
+    netCashPayable: 77436
+  };
+
+  if (step === 1) {
+    container.innerHTML = `
+      <div class="space-y-6">
+        <div class="p-6 rounded-xl border border-outline-variant bg-surface-container-low/50 space-y-4">
+          <div class="space-y-1">
+            <h3 class="font-headline-sm font-bold text-on-surface">Sales Invoices</h3>
+            <p class="font-body-md text-secondary">
+              Review and record all sales invoices issued to customers during this month.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-secondary">Recorded Sales</span>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">${m.salesCount} Invoices</div>
+              <p class="text-xs text-secondary mt-0.5">B2B & B2C transactions</p>
+            </div>
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-secondary">Taxable Sales</span>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">₹${(m.taxableSales || 842500).toLocaleString("en-IN")}</div>
+              <p class="text-xs text-secondary mt-0.5">Net turnover before GST</p>
+            </div>
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-secondary">Tax Collected</span>
+              <div class="font-numeric-lg text-xl font-bold text-primary mt-1">₹${(m.totalOutputLiability || 151650).toLocaleString("en-IN")}</div>
+              <p class="text-xs text-secondary mt-0.5">IGST, CGST & SGST output tax</p>
+            </div>
+          </div>
+
+          <details class="text-xs text-secondary pt-2">
+            <summary class="font-medium text-primary hover:underline cursor-pointer select-none">Learn more about Sales filing requirements</summary>
+            <p class="mt-2 text-on-surface-variant leading-relaxed">
+              Sales invoices are reported in Form GSTR-1. Invoices with valid customer GSTINs are verified and transmitted so your buyers can claim eligible Input Tax Credit without notice disallowance.
+            </p>
+          </details>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-outline-variant">
+          <button onclick="switchSuite('gst')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+            <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+            <span>View / Add Sales Invoices</span>
+          </button>
+          <button onclick="setGuidedStep(2)" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+            <span>Continue to Purchases</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    `;
+  } else if (step === 2) {
+    container.innerHTML = `
+      <div class="space-y-6">
+        <div class="p-6 rounded-xl border border-outline-variant bg-surface-container-low/50 space-y-4">
+          <div class="space-y-1">
+            <h3 class="font-headline-sm font-bold text-on-surface">Purchases</h3>
+            <p class="font-body-md text-secondary">
+              Review inward purchase bills and expenses received from suppliers.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-secondary">Recorded Bills</span>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">${m.purchasesCount} Bills</div>
+              <p class="text-xs text-secondary mt-0.5">Scanned & verified inward bills</p>
+            </div>
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-secondary">Taxable Purchases</span>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">₹${(m.taxablePurchases || 412300).toLocaleString("en-IN")}</div>
+              <p class="text-xs text-secondary mt-0.5">Value of purchases before tax</p>
+            </div>
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-secondary">Tax on Purchases</span>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">₹${((m.totalEligibleItc || 74214) + (m.blockedItc || 0)).toLocaleString("en-IN")}</div>
+              <p class="text-xs text-secondary mt-0.5">Total GST paid to suppliers</p>
+            </div>
+          </div>
+
+          <details class="text-xs text-secondary pt-2">
+            <summary class="font-medium text-primary hover:underline cursor-pointer select-none">Learn more about Purchase bills and 180-day rules</summary>
+            <p class="mt-2 text-on-surface-variant leading-relaxed">
+              Under Rule 37 of the CGST Rules, purchase invoices must be paid to suppliers within 180 days from the invoice date. Unpaid invoices past 180 days require proportional reversal of credit with interest.
+            </p>
+          </details>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-outline-variant">
+          <div class="flex items-center gap-3 w-full sm:w-auto">
+            <button onclick="setGuidedStep(1)" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-secondary font-label-md hover:bg-surface-container transition-colors cursor-pointer">
+              ← Back to Sales
+            </button>
+            <button onclick="switchSuite('bills')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+              <span class="material-symbols-outlined text-[18px]">upload_file</span>
+              <span>View / Upload Bills</span>
+            </button>
+          </div>
+          <button onclick="setGuidedStep(3)" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+            <span>Continue to Input Tax Credit</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    `;
+  } else if (step === 3) {
+    container.innerHTML = `
+      <div class="space-y-6">
+        <div class="p-6 rounded-xl border border-outline-variant bg-surface-container-low/50 space-y-4">
+          <div class="space-y-1">
+            <h3 class="font-headline-sm font-bold text-on-surface">Available Input Tax Credit</h3>
+            <p class="font-body-md text-secondary">
+              Input Tax Credit available to reduce your tax payment, matched against supplier GSTR-2B.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-emerald-800">Available Credit</span>
+              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">₹${(m.totalEligibleItc || 74214).toLocaleString("en-IN")}</div>
+              <p class="text-xs text-secondary mt-0.5">Matched with supplier GSTR-2B</p>
+            </div>
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-secondary">Ineligible / Blocked Credit</span>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">₹${(m.blockedItc || 0).toLocaleString("en-IN")}</div>
+              <p class="text-xs text-secondary mt-0.5">Section 17(5) restricted credit</p>
+            </div>
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-amber-800">Pending Supplier Filing</span>
+              <div class="font-numeric-lg text-xl font-bold text-amber-700 mt-1">3 Bills</div>
+              <p class="text-xs text-secondary mt-0.5">Suppliers yet to file GSTR-1</p>
+            </div>
+          </div>
+
+          <details class="text-xs text-secondary pt-2">
+            <summary class="font-medium text-primary hover:underline cursor-pointer select-none">Learn more about GSTR-2B matching</summary>
+            <p class="mt-2 text-on-surface-variant leading-relaxed">
+              Under Section 16(2)(aa), Input Tax Credit can only be claimed if your supplier has uploaded the invoice in their GSTR-1 and it is reflected in your auto-drafted GSTR-2B statement.
+            </p>
+          </details>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-outline-variant">
+          <div class="flex items-center gap-3 w-full sm:w-auto">
+            <button onclick="setGuidedStep(2)" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-secondary font-label-md hover:bg-surface-container transition-colors cursor-pointer">
+              ← Back to Purchases
+            </button>
+            <button onclick="switchSuite('recon')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+              <span class="material-symbols-outlined text-[18px]">rule</span>
+              <span>Reconcile Bills</span>
+            </button>
+          </div>
+          <button onclick="setGuidedStep(4)" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+            <span>Continue to Tax Summary</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    `;
+  } else if (step === 4) {
+    container.innerHTML = `
+      <div class="space-y-6">
+        <div class="p-6 rounded-xl border border-outline-variant bg-surface-container-low/50 space-y-4">
+          <div class="space-y-1">
+            <h3 class="font-headline-sm font-bold text-on-surface">Tax Summary</h3>
+            <p class="font-body-md text-secondary">
+              Calculate your net tax liability after offsetting available Input Tax Credit.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-secondary">Total Tax on Sales</span>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">₹${(m.totalOutputLiability || 151650).toLocaleString("en-IN")}</div>
+              <p class="text-xs text-secondary mt-0.5">Gross liability assessed</p>
+            </div>
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-emerald-800">Less: Available Credit</span>
+              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">-₹${(m.totalEligibleItc || 74214).toLocaleString("en-IN")}</div>
+              <p class="text-xs text-secondary mt-0.5">Auto-offset applied u/r 88A</p>
+            </div>
+            <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
+              <span class="text-xs uppercase font-semibold text-error">Amount to Pay</span>
+              <div class="font-numeric-lg text-xl font-bold text-error mt-1">₹${(m.netCashPayable || 77436).toLocaleString("en-IN")}</div>
+              <p class="text-xs text-secondary mt-0.5">Cash payment required</p>
+            </div>
+          </div>
+
+          <details class="text-xs text-secondary pt-2">
+            <summary class="font-medium text-primary hover:underline cursor-pointer select-none">Learn more about Rule 88A tax set-off</summary>
+            <p class="mt-2 text-on-surface-variant leading-relaxed">
+              Section 49A/49B and Rule 88A require that IGST credit must be fully exhausted first before using CGST or SGST credits. CGST credit cannot be set off against SGST liability and vice versa.
+            </p>
+          </details>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-outline-variant">
+          <div class="flex items-center gap-3 w-full sm:w-auto">
+            <button onclick="setGuidedStep(3)" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-secondary font-label-md hover:bg-surface-container transition-colors cursor-pointer">
+              ← Back to Credit
+            </button>
+            <button onclick="switchSuite('taxcalc')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+              <span class="material-symbols-outlined text-[18px]">calculate</span>
+              <span>View Offset Details</span>
+            </button>
+          </div>
+          <button onclick="setGuidedStep(5)" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+            <span>Continue to Review & File</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    `;
+  } else if (step === 5) {
+    container.innerHTML = `
+      <div class="space-y-6">
+        <div class="p-6 rounded-xl border border-outline-variant bg-surface-container-low/50 space-y-4">
+          <div class="space-y-1">
+            <h3 class="font-headline-sm font-bold text-on-surface">Review & File GSTR-3B</h3>
+            <p class="font-body-md text-secondary">
+              Review your monthly return details before submitting.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-lg bg-surface border border-outline-variant space-y-3 shadow-xs">
+            <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
+              <span class="text-secondary">Taxpayer</span>
+              <span class="font-semibold text-on-surface" id="reviewEntityDisplay">Apex Retailers Pvt Ltd (27AAACA1234A1Z5)</span>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
+              <span class="text-secondary">Filing Period</span>
+              <span class="font-semibold text-on-surface dynamic-period-label">October 2026</span>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
+              <span class="text-secondary">Gross Output Tax (Sales)</span>
+              <span class="font-mono font-medium text-on-surface">₹${(m.totalOutputLiability || 151650).toLocaleString("en-IN")}</span>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
+              <span class="text-secondary">Input Tax Credit Offset</span>
+              <span class="font-mono font-medium text-emerald-700">-₹${(m.totalEligibleItc || 74214).toLocaleString("en-IN")}</span>
+            </div>
+            <div class="flex items-center justify-between py-2 text-base font-bold">
+              <span class="text-on-surface">Net Amount to Pay</span>
+              <span class="font-mono text-error">₹${(m.netCashPayable || 77436).toLocaleString("en-IN")}</span>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-lg bg-surface-container text-xs text-secondary flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">verified_user</span>
+            <span><strong>Notice:</strong> Submitting in simulation mode prepares your Form GSTR-3B and updates your electronic ledgers. No live GSTN transmission will occur without live credentials.</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-outline-variant">
+          <button onclick="setGuidedStep(4)" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-secondary font-label-md hover:bg-surface-container transition-colors cursor-pointer">
+            ← Back to Tax Summary
+          </button>
+          <button onclick="executeFinalFiling()" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+            <span class="material-symbols-outlined text-[18px]">verified</span>
+            <span>File GSTR-3B Return (Simulated)</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+}
+window.setGuidedStep = setGuidedStep;
+
+function executeFinalFiling() {
+  if (typeof window.executeGstr3bOffsetFiling === "function") {
+    return window.executeGstr3bOffsetFiling();
+  }
+  showToast("Simulated GSTR-3B Return filed successfully!", "success");
+  if (typeof openArnModal === "function") {
+    openArnModal();
+  }
+}
+window.executeFinalFiling = executeFinalFiling;
+
+// Retain legacy submitNilReturn for backward compatibility
+async function submitNilReturn() {
+  return executeNilFilingSubmission();
 }
 window.submitNilReturn = submitNilReturn;
 

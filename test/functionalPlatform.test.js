@@ -462,3 +462,86 @@ test("Regression & Defect Audit: Five-step filing navigation integrity & Nil Ret
   assert.ok(nilRes.arn.startsWith("NIL-"), "Nil ARN must have standard prefix");
   assert.ok(nilRes.watermark.includes("SIMULATION MODE"), "Nil ARN receipt must carry simulation watermark");
 });
+
+test("UX Simplification: File GST 2-Card Decision, Nil Pre-Check & Dynamic Period Sync", async () => {
+  const html = fs.readFileSync(path.join(process.cwd(), "index.html"), "utf8");
+  const js = fs.readFileSync(path.join(process.cwd(), "app.js"), "utf8");
+
+  // 1. Primary question is front-and-center
+  assert.ok(
+    html.includes("Did your business have any sales or purchases this month?"),
+    "File GST must feature the zero-jargon primary question"
+  );
+
+  // 2. Exactly two clean choice cards (YES and NO)
+  assert.ok(html.includes("YES — I had sales or purchases"), "YES card title present");
+  assert.ok(html.includes("Add your sales invoices and purchase bills."), "YES card description present");
+  assert.ok(html.includes("NO — I had no sales or purchases"), "NO card title present");
+  assert.ok(html.includes("Prepare your Nil GST return."), "NO card description present");
+
+  // 3. Removed technical clutter and duplicate buttons
+  assert.ok(!html.includes(">Audit Trail</button>"), "Audit Trail button removed from filing header");
+  assert.ok(!html.includes(">Prior GSTR-3B Summary</button>"), "Prior GSTR-3B Summary button removed from primary workflow");
+  assert.ok(!html.includes("Instant OTP or EVC Verification Simulator"), "Simulator marketing text removed");
+  assert.ok(!html.includes("Immediate ARN generation"), "Misleading immediate ARN generation removed");
+
+  // 4. Zero occurrences of outdated 2024 dates in index.html
+  const matches2024 = html.match(/2024/g) || [];
+  assert.equal(matches2024.length, 0, "No hardcoded 2024 dates should remain in index.html");
+
+  // 5. Pre-filing Nil Verification API blocks returns with transactions
+  const { handleFunctionalApi } = await import("../lib/functionalApi.js");
+  const { gstinRepo } = await import("../lib/db.js");
+
+  function mockApiCall(method, pathname, query = {}, body = null) {
+    const req = { method, url: pathname, headers: {} };
+    let statusCode = 200;
+    let data = "";
+    const res = {
+      writeHead(code) { statusCode = code; },
+      end(payload) { data = payload; }
+    };
+    return {
+      run: async () => {
+        await handleFunctionalApi(req, res, pathname, method, query, body);
+        return { statusCode, body: data ? JSON.parse(data) : null };
+      }
+    };
+  }
+
+  // MH branch has 6 sales and 2 purchases in development seed -> MUST BE BLOCKED
+  const mhBranch = gstinRepo.findByGstin("27AAACA1234A1Z5");
+  assert.ok(mhBranch, "MH branch exists");
+  await mockApiCall("POST", `/api/gstins/${mhBranch.id}/activate`).run();
+
+  const verifyMh = await mockApiCall("GET", "/api/gst/nil-verify", { period: "102026" }).run();
+  assert.equal(verifyMh.body.eligible, false, "Must block Nil filing when transactions exist");
+  assert.equal(verifyMh.body.hasTransactions, true, "hasTransactions flag must be true");
+  assert.ok(verifyMh.body.verification.salesCount > 0, "Must report actual sales invoices found");
+
+  const fileMh = await mockApiCall("POST", "/api/gst/nil-file", {}, { period: "102026" }).run();
+  assert.equal(fileMh.statusCode, 400, "POST /api/gst/nil-file must reject with HTTP 400 when transactions exist");
+  assert.equal(fileMh.body.success, false);
+
+  // Switch to KA branch with 0 transactions -> MUST BE ELIGIBLE
+  const { db } = await import("../lib/db.js");
+  const kaBranch = gstinRepo.findByGstin("29AAACB1234F1Z5");
+  assert.ok(kaBranch, "KA branch exists");
+  db.prepare("DELETE FROM tax_returns WHERE gstin_id = ? AND period = ?").run(kaBranch.id, "102026");
+  await mockApiCall("POST", `/api/gstins/${kaBranch.id}/activate`).run();
+
+  const verifyKa = await mockApiCall("GET", "/api/gst/nil-verify", { period: "102026" }).run();
+  assert.equal(verifyKa.body.eligible, true, "Zero transactions entity must be eligible for Nil");
+  assert.equal(verifyKa.body.hasTransactions, false);
+  assert.equal(verifyKa.body.verification.salesCount, 0);
+
+  const fileKa = await mockApiCall("POST", "/api/gst/nil-file", {}, { period: "102026", authorisedPerson: "Rajesh Sharma" }).run();
+  assert.equal(fileKa.statusCode, 200);
+  assert.equal(fileKa.body.success, true);
+  assert.equal(fileKa.body.isNil, true);
+  assert.equal(fileKa.body.isSimulation, true);
+  assert.ok(fileKa.body.arn.startsWith("NIL-AA29"));
+
+  // Reset back to MH primary
+  await mockApiCall("POST", `/api/gstins/${mhBranch.id}/activate`).run();
+});

@@ -104,7 +104,7 @@ async function runAcceptanceVerification() {
     assert.strictEqual(rootRes.status, 200);
     assert.ok(rootRes.body.includes('id="viewFileGstSuite"'), "#viewFileGstSuite must be in HTML");
     assert.ok(rootRes.body.includes('id="bottom-nav-file-gst" onclick="switchSuite(\'file-gst\')"'), "Mobile bottom nav must navigate to file-gst");
-    assert.ok(rootRes.body.includes('Step 2: Purchases — Add inward invoices for Oct 2024'), "Filing flow Step 2 banner rendered");
+    assert.ok(rootRes.body.includes('Step 2: Purchases — Add inward invoices for Oct 2026'), "Filing flow Step 2 banner rendered");
     results.push({ item: "4. File GST 5-Step Return Workflow", status: "PASS", note: "Mobile bottom nav points to file-gst and 5-step return workflow renders cleanly" });
 
     // 6. Bills & Docs allows upload, OCR review, and download
