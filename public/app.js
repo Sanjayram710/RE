@@ -88,29 +88,48 @@ window.apiFetch = apiFetch;
 
 async function initSessionFromBackend() {
   try {
-    const res = await fetch("/api/auth/session");
-    if (res.ok) {
-      const data = await res.json();
-      if (data.authenticated && data.activeGstin) {
-        appState.csrfToken = data.csrfToken;
-        appState.organization = data.organization;
-        appState.activeGstin = data.activeGstin;
-        appState.allGstins = data.allGstins || [];
-        appState.activePeriod = data.activePeriod || appState.activePeriod || "102026";
-        if (!appState.gst) appState.gst = {};
-        if (!appState.gst.business) appState.gst.business = {};
-        appState.gst.business.gstin = data.activeGstin.gstin;
-        appState.gst.business.tradeName = data.activeGstin.trade_name;
-        appState.gst.business.legalName = data.organization?.name;
-        appState.gst.business.filingPeriod = data.activePeriod || appState.activePeriod || "102026";
-        appState.auth = {
-          isLoggedIn: true,
-          user: data.user,
-          csrfToken: data.csrfToken
-        };
-        selectFilingEntity(data.activeGstin.gstin, data.activeGstin.trade_name || data.organization?.name, data.activeGstin.state_name);
-        if (typeof renderAuthState === "function") renderAuthState();
+    let res = await fetch("/api/auth/session", { credentials: "same-origin" });
+    let data = res.ok ? await res.json() : null;
+
+    if (!data || !data.authenticated) {
+      // Auto-initialize default development/demo session for Rajesh Sharma
+      const loginRes = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ email: "rajesh.sharma@apexretail.com", password: "ApexAdmin@2026" })
+      });
+      if (loginRes.ok) {
+        const loginData = await loginRes.json();
+        if (loginData.sessionToken) {
+          appState.sessionToken = loginData.sessionToken;
+        }
+        res = await fetch("/api/auth/session", { credentials: "same-origin" });
+        data = res.ok ? await res.json() : null;
       }
+    }
+
+    if (data && data.authenticated && data.activeGstin) {
+      appState.csrfToken = data.csrfToken;
+      appState.organization = data.organization;
+      appState.activeGstin = data.activeGstin;
+      appState.allGstins = data.allGstins || [];
+      appState.activePeriod = data.activePeriod || appState.activePeriod || "102026";
+      if (!appState.gst) appState.gst = {};
+      if (!appState.gst.business) appState.gst.business = {};
+      appState.gst.business.gstin = data.activeGstin.gstin;
+      appState.gst.business.tradeName = data.activeGstin.trade_name;
+      appState.gst.business.legalName = data.organization?.name;
+      appState.gst.business.filingPeriod = data.activePeriod || appState.activePeriod || "102026";
+      appState.auth = {
+        isLoggedIn: true,
+        user: data.user,
+        csrfToken: data.csrfToken
+      };
+      if (typeof selectFilingEntity === "function") {
+        selectFilingEntity(data.activeGstin.gstin, data.activeGstin.trade_name || data.organization?.name, data.activeGstin.state_name);
+      }
+      if (typeof renderAuthState === "function") renderAuthState();
     }
   } catch (err) {
     console.warn("Could not retrieve session from /api/auth/session:", err);
@@ -239,6 +258,7 @@ function showToast(message, type = "info") {
 // ============================================================================
 document.addEventListener("DOMContentLoaded", async () => {
   setupSidebarCountdown();
+  await initSessionFromBackend();
   initAuth();
   initKioskEventListeners();
   await fetchAppMode();
