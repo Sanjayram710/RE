@@ -1,3 +1,111 @@
+
+// ============================================================================
+// SECURITY & API CLIENT ENGINE (CSRF, Cookie Auth, Session Handling)
+// ============================================================================
+function getCsrfToken() {
+  if (appState.csrfToken) return appState.csrfToken;
+  const match = document.cookie.match(/(?:^|;\s*)simplegst_csrf=([^;]+)/);
+  if (match) {
+    const val = decodeURIComponent(match[1]);
+    appState.csrfToken = val;
+    return val;
+  }
+  return "";
+}
+window.getCsrfToken = getCsrfToken;
+
+function getActiveGstin() {
+  return appState.activeGstin?.gstin ||
+         appState.gst?.business?.gstin ||
+         appState.auth?.user?.gstin ||
+         null;
+}
+window.getActiveGstin = getActiveGstin;
+
+function getActivePeriod() {
+  return appState.activePeriod ||
+         appState.gst?.business?.filingPeriod ||
+         null;
+}
+window.getActivePeriod = getActivePeriod;
+
+async function apiFetch(url, options = {}) {
+  const method = (options.method || "GET").toUpperCase();
+  const isStateChanging = ["POST", "PUT", "DELETE", "PATCH"].includes(method);
+
+  const headers = {
+    ...(options.headers || {})
+  };
+
+  if (options.body && typeof options.body === "string" && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const csrf = getCsrfToken();
+  if (isStateChanging && csrf && !headers["X-CSRF-Token"] && !headers["x-csrf-token"]) {
+    headers["X-CSRF-Token"] = csrf;
+  }
+
+  if (appState.sessionToken && !headers["Authorization"] && !headers["authorization"]) {
+    headers["Authorization"] = `Bearer ${appState.sessionToken}`;
+  }
+
+  const res = await fetch(url, { ...options, headers });
+
+  if (res.status === 401) {
+    console.warn("Session expired or unauthorized request to:", url);
+    if (typeof showToast === "function") {
+      showToast("Authentication required or session expired. Please sign in.", "warning");
+    }
+  } else if (res.status === 403) {
+    const cloned = res.clone();
+    try {
+      const errData = await cloned.json();
+      if (errData.error && errData.error.includes("CSRF")) {
+        console.error("CSRF token validation failed on:", url);
+        if (typeof showToast === "function") {
+          showToast("Security check (CSRF) failed. Please refresh your session.", "error");
+        }
+      }
+    } catch (_) {}
+  }
+
+  return res;
+}
+window.apiFetch = apiFetch;
+
+async function initSessionFromBackend() {
+  try {
+    const res = await fetch("/api/auth/session");
+    if (res.ok) {
+      const data = await res.json();
+      if (data.authenticated && data.activeGstin) {
+        appState.csrfToken = data.csrfToken;
+        appState.organization = data.organization;
+        appState.activeGstin = data.activeGstin;
+        appState.allGstins = data.allGstins || [];
+        appState.activePeriod = data.activePeriod || appState.activePeriod || "102026";
+        if (!appState.gst) appState.gst = {};
+        if (!appState.gst.business) appState.gst.business = {};
+        appState.gst.business.gstin = data.activeGstin.gstin;
+        appState.gst.business.tradeName = data.activeGstin.trade_name;
+        appState.gst.business.legalName = data.organization?.name;
+        appState.gst.business.filingPeriod = data.activePeriod || appState.activePeriod || "102026";
+        appState.auth = {
+          isLoggedIn: true,
+          user: data.user,
+          csrfToken: data.csrfToken
+        };
+        selectFilingEntity(data.activeGstin.gstin, data.activeGstin.trade_name || data.organization?.name, data.activeGstin.state_name);
+        if (typeof renderAuthState === "function") renderAuthState();
+      }
+    }
+  } catch (err) {
+    console.warn("Could not retrieve session from /api/auth/session:", err);
+  }
+}
+window.initSessionFromBackend = initSessionFromBackend;
+
 /**
    SimpleGST Client Application & ITR E-Filing Platform
    Faithfully reproduces the ITR e-filing flow from screenshots and integrates the GST Engine
@@ -381,6 +489,26 @@ function executeSwitchSuite(suite) {
       viewVault.classList.add("active");
       viewVault.classList.remove("hidden");
       viewVault.style.display = "block";
+    }
+  } else if (suite === "sales" || suite === "sales-suite") {
+    if (viewSales) {
+      viewSales.classList.add("active");
+      viewSales.classList.remove("hidden");
+      viewSales.style.display = "block";
+    }
+    highlightSidebarNav('nav-link-sales');
+    if (typeof renderSalesSuite === "function") {
+      renderSalesSuite();
+    }
+  } else if (suite === "purchase" || suite === "purchases" || suite === "purchase-suite") {
+    if (viewPurchase) {
+      viewPurchase.classList.add("active");
+      viewPurchase.classList.remove("hidden");
+      viewPurchase.style.display = "block";
+    }
+    highlightSidebarNav('nav-link-purchases');
+    if (typeof renderPurchaseSuite === "function") {
+      renderPurchaseSuite();
     }
   }
 
@@ -1134,7 +1262,7 @@ function selectFilingEntity(pan, name, subtitle) {
     .then(data => {
       const g = (data.gstins || []).find(x => x.gstin === pan);
       if (g) {
-        fetch(`/api/gstins/${g.id}/activate`, { method: "POST" })
+        apiFetch(`/api/gstins/${g.id}/activate`, { method: "POST" })
           .then(() => {
             if (typeof syncPeriodAcrossUi === "function") syncPeriodAcrossUi();
             if (typeof loadDashboardData === "function") loadDashboardData();
@@ -1847,8 +1975,22 @@ async function saveManualInvoice(type) {
     return;
   }
 
-  const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
-  const activeGstin = appState.gst?.business?.gstin || "27AAACA1234A1Z5";
+  const activeGstin = getActiveGstin();
+  if (!activeGstin) {
+    const msg = "Validation Error: Active business GSTIN is missing. Please select an entity from the workspace.";
+    if (typeof showToast === "function") showToast(msg, "error");
+    else alert(msg);
+    return;
+  }
+
+  const period = getActivePeriod();
+  if (!period) {
+    const msg = "Validation Error: Return filing period is missing. Please select a filing period.";
+    if (typeof showToast === "function") showToast(msg, "error");
+    else alert(msg);
+    return;
+  }
+
   const pos = gstin && gstin.length >= 2 ? gstin.slice(0, 2) : activeGstin.slice(0, 2);
 
   const endpoint = type === "sales" ? `/api/sales?period=${period}` : `/api/purchases?period=${period}`;
@@ -1865,7 +2007,7 @@ async function saveManualInvoice(type) {
     invoiceNumber: invNo,
     invoiceDate: date,
     supplierName: party,
-    supplierGstin: gstin || "27AAACA1234A1Z5",
+    supplierGstin: gstin || activeGstin,
     pos,
     taxableAmount: taxable,
     gstRate: rate,
@@ -1874,9 +2016,8 @@ async function saveManualInvoice(type) {
   };
 
   try {
-    const res = await fetch(endpoint, {
+    const res = await apiFetch(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
     const data = await res.json();
@@ -1935,7 +2076,7 @@ function handleFileChosen(e) {
   reader.onload = async (evt) => {
     const rawCsv = evt.target.result;
     try {
-      const res = await fetch("/api/invoices/import", {
+      const res = await apiFetch("/api/invoices/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rawCsv })
@@ -4318,7 +4459,7 @@ async function switchFilingPeriod(periodStr) {
   if (menu) menu.classList.add("hidden");
 
   try {
-    await fetch("/api/context/period", {
+    await apiFetch("/api/context/period", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ period: p })
@@ -4524,6 +4665,21 @@ window.renderCopilotWorkspace = renderCopilotWorkspace;
 // Modal Controllers: New Sales Invoice Modal
 // ============================================================================
 function openNewInvoiceModal() {
+  const activeGstin = getActiveGstin();
+  if (!activeGstin) {
+    if (typeof showToast === "function") {
+      showToast("Please sign in or select an active business GSTIN before creating an invoice.", "warning");
+    }
+    return;
+  }
+  const period = getActivePeriod();
+  if (!period) {
+    if (typeof showToast === "function") {
+      showToast("Please select a return filing period first.", "warning");
+    }
+    return;
+  }
+
   const m = document.getElementById('modalNewInvoice');
   if (m) {
     m.classList.remove('hidden');
@@ -4536,6 +4692,10 @@ function openNewInvoiceModal() {
   const numInput = document.getElementById('newInvNumber');
   if (numInput && !numInput.value) {
     numInput.value = `INV-${Date.now().toString().slice(-4)}`;
+  }
+  const posSelect = document.getElementById('newInvPos');
+  if (posSelect && !posSelect.dataset.userModified) {
+    posSelect.value = activeGstin.slice(0, 2);
   }
   calculateNewInvoiceTax();
 }
@@ -4550,14 +4710,29 @@ function closeNewInvoiceModal() {
 }
 window.closeNewInvoiceModal = closeNewInvoiceModal;
 
+function onCustomerGstinInput() {
+  const custGstin = (document.getElementById('newInvCustomerGstin')?.value || "").trim().toUpperCase();
+  const posSelect = document.getElementById('newInvPos');
+  if (custGstin.length >= 2 && posSelect && !posSelect.dataset.userModified) {
+    const stateCode = custGstin.slice(0, 2);
+    posSelect.value = stateCode;
+  }
+  calculateNewInvoiceTax();
+}
+window.onCustomerGstinInput = onCustomerGstinInput;
+
 function calculateNewInvoiceTax() {
   const taxable = parseFloat(document.getElementById('newInvTaxable')?.value) || 0;
   const rate = parseFloat(document.getElementById('newInvGstRate')?.value) || 0;
-  const custGstin = (document.getElementById('newInvCustomerGstin')?.value || "").trim().toUpperCase();
-  const activeGstin = appState.gst?.business?.gstin || "27AAACA1234A1Z5";
-  const activeState = activeGstin.slice(0, 2);
-  const custState = custGstin.length >= 2 ? custGstin.slice(0, 2) : activeState;
-  const isInter = custGstin.length >= 2 && custState !== activeState;
+
+  const activeGstin = getActiveGstin();
+  const activeState = (activeGstin && activeGstin.length >= 2) ? activeGstin.slice(0, 2) : "27";
+
+  const posSelect = document.getElementById('newInvPos');
+  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : activeState;
+
+  // Inter-State if Place of Supply differs from seller state
+  const isInter = pos !== activeState;
 
   const totalTax = taxable * (rate / 100);
   let cgst = 0, sgst = 0, igst = 0;
@@ -4567,17 +4742,17 @@ function calculateNewInvoiceTax() {
     igst = totalTax;
     igstRate = rate;
     const stEl = document.getElementById('newInvSupplyType');
-    if (stEl) stEl.textContent = `Inter-State (IGST) — Place of Supply: ${custState}`;
+    if (stEl) stEl.textContent = `Inter-State Supply (IGST) — Place of Supply: ${pos}`;
   } else {
     cgst = totalTax / 2;
     sgst = totalTax / 2;
     cgstRate = rate / 2;
     sgstRate = rate / 2;
     const stEl = document.getElementById('newInvSupplyType');
-    if (stEl) stEl.textContent = `Intra-State (CGST + SGST)`;
+    if (stEl) stEl.textContent = `Intra-State Supply (CGST + SGST) — Place of Supply: ${pos}`;
   }
 
-  const fmt = (n) => "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   if (document.getElementById('newInvCgstRate')) document.getElementById('newInvCgstRate').textContent = cgstRate;
   if (document.getElementById('newInvSgstRate')) document.getElementById('newInvSgstRate').textContent = sgstRate;
   if (document.getElementById('newInvIgstRate')) document.getElementById('newInvIgstRate').textContent = igstRate;
@@ -4597,38 +4772,56 @@ async function submitNewInvoice(event) {
   const customerGstin = document.getElementById('newInvCustomerGstin')?.value?.trim().toUpperCase();
   const taxableAmount = parseFloat(document.getElementById('newInvTaxable')?.value) || 0;
   const gstRate = parseFloat(document.getElementById('newInvGstRate')?.value) || 0;
+  const supplyType = document.getElementById('newInvSupplyTypeSelect')?.value || (customerGstin ? "B2B" : "B2C");
 
-  if (!invoiceNumber || !invoiceDate || !customerName || taxableAmount <= 0) {
+  const activeGstin = getActiveGstin();
+  if (!activeGstin) {
     if (typeof showToast === "function") {
-      showToast("Please enter all required invoice fields.", "warning");
+      showToast("Validation Error: Active business GSTIN is missing. Please sign in or select an active entity.", "error");
     }
     return;
   }
 
   const period = getActivePeriod();
-  const activeGstin = appState.gst?.business?.gstin || "27AAACA1234A1Z5";
-  const pos = customerGstin && customerGstin.length >= 2 ? customerGstin.slice(0, 2) : activeGstin.slice(0, 2);
+  if (!period) {
+    if (typeof showToast === "function") {
+      showToast("Validation Error: Return filing period is missing. Please select a filing period.", "error");
+    }
+    return;
+  }
+
+  if (!invoiceNumber || !invoiceDate || !customerName || taxableAmount <= 0) {
+    if (typeof showToast === "function") {
+      showToast("Please enter all required invoice fields (Invoice #, Date, Customer, Taxable Value).", "warning");
+    }
+    return;
+  }
+
+  const posSelect = document.getElementById('newInvPos');
+  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : activeGstin.slice(0, 2);
+
+  const btn = document.querySelector("#modalNewInvoice button[type='submit']");
+  if (btn) btn.disabled = true;
 
   try {
-    const res = await fetch(`/api/sales?period=${period}`, {
+    const res = await apiFetch(`/api/sales?period=${period}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         invoiceNumber,
         invoiceDate,
         customerName,
-        customerGstin,
+        customerGstin: customerGstin || undefined,
         pos,
         taxableAmount,
         gstRate,
-        supplyType: customerGstin ? "B2B" : "B2C"
+        supplyType
       })
     });
     const data = await res.json();
     if (res.ok && data.success) {
       closeNewInvoiceModal();
       if (typeof showToast === "function") {
-        showToast(`Invoice ${invoiceNumber} created and saved to database!`, "success");
+        showToast(`Sales Invoice ${invoiceNumber} created and saved to SQLite database!`, "success");
       }
       if (typeof loadDashboardData === "function") {
         loadDashboardData(period);
@@ -4638,6 +4831,7 @@ async function submitNewInvoice(event) {
       }
       const form = document.querySelector("#modalNewInvoice form");
       if (form) form.reset();
+      if (posSelect) delete posSelect.dataset.userModified;
     } else {
       if (typeof showToast === "function") {
         showToast(data.error || "Failed to create invoice", "error");
@@ -4647,6 +4841,8 @@ async function submitNewInvoice(event) {
     if (typeof showToast === "function") {
       showToast("Network error creating invoice: " + err.message, "error");
     }
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 window.submitNewInvoice = submitNewInvoice;
@@ -4833,7 +5029,7 @@ async function executeNilFilingSubmission() {
 
   try {
     const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
-    const res = await fetch("/api/gst/nil-file", {
+    const res = await apiFetch("/api/gst/nil-file", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -5503,7 +5699,7 @@ window.submitNilFiling = async function() {
 
   try {
     const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
-    const res = await fetch("/api/gst/nil-file", {
+    const res = await apiFetch("/api/gst/nil-file", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -6121,6 +6317,21 @@ window.loadRcmData = async function() {
 // MODAL CONTROLLER: NEW INWARD PURCHASE BILL
 // ============================================================================
 function openNewPurchaseModal() {
+  const activeGstin = getActiveGstin();
+  if (!activeGstin) {
+    if (typeof showToast === "function") {
+      showToast("Please sign in or select an active business GSTIN before creating a purchase bill.", "warning");
+    }
+    return;
+  }
+  const period = getActivePeriod();
+  if (!period) {
+    if (typeof showToast === "function") {
+      showToast("Please select a return filing period first.", "warning");
+    }
+    return;
+  }
+
   const m = document.getElementById('modalNewPurchase');
   if (m) {
     m.classList.remove('hidden');
@@ -6133,6 +6344,10 @@ function openNewPurchaseModal() {
   const numInput = document.getElementById('newPurNumber');
   if (numInput && !numInput.value) {
     numInput.value = `BILL-${Date.now().toString().slice(-4)}`;
+  }
+  const posSelect = document.getElementById('newPurPos');
+  if (posSelect && !posSelect.dataset.userModified) {
+    posSelect.value = activeGstin.slice(0, 2);
   }
   calculateNewPurchaseTax();
 }
@@ -6147,21 +6362,36 @@ function closeNewPurchaseModal() {
 }
 window.closeNewPurchaseModal = closeNewPurchaseModal;
 
+function onSupplierGstinInput() {
+  const suppGstin = (document.getElementById('newPurSupplierGstin')?.value || "").trim().toUpperCase();
+  const posSelect = document.getElementById('newPurPos');
+  const activeGstin = getActiveGstin();
+  if (posSelect && !posSelect.dataset.userModified && activeGstin) {
+    posSelect.value = activeGstin.slice(0, 2);
+  }
+  calculateNewPurchaseTax();
+}
+window.onSupplierGstinInput = onSupplierGstinInput;
+
 function calculateNewPurchaseTax() {
   const taxable = parseFloat(document.getElementById('newPurTaxable')?.value) || 0;
   const rate = parseFloat(document.getElementById('newPurGstRate')?.value) || 0;
-  const suppGstin = (document.getElementById('newPurSupplierGstin')?.value || "").trim().toUpperCase();
-  const activeGstin = appState.gst?.business?.gstin || "27AAACA1234A1Z5";
-  const activeState = activeGstin.slice(0, 2);
-  const suppState = suppGstin.length >= 2 ? suppGstin.slice(0, 2) : activeState;
-  const isInter = suppGstin.length >= 2 && suppState !== activeState;
 
+  const activeGstin = getActiveGstin();
+  const activeState = (activeGstin && activeGstin.length >= 2) ? activeGstin.slice(0, 2) : "27";
+
+  const posSelect = document.getElementById('newPurPos');
+  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : activeState;
+
+  // Inter-state if Place of Supply is outside the recipient branch state
+  const isInter = pos !== activeState;
   const totalTax = taxable * (rate / 100);
+
   const stEl = document.getElementById('newPurSupplyType');
   if (stEl) {
     stEl.textContent = isInter
-      ? `Inter-State (IGST) — Place of Supply: ${suppState}`
-      : `Intra-State (CGST + SGST)`;
+      ? `Inter-State Inward Supply (IGST) — Place of Supply: ${pos}`
+      : `Intra-State Inward Supply (CGST + SGST) — Place of Supply: ${pos}`;
   }
 
   const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -6183,24 +6413,38 @@ async function submitNewPurchase(event) {
   const itcEligibility = document.getElementById('newPurItcEligibility')?.value || "ELIGIBLE";
   const isRcm = document.getElementById('newPurIsRcm')?.checked || false;
 
-  if (!invoiceNumber || !invoiceDate || !supplierName || taxableAmount <= 0) {
+  const activeGstin = getActiveGstin();
+  if (!activeGstin) {
     if (typeof showToast === "function") {
-      showToast("Please enter all required purchase bill fields.", "warning");
+      showToast("Validation Error: Active business GSTIN is missing. Please sign in or select an entity.", "error");
     }
     return;
   }
 
-  const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
-  const activeGstin = appState.gst?.business?.gstin || "27AAACA1234A1Z5";
-  const pos = supplierGstin.length >= 2 ? supplierGstin.slice(0, 2) : activeGstin.slice(0, 2);
+  const period = getActivePeriod();
+  if (!period) {
+    if (typeof showToast === "function") {
+      showToast("Validation Error: Filing period is missing. Please select a filing period.", "error");
+    }
+    return;
+  }
+
+  if (!invoiceNumber || !invoiceDate || !supplierName || taxableAmount <= 0) {
+    if (typeof showToast === "function") {
+      showToast("Please enter all required purchase bill fields (Bill #, Date, Supplier, Taxable Value).", "warning");
+    }
+    return;
+  }
+
+  const posSelect = document.getElementById('newPurPos');
+  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : activeGstin.slice(0, 2);
 
   const btn = document.getElementById('btnSubmitPurchase');
   if (btn) btn.disabled = true;
 
   try {
-    const res = await fetch(`/api/purchases?period=${period}`, {
+    const res = await apiFetch(`/api/purchases?period=${period}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         invoiceNumber,
         invoiceDate,
@@ -6217,7 +6461,7 @@ async function submitNewPurchase(event) {
     if (res.ok && data.success) {
       closeNewPurchaseModal();
       if (typeof showToast === "function") {
-        showToast(`Purchase bill ${invoiceNumber} saved to database!`, "success");
+        showToast(`Purchase bill ${invoiceNumber} saved to SQLite database!`, "success");
       }
       if (typeof refreshInvoices === "function") {
         await refreshInvoices('purchase');
@@ -6227,6 +6471,7 @@ async function submitNewPurchase(event) {
       }
       const form = document.querySelector("#modalNewPurchase form");
       if (form) form.reset();
+      if (posSelect) delete posSelect.dataset.userModified;
     } else {
       if (typeof showToast === "function") {
         showToast(data.error || "Failed to create purchase bill", "error");
@@ -6466,9 +6711,8 @@ async function uploadDocumentAndProcess(file, category) {
   reader.onload = async function() {
     try {
       const rawText = reader.result;
-      const res = await fetch("/api/documents/upload", {
+      const res = await apiFetch("/api/documents/upload", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           filename: file.name,
           category,
@@ -6546,8 +6790,9 @@ function openOcrReviewModal(docId, fields, type = "purchase_bill", filename = "D
   const partyEl = document.getElementById('ocrReviewPartyName');
   if (partyEl) partyEl.value = fields.partyName || fields.supplierName || fields.customerName || "Extracted Enterprise";
 
+  const activeGstin = getActiveGstin();
   const gstinEl = document.getElementById('ocrReviewGstin');
-  if (gstinEl) gstinEl.value = fields.gstin || fields.buyerGstin || "27AAACA1234A1Z5";
+  if (gstinEl) gstinEl.value = fields.gstin || fields.buyerGstin || (activeGstin || "");
 
   const dateEl = document.getElementById('ocrReviewInvoiceDate');
   if (dateEl) dateEl.value = fields.invoiceDate || new Date().toISOString().split('T')[0];
@@ -6599,9 +6844,8 @@ async function submitOcrApproval(event) {
   if (btn) btn.disabled = true;
 
   try {
-    const res = await fetch("/api/ocr/approve", {
+    const res = await apiFetch("/api/ocr/approve", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         documentId: docId,
         invoiceType,
@@ -6662,9 +6906,8 @@ async function approveOcrReviewInvoice() {
     totalInvoiceValue: 33040
   };
   try {
-    const res = await fetch("/api/ocr/approve", {
+    const res = await apiFetch("/api/ocr/approve", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         documentId: "doc-aos-4412",
         invoiceType: "purchase_bill",

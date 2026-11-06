@@ -291,3 +291,143 @@ test("Invoice Persistence: Central Bills & Docs upload and OCR approval workflow
   assert.ok(dbBill, "Approved OCR purchase bill must exist in purchase register database");
   assert.equal(dbBill.taxable_amount, 45000);
 });
+
+
+test("Invoice Persistence & Security: Cookie session without CSRF token is rejected with 403", async () => {
+  seedDevelopmentData();
+  const sessionToken = "tok-csrf-test-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7);
+  const csrfToken = "csrf-secret-" + Date.now();
+  const user = userRepo.findByEmail("rajesh.sharma@apexretail.com");
+  const org = db.prepare("SELECT * FROM organizations LIMIT 1").get();
+  const gstin = db.prepare("SELECT * FROM gst_registrations WHERE org_id = ? LIMIT 1").get(org.id);
+  
+  sessionRepo.create({
+    userId: user.id,
+    token: sessionToken,
+    csrfToken: csrfToken,
+    activeOrgId: org.id,
+    activeGstinId: gstin.id,
+    activePeriod: "102026"
+  });
+
+  // 1. Missing CSRF header with cookie auth -> 403 Forbidden
+  const cookieReqNoCsrf = {
+    headers: {
+      cookie: `simplegst_session=${sessionToken}`
+    }
+  };
+  const res1 = createMockRes();
+  await handleFunctionalApi(cookieReqNoCsrf, res1, "/api/sales", "POST", { period: "102026" }, {
+    invoiceNumber: `INV-CSRF-NO-${Date.now().toString().slice(-4)}`,
+    invoiceDate: "2026-10-20",
+    customerName: "CSRF Test Customer",
+    pos: "27",
+    taxableAmount: 10000,
+    gstRate: 18
+  });
+  assert.equal(res1.statusCode, 403, "Cookie session state-changing request without CSRF token must return 403");
+  const errBody = JSON.parse(res1.body);
+  assert.ok(errBody.error.includes("CSRF"));
+
+  // 2. Valid CSRF header with cookie auth -> 201 Created
+  const cookieReqWithCsrf = {
+    headers: {
+      cookie: `simplegst_session=${sessionToken}`,
+      "x-csrf-token": csrfToken
+    }
+  };
+  const res2 = createMockRes();
+  await handleFunctionalApi(cookieReqWithCsrf, res2, "/api/sales", "POST", { period: "102026" }, {
+    invoiceNumber: `INV-CSRF-OK-${Date.now().toString().slice(-4)}`,
+    invoiceDate: "2026-10-20",
+    customerName: "CSRF Test Customer",
+    pos: "27",
+    taxableAmount: 10000,
+    gstRate: 18
+  });
+  assert.equal(res2.statusCode, 201, "Cookie session with valid X-CSRF-Token must succeed with 201");
+});
+
+test("Place of Supply: Explicit POS determines IGST vs CGST+SGST independently of customer GSTIN", async () => {
+  // Case A: Customer has Gujarat GSTIN (24), but goods are supplied within Maharashtra (POS = 27)
+  // Under Section 10(1)(c) of IGST Act: Intra-State -> CGST + SGST
+  const invNoIntra = `INV-POS-INTRA-${Date.now().toString().slice(-4)}`;
+  const resA = createMockRes();
+  await handleFunctionalApi(getAuthReq(), resA, "/api/sales", "POST", { period: "102026" }, {
+    invoiceNumber: invNoIntra,
+    invoiceDate: "2026-10-22",
+    customerName: "Gujarat Buyer - Mumbai Over the Counter",
+    customerGstin: "24AAACG1234F1Z8", // 24-Gujarat
+    pos: "27", // Explicit Place of Supply is 27-Maharashtra!
+    taxableAmount: 100000,
+    gstRate: 18
+  });
+  assert.equal(resA.statusCode, 201);
+  const dataA = JSON.parse(resA.body);
+  assert.equal(dataA.invoice.is_interstate, 0, "POS = 27 for seller in 27 must be Intra-State");
+  assert.equal(dataA.invoice.cgst, 9000);
+  assert.equal(dataA.invoice.sgst, 9000);
+  assert.equal(dataA.invoice.igst, 0);
+
+  // Case B: Customer has Maharashtra GSTIN (27), but delivery/POS is shipped to Karnataka (POS = 29)
+  // Inter-State -> IGST
+  const invNoInter = `INV-POS-INTER-${Date.now().toString().slice(-4)}`;
+  const resB = createMockRes();
+  await handleFunctionalApi(getAuthReq(), resB, "/api/sales", "POST", { period: "102026" }, {
+    invoiceNumber: invNoInter,
+    invoiceDate: "2026-10-22",
+    customerName: "MH Buyer - Shipped to Bangalore Warehouse",
+    customerGstin: "27AAACA1234A1Z5", // 27-Maharashtra
+    pos: "29", // Explicit Place of Supply is 29-Karnataka!
+    taxableAmount: 100000,
+    gstRate: 18
+  });
+  assert.equal(resB.statusCode, 201);
+  const dataB = JSON.parse(resB.body);
+  assert.equal(dataB.invoice.is_interstate, 1, "POS = 29 for seller in 27 must be Inter-State");
+  assert.equal(dataB.invoice.igst, 18000);
+  assert.equal(dataB.invoice.cgst, 0);
+  assert.equal(dataB.invoice.sgst, 0);
+});
+
+test("Purchase Workflow: ITC Eligibility flows into dashboard and reconciliation summaries", async () => {
+  const eligibleBillNo = `BILL-EL-${Date.now().toString().slice(-4)}`;
+  const ineligibleBillNo = `BILL-INEL-${Date.now().toString().slice(-4)}`;
+
+  // 1. Create Eligible purchase bill
+  const resEl = createMockRes();
+  await handleFunctionalApi(getAuthReq(), resEl, "/api/purchases", "POST", { period: "102026" }, {
+    invoiceNumber: eligibleBillNo,
+    invoiceDate: "2026-10-15",
+    supplierName: "Apex Software & IT Solutions",
+    supplierGstin: "27AAACS1122D1Z3",
+    pos: "27",
+    taxableAmount: 100000,
+    gstRate: 18,
+    itcEligibility: "ELIGIBLE"
+  });
+  assert.equal(resEl.statusCode, 201);
+
+  // 2. Create Ineligible purchase bill (blocked u/s 17(5))
+  const resInel = createMockRes();
+  await handleFunctionalApi(getAuthReq(), resInel, "/api/purchases", "POST", { period: "102026" }, {
+    invoiceNumber: ineligibleBillNo,
+    invoiceDate: "2026-10-15",
+    supplierName: "Grand Palace Hotel & Banquets",
+    supplierGstin: "27AAACG9988C1Z4",
+    pos: "27",
+    taxableAmount: 50000,
+    gstRate: 18,
+    itcEligibility: "INELIGIBLE_17_5",
+    blockedReason: "Section 17(5)(b) Outdoor catering & hospitality"
+  });
+  assert.equal(resInel.statusCode, 201);
+
+  // 3. Check dashboard summary
+  const dashRes = createMockRes();
+  await handleFunctionalApi(getAuthReq(), dashRes, "/api/dashboard/summary", "GET", { period: "102026" }, {});
+  assert.equal(dashRes.statusCode, 200);
+  const dashData = JSON.parse(dashRes.body);
+  assert.ok(dashData.metrics.totalEligibleItc > 0, "Dashboard must calculate eligible ITC");
+  assert.ok(dashData.metrics.blockedItc >= 9000, "Blocked ITC must include the ineligible purchase bill tax (₹9,000)");
+});
