@@ -1,4 +1,5 @@
 import { handleFunctionalApi, isAllowedOrigin } from "./lib/functionalApi.js";
+import { getSwaggerHtml, getOpenApiSpec } from "./lib/swaggerDocs.js";
 import { parseMultipartBuffer } from "./lib/multipart.js";
 import http from "node:http";
 import fs from "node:fs";
@@ -186,6 +187,21 @@ export async function handleRequest(req, res) {
     }
 
     // ---------------------------------------------------------
+    // 0a. Swagger UI & OpenAPI Specification
+    // (/swagger, /docs, /api-docs, /api/openapi.json, /api/swagger.json)
+    // ---------------------------------------------------------
+    if (pathname === "/swagger" || pathname === "/swagger/" || pathname === "/docs" || pathname === "/api-docs") {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(getSwaggerHtml("/api/openapi.json"));
+      return;
+    }
+
+    if (pathname === "/api/openapi.json" || pathname === "/api/swagger.json") {
+      const host = req.headers.host || "localhost:3000";
+      return sendJson(res, 200, getOpenApiSpec(host));
+    }
+
+    // ---------------------------------------------------------
     // 0b. GET /api or /api/ (API Catalog & Directory)
     // ---------------------------------------------------------
     if ((pathname === "/api" || pathname === "/api/") && method === "GET") {
@@ -194,8 +210,13 @@ export async function handleRequest(req, res) {
         version: "2.0.0",
         status: "ONLINE",
         webApp: "http://localhost:3000/",
+        swaggerUI: "http://localhost:3000/swagger",
+        openApiSpec: "http://localhost:3000/api/openapi.json",
         activeGstin: "27AAACA1234A1Z5",
         endpoints: {
+          swagger: "/swagger",
+          docs: "/docs",
+          openapi: "/api/openapi.json",
           session: "/api/auth/session",
           devSession: "/api/auth/dev-session",
           sales: "/api/sales",
