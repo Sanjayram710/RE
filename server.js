@@ -1,4 +1,5 @@
 import { handleFunctionalApi, isAllowedOrigin } from "./lib/functionalApi.js";
+import { parseMultipartBuffer } from "./lib/multipart.js";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -97,14 +98,28 @@ function readBody(req) {
   }
 
   return new Promise((resolve, reject) => {
-    let body = "";
-    req.on("data", chunk => { body += chunk; });
+    const chunks = [];
+    req.on("data", chunk => { chunks.push(chunk); });
     req.on("end", () => {
+      const buffer = Buffer.concat(chunks);
+      const contentType = req.headers["content-type"] || "";
+
+      if (contentType.toLowerCase().includes("multipart/form-data")) {
+        try {
+          const parsed = parseMultipartBuffer(buffer, contentType);
+          resolve(parsed);
+          return;
+        } catch (err) {
+          console.error("Multipart parsing failed:", err.message);
+        }
+      }
+
+      const body = buffer.toString("utf8");
       try {
         resolve(body ? JSON.parse(body) : {});
       } catch (e) {
         // Fallback for raw text/CSV
-        resolve({ rawText: body });
+        resolve({ rawText: body, rawBuffer: buffer });
       }
     });
     req.on("error", reject);

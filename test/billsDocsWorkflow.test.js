@@ -544,3 +544,47 @@ test("Bills & Docs 11: Multi-tenant cross-org access protection", async () => {
   await handleFunctionalApi(getOrgBReq(), crossDelRes, `/api/documents/${docId}`, "DELETE", {}, {});
   assert.ok([403, 404].includes(crossDelRes.statusCode));
 });
+
+test("Bills & Docs 12: Multipart form-data upload with boundary and binary buffer extraction", async () => {
+  const { parseMultipartBuffer } = await import("../lib/multipart.js");
+  const pdfBuf = createPdfBuffer([
+    "TAX INVOICE",
+    "Invoice Number: MP-2026-999",
+    "Date: 2026-10-24",
+    "Seller GSTIN: 27AABCD1234F1Z5",
+    "Buyer GSTIN: 27GHIJK5678L1Z9",
+    "Taxable Value: 45000",
+    "CGST: 4050",
+    "SGST: 4050",
+    "Total: 53100"
+  ]);
+
+  const boundary = "----WebKitFormBoundaryMultipartTest77";
+  const crlf = "\r\n";
+  const rawMultipart = Buffer.concat([
+    Buffer.from(`--${boundary}${crlf}Content-Disposition: form-data; name="category"${crlf}${crlf}purchase_bill${crlf}`),
+    Buffer.from(`--${boundary}${crlf}Content-Disposition: form-data; name="file"; filename="Multipart_Invoice.pdf"${crlf}Content-Type: application/pdf${crlf}${crlf}`),
+    pdfBuf,
+    Buffer.from(`${crlf}--${boundary}--${crlf}`)
+  ]);
+
+  const parsedBody = parseMultipartBuffer(rawMultipart, `multipart/form-data; boundary=${boundary}`);
+  assert.strictEqual(parsedBody.category, "purchase_bill");
+  assert.strictEqual(parsedBody.filename, "Multipart_Invoice.pdf");
+  assert.ok(Buffer.isBuffer(parsedBody.fileBytes));
+
+  const upRes = createMockRes();
+  await handleFunctionalApi(getOrgAReq(), upRes, "/api/documents/upload", "POST", {}, parsedBody);
+
+  assert.strictEqual(upRes.statusCode, 201);
+  const upData = JSON.parse(upRes.body);
+  assert.strictEqual(upData.success, true);
+  assert.ok(upData.document.id);
+  assert.strictEqual(upData.document.original_filename, "Multipart_Invoice.pdf");
+  assert.strictEqual(upData.document.category, "purchase_bill");
+
+  // Verify file written to disk
+  assert.ok(fs.existsSync(upData.document.storage_path));
+  const diskBytes = fs.readFileSync(upData.document.storage_path);
+  assert.strictEqual(diskBytes.length, pdfBuf.length);
+});

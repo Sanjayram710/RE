@@ -37,8 +37,16 @@ async function apiFetch(url, options = {}) {
     ...(options.headers || {})
   };
 
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
+
   if (options.body && typeof options.body === "string" && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
+  }
+
+  if (isFormData) {
+    // Delete Content-Type to allow browser to calculate multipart boundary
+    delete headers["Content-Type"];
+    delete headers["content-type"];
   }
 
   const csrf = getCsrfToken();
@@ -50,7 +58,11 @@ async function apiFetch(url, options = {}) {
     headers["Authorization"] = `Bearer ${appState.sessionToken}`;
   }
 
-  const res = await fetch(url, { ...options, headers });
+  const res = await fetch(url, {
+    ...options,
+    headers,
+    credentials: options.credentials || "same-origin"
+  });
 
   if (res.status === 401) {
     console.warn("Session expired or unauthorized request to:", url);
@@ -4825,7 +4837,7 @@ async function submitNewInvoice(event) {
         loadDashboardData(period);
       }
       if (typeof refreshInvoices === "function") {
-        refreshInvoices('sales');
+        await refreshInvoices('sales');
       }
       const form = document.querySelector("#modalNewInvoice form");
       if (form) form.reset();
@@ -6494,7 +6506,7 @@ async function renderSalesSuite() {
   if (badge) badge.textContent = period;
 
   try {
-    const res = await fetch(`/api/sales?period=${period}`);
+    const res = await apiFetch(`/api/sales?period=${period}`);
     const data = await res.json();
     const invoices = data.invoices || [];
     if (!appState.gst) appState.gst = {};
@@ -6582,7 +6594,7 @@ async function renderPurchaseSuite() {
   if (badge) badge.textContent = period;
 
   try {
-    const res = await fetch(`/api/purchases?period=${period}`);
+    const res = await apiFetch(`/api/purchases?period=${period}`);
     const data = await res.json();
     const purchases = data.purchases || [];
     if (!appState.gst) appState.gst = {};
@@ -6748,12 +6760,7 @@ async function uploadDocumentAndProcess(file, category) {
   }
 }
 
-function handleBillsFileSelect(e) {
-  const file = e.target.files && e.target.files[0];
-  if (file) uploadDocumentAndProcess(file, "purchase_bill");
-  e.target.value = "";
-}
-window.handleBillsFileSelect = handleBillsFileSelect;
+// handleBillsFileSelect with staging and FormData upload is managed by Bills & Docs suite below
 
 function handleSalesDocSelected(e) {
   const file = e.target.files && e.target.files[0];
@@ -7495,15 +7502,17 @@ function renderBillsDashboard() {
   };
 
   tableBody.innerHTML = docs.map(doc => {
-    const isPdf = (doc.filename || "").toLowerCase().endsWith(".pdf");
-    const isImg = /\.(png|jpe?g)$/i.test(doc.filename || "");
+    const fileName = doc.filename || doc.original_filename || "Document.pdf";
+    const isPdf = fileName.toLowerCase().endsWith(".pdf");
+    const isImg = /\.(png|jpe?g)$/i.test(fileName);
     const fileIcon = isPdf ? "picture_as_pdf" : (isImg ? "image" : "description");
     const fileColor = isPdf ? "text-rose-600" : (isImg ? "text-blue-600" : "text-slate-600");
 
     const catCfg = categoryLabels[doc.category] || categoryLabels.other;
     const stCfg = statusConfig[doc.status] || statusConfig.PENDING_REVIEW;
 
-    const formattedSize = doc.file_size ? `${(doc.file_size / 1024).toFixed(1)} KB` : "—";
+    const rawSize = doc.file_size || doc.file_size_bytes || 0;
+    const formattedSize = rawSize ? `${(rawSize / 1024).toFixed(1)} KB` : "—";
     const createdDate = doc.created_at ? new Date(doc.created_at).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : "—";
 
     const invNum = doc.invoice_number || (doc.extracted_invoice?.invoiceInfo?.invoiceNumber) || "—";
@@ -7529,7 +7538,7 @@ function renderBillsDashboard() {
           <div class="flex items-center gap-2.5">
             <span class="material-symbols-outlined text-xl ${fileColor}">${fileIcon}</span>
             <div class="flex flex-col">
-              <span class="font-semibold text-on-surface truncate max-w-[180px] sm:max-w-[240px]" title="${escapeHtml(doc.filename)}">${escapeHtml(doc.filename)}</span>
+              <span class="font-semibold text-on-surface truncate max-w-[180px] sm:max-w-[240px]" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</span>
               <div class="flex items-center gap-2 text-[11px] text-secondary font-mono">
                 <span>${formattedSize}</span>
                 <span>•</span>
@@ -7649,27 +7658,65 @@ function handleBillsDragLeave(e) {
 }
 window.handleBillsDragLeave = handleBillsDragLeave;
 
-function handleBillsDrop(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  const dz = document.getElementById('billsDropzone');
-  if (dz) {
-    dz.classList.remove('border-primary', 'bg-surface-container');
-  }
-  if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-    uploadBillsFiles(e.dataTransfer.files);
+let stagedBillsFiles = [];
+
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+}
+window.formatFileSize = formatFileSize;
+
+function handleBillsFileSelect(e) {
+  const files = e.target.files ? Array.from(e.target.files) : [];
+  if (!files || files.length === 0) return;
+  stagedBillsFiles = files;
+
+  const infoEl = document.getElementById('billsSelectedFileInfo');
+  const nameEl = document.getElementById('billsSelectedFileName');
+  const sizeEl = document.getElementById('billsSelectedFileSize');
+
+  if (infoEl && nameEl && sizeEl) {
+    if (files.length === 1) {
+      nameEl.textContent = files[0].name;
+      sizeEl.textContent = `${formatFileSize(files[0].size)} • Ready to upload`;
+    } else {
+      const totalBytes = files.reduce((acc, f) => acc + f.size, 0);
+      nameEl.textContent = `${files[0].name} (+${files.length - 1} more)`;
+      sizeEl.textContent = `${formatFileSize(totalBytes)} • ${files.length} files selected`;
+    }
+    infoEl.classList.remove('hidden');
   }
 }
-window.handleBillsDrop = handleBillsDrop;
+window.handleBillsFileSelect = handleBillsFileSelect;
 
-async function uploadBillsFiles(fileList) {
-  if (!fileList || fileList.length === 0) return;
-  const files = Array.from(fileList);
+function cancelBillsSelection(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  stagedBillsFiles = [];
+  const fi = document.getElementById('billsFileInput');
+  if (fi) fi.value = "";
+  const infoEl = document.getElementById('billsSelectedFileInfo');
+  if (infoEl) infoEl.classList.add('hidden');
+}
+window.cancelBillsSelection = cancelBillsSelection;
 
-  for (const file of files) {
-    if (file.size > 15 * 1024 * 1024) {
+async function confirmBillsUpload(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  if (!stagedBillsFiles || stagedBillsFiles.length === 0) return;
+
+  const files = [...stagedBillsFiles];
+  for (const f of files) {
+    if (f.size > 15 * 1024 * 1024) {
       if (typeof showToast === "function") {
-        showToast(`File "${file.name}" exceeds the maximum allowed size of 15 MB.`, "error");
+        showToast(`File "${f.name}" exceeds maximum allowed upload size of 15 MB.`, "error");
       }
       return;
     }
@@ -7681,67 +7728,95 @@ async function uploadBillsFiles(fileList) {
   const progressBar = document.getElementById('billsUploadProgressBar');
 
   if (progressContainer) progressContainer.classList.remove('hidden');
+  if (filenameEl) filenameEl.textContent = `Uploading ${files.length === 1 ? files[0].name : files.length + " files"}...`;
+  if (percentEl) percentEl.textContent = "40%";
+  if (progressBar) progressBar.style.width = "40%";
 
-  let successCount = 0;
-  let lastUploadedData = null;
-
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const percent = Math.round(((i + 0.5) / files.length) * 100);
-    if (filenameEl) filenameEl.textContent = `Processing ${file.name} (${i + 1}/${files.length})...`;
-    if (percentEl) percentEl.textContent = `${percent}%`;
-    if (progressBar) progressBar.style.width = `${percent}%`;
-
-    try {
-      const rawText = await readFileAsBase64OrText(file);
-      const res = await apiFetch("/api/documents/upload", {
-        method: "POST",
-        body: JSON.stringify({
-          filename: file.name,
-          category: billsDocsState.activeCategory || "purchase_bill",
-          rawText
-        })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        successCount++;
-        lastUploadedData = data;
-      } else {
-        if (typeof showToast === "function") {
-          showToast(`Error processing ${file.name}: ${data.error || "Unknown error"}`, "error");
-        }
+  try {
+    const formData = new FormData();
+    if (files.length === 1) {
+      formData.append("file", files[0]);
+    } else {
+      for (const f of files) {
+        formData.append("files", f);
       }
-    } catch (err) {
+    }
+    formData.append("category", billsDocsState.activeCategory || "purchase_bill");
+
+    const res = await apiFetch("/api/documents/upload", {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+
+    if (percentEl) percentEl.textContent = "100%";
+    if (progressBar) progressBar.style.width = "100%";
+
+    if (res.ok && data.success) {
+      cancelBillsSelection();
       if (typeof showToast === "function") {
-        showToast(`Failed to upload ${file.name}: ${err.message}`, "error");
+        showToast(`Successfully uploaded ${files.length} document(s)!`, "success");
+      }
+      await loadBillsDashboard();
+
+      if (files.length === 1 && data.document) {
+        openOcrReviewModal(
+          data.document.id,
+          data.parsedInvoice || data.extractedFields || {},
+          data.parsedInvoice?.documentType || data.document.category || "purchase_bill",
+          files[0].name,
+          data.parsedInvoice?.confidence || "96%"
+        );
+      }
+    } else {
+      if (typeof showToast === "function") {
+        showToast(`Upload failed: ${data.error || "Unknown error"}`, "error");
       }
     }
-  }
-
-  if (percentEl) percentEl.textContent = `100%`;
-  if (progressBar) progressBar.style.width = `100%`;
-
-  setTimeout(() => {
-    if (progressContainer) progressContainer.classList.add('hidden');
-    if (progressBar) progressBar.style.width = `0%`;
-  }, 600);
-
-  if (successCount > 0) {
+  } catch (err) {
     if (typeof showToast === "function") {
-      showToast(`Successfully processed ${successCount} document(s)!`, "success");
+      showToast("Upload network error: " + err.message, "error");
     }
-    await loadBillsDashboard();
+  } finally {
+    setTimeout(() => {
+      if (progressContainer) progressContainer.classList.add('hidden');
+      if (progressBar) progressBar.style.width = "0%";
+    }, 600);
+  }
+}
+window.confirmBillsUpload = confirmBillsUpload;
 
-    if (files.length === 1 && lastUploadedData && lastUploadedData.document) {
-      openOcrReviewModal(
-        lastUploadedData.document.id,
-        lastUploadedData.parsedInvoice || lastUploadedData.extractedFields || {},
-        lastUploadedData.parsedInvoice?.documentType || lastUploadedData.document.category || "purchase_bill",
-        files[0].name,
-        lastUploadedData.parsedInvoice?.confidence || "96%"
-      );
+function handleBillsDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('billsDropzone');
+  if (dz) {
+    dz.classList.remove('border-primary', 'bg-surface-container');
+  }
+  if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    stagedBillsFiles = Array.from(e.dataTransfer.files);
+    const infoEl = document.getElementById('billsSelectedFileInfo');
+    const nameEl = document.getElementById('billsSelectedFileName');
+    const sizeEl = document.getElementById('billsSelectedFileSize');
+    if (infoEl && nameEl && sizeEl) {
+      if (stagedBillsFiles.length === 1) {
+        nameEl.textContent = stagedBillsFiles[0].name;
+        sizeEl.textContent = `${formatFileSize(stagedBillsFiles[0].size)} • Ready to upload`;
+      } else {
+        const totalBytes = stagedBillsFiles.reduce((acc, f) => acc + f.size, 0);
+        nameEl.textContent = `${stagedBillsFiles[0].name} (+${stagedBillsFiles.length - 1} more)`;
+        sizeEl.textContent = `${formatFileSize(totalBytes)} • ${stagedBillsFiles.length} files selected`;
+      }
+      infoEl.classList.remove('hidden');
     }
   }
+}
+window.handleBillsDrop = handleBillsDrop;
+
+async function uploadBillsFiles(fileList) {
+  if (!fileList || fileList.length === 0) return;
+  stagedBillsFiles = Array.from(fileList);
+  await confirmBillsUpload();
 }
 window.uploadBillsFiles = uploadBillsFiles;
 
@@ -7905,37 +7980,6 @@ async function rejectOcrDocument() {
   }
 }
 window.rejectOcrDocument = rejectOcrDocument;
-
-async function reExtractCurrentDocument() {
-  const docId = ocrInvoiceState.docId || document.getElementById('ocrReviewDocId')?.value;
-  if (!docId) return;
-
-  const btn = document.getElementById('btnReExtractOcr');
-  if (btn) btn.disabled = true;
-
-  try {
-    const res = await apiFetch(`/api/documents/${docId}/re-extract`, { method: "POST" });
-    const data = await res.json();
-    if (res.ok && data.success) {
-      if (typeof showToast === "function") showToast("Document re-extracted successfully!", "success");
-      openOcrReviewModal(
-        docId,
-        data.parsedInvoice || data.extractedFields,
-        ocrInvoiceState.documentType,
-        ocrInvoiceState.filename,
-        "Re-extracted (98%)"
-      );
-      await loadBillsDashboard();
-    } else {
-      if (typeof showToast === "function") showToast(data.error || "Failed to re-extract document.", "error");
-    }
-  } catch (err) {
-    if (typeof showToast === "function") showToast("Re-extract error: " + err.message, "error");
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-window.reExtractCurrentDocument = reExtractCurrentDocument;
 
 async function deleteDocument(docId) {
   if (!docId) return;

@@ -543,6 +543,60 @@ async function runBrowserTest() {
       throw new Error(`Document Preview modal failed to render: ${JSON.stringify(billsCheck)}`);
     }
 
+    // Step 13: Test Bills & Docs File Selection, Staging Details Display, and FormData Upload
+    console.log("\n[Step 13] Testing Bills & Docs file selection, staging details, and upload confirmation...");
+    const stagingCheck = await evaluate(`
+      (async () => {
+        window.switchSuite('bills');
+        await new Promise(r => setTimeout(r, 200));
+
+        // Create a simulated File object
+        const mockPdfContent = "%PDF-1.4\\n1 0 obj\\n<< /Title (CDP Test Invoice) >>\\nendobj\\n";
+        const file = new File([mockPdfContent], "CDP_Staged_Invoice.pdf", { type: "application/pdf" });
+
+        // Dispatch change event to billsFileInput
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        const fileInput = document.getElementById('billsFileInput');
+        fileInput.files = dt.files;
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+        await new Promise(r => setTimeout(r, 100));
+
+        const infoCard = document.getElementById('billsSelectedFileInfo');
+        const isInfoVisible = infoCard && !infoCard.classList.contains('hidden');
+        const displayedFileName = document.getElementById('billsSelectedFileName')?.innerText;
+        const displayedFileSize = document.getElementById('billsSelectedFileSize')?.innerText;
+
+        // Click confirm upload button
+        const confirmBtn = document.getElementById('btnConfirmBillsUpload');
+        if (confirmBtn) {
+          await window.confirmBillsUpload();
+        }
+
+        await new Promise(r => setTimeout(r, 800));
+
+        const isInfoHiddenAfterUpload = infoCard && infoCard.classList.contains('hidden');
+        const tableText = document.getElementById('billsDocsTableBody')?.innerText || "";
+        const fileFoundInTable = tableText.includes("CDP_Staged_Invoice.pdf");
+
+        return {
+          isInfoVisible,
+          displayedFileName,
+          displayedFileSize,
+          isInfoHiddenAfterUpload,
+          fileFoundInTable
+        };
+      })()
+    `);
+    console.log("✔ Bills & Docs File Staging & Upload Result:", stagingCheck);
+    if (!stagingCheck.isInfoVisible || stagingCheck.displayedFileName !== 'CDP_Staged_Invoice.pdf') {
+      throw new Error(`Bills & Docs file staging failed: ${JSON.stringify(stagingCheck)}`);
+    }
+    if (!stagingCheck.isInfoHiddenAfterUpload || !stagingCheck.fileFoundInTable) {
+      throw new Error(`Bills & Docs upload confirmation failed: ${JSON.stringify(stagingCheck)}`);
+    }
+
     console.log(`✔ Console log messages captured: ${consoleLogs.length}`);
     console.log("\n=======================================================");
     console.log("ALL REAL BROWSER CDP CHECKS PASSED WITH 100% SUCCESS!");
