@@ -628,3 +628,155 @@ test("Scenario 12: Inter-state vs Intra-state Place of Supply determination and 
   assert.equal(dbInter.sgst, 0);
 });
 
+// ============================================================================
+// SCENARIO 13: Phase 5 Mandatory Real PDF Regression Test
+// ============================================================================
+test("Scenario 13: Phase 5 Mandatory Multi-Item Real PDF Regression Test (ABC/2026-27/001)", async () => {
+  setupAuth();
+
+  const lines = [
+    "TAX INVOICE",
+    "Invoice Number: ABC/2026-27/001",
+    "Invoice Date: 06-Nov-2026",
+    "Due Date: 21-Nov-2026",
+    "Payment Terms: Net 15 Days",
+    "Seller: ABC Retail Solutions",
+    "Address: Chennai, Tamil Nadu",
+    "GSTIN: 33AABCA1234C1Z5",
+    "Buyer: Sunrise Traders",
+    "Address: Bengaluru, Karnataka",
+    "GSTIN: 29AABCS5678D1Z2",
+    "Place of Supply: Karnataka (29)",
+    "Reverse Charge: No",
+    "S.No Description HSN Qty Rate Taxable GST% IGST Total",
+    "1 Cotton T-Shirts (assorted sizes) 6109 20 500 10000 5% 500 10500",
+    "2 Denim Jeans 6203 10 1200 12000 12% 1440 13440",
+    "Taxable Value: 22000.00",
+    "IGST: 1940.00",
+    "CGST: 0.00",
+    "SGST: 0.00",
+    "Round Off: 0.00",
+    "Grand Total: 23940.00"
+  ];
+
+  const pdfBuf = createPdfBuffer(lines);
+  const base64Content = `data:application/pdf;base64,${pdfBuf.toString("base64")}`;
+
+  // 1. Test extraction directly
+  const { text } = extractTextFromPdf(pdfBuf);
+  assert.ok(text.includes("ABC/2026-27/001"));
+  assert.ok(text.includes("Cotton T-Shirts (assorted sizes)"));
+  assert.ok(text.includes("Denim Jeans"));
+
+  const parsed = parseInvoiceFromText(text, {
+    filename: "ABC_2026_27_001.pdf",
+    categoryHint: "sales_invoice",
+    activeGstin: { gstin: "33AABCA1234C1Z5", state_code: "33", legal_name: "ABC Retail Solutions" }
+  });
+
+  // Verify Header fields
+  assert.equal(parsed.invoiceNumber, "ABC/2026-27/001");
+  assert.equal(parsed.invoiceDate, "2026-11-06");
+  assert.equal(parsed.dueDate, "2026-11-21");
+  assert.equal(parsed.paymentTerms, "Net 15 Days");
+  assert.equal(parsed.pos, "29");
+  assert.equal(parsed.invoiceInfo.isInterstate, true);
+  assert.equal(parsed.invoiceInfo.isRcm, false);
+
+  // Verify Seller & Buyer
+  assert.equal(parsed.seller.name, "ABC Retail Solutions");
+  assert.equal(parsed.seller.gstin, "33AABCA1234C1Z5");
+  assert.equal(parsed.seller.state, "33");
+  assert.equal(parsed.buyer.name, "Sunrise Traders");
+  assert.equal(parsed.buyer.gstin, "29AABCS5678D1Z2");
+  assert.equal(parsed.buyer.state, "29");
+
+  // Verify Line Items
+  assert.equal(parsed.lineItems.length, 2);
+  const item1 = parsed.lineItems[0];
+  assert.equal(item1.description, "Cotton T-Shirts (assorted sizes)");
+  assert.equal(item1.hsnCode, "6109");
+  assert.equal(item1.quantity, 20);
+  assert.equal(item1.rate, 500);
+  assert.equal(item1.taxableValue, 10000);
+  assert.equal(item1.gstRate, 5);
+  assert.equal(item1.igst, 500);
+  assert.equal(item1.cgst, 0);
+  assert.equal(item1.sgst, 0);
+  assert.equal(item1.totalAmount, 10500);
+
+  const item2 = parsed.lineItems[1];
+  assert.equal(item2.description, "Denim Jeans");
+  assert.equal(item2.hsnCode, "6203");
+  assert.equal(item2.quantity, 10);
+  assert.equal(item2.rate, 1200);
+  assert.equal(item2.taxableValue, 12000);
+  assert.equal(item2.gstRate, 12);
+  assert.equal(item2.igst, 1440);
+  assert.equal(item2.cgst, 0);
+  assert.equal(item2.sgst, 0);
+  assert.equal(item2.totalAmount, 13440);
+
+  // Verify Totals
+  assert.equal(parsed.totals.taxableAmount, 22000);
+  assert.equal(parsed.totals.igst, 1940);
+  assert.equal(parsed.totals.cgst, 0);
+  assert.equal(parsed.totals.sgst, 0);
+  assert.equal(parsed.totals.totalTax, 1940);
+  assert.equal(parsed.totals.totalAmount, 23940);
+
+  // 2. Upload via API (Sales Workflow)
+  const salesRes = createMockRes();
+  await handleFunctionalApi(getAuthReq(), salesRes, "/api/documents/upload", "POST", {}, {
+    filename: "ABC_2026_27_001.pdf",
+    category: "sales_invoice",
+    content: base64Content
+  });
+  assert.equal(salesRes.statusCode, 201);
+  const salesData = JSON.parse(salesRes.body);
+  assert.equal(salesData.parsedInvoice.invoiceNumber, "ABC/2026-27/001");
+  assert.equal(salesData.parsedInvoice.lineItems.length, 2);
+
+  // Clean up if duplicate invoice already in db
+  db.prepare("DELETE FROM sales_invoices WHERE invoice_number = 'ABC/2026-27/001'").run();
+
+  // Approve & Save to Sales Register
+  const approveRes = createMockRes();
+  await handleFunctionalApi(getAuthReq(), approveRes, "/api/ocr/approve", "POST", {}, {
+    documentId: salesData.document.id,
+    invoiceType: "sales_invoice",
+    fields: {
+      invoiceNumber: "ABC/2026-27/001",
+      invoiceDate: "2026-11-06",
+      customerName: "Sunrise Traders",
+      customerGstin: "29AABCS5678D1Z2",
+      pos: "29",
+      isInterstate: true,
+      taxableAmount: 22000,
+      gstRate: 18,
+      igst: 1940,
+      cgst: 0,
+      sgst: 0,
+      cess: 0,
+      totalTax: 1940,
+      totalAmount: 23940,
+      lineItems: salesData.parsedInvoice.lineItems
+    }
+  });
+
+  assert.equal(approveRes.statusCode, 200);
+  const savedSale = db.prepare("SELECT * FROM sales_invoices WHERE invoice_number = 'ABC/2026-27/001'").get();
+  assert.ok(savedSale);
+  assert.equal(savedSale.taxable_amount, 22000);
+  assert.equal(savedSale.igst, 1940);
+  assert.equal(savedSale.cgst, 0);
+  assert.equal(savedSale.sgst, 0);
+  assert.equal(savedSale.total_amount, 23940);
+  assert.equal(savedSale.is_interstate, 1);
+  assert.ok(savedSale.line_items_json);
+  const savedItems = JSON.parse(savedSale.line_items_json);
+  assert.equal(savedItems.length, 2);
+  assert.equal(savedItems[0].hsnCode, "6109");
+  assert.equal(savedItems[1].hsnCode, "6203");
+});
+

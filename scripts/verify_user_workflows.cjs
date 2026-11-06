@@ -474,6 +474,218 @@ async function runCompleteUserVerification() {
       throw new Error(`Duplicate records detected in database!`);
     }
 
+    // -------------------------------------------------------------------------
+    // STEP 7: Phase 5 Mandatory Multi-Item Real PDF Upload & OCR Review (Sales)
+    // -------------------------------------------------------------------------
+    console.log("\n[STEP 7] Testing Real Sales PDF Upload & Multi-Line Item Review Modal (ABC/2026-27/001)...");
+    const zlib = require("zlib");
+    function makeSamplePdf() {
+      const sampleLines = [
+        "TAX INVOICE",
+        "Invoice Number: ABC/2026-27/001",
+        "Invoice Date: 06-Nov-2026",
+        "Due Date: 21-Nov-2026",
+        "Payment Terms: Net 15 Days",
+        "Seller: ABC Retail Solutions",
+        "Address: Chennai, Tamil Nadu",
+        "GSTIN: 33AABCA1234C1Z5",
+        "Buyer: Sunrise Traders",
+        "Address: Bengaluru, Karnataka",
+        "GSTIN: 29AABCS5678D1Z2",
+        "Place of Supply: Karnataka (29)",
+        "Reverse Charge: No",
+        "S.No Description HSN Qty Rate Taxable GST% IGST Total",
+        "1 Cotton T-Shirts (assorted sizes) 6109 20 500 10000 5% 500 10500",
+        "2 Denim Jeans 6203 10 1200 12000 12% 1440 13440",
+        "Taxable Value: 22000.00",
+        "IGST: 1940.00",
+        "CGST: 0.00",
+        "SGST: 0.00",
+        "Round Off: 0.00",
+        "Grand Total: 23940.00"
+      ];
+      const tjParts = sampleLines.map(l => `(${l.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)")}) Tj`).join(" T* ");
+      const textStream = `BT /F1 12 Tf 50 750 Td ${tjParts} ET`;
+      const streamData = zlib.deflateSync(Buffer.from(textStream, "utf8"));
+      const header = `%PDF-1.4\n1 0 obj\n<< /Filter /FlateDecode /Length ${streamData.length} >>\nstream\n`;
+      const footer = `\nendstream\nendobj\nxref\ntrailer\n<< >>\nstartxref\n0\n%%EOF`;
+      return Buffer.concat([Buffer.from(header, "utf8"), streamData, Buffer.from(footer, "utf8")]);
+    }
+
+    const samplePdfBuf = makeSamplePdf();
+    const samplePdfBase64 = samplePdfBuf.toString("base64");
+
+    // Clean any prior run invoice in DB
+    db.prepare("DELETE FROM sales_invoices WHERE invoice_number = 'ABC/2026-27/001'").run();
+
+    const ocrReviewResult = await evaluate(`
+      (async () => {
+        window.switchSuite('sales');
+        await new Promise(r => setTimeout(r, 400));
+
+        // Upload sample PDF
+        const binaryStr = atob('${samplePdfBase64}');
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+        const file = new File([bytes], "ABC_2026_27_001.pdf", { type: "application/pdf" });
+
+        await window.uploadDocumentAndProcess(file, 'sales_invoice');
+        await new Promise(r => setTimeout(r, 1200));
+
+        const modal = document.getElementById('modalOcrReview');
+        const isModalVisible = modal && !modal.classList.contains('hidden') && modal.style.display !== 'none';
+
+        const invNum = document.getElementById('ocrReviewInvoiceNumber')?.value;
+        const invDate = document.getElementById('ocrReviewInvoiceDate')?.value;
+        const dueDate = document.getElementById('ocrReviewDueDate')?.value;
+        const pos = document.getElementById('ocrReviewPos')?.value;
+        const sellerName = document.getElementById('ocrReviewSellerName')?.value;
+        const sellerGstin = document.getElementById('ocrReviewSellerGstin')?.value;
+        const buyerName = document.getElementById('ocrReviewBuyerName')?.value;
+        const buyerGstin = document.getElementById('ocrReviewBuyerGstin')?.value;
+        const isRcm = document.getElementById('ocrReviewIsRcm')?.checked;
+
+        const taxableDisp = document.getElementById('ocrReviewTaxableDisplay')?.textContent?.trim();
+        const igstDisp = document.getElementById('ocrReviewIgstDisplay')?.textContent?.trim();
+        const cgstDisp = document.getElementById('ocrReviewCgstDisplay')?.textContent?.trim();
+        const sgstDisp = document.getElementById('ocrReviewSgstDisplay')?.textContent?.trim();
+        const grandTotalDisp = document.getElementById('ocrReviewGrandTotalDisplay')?.textContent?.trim();
+
+        const lineItemRows = Array.from(document.querySelectorAll('#ocrReviewLineItemsTbody tr'));
+        const lineItemsData = lineItemRows.map(tr => {
+          const inputs = tr.querySelectorAll('input, select');
+          return {
+            desc: inputs[0]?.value,
+            hsn: inputs[1]?.value,
+            qty: inputs[2]?.value,
+            unit: inputs[3]?.value,
+            rate: inputs[4]?.value,
+            disc: inputs[5]?.value,
+            gstRate: inputs[6]?.value
+          };
+        });
+
+        // Test editing line item live: update row 1 qty to 20, verify recalculation
+        window.updateOcrLineItem(0, 'quantity', 20);
+        await new Promise(r => setTimeout(r, 300));
+
+        // Click Approve & Save to Sales Register
+        await window.saveExtractedInvoice();
+        await new Promise(r => setTimeout(r, 1200));
+
+        return {
+          isModalVisible,
+          invNum,
+          invDate,
+          dueDate,
+          pos,
+          sellerName,
+          sellerGstin,
+          buyerName,
+          buyerGstin,
+          isRcm,
+          taxableDisp,
+          igstDisp,
+          cgstDisp,
+          sgstDisp,
+          grandTotalDisp,
+          lineItemCount: lineItemRows.length,
+          lineItemsData,
+          modalAfterApprove: modal?.classList.contains('hidden') || modal?.style.display === 'none'
+        };
+      })()
+    `);
+
+    console.log("✔ OCR Review Modal Verified:", {
+      invNum: ocrReviewResult.invNum,
+      invDate: ocrReviewResult.invDate,
+      dueDate: ocrReviewResult.dueDate,
+      pos: ocrReviewResult.pos,
+      sellerName: ocrReviewResult.sellerName,
+      buyerName: ocrReviewResult.buyerName,
+      taxable: ocrReviewResult.taxableDisp,
+      igst: ocrReviewResult.igstDisp,
+      grandTotal: ocrReviewResult.grandTotalDisp,
+      lineItemCount: ocrReviewResult.lineItemCount
+    });
+
+    assert.strictEqual(ocrReviewResult.invNum, "ABC/2026-27/001", "Extracted invoice number must match PDF");
+    assert.strictEqual(ocrReviewResult.invDate, "2026-11-06", "Extracted invoice date must match PDF");
+    assert.strictEqual(ocrReviewResult.dueDate, "2026-11-21", "Extracted due date must match PDF");
+    assert.strictEqual(ocrReviewResult.pos, "29", "Place of supply must be Karnataka (29)");
+    assert.strictEqual(ocrReviewResult.sellerName, "ABC Retail Solutions", "Seller name must match PDF");
+    assert.strictEqual(ocrReviewResult.sellerGstin, "33AABCA1234C1Z5", "Seller GSTIN must match PDF");
+    assert.strictEqual(ocrReviewResult.buyerName, "Sunrise Traders", "Buyer name must match PDF");
+    assert.strictEqual(ocrReviewResult.buyerGstin, "29AABCS5678D1Z2", "Buyer GSTIN must match PDF");
+    assert.strictEqual(ocrReviewResult.isRcm, false, "Reverse charge must be false");
+    assert.strictEqual(ocrReviewResult.lineItemCount, 2, "Must extract exactly 2 line items");
+    assert.strictEqual(ocrReviewResult.lineItemsData[0].hsn, "6109");
+    assert.strictEqual(ocrReviewResult.lineItemsData[1].hsn, "6203");
+    assert.strictEqual(ocrReviewResult.taxableDisp, "₹22,000.00", "Taxable value must be ₹22,000.00");
+    assert.strictEqual(ocrReviewResult.igstDisp, "₹1,940.00", "IGST must be ₹1,940.00");
+    assert.strictEqual(ocrReviewResult.cgstDisp, "₹0.00", "CGST must be ₹0.00");
+    assert.strictEqual(ocrReviewResult.sgstDisp, "₹0.00", "SGST must be ₹0.00");
+    assert.strictEqual(ocrReviewResult.grandTotalDisp, "₹23,940.00", "Grand Total must be ₹23,940.00");
+    assert.strictEqual(ocrReviewResult.modalAfterApprove, true, "Modal must close upon approval");
+
+    // Direct SQLite check for approved ABC/2026-27/001
+    const savedSaleRow = db.prepare("SELECT * FROM sales_invoices WHERE invoice_number = 'ABC/2026-27/001'").get();
+    assert.ok(savedSaleRow, "Invoice ABC/2026-27/001 must be saved in sales_invoices table");
+    assert.strictEqual(savedSaleRow.taxable_amount, 22000);
+    assert.strictEqual(savedSaleRow.igst, 1940);
+    assert.strictEqual(savedSaleRow.total_amount, 23940);
+    assert.strictEqual(savedSaleRow.is_interstate, 1);
+    assert.ok(savedSaleRow.line_items_json, "Line items JSON must be persisted in SQLite");
+    const parsedSavedLines = JSON.parse(savedSaleRow.line_items_json);
+    assert.strictEqual(parsedSavedLines.length, 2);
+    assert.strictEqual(parsedSavedLines[0].hsnCode, "6109");
+    assert.strictEqual(parsedSavedLines[1].hsnCode, "6203");
+    console.log("✔ SQLite persistence verified for ABC/2026-27/001 with 2 line items!");
+
+    // -------------------------------------------------------------------------
+    // STEP 8: Cross-Module Statutory Consistency Verification
+    // -------------------------------------------------------------------------
+    console.log("\n[STEP 8] Verifying cross-module statutory consistency (Tax-Calc, Reconciliation, Sales Register)...");
+    const crossModuleResult = await evaluate(`
+      (async () => {
+        // Tax calculation endpoint (Rule 88A)
+        const taxRes = await window.apiFetch('/api/returns/tax-calc?period=112026');
+        const taxData = await taxRes.json();
+
+        // GSTR-2B reconciliation summary
+        const reconRes = await window.apiFetch('/api/reconciliation/summary?period=112026');
+        const reconData = await reconRes.json();
+
+        // Sales register endpoint
+        const salesRes = await window.apiFetch('/api/sales?period=112026');
+        const salesData = await salesRes.json();
+
+        return {
+          taxOk: taxRes.ok,
+          taxData,
+          reconOk: reconRes.ok,
+          reconData,
+          salesOk: salesRes.ok,
+          salesData
+        };
+      })()
+    `);
+
+    console.log("✔ Cross-module response status:", {
+      taxOk: crossModuleResult.taxOk,
+      reconOk: crossModuleResult.reconOk,
+      salesOk: crossModuleResult.salesOk
+    });
+    assert.strictEqual(crossModuleResult.taxOk, true, "Tax calculation endpoint must return 200 OK");
+    assert.strictEqual(crossModuleResult.reconOk, true, "Reconciliation summary endpoint must return 200 OK");
+    assert.strictEqual(crossModuleResult.salesOk, true, "Sales endpoint must return 200 OK");
+    console.log("✔ Tax Calculation Result for Period 112026:", {
+      liability: crossModuleResult.taxData.liability,
+      inputCredit: crossModuleResult.taxData.inputCredit,
+      netCashPayable: crossModuleResult.taxData.netCashPayable
+    });
+    assert.strictEqual(crossModuleResult.taxData.liability.igst >= 1940, true, "Output IGST liability must include ₹1,940 from ABC/2026-27/001");
+
     console.log("\n===============================================================================");
     console.log("ALL REAL USER-INTERFACE WORKFLOWS PASSED WITH 100% SUCCESS!");
     console.log("===============================================================================");

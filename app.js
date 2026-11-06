@@ -6964,24 +6964,22 @@ function openOcrReviewModal(docIdOrData, maybeData, type = "purchase_bill", file
     isModified: false
   };
 
-  // If no line items, create initial default line item
+  // If no line items extracted, do not fabricate fake fallback data. Provide empty row for manual entry.
   if (ocrInvoiceState.lineItems.length === 0) {
-    const taxVal = Number(totals.taxableAmount || data.taxableValue || data.taxableAmount || 25000);
-    const gRate = Number(totals.gstRate || data.gstRate || 18);
     ocrInvoiceState.lineItems.push({
       id: "item-1",
-      description: data.description || "Commercial Goods & Supplies",
-      hsnCode: data.hsnCode || "9983",
+      description: "",
+      hsnCode: "",
       quantity: 1,
       unit: "NOS",
-      rate: taxVal,
+      rate: 0,
       discount: 0,
-      taxableValue: taxVal,
-      gstRate: gRate,
-      cgst: totals.cgst || (taxVal * (gRate / 200)),
-      sgst: totals.sgst || (taxVal * (gRate / 200)),
-      igst: totals.igst || 0,
-      totalAmount: totals.totalAmount || (taxVal * (1 + gRate / 100))
+      taxableValue: 0,
+      gstRate: 18,
+      cgst: 0,
+      sgst: 0,
+      igst: 0,
+      totalAmount: 0
     });
   }
 
@@ -7003,19 +7001,19 @@ function openOcrReviewModal(docIdOrData, maybeData, type = "purchase_bill", file
   setOcrDocumentType(resolvedType, false);
 
   const numEl = document.getElementById('ocrReviewInvoiceNumber');
-  if (numEl) numEl.value = invoiceInfo.invoiceNumber || data.invoiceNumber || `INV-${Date.now().toString().slice(-4)}`;
+  if (numEl) numEl.value = invoiceInfo.invoiceNumber || parsed.invoiceNumber || data.invoiceNumber || "";
 
   const dateEl = document.getElementById('ocrReviewInvoiceDate');
-  if (dateEl) dateEl.value = invoiceInfo.invoiceDate || data.invoiceDate || new Date().toISOString().split('T')[0];
+  if (dateEl) dateEl.value = invoiceInfo.invoiceDate || parsed.invoiceDate || data.invoiceDate || "";
 
   const dueEl = document.getElementById('ocrReviewDueDate');
-  if (dueEl) dueEl.value = invoiceInfo.dueDate || "";
+  if (dueEl) dueEl.value = invoiceInfo.dueDate || parsed.dueDate || data.dueDate || "";
 
   const posEl = document.getElementById('ocrReviewPos');
-  if (posEl) posEl.value = invoiceInfo.pos || (data.pos ? data.pos.slice(0, 2) : "27");
+  if (posEl) posEl.value = invoiceInfo.pos || parsed.pos || (data.pos ? data.pos.slice(0, 2) : "27");
 
   const rcmEl = document.getElementById('ocrReviewIsRcm');
-  if (rcmEl) rcmEl.checked = Boolean(invoiceInfo.isRcm || data.isRcm);
+  if (rcmEl) rcmEl.checked = Boolean(invoiceInfo.isRcm !== undefined ? invoiceInfo.isRcm : (parsed.isRcm !== undefined ? parsed.isRcm : data.isRcm));
 
   const itcEl = document.getElementById('ocrReviewItcEligibility');
   if (itcEl) itcEl.value = data.itcEligibility || "ELIGIBLE";
@@ -7023,32 +7021,38 @@ function openOcrReviewModal(docIdOrData, maybeData, type = "purchase_bill", file
   const supTypeEl = document.getElementById('ocrReviewSupplyType');
   if (supTypeEl) supTypeEl.value = data.supplyType || (invoiceInfo.isInterstate ? "B2B" : "B2B");
 
-  // Populate Parties
+  // Populate Parties without fabricating fallback company names
   const activeGstin = typeof getActiveGstin === "function" ? getActiveGstin() : null;
-  const orgName = appState.organization?.name || appState.activeGstin?.trade_name || "Business Enterprise";
+  const orgName = appState.organization?.name || appState.activeGstin?.trade_name || "";
   const sellerNameEl = document.getElementById('ocrReviewSellerName');
-  if (sellerNameEl) sellerNameEl.value = seller.name || data.partyName || (resolvedType === "sales_invoice" ? orgName : "Supplier Enterprise");
+  if (sellerNameEl) sellerNameEl.value = seller.name || data.supplierName || (resolvedType === "sales_invoice" ? orgName : "");
 
   const sellerGstinEl = document.getElementById('ocrReviewSellerGstin');
-  if (sellerGstinEl) sellerGstinEl.value = seller.gstin || (resolvedType === "sales_invoice" ? (activeGstin || "") : (data.gstin || ""));
+  if (sellerGstinEl) sellerGstinEl.value = seller.gstin || data.supplierGstin || (resolvedType === "sales_invoice" ? (activeGstin || "") : "");
 
   const sellerStateEl = document.getElementById('ocrReviewSellerState');
-  if (sellerStateEl) sellerStateEl.value = seller.state || seller.stateName || (appState.activeGstin?.state_name || "Maharashtra");
+  if (sellerStateEl) sellerStateEl.value = seller.state || seller.stateName || (resolvedType === "sales_invoice" ? (appState.activeGstin?.state_name || "") : "");
 
   const sellerAddrEl = document.getElementById('ocrReviewSellerAddress');
   if (sellerAddrEl) sellerAddrEl.value = seller.address || "";
 
   const buyerNameEl = document.getElementById('ocrReviewBuyerName');
-  if (buyerNameEl) buyerNameEl.value = buyer.name || (resolvedType === "sales_invoice" ? (data.partyName || "B2B Client Ltd") : orgName);
+  if (buyerNameEl) buyerNameEl.value = buyer.name || data.customerName || (resolvedType === "purchase_bill" ? orgName : "");
 
   const buyerGstinEl = document.getElementById('ocrReviewBuyerGstin');
-  if (buyerGstinEl) buyerGstinEl.value = buyer.gstin || (resolvedType === "sales_invoice" ? (data.buyerGstin || "") : (activeGstin || ""));
+  if (buyerGstinEl) buyerGstinEl.value = buyer.gstin || data.customerGstin || (resolvedType === "purchase_bill" ? (activeGstin || "") : "");
 
   const buyerStateEl = document.getElementById('ocrReviewBuyerState');
-  if (buyerStateEl) buyerStateEl.value = buyer.state || buyer.stateName || "24-Gujarat";
+  if (buyerStateEl) buyerStateEl.value = buyer.state || buyer.stateName || (resolvedType === "purchase_bill" ? (appState.activeGstin?.state_name || "") : "");
 
   const buyerAddrEl = document.getElementById('ocrReviewBuyerAddress');
   if (buyerAddrEl) buyerAddrEl.value = buyer.address || "";
+
+  const cessEl = document.getElementById('ocrReviewCess');
+  if (cessEl) cessEl.value = totals.cess || data.cess || 0;
+
+  const roundEl = document.getElementById('ocrReviewRoundOff');
+  if (roundEl) roundEl.value = totals.roundOff || data.roundOff || 0;
 
   // Render Line items & Totals
   renderOcrLineItems();
@@ -7427,6 +7431,7 @@ async function saveExtractedInvoice() {
         fields: {
           invoiceNumber,
           invoiceDate,
+          period: (invoiceDate && invoiceDate.length >= 7 ? `${invoiceDate.slice(5, 7)}${invoiceDate.slice(0, 4)}` : undefined),
           customerName: buyerName,
           customerGstin: buyerGstin,
           supplierName: sellerName,
