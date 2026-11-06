@@ -627,3 +627,4 @@ test("Scenario 12: Inter-state vs Intra-state Place of Supply determination and 
   assert.equal(dbInter.cgst, 0);
   assert.equal(dbInter.sgst, 0);
 });
+

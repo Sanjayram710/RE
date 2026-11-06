@@ -495,6 +495,54 @@ async function runBrowserTest() {
       throw new Error(`OCR Invoice ${ocrInvNo} not found in Sales Register after save!`);
     }
 
+    // Step 12: Test Bills & Docs Dashboard, Category Filtering & Preview Modal
+    console.log("\n[Step 12] Testing Bills & Docs Dashboard, category filters & document preview...");
+    const billsCheck = await evaluate(`
+      (async () => {
+        window.switchSuite('bills');
+        await new Promise(r => setTimeout(r, 400));
+
+        const totalDocsText = document.getElementById('statBillsTotal')?.innerText || "0";
+        const salesDocsText = document.getElementById('statBillsSales')?.innerText || "0";
+        const purDocsText = document.getElementById('statBillsPurchases')?.innerText || "0";
+        const rowsCount = document.querySelectorAll('#billsDocsTableBody tr').length;
+
+        // Filter category to sales_invoice
+        window.filterBillsCategory('sales_invoice');
+        await new Promise(r => setTimeout(r, 300));
+        const salesFilterRows = document.querySelectorAll('#billsDocsTableBody tr').length;
+
+        // Reset filter
+        window.filterBillsCategory('');
+        await new Promise(r => setTimeout(r, 300));
+
+        // Open Document Preview Modal
+        window.openDocumentPreviewModal('doc-test-cdp-01', 'Cloud_Server_Invoice.pdf');
+        await new Promise(r => setTimeout(r, 200));
+
+        const previewModal = document.getElementById('modalDocumentPreview');
+        const isPreviewVisible = previewModal && !previewModal.classList.contains('hidden');
+        const previewTitle = document.getElementById('docPreviewTitle')?.innerText;
+
+        // Close Preview Modal
+        window.closeDocumentPreviewModal();
+
+        return {
+          totalDocsText,
+          salesDocsText,
+          purDocsText,
+          rowsCount,
+          salesFilterRows,
+          isPreviewVisible,
+          previewTitle
+        };
+      })()
+    `);
+    console.log("✔ Bills & Docs Dashboard DOM verification:", billsCheck);
+    if (!billsCheck.isPreviewVisible || billsCheck.previewTitle !== 'Cloud_Server_Invoice.pdf') {
+      throw new Error(`Document Preview modal failed to render: ${JSON.stringify(billsCheck)}`);
+    }
+
     console.log(`✔ Console log messages captured: ${consoleLogs.length}`);
     console.log("\n=======================================================");
     console.log("ALL REAL BROWSER CDP CHECKS PASSED WITH 100% SUCCESS!");

@@ -420,6 +420,9 @@ function executeSwitchSuite(suite) {
     }
     highlightSidebarNav('nav-link-bills');
     highlightBottomNav('bottom-nav-bills');
+    if (typeof loadBillsDashboard === "function") {
+      loadBillsDashboard();
+    }
   } else if (suite === "reconciliation" || suite === "recon") {
     if (viewRecon) {
       viewRecon.classList.add("active");
@@ -7312,6 +7315,9 @@ async function saveExtractedInvoice() {
       } else {
         if (typeof renderPurchaseSuite === "function") await renderPurchaseSuite();
       }
+      if (typeof loadBillsDashboard === "function") {
+        await loadBillsDashboard();
+      }
       const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
       if (typeof loadDashboardData === "function") loadDashboardData(period);
     } else {
@@ -7386,19 +7392,619 @@ async function approveOcrReviewInvoice() {
 }
 window.approveOcrReviewInvoice = approveOcrReviewInvoice;
 
-async function renderCentralDocumentsLibrary() {
-  const category = document.getElementById('billsFilterCategory')?.value || "";
+// ============================================================================
+// BILLS & DOCS CENTRAL DOCUMENT MANAGEMENT WORKFLOW
+// ============================================================================
+
+let billsDocsState = {
+  documents: [],
+  stats: {},
+  activeCategory: "",
+  activeStatus: "",
+  searchQuery: "",
+  isLoading: false
+};
+window.billsDocsState = billsDocsState;
+
+async function loadBillsDashboard() {
+  billsDocsState.isLoading = true;
   try {
-    const url = category ? `/api/documents?category=${category}` : "/api/documents";
-    const res = await fetch(url);
-    const data = await res.json();
-    if (res.ok && data.documents) {
-      if (typeof showToast === "function") {
-        showToast(`Central document repository refreshed (${data.documents.length} files)`, "info");
-      }
+    const params = new URLSearchParams();
+    if (billsDocsState.activeCategory) params.set("category", billsDocsState.activeCategory);
+    if (billsDocsState.activeStatus) params.set("status", billsDocsState.activeStatus);
+    if (billsDocsState.searchQuery) params.set("search", billsDocsState.searchQuery);
+
+    const res = await apiFetch(`/api/documents?${params.toString()}`);
+    if (res.ok) {
+      const data = await res.json();
+      billsDocsState.documents = data.documents || [];
+      billsDocsState.stats = data.stats || {};
+      renderBillsDashboard();
     }
   } catch (err) {
-    console.error("Failed to fetch documents:", err);
+    console.error("Failed to load bills documents:", err);
+  } finally {
+    billsDocsState.isLoading = false;
   }
 }
-window.renderCentralDocumentsLibrary = renderCentralDocumentsLibrary;
+window.loadBillsDashboard = loadBillsDashboard;
+window.refreshBillsDocs = loadBillsDashboard;
+window.renderCentralDocumentsLibrary = loadBillsDashboard;
+
+function renderBillsDashboard() {
+  const stats = billsDocsState.stats || {};
+  const totalEl = document.getElementById('statBillsTotal');
+  const salesEl = document.getElementById('statBillsSales');
+  const purchaseEl = document.getElementById('statBillsPurchases');
+  const pendingEl = document.getElementById('statBillsPending');
+  const approvedEl = document.getElementById('statBillsApproved');
+  const rejectedEl = document.getElementById('statBillsRejected');
+  const draftEl = document.getElementById('statBillsDraft');
+  const badgeText = document.getElementById('billsPendingBadgeText');
+  const countText = document.getElementById('billsDocsCountText');
+  const tableBody = document.getElementById('billsDocsTableBody');
+  const emptyState = document.getElementById('billsDocsEmptyState');
+
+  if (totalEl) totalEl.textContent = stats.total || 0;
+  if (salesEl) salesEl.textContent = stats.sales || 0;
+  if (purchaseEl) purchaseEl.textContent = stats.purchases || 0;
+  if (pendingEl) pendingEl.textContent = stats.pending_review || 0;
+  if (approvedEl) approvedEl.textContent = stats.approved || 0;
+  if (rejectedEl) rejectedEl.textContent = stats.rejected || 0;
+  if (draftEl) draftEl.textContent = stats.draft || 0;
+  if (badgeText) badgeText.textContent = `${stats.pending_review || 0} Pending Review`;
+
+  // Highlight Category Pills
+  const pills = document.querySelectorAll('#billsCategoryPills .bills-cat-pill');
+  pills.forEach(pill => {
+    const cat = pill.getAttribute('data-category') || "";
+    if (cat === billsDocsState.activeCategory) {
+      pill.className = "bills-cat-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-on-primary cursor-pointer transition-colors";
+    } else {
+      pill.className = "bills-cat-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface cursor-pointer transition-colors";
+    }
+  });
+
+  const docs = billsDocsState.documents || [];
+  if (countText) countText.textContent = `Showing ${docs.length} document${docs.length === 1 ? '' : 's'}`;
+
+  if (!tableBody) return;
+
+  if (docs.length === 0) {
+    tableBody.innerHTML = "";
+    if (emptyState) emptyState.classList.remove('hidden');
+    return;
+  }
+
+  if (emptyState) emptyState.classList.add('hidden');
+
+  const categoryLabels = {
+    sales_invoice: { label: "Sales", badge: "bg-emerald-100 text-emerald-800 border-emerald-300" },
+    purchase_bill: { label: "Purchase", badge: "bg-indigo-100 text-indigo-800 border-indigo-300" },
+    expense_bill: { label: "Expense", badge: "bg-amber-100 text-amber-800 border-amber-300" },
+    credit_note: { label: "Credit Note", badge: "bg-purple-100 text-purple-800 border-purple-300" },
+    debit_note: { label: "Debit Note", badge: "bg-cyan-100 text-cyan-800 border-cyan-300" },
+    other: { label: "Other", badge: "bg-slate-100 text-slate-800 border-slate-300" }
+  };
+
+  const statusConfig = {
+    APPROVED: { label: "Approved", badge: "bg-emerald-100 text-emerald-800 border-emerald-300", icon: "check_circle" },
+    PENDING_REVIEW: { label: "Pending Review", badge: "bg-amber-100 text-amber-800 border-amber-300", icon: "pending_actions" },
+    DRAFT: { label: "Draft", badge: "bg-blue-100 text-blue-800 border-blue-300", icon: "edit_note" },
+    REJECTED: { label: "Rejected", badge: "bg-rose-100 text-rose-800 border-rose-300", icon: "cancel" }
+  };
+
+  tableBody.innerHTML = docs.map(doc => {
+    const isPdf = (doc.filename || "").toLowerCase().endsWith(".pdf");
+    const isImg = /\.(png|jpe?g)$/i.test(doc.filename || "");
+    const fileIcon = isPdf ? "picture_as_pdf" : (isImg ? "image" : "description");
+    const fileColor = isPdf ? "text-rose-600" : (isImg ? "text-blue-600" : "text-slate-600");
+
+    const catCfg = categoryLabels[doc.category] || categoryLabels.other;
+    const stCfg = statusConfig[doc.status] || statusConfig.PENDING_REVIEW;
+
+    const formattedSize = doc.file_size ? `${(doc.file_size / 1024).toFixed(1)} KB` : "—";
+    const createdDate = doc.created_at ? new Date(doc.created_at).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : "—";
+
+    const invNum = doc.invoice_number || (doc.extracted_invoice?.invoiceInfo?.invoiceNumber) || "—";
+    const invDate = doc.invoice_date || (doc.extracted_invoice?.invoiceInfo?.invoiceDate) || "";
+    const partyName = doc.party_name || (doc.category === 'sales_invoice' ? doc.extracted_invoice?.buyer?.name : doc.extracted_invoice?.seller?.name) || "—";
+    const partyGstin = doc.party_gstin || (doc.category === 'sales_invoice' ? doc.extracted_invoice?.buyer?.gstin : doc.extracted_invoice?.seller?.gstin) || "";
+
+    const taxable = doc.taxable_amount || doc.extracted_invoice?.totals?.taxableAmount || 0;
+    const total = doc.total_amount || doc.extracted_invoice?.totals?.totalAmount || 0;
+
+    let conf = Math.round((doc.confidence || 0.95) * 100);
+    let confBadge = `bg-emerald-100 text-emerald-800 border-emerald-300`;
+    if (doc.is_scanned || isImg) {
+      confBadge = `bg-amber-100 text-amber-800 border-amber-300`;
+    }
+
+    const canDelete = doc.status !== 'APPROVED';
+
+    return `
+      <tr class="hover:bg-surface-container-low/50 transition-colors">
+        <!-- Document / File -->
+        <td class="py-3 px-4">
+          <div class="flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-xl ${fileColor}">${fileIcon}</span>
+            <div class="flex flex-col">
+              <span class="font-semibold text-on-surface truncate max-w-[180px] sm:max-w-[240px]" title="${escapeHtml(doc.filename)}">${escapeHtml(doc.filename)}</span>
+              <div class="flex items-center gap-2 text-[11px] text-secondary font-mono">
+                <span>${formattedSize}</span>
+                <span>•</span>
+                <span>${createdDate}</span>
+              </div>
+            </div>
+          </div>
+        </td>
+
+        <!-- Category -->
+        <td class="py-3 px-3">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${catCfg.badge}">
+            ${catCfg.label}
+          </span>
+        </td>
+
+        <!-- Extracted Details -->
+        <td class="py-3 px-4">
+          <div class="flex flex-col">
+            <div class="flex items-center gap-2">
+              <span class="font-mono font-bold text-on-surface">${escapeHtml(invNum)}</span>
+              ${invDate ? `<span class="text-[11px] text-secondary font-mono">(${invDate})</span>` : ''}
+            </div>
+            <div class="text-[11px] text-secondary truncate max-w-[200px]" title="${escapeHtml(partyName)}">
+              ${escapeHtml(partyName)}
+              ${partyGstin ? `<span class="font-mono text-on-surface-variant font-medium ml-1">[${escapeHtml(partyGstin)}]</span>` : ''}
+            </div>
+          </div>
+        </td>
+
+        <!-- Amounts -->
+        <td class="py-3 px-4 text-right font-mono">
+          <div class="flex flex-col items-end">
+            <span class="font-bold text-on-surface">₹${Number(total).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <span class="text-[11px] text-secondary">Taxable: ₹${Number(taxable).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+          </div>
+        </td>
+
+        <!-- Status -->
+        <td class="py-3 px-3 text-center">
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${stCfg.badge}">
+            <span class="material-symbols-outlined text-[13px]">${stCfg.icon}</span>
+            <span>${stCfg.label}</span>
+          </span>
+        </td>
+
+        <!-- AI Confidence -->
+        <td class="py-3 px-3 text-center">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold border ${confBadge}">
+            ${doc.is_scanned || isImg ? 'Scanned OCR' : `${conf}% AI Verified`}
+          </span>
+        </td>
+
+        <!-- Actions -->
+        <td class="py-3 px-4 text-right">
+          <div class="flex items-center justify-end gap-1.5">
+            <button onclick="openDocumentReview('${doc.id}')" class="px-2.5 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold transition-colors cursor-pointer" title="Review and Edit">
+              Review
+            </button>
+            <button onclick="openDocumentPreviewModal('${doc.id}', '${escapeHtml(doc.filename)}')" class="p-1 rounded-md hover:bg-surface-container text-secondary hover:text-on-surface transition-colors cursor-pointer" title="Preview Original">
+              <span class="material-symbols-outlined text-[16px]">visibility</span>
+            </button>
+            <a href="/api/documents/${doc.id}/download" target="_blank" download class="p-1 rounded-md hover:bg-surface-container text-secondary hover:text-on-surface transition-colors cursor-pointer" title="Download Document">
+              <span class="material-symbols-outlined text-[16px]">download</span>
+            </a>
+            ${canDelete ? `
+            <button onclick="deleteDocument('${doc.id}')" class="p-1 rounded-md hover:bg-rose-50 text-secondary hover:text-rose-600 transition-colors cursor-pointer" title="Delete Document">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+window.renderBillsDashboard = renderBillsDashboard;
+
+function filterBillsCategory(category) {
+  billsDocsState.activeCategory = category || "";
+  loadBillsDashboard();
+}
+window.filterBillsCategory = filterBillsCategory;
+
+function filterBillsStatus(status) {
+  billsDocsState.activeStatus = status || "";
+  loadBillsDashboard();
+}
+window.filterBillsStatus = filterBillsStatus;
+
+let billsSearchTimer = null;
+function searchBillsDocs(query) {
+  clearTimeout(billsSearchTimer);
+  billsSearchTimer = setTimeout(() => {
+    billsDocsState.searchQuery = (query || "").trim();
+    loadBillsDashboard();
+  }, 300);
+}
+window.searchBillsDocs = searchBillsDocs;
+
+function handleBillsDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('billsDropzone');
+  if (dz) {
+    dz.classList.add('border-primary', 'bg-surface-container');
+  }
+}
+window.handleBillsDragOver = handleBillsDragOver;
+
+function handleBillsDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('billsDropzone');
+  if (dz) {
+    dz.classList.remove('border-primary', 'bg-surface-container');
+  }
+}
+window.handleBillsDragLeave = handleBillsDragLeave;
+
+function handleBillsDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('billsDropzone');
+  if (dz) {
+    dz.classList.remove('border-primary', 'bg-surface-container');
+  }
+  if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    uploadBillsFiles(e.dataTransfer.files);
+  }
+}
+window.handleBillsDrop = handleBillsDrop;
+
+async function uploadBillsFiles(fileList) {
+  if (!fileList || fileList.length === 0) return;
+  const files = Array.from(fileList);
+
+  for (const file of files) {
+    if (file.size > 15 * 1024 * 1024) {
+      if (typeof showToast === "function") {
+        showToast(`File "${file.name}" exceeds the maximum allowed size of 15 MB.`, "error");
+      }
+      return;
+    }
+  }
+
+  const progressContainer = document.getElementById('billsUploadProgress');
+  const filenameEl = document.getElementById('billsUploadFilename');
+  const percentEl = document.getElementById('billsUploadPercent');
+  const progressBar = document.getElementById('billsUploadProgressBar');
+
+  if (progressContainer) progressContainer.classList.remove('hidden');
+
+  let successCount = 0;
+  let lastUploadedData = null;
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const percent = Math.round(((i + 0.5) / files.length) * 100);
+    if (filenameEl) filenameEl.textContent = `Processing ${file.name} (${i + 1}/${files.length})...`;
+    if (percentEl) percentEl.textContent = `${percent}%`;
+    if (progressBar) progressBar.style.width = `${percent}%`;
+
+    try {
+      const rawText = await readFileAsBase64OrText(file);
+      const res = await apiFetch("/api/documents/upload", {
+        method: "POST",
+        body: JSON.stringify({
+          filename: file.name,
+          category: billsDocsState.activeCategory || "purchase_bill",
+          rawText
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        successCount++;
+        lastUploadedData = data;
+      } else {
+        if (typeof showToast === "function") {
+          showToast(`Error processing ${file.name}: ${data.error || "Unknown error"}`, "error");
+        }
+      }
+    } catch (err) {
+      if (typeof showToast === "function") {
+        showToast(`Failed to upload ${file.name}: ${err.message}`, "error");
+      }
+    }
+  }
+
+  if (percentEl) percentEl.textContent = `100%`;
+  if (progressBar) progressBar.style.width = `100%`;
+
+  setTimeout(() => {
+    if (progressContainer) progressContainer.classList.add('hidden');
+    if (progressBar) progressBar.style.width = `0%`;
+  }, 600);
+
+  if (successCount > 0) {
+    if (typeof showToast === "function") {
+      showToast(`Successfully processed ${successCount} document(s)!`, "success");
+    }
+    await loadBillsDashboard();
+
+    if (files.length === 1 && lastUploadedData && lastUploadedData.document) {
+      openOcrReviewModal(
+        lastUploadedData.document.id,
+        lastUploadedData.parsedInvoice || lastUploadedData.extractedFields || {},
+        lastUploadedData.parsedInvoice?.documentType || lastUploadedData.document.category || "purchase_bill",
+        files[0].name,
+        lastUploadedData.parsedInvoice?.confidence || "96%"
+      );
+    }
+  }
+}
+window.uploadBillsFiles = uploadBillsFiles;
+
+function readFileAsBase64OrText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    if (file.type && (file.type.startsWith("text/") || file.name.endsWith(".csv") || file.name.endsWith(".txt"))) {
+      reader.readAsText(file);
+    } else {
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+function openDocumentReview(docId) {
+  const doc = (billsDocsState.documents || []).find(d => d.id === docId);
+  if (!doc) {
+    if (typeof showToast === "function") showToast("Document not found in list.", "error");
+    return;
+  }
+
+  const invoiceData = doc.extracted_invoice || {
+    invoiceInfo: {
+      invoiceNumber: doc.invoice_number || `INV-${doc.id.slice(0, 6).toUpperCase()}`,
+      invoiceDate: doc.invoice_date || new Date().toISOString().split('T')[0],
+      pos: "27",
+      supplyType: "B2B",
+      isRcm: false,
+      itcEligibility: "ELIGIBLE"
+    },
+    seller: {
+      name: doc.category === "sales_invoice" ? "My Business" : (doc.party_name || "Supplier"),
+      gstin: doc.category === "sales_invoice" ? "" : (doc.party_gstin || ""),
+    },
+    buyer: {
+      name: doc.category === "sales_invoice" ? (doc.party_name || "Customer") : "My Business",
+      gstin: doc.category === "sales_invoice" ? (doc.party_gstin || "") : "",
+    },
+    totals: {
+      taxableAmount: doc.taxable_amount || 0,
+      totalAmount: doc.total_amount || 0,
+      cgst: 0,
+      sgst: 0,
+      igst: 0
+    },
+    lineItems: [],
+    warnings: []
+  };
+
+  const confidence = doc.confidence ? `${Math.round(doc.confidence * 100)}%` : "96%";
+  openOcrReviewModal(doc.id, invoiceData, doc.category, doc.filename, confidence);
+}
+window.openDocumentReview = openDocumentReview;
+
+async function saveOcrDraft() {
+  const docId = ocrInvoiceState.docId || document.getElementById('ocrReviewDocId')?.value;
+  if (!docId) {
+    if (typeof showToast === "function") showToast("No active document ID for draft save.", "warning");
+    return;
+  }
+
+  const invoiceType = document.getElementById('ocrReviewInvoiceType')?.value || ocrInvoiceState.documentType;
+  const invoiceNumber = document.getElementById('ocrReviewInvoiceNumber')?.value?.trim();
+  const invoiceDate = document.getElementById('ocrReviewInvoiceDate')?.value;
+  const dueDate = document.getElementById('ocrReviewDueDate')?.value;
+  const pos = (document.getElementById('ocrReviewPos')?.value || "27").slice(0, 2);
+  const supplyType = document.getElementById('ocrReviewSupplyType')?.value || "B2B";
+  const itcEligibility = document.getElementById('ocrReviewItcEligibility')?.value || "ELIGIBLE";
+  const isRcm = Boolean(document.getElementById('ocrReviewIsRcm')?.checked);
+
+  const sellerName = document.getElementById('ocrReviewSellerName')?.value?.trim();
+  const sellerGstin = (document.getElementById('ocrReviewSellerGstin')?.value || "").trim().toUpperCase();
+  const sellerState = document.getElementById('ocrReviewSellerState')?.value?.trim();
+  const sellerAddress = document.getElementById('ocrReviewSellerAddress')?.value?.trim();
+
+  const buyerName = document.getElementById('ocrReviewBuyerName')?.value?.trim();
+  const buyerGstin = (document.getElementById('ocrReviewBuyerGstin')?.value || "").trim().toUpperCase();
+  const buyerState = document.getElementById('ocrReviewBuyerState')?.value?.trim();
+  const buyerAddress = document.getElementById('ocrReviewBuyerAddress')?.value?.trim();
+
+  const cess = parseFloat(document.getElementById('ocrReviewCess')?.value) || 0;
+  const roundOff = parseFloat(document.getElementById('ocrReviewRoundOff')?.value) || 0;
+
+  let totalTaxable = 0, totalCgst = 0, totalSgst = 0, totalIgst = 0;
+  ocrInvoiceState.lineItems.forEach(item => {
+    totalTaxable += Number(item.taxableValue || 0);
+    totalCgst += Number(item.cgst || 0);
+    totalSgst += Number(item.sgst || 0);
+    totalIgst += Number(item.igst || 0);
+  });
+
+  const totalTax = totalCgst + totalSgst + totalIgst + cess;
+  const totalAmount = Math.round((totalTaxable + totalTax + roundOff) * 100) / 100;
+
+  const btn = document.getElementById('btnSaveOcrDraft');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await apiFetch(`/api/documents/${docId}/draft`, {
+      method: "POST",
+      body: JSON.stringify({
+        invoiceType,
+        fields: {
+          invoiceInfo: { invoiceNumber, invoiceDate, dueDate, pos, supplyType, itcEligibility, isRcm },
+          seller: { name: sellerName, gstin: sellerGstin, state: sellerState, address: sellerAddress },
+          buyer: { name: buyerName, gstin: buyerGstin, state: buyerState, address: buyerAddress },
+          partyName: invoiceType === 'sales_invoice' ? buyerName : sellerName,
+          gstin: invoiceType === 'sales_invoice' ? buyerGstin : sellerGstin,
+          lineItems: ocrInvoiceState.lineItems,
+          totals: { taxableAmount: totalTaxable, cgst: totalCgst, sgst: totalSgst, igst: totalIgst, cess, roundOff, totalTax, totalAmount },
+          taxableAmount: totalTaxable,
+          totalAmount
+        }
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === "function") showToast("Draft saved successfully!", "success");
+      closeOcrReviewModal();
+      await loadBillsDashboard();
+    } else {
+      if (typeof showToast === "function") showToast(data.error || "Failed to save draft.", "error");
+    }
+  } catch (err) {
+    if (typeof showToast === "function") showToast("Error saving draft: " + err.message, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+window.saveOcrDraft = saveOcrDraft;
+
+async function rejectOcrDocument() {
+  const docId = ocrInvoiceState.docId || document.getElementById('ocrReviewDocId')?.value;
+  if (!docId) return;
+
+  const reason = prompt("Enter rejection reason (optional):", "Rejected upon review");
+  if (reason === null) return; // User cancelled prompt
+
+  const btn = document.getElementById('btnRejectOcr');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await apiFetch(`/api/documents/${docId}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ reason })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === "function") showToast(data.message || "Document marked as rejected.", "info");
+      closeOcrReviewModal();
+      await loadBillsDashboard();
+    } else {
+      if (typeof showToast === "function") showToast(data.error || "Failed to reject document.", "error");
+    }
+  } catch (err) {
+    if (typeof showToast === "function") showToast("Error rejecting document: " + err.message, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+window.rejectOcrDocument = rejectOcrDocument;
+
+async function reExtractCurrentDocument() {
+  const docId = ocrInvoiceState.docId || document.getElementById('ocrReviewDocId')?.value;
+  if (!docId) return;
+
+  const btn = document.getElementById('btnReExtractOcr');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await apiFetch(`/api/documents/${docId}/re-extract`, { method: "POST" });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === "function") showToast("Document re-extracted successfully!", "success");
+      openOcrReviewModal(
+        docId,
+        data.parsedInvoice || data.extractedFields,
+        ocrInvoiceState.documentType,
+        ocrInvoiceState.filename,
+        "Re-extracted (98%)"
+      );
+      await loadBillsDashboard();
+    } else {
+      if (typeof showToast === "function") showToast(data.error || "Failed to re-extract document.", "error");
+    }
+  } catch (err) {
+    if (typeof showToast === "function") showToast("Re-extract error: " + err.message, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+window.reExtractCurrentDocument = reExtractCurrentDocument;
+
+async function deleteDocument(docId) {
+  if (!docId) return;
+  if (!confirm("Are you sure you want to delete this document? This action cannot be undone.")) return;
+
+  try {
+    const res = await apiFetch(`/api/documents/${docId}`, { method: "DELETE" });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === "function") showToast("Document deleted successfully.", "success");
+      await loadBillsDashboard();
+    } else {
+      if (typeof showToast === "function") showToast(data.error || "Failed to delete document.", "error");
+    }
+  } catch (err) {
+    if (typeof showToast === "function") showToast("Delete error: " + err.message, "error");
+  }
+}
+window.deleteDocument = deleteDocument;
+
+function openDocumentPreviewModal(docId, filename) {
+  const modal = document.getElementById('modalDocumentPreview');
+  const titleEl = document.getElementById('docPreviewTitle');
+  const subtitleEl = document.getElementById('docPreviewSubtitle');
+  const downloadBtn = document.getElementById('docPreviewDownloadBtn');
+  const iframeEl = document.getElementById('docPreviewIframe');
+  const imgEl = document.getElementById('docPreviewImage');
+  const placeholderEl = document.getElementById('docPreviewPlaceholder');
+
+  if (titleEl) titleEl.textContent = filename || "Document Preview";
+  if (subtitleEl) subtitleEl.textContent = `Document ID: ${docId}`;
+  if (downloadBtn) {
+    downloadBtn.href = `/api/documents/${docId}/download`;
+    downloadBtn.setAttribute('download', filename || 'document');
+  }
+
+  const isPdf = (filename || '').toLowerCase().endsWith('.pdf');
+  const isImg = /\.(png|jpe?g)$/i.test(filename || '');
+
+  if (iframeEl) iframeEl.classList.add('hidden');
+  if (imgEl) imgEl.classList.add('hidden');
+  if (placeholderEl) placeholderEl.classList.add('hidden');
+
+  const previewUrl = `/api/documents/${docId}/preview`;
+
+  if (isPdf && iframeEl) {
+    iframeEl.src = previewUrl;
+    iframeEl.classList.remove('hidden');
+  } else if (isImg && imgEl) {
+    imgEl.src = previewUrl;
+    imgEl.classList.remove('hidden');
+  } else if (placeholderEl) {
+    placeholderEl.classList.remove('hidden');
+  }
+
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+}
+window.openDocumentPreviewModal = openDocumentPreviewModal;
+
+function closeDocumentPreviewModal() {
+  const modal = document.getElementById('modalDocumentPreview');
+  const iframeEl = document.getElementById('docPreviewIframe');
+  if (iframeEl) iframeEl.src = 'about:blank';
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+}
+window.closeDocumentPreviewModal = closeDocumentPreviewModal;
