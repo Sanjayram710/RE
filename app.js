@@ -66,6 +66,14 @@ async function apiFetch(url, options = {}) {
 
   if (res.status === 401) {
     console.warn("Session expired or unauthorized request to:", url);
+    if (appState.auth && appState.auth.isLoggedIn) {
+      appState.auth = { isLoggedIn: false, user: null };
+      appState.sessionToken = null;
+      appState.csrfToken = null;
+      localStorage.removeItem("simplegst_user_session");
+      if (typeof renderAuthState === "function") renderAuthState();
+      if (typeof openAuthModal === "function") openAuthModal("signin");
+    }
     if (typeof showToast === "function") {
       showToast("Authentication required or session expired. Please sign in.", "warning");
     }
@@ -88,51 +96,65 @@ window.apiFetch = apiFetch;
 
 async function initSessionFromBackend() {
   try {
-    let res = await fetch("/api/auth/session", { credentials: "same-origin" });
-    let data = res.ok ? await res.json() : null;
-
-    if (!data || !data.authenticated) {
-      // Auto-initialize default development/demo session for Rajesh Sharma
-      const loginRes = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ email: "rajesh.sharma@apexretail.com", password: "ApexAdmin@2026" })
-      });
-      if (loginRes.ok) {
-        const loginData = await loginRes.json();
-        if (loginData.sessionToken) {
-          appState.sessionToken = loginData.sessionToken;
-        }
-        res = await fetch("/api/auth/session", { credentials: "same-origin" });
-        data = res.ok ? await res.json() : null;
-      }
+    const headers = {};
+    if (appState.sessionToken) {
+      headers["Authorization"] = `Bearer ${appState.sessionToken}`;
     }
+    const res = await fetch("/api/auth/session", {
+      credentials: "same-origin",
+      headers
+    });
+    const data = res.ok ? await res.json() : null;
 
-    if (data && data.authenticated && data.activeGstin) {
+    if (data && data.authenticated && data.user) {
       appState.csrfToken = data.csrfToken;
-      appState.organization = data.organization;
-      appState.activeGstin = data.activeGstin;
+      appState.organization = data.organization || null;
+      appState.activeGstin = data.activeGstin || null;
       appState.allGstins = data.allGstins || [];
       appState.activePeriod = data.activePeriod || appState.activePeriod || "102026";
       if (!appState.gst) appState.gst = {};
       if (!appState.gst.business) appState.gst.business = {};
-      appState.gst.business.gstin = data.activeGstin.gstin;
-      appState.gst.business.tradeName = data.activeGstin.trade_name;
-      appState.gst.business.legalName = data.organization?.name;
-      appState.gst.business.filingPeriod = data.activePeriod || appState.activePeriod || "102026";
+      if (data.activeGstin) {
+        appState.gst.business.gstin = data.activeGstin.gstin;
+        appState.gst.business.tradeName = data.activeGstin.trade_name;
+        appState.gst.business.legalName = data.organization?.name || data.activeGstin.trade_name;
+        appState.gst.business.filingPeriod = data.activePeriod || "102026";
+        appState.gst.business.authorisedPerson = data.user.name;
+      }
       appState.auth = {
         isLoggedIn: true,
         user: data.user,
         csrfToken: data.csrfToken
       };
-      if (typeof selectFilingEntity === "function") {
+      localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
+      if (data.activeGstin && typeof selectFilingEntity === "function") {
         selectFilingEntity(data.activeGstin.gstin, data.activeGstin.trade_name || data.organization?.name, data.activeGstin.state_name);
       }
       if (typeof renderAuthState === "function") renderAuthState();
+      return true;
+    } else {
+      // Unauthenticated session - clear sensitive state
+      appState.sessionToken = null;
+      appState.csrfToken = data?.csrfToken || null;
+      appState.organization = null;
+      appState.activeGstin = null;
+      appState.allGstins = [];
+      appState.auth = {
+        isLoggedIn: false,
+        user: null,
+        csrfToken: null
+      };
+      localStorage.removeItem("simplegst_user_session");
+      if (typeof renderAuthState === "function") renderAuthState();
+      return false;
     }
   } catch (err) {
     console.warn("Could not retrieve session from /api/auth/session:", err);
+    appState.sessionToken = null;
+    appState.auth = { isLoggedIn: false, user: null, csrfToken: null };
+    localStorage.removeItem("simplegst_user_session");
+    if (typeof renderAuthState === "function") renderAuthState();
+    return false;
   }
 }
 window.initSessionFromBackend = initSessionFromBackend;
@@ -258,20 +280,24 @@ function showToast(message, type = "info") {
 // ============================================================================
 document.addEventListener("DOMContentLoaded", async () => {
   setupSidebarCountdown();
-  await initSessionFromBackend();
+  const isAuthenticated = await initSessionFromBackend();
   initAuth();
   initKioskEventListeners();
   await fetchAppMode();
-  await loadGstDemoData();
   
-  // Default to GST Return Assistant (Guiding Path) on load
+  // Default to GST Return Assistant on load
   switchSuite('home');
-  selectFilingEntity('27AAACA1234A1Z5', 'Apex Retailers Pvt Ltd', 'Main Branch');
-  
-  // Hydrate dynamic period, live dashboard, and copilot
-  if (typeof syncPeriodAcrossUi === "function") syncPeriodAcrossUi();
-  if (typeof loadDashboardData === "function") loadDashboardData();
-  if (typeof renderCopilotWorkspace === "function") renderCopilotWorkspace();
+
+  if (isAuthenticated && appState.activeGstin) {
+    selectFilingEntity(appState.activeGstin.gstin, appState.activeGstin.trade_name || appState.organization?.name || "Taxpayer", appState.activeGstin.state_name || "");
+    if (typeof syncPeriodAcrossUi === "function") syncPeriodAcrossUi();
+    if (typeof loadDashboardData === "function") loadDashboardData();
+    if (typeof renderCopilotWorkspace === "function") renderCopilotWorkspace();
+  } else {
+    // Unauthenticated initial state: render logged out state and present the sign in modal
+    renderAuthState();
+    openAuthModal("signin");
+  }
 
   // Close dropdowns on outside click
   document.addEventListener("click", (e) => {
@@ -1341,71 +1367,66 @@ appState.auth = {
 };
 
 function initAuth() {
-  try {
-    const saved = localStorage.getItem("simplegst_user_session");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed && parsed.isLoggedIn && parsed.user) {
-        appState.auth = parsed;
-      }
-    }
-  } catch (e) {
-    console.warn("Could not parse saved user session:", e);
+  if (appState.auth && appState.auth.isLoggedIn && appState.auth.user) {
+    renderAuthState();
+    return;
   }
   renderAuthState();
 }
 
-function renderFilingDropdownMenu() {
+function renderFilingDropdownItems() {
   const menu = document.getElementById("filingDropdownMenu");
   if (!menu) return;
 
-  if (appState.auth && appState.auth.isLoggedIn && appState.auth.user) {
-    const user = appState.auth.user;
-    const pan = user.pan || appState.itr.personalInfo.pan || "NO PAN";
-    const name = user.name || "Authorized Taxpayer";
-
-    menu.innerHTML = `
-      <div class="filing-menu-item active" style="background: #EFF6FF; border-left: 3px solid #0F67FE;">
-        <div class="entity-pan" style="color: #0F67FE; font-weight: 800;">${pan}</div>
-        <div class="entity-name" style="font-weight: 600;">${name} • AY 2026-27 (Active)</div>
-      </div>
-      <div style="height: 1px; background: #E2E8F0; margin: 6px 0;"></div>
-      <div class="filing-menu-item" onclick="openProfileModal()">
-        <div style="font-size: 12px; font-weight: 600; color: #1E3A8A;">👤 Manage PAN & Profile (${pan})</div>
-      </div>
-      <div class="filing-menu-item" onclick="logoutAction()">
-        <div style="font-size: 12px; font-weight: 600; color: #DC2626;">🚪 Log Out (${name})</div>
-      </div>
-    `;
+  if (appState.auth && appState.auth.isLoggedIn && appState.allGstins && appState.allGstins.length > 0) {
+    let html = `<div class="p-2 text-xs font-semibold text-secondary uppercase tracking-wider">Select GSTIN Entity</div>`;
+    appState.allGstins.forEach(g => {
+      const isAct = appState.activeGstin && appState.activeGstin.gstin === g.gstin;
+      const gstinStr = escapeHtml(g.gstin);
+      const nameStr = escapeHtml(g.trade_name || g.legal_name || "Branch");
+      const stateStr = escapeHtml(g.state_name || "");
+      html += `
+        <div class="filing-menu-item p-2.5 rounded-lg hover:bg-surface-container cursor-pointer transition-colors ${isAct ? 'bg-primary/5 font-semibold' : ''}" onclick="selectFilingEntity('${gstinStr}', '${nameStr.replace(/'/g, "\\'")}', '${stateStr.replace(/'/g, "\\'")}')">
+          <div class="entity-pan font-mono font-bold text-xs text-primary">${gstinStr}</div>
+          <div class="entity-name text-xs text-on-surface">${nameStr} • ${stateStr}</div>
+        </div>
+      `;
+    });
+    menu.innerHTML = html;
   } else {
-    // Guest Mode
     menu.innerHTML = `
-      <div class="filing-menu-item active">
-        <div class="entity-pan">Guest Mode</div>
-        <div class="entity-name">Sign In or Register to link PAN</div>
-      </div>
-      <div style="height: 1px; background: #E2E8F0; margin: 6px 0;"></div>
-      <div style="padding: 6px 12px; font-size: 11px; text-transform: uppercase; color: #64748B; font-weight: 700;">Demo Quick Logins</div>
-      <div class="filing-menu-item" onclick="quickDemoLogin('sanjay')">
-        <div class="entity-pan">CVBBC4433W</div>
-        <div class="entity-name">Sanjay Harshi (Demo) • Salaried</div>
-      </div>
-      <div class="filing-menu-item" onclick="quickDemoLogin('priya')">
-        <div class="entity-pan">AAPCS1234F</div>
-        <div class="entity-name">Priya Sharma (Demo) • Professional</div>
+      <div class="p-3 text-xs text-secondary text-center">
+        <div class="font-medium text-on-surface mb-1">No active session</div>
+        <div>Please sign in to select a GSTIN entity.</div>
+        <button onclick="openAuthModal('signin')" class="mt-2.5 w-full py-1.5 px-3 rounded bg-primary text-white font-medium text-xs hover:bg-primary-container transition-colors cursor-pointer">Sign In</button>
       </div>
     `;
   }
+}
+window.renderFilingDropdownItems = renderFilingDropdownItems;
+
+function renderFilingDropdownMenu() {
+  renderFilingDropdownItems();
 }
 
 function renderAuthState() {
   const loggedOutNav = document.getElementById("navAuthLoggedOut");
   const loggedInNav = document.getElementById("navAuthLoggedIn");
+  const btnNavSignIn = document.getElementById("btnNavSignIn");
   const navUserName = document.getElementById("navUserName");
+  const navUserRole = document.getElementById("navUserRole");
   const menuUserName = document.getElementById("menuUserFullName");
   const menuUserEmail = document.getElementById("menuUserEmail");
   const currentFilingPan = document.getElementById("currentFilingPan");
+  const currentFilingEntityName = document.getElementById("currentFilingEntityName");
+  const sidebarEntityDisplay = document.getElementById("sidebarEntityDisplay");
+  const sidebarGstinDisplay = document.getElementById("sidebarGstinDisplay");
+  const sidebarUserName = document.getElementById("sidebarUserName");
+  const sidebarUserRole = document.getElementById("sidebarUserRole");
+  const fileBadge = document.getElementById("fileGstActiveEntityBadge");
   const guestBanner = document.getElementById("guestWelcomeBanner");
+  const greetingHeader = document.getElementById("dashboardGreetingHeader");
+  const btnMenuAuthAction = document.getElementById("btnMenuAuthAction");
 
   const inputFirst = document.getElementById("inputFirstName");
   const inputLast = document.getElementById("inputLastName");
@@ -1421,10 +1442,29 @@ function renderAuthState() {
     const user = appState.auth.user;
     if (loggedOutNav) loggedOutNav.style.display = "none";
     if (loggedInNav) loggedInNav.style.display = "flex";
+    if (btnNavSignIn) btnNavSignIn.style.display = "none";
     if (navUserName) navUserName.textContent = user.name || "Assessee";
+    if (navUserRole) navUserRole.textContent = user.role || "Taxpayer";
     if (menuUserName) menuUserName.textContent = user.name || "Assessee";
     if (menuUserEmail) menuUserEmail.textContent = user.email || "user@simplegst.tax";
-    if (currentFilingPan) currentFilingPan.textContent = user.pan || "CVBBC4433W";
+    if (sidebarUserName) sidebarUserName.textContent = user.name || "Assessee";
+    if (sidebarUserRole) sidebarUserRole.textContent = user.role || "Taxpayer";
+    if (greetingHeader) greetingHeader.textContent = `Welcome, ${user.name || "Taxpayer"}`;
+
+    if (btnMenuAuthAction) {
+      btnMenuAuthAction.innerHTML = `<span class="material-symbols-outlined text-[16px]">logout</span> Log Out`;
+      btnMenuAuthAction.onclick = logoutAction;
+      btnMenuAuthAction.className = "w-full text-left flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-error hover:bg-error-container/20 font-semibold cursor-pointer";
+    }
+
+    const orgName = appState.organization?.name || appState.activeGstin?.trade_name || "Taxpayer Workspace";
+    const gstin = appState.activeGstin?.gstin || "—";
+    if (currentFilingEntityName) currentFilingEntityName.textContent = orgName;
+    if (currentFilingPan) currentFilingPan.textContent = gstin;
+    if (sidebarEntityDisplay) sidebarEntityDisplay.textContent = orgName;
+    if (sidebarGstinDisplay) sidebarGstinDisplay.textContent = gstin;
+    if (fileBadge) fileBadge.textContent = `${orgName} (${gstin})`;
+
     if (guestBanner) guestBanner.style.display = "none";
     if (expertTaxpayerName) expertTaxpayerName.textContent = user.name;
 
@@ -1438,26 +1478,45 @@ function renderAuthState() {
     if (inputPan) inputPan.value = user.pan || "";
     if (inputMobile) inputMobile.value = user.mobile || "";
     if (inputEmail) inputEmail.value = user.email || "";
-    if (inputDob) inputDob.value = user.dob || "07/10/2006";
-    if (inputFather) inputFather.value = user.fatherName || "Harshi V";
-    if (inputAadhaar) inputAadhaar.value = user.aadhaar || "482910482910";
+    if (inputDob) inputDob.value = user.dob || "";
+    if (inputFather) inputFather.value = user.fatherName || "";
+    if (inputAadhaar) inputAadhaar.value = user.aadhaar || "";
 
-    // Sync appState
-    appState.itr.personalInfo.firstName = firstName;
-    appState.itr.personalInfo.lastName = lastName;
-    appState.itr.personalInfo.pan = user.pan;
-    appState.itr.personalInfo.mobile = user.mobile;
-    appState.itr.personalInfo.email = user.email;
-
+    if (appState.itr && appState.itr.personalInfo) {
+      appState.itr.personalInfo.firstName = firstName;
+      appState.itr.personalInfo.lastName = lastName;
+      appState.itr.personalInfo.pan = user.pan || "";
+      appState.itr.personalInfo.mobile = user.mobile || "";
+      appState.itr.personalInfo.email = user.email || "";
+    }
   } else {
     // GUEST / LOGGED OUT STATE
     if (loggedOutNav) loggedOutNav.style.display = "flex";
     if (loggedInNav) loggedInNav.style.display = "none";
-    if (currentFilingPan) currentFilingPan.textContent = "Guest / New Filing";
+    if (btnNavSignIn) btnNavSignIn.style.display = "inline-flex";
+    if (navUserName) navUserName.textContent = "Sign In";
+    if (navUserRole) navUserRole.textContent = "Click to authenticate";
+    if (menuUserName) menuUserName.textContent = "Guest Taxpayer";
+    if (menuUserEmail) menuUserEmail.textContent = "Not signed in";
+    if (sidebarUserName) sidebarUserName.textContent = "Guest Taxpayer";
+    if (sidebarUserRole) sidebarUserRole.textContent = "Not Signed In";
+    if (greetingHeader) greetingHeader.textContent = "Welcome to SimpleGST";
+
+    if (btnMenuAuthAction) {
+      btnMenuAuthAction.innerHTML = `<span class="material-symbols-outlined text-[16px]">login</span> Sign In`;
+      btnMenuAuthAction.onclick = () => openAuthModal("signin");
+      btnMenuAuthAction.className = "w-full text-left flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-primary hover:bg-primary-container/20 font-semibold cursor-pointer";
+    }
+
+    if (currentFilingEntityName) currentFilingEntityName.textContent = "Select Organization";
+    if (currentFilingPan) currentFilingPan.textContent = "—";
+    if (sidebarEntityDisplay) sidebarEntityDisplay.textContent = "No Active Organization";
+    if (sidebarGstinDisplay) sidebarGstinDisplay.textContent = "—";
+    if (fileBadge) fileBadge.textContent = "No Active GSTIN";
+
     if (guestBanner) guestBanner.style.display = "flex";
     if (expertTaxpayerName) expertTaxpayerName.textContent = "New Taxpayer (Guest)";
 
-    // Clear personal info fields so a new user has a clean slate
     if (inputFirst) inputFirst.value = "";
     if (inputLast) inputLast.value = "";
     if (inputPan) inputPan.value = "";
@@ -1467,23 +1526,31 @@ function renderAuthState() {
     if (inputFather) inputFather.value = "";
     if (inputAadhaar) inputAadhaar.value = "";
 
-    appState.itr.personalInfo.firstName = "";
-    appState.itr.personalInfo.lastName = "";
-    appState.itr.personalInfo.pan = "";
-    appState.itr.personalInfo.mobile = "";
-    appState.itr.personalInfo.email = "";
+    if (appState.itr && appState.itr.personalInfo) {
+      appState.itr.personalInfo.firstName = "";
+      appState.itr.personalInfo.lastName = "";
+      appState.itr.personalInfo.pan = "";
+      appState.itr.personalInfo.mobile = "";
+      appState.itr.personalInfo.email = "";
+    }
   }
-  updatePersonalInfoState();
+  if (typeof updatePersonalInfoState === "function") updatePersonalInfoState();
+  renderFilingDropdownItems();
 }
+window.renderAuthState = renderAuthState;
 
 function openAuthModal(tab = "signin") {
   openModal("modalAuth");
   switchAuthTab(tab);
 }
+window.openAuthModal = openAuthModal;
 
 function closeAuthModal() {
   closeModal("modalAuth");
+  const errorEl = document.getElementById("loginErrorMessage");
+  if (errorEl) errorEl.classList.add("hidden");
 }
+window.closeAuthModal = closeAuthModal;
 
 function switchAuthTab(tab) {
   const btnSignIn = document.getElementById("tabAuthSignIn");
@@ -1509,7 +1576,7 @@ function switchAuthTab(tab) {
     if (formSignIn) formSignIn.classList.remove("hidden");
     if (formRegister) formRegister.classList.add("hidden");
     if (title) title.textContent = "Sign In to SimpleGST";
-    if (sub) sub.textContent = "Secure ClearTax-grade access to tax returns, AIS data & CA consultations";
+    if (sub) sub.textContent = "Secure access to your tax returns, GSTR filings, and compliance vault";
   } else {
     if (btnRegister) {
       btnRegister.style.background = "var(--white)";
@@ -1529,65 +1596,93 @@ function switchAuthTab(tab) {
     if (sub) sub.textContent = "Enter your legal PAN and contact info to start frictionless e-filing";
   }
 }
+window.switchAuthTab = switchAuthTab;
 
-function handleSignInSubmit(e) {
-  e.preventDefault();
+async function handleSignInSubmit(e) {
+  if (e && e.preventDefault) e.preventDefault();
   const idInput = document.getElementById("loginIdentifier");
-  const identifier = idInput ? idInput.value.trim() : "";
+  const passInput = document.getElementById("loginPassword");
+  const errorEl = document.getElementById("loginErrorMessage");
+  const errorTextEl = document.getElementById("loginErrorText");
+  const submitBtn = document.getElementById("btnSignInSubmit");
 
-  if (!identifier) {
-    alert("Please enter your Mobile Number or Email Address to sign in.");
+  const identifier = idInput ? idInput.value.trim() : "";
+  const password = passInput ? passInput.value : "";
+
+  if (!identifier || !password) {
+    if (errorEl) {
+      if (errorTextEl) errorTextEl.textContent = "Please enter both your email address and password.";
+      errorEl.classList.remove("hidden");
+    } else {
+      showToast("Please enter both your email address and password.", "error");
+    }
     return;
   }
 
-  // Check previously registered users from localStorage
-  let matchedUser = null;
-  try {
-    const users = JSON.parse(localStorage.getItem("simplegst_registered_users") || "[]");
-    matchedUser = users.find(u => (u.email && u.email.toLowerCase() === identifier.toLowerCase()) || (u.mobile && u.mobile === identifier));
-  } catch (err) {}
+  if (errorEl) errorEl.classList.add("hidden");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.dataset.origText = submitBtn.innerHTML;
+    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Signing in...`;
+  }
 
-  if (!matchedUser && appState.auth && appState.auth.user) {
-    if ((appState.auth.user.email && appState.auth.user.email.toLowerCase() === identifier.toLowerCase()) || (appState.auth.user.mobile && appState.auth.user.mobile === identifier)) {
-      matchedUser = appState.auth.user;
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ email: identifier, password: password })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || !data.success) {
+      const msg = data.error || "Invalid email or password. Please check your credentials.";
+      if (errorEl) {
+        if (errorTextEl) errorTextEl.textContent = msg;
+        errorEl.classList.remove("hidden");
+      }
+      showToast(msg, "error");
+      return;
+    }
+
+    if (data.sessionToken) {
+      appState.sessionToken = data.sessionToken;
+    }
+    if (data.csrfToken) {
+      appState.csrfToken = data.csrfToken;
+    }
+
+    await initSessionFromBackend();
+
+    closeAuthModal();
+    if (passInput) passInput.value = "";
+    showToast(`Welcome back, ${data.user?.name || "Taxpayer"}!`, "success");
+
+    if (typeof loadDashboardData === "function") loadDashboardData();
+    if (typeof syncPeriodAcrossUi === "function") syncPeriodAcrossUi();
+    if (typeof renderCopilotWorkspace === "function") renderCopilotWorkspace();
+    if (typeof loadSalesRegister === "function") loadSalesRegister();
+    if (typeof loadPurchaseRegister === "function") loadPurchaseRegister();
+    if (typeof loadBillsRegister === "function") loadBillsRegister();
+  } catch (err) {
+    console.error("Sign in failed:", err);
+    if (errorEl) {
+      if (errorTextEl) errorTextEl.textContent = "Sign in network failure. Please try again.";
+      errorEl.classList.remove("hidden");
+    }
+    showToast("Sign in request failed. Please check network connection.", "error");
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      if (submitBtn.dataset.origText) submitBtn.innerHTML = submitBtn.dataset.origText;
     }
   }
-
-  if (matchedUser) {
-    appState.auth = {
-      isLoggedIn: true,
-      user: matchedUser
-    };
-  } else {
-    // Fresh user logged in with phone or email
-    const isEmail = identifier.includes("@");
-    const cleanName = isEmail ? identifier.split("@")[0] : `User ${identifier.slice(-4)}`;
-    const formattedName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-    appState.auth = {
-      isLoggedIn: true,
-      user: {
-        name: formattedName,
-        firstName: formattedName,
-        lastName: "",
-        email: isEmail ? identifier : `${identifier}@taxpayer.in`,
-        mobile: isEmail ? "" : identifier.replace(/\D/g, '').slice(0, 10),
-        pan: "", // User will type their PAN in Step 1
-        dob: "",
-        fatherName: "",
-        aadhaar: ""
-      }
-    };
-  }
-
-  localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
-  renderAuthState();
-  closeAuthModal();
-  goToItrStep(1);
-  showToast(`✓ Welcome, ${appState.auth.user.name}! Signed in successfully.`, "success");
 }
+window.handleSignInSubmit = handleSignInSubmit;
 
 function handleRegisterSubmit(e) {
-  e.preventDefault();
+  if (e && e.preventDefault) e.preventDefault();
   const name = document.getElementById("regFullName")?.value.trim() || "New Taxpayer";
   const pan = (document.getElementById("regPan")?.value || "").trim().toUpperCase();
   const mobile = document.getElementById("regMobile")?.value.trim() || "9876543210";
@@ -1629,59 +1724,72 @@ function handleRegisterSubmit(e) {
   renderAuthState();
   closeAuthModal();
   goToItrStep(1);
-  showToast(`🎉 Account created for ${name} (${pan})! Ready to file.`, "success");
+  showToast(`Account created for ${name} (${pan})! Ready to file.`, "success");
 }
+window.handleRegisterSubmit = handleRegisterSubmit;
 
 function quickDemoLogin(profile = "sanjay") {
-  let user;
-  if (profile === "priya") {
-    user = {
-      name: "Priya Sharma",
-      firstName: "Priya",
-      lastName: "Sharma",
-      email: "priya.sharma@techfirm.io",
-      mobile: "9811223344",
-      pan: "AAPCS1234F",
-      dob: "15/04/1994",
-      fatherName: "Ramesh Sharma",
-      aadhaar: "593810293841"
-    };
-  } else {
-    user = {
-      name: "Sanjay Harshi",
-      firstName: "Sanjay",
-      lastName: "Harshi",
-      email: "sanjay@example.com",
-      mobile: "9876543210",
-      pan: "CVBBC4433W",
-      dob: "07/10/2006",
-      fatherName: "Harshi V",
-      aadhaar: "482910482910"
-    };
+  openAuthModal("signin");
+  showToast("Please enter your account email and password to sign in.", "info");
+}
+window.quickDemoLogin = quickDemoLogin;
+
+async function logoutAction() {
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(appState.csrfToken ? { "X-CSRF-Token": appState.csrfToken } : {}),
+        ...(appState.sessionToken ? { "Authorization": `Bearer ${appState.sessionToken}` } : {})
+      },
+      credentials: "same-origin"
+    });
+  } catch (err) {
+    console.warn("Logout request failed:", err);
   }
 
-  appState.auth = {
-    isLoggedIn: true,
-    user
-  };
-  localStorage.setItem("simplegst_user_session", JSON.stringify(appState.auth));
-  renderAuthState();
-  closeAuthModal();
-  goToItrStep(1);
-  showToast(`✓ Logged in as ${user.name} (${user.pan})`, "success");
-}
-
-function logoutAction() {
+  // Clear session from memory and storage
+  appState.sessionToken = null;
+  appState.csrfToken = null;
+  appState.organization = null;
+  appState.activeGstin = null;
+  appState.allGstins = [];
   appState.auth = {
     isLoggedIn: false,
-    user: null
+    user: null,
+    csrfToken: null
   };
+  if (appState.gst) {
+    appState.gst.salesInvoices = [];
+    appState.gst.purchaseInvoices = [];
+    appState.gst.business = {};
+  }
   localStorage.removeItem("simplegst_user_session");
+
+  // Reset dashboard values to empty state
+  const dashSalesTotal = document.getElementById("dashSalesTotal");
+  const dashPurchasesTotal = document.getElementById("dashPurchasesTotal");
+  const dashNetTaxPayable = document.getElementById("dashNetTaxPayable");
+  const dashEligibleItc = document.getElementById("dashEligibleItc");
+  if (dashSalesTotal) dashSalesTotal.textContent = "₹0.00";
+  if (dashPurchasesTotal) dashPurchasesTotal.textContent = "₹0.00";
+  if (dashNetTaxPayable) dashNetTaxPayable.textContent = "₹0.00";
+  if (dashEligibleItc) dashEligibleItc.textContent = "₹0.00";
+  const heroDesc = document.getElementById("homeHeroDescription");
+  if (heroDesc) heroDesc.textContent = "Please sign in to view your business filing dashboard, sales and purchase registers.";
+  const recentTable = document.getElementById("dashRecentActivityBody");
+  if (recentTable) recentTable.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-secondary text-xs">Please sign in to view recent transactions.</td></tr>`;
+
   renderAuthState();
   document.getElementById("profileDropdownMenu")?.classList.remove("active");
-  goToItrStep(1);
-  showToast("✓ You have been logged out. Switched to Guest mode.", "info");
+  document.getElementById("profileDropdownMenu")?.classList.add("hidden");
+
+  // Show login screen
+  openAuthModal("signin");
+  showToast("You have been signed out successfully.", "info");
 }
+window.logoutAction = logoutAction;
 
 function onRegisterPanInput(val) {
   const pan = (val || "").trim().toUpperCase();
@@ -1770,8 +1878,20 @@ function openLiveFilingModal() {
 }
 
 // Modal generic open/close
-function openModal(id) { document.getElementById(id)?.classList.remove("hidden"); }
-function closeModal(id) { document.getElementById(id)?.classList.add("hidden"); }
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.remove("hidden");
+    el.style.display = "flex";
+  }
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add("hidden");
+    el.style.display = "none";
+  }
+}
 
 // ============================================================================
 // GST SUITE ENGINE LOGIC (Retained & Fully Functional)
@@ -4657,8 +4777,8 @@ async function renderCopilotWorkspace(period) {
 
     const chatContainer = document.getElementById("copilotChatMessages");
     if (chatContainer) {
-      const activeName = escapeHtml(data.activeOrg?.name || data.activeEntity?.tradeName || "Apex Retailers Pvt Ltd");
-      const gstin = escapeHtml(data.activeEntity?.gstin || "27AAACA1234A1Z5");
+      const activeName = escapeHtml(data.activeOrg?.name || data.activeEntity?.tradeName || appState.organization?.name || "Your Business");
+      const gstin = escapeHtml(data.activeEntity?.gstin || appState.activeGstin?.gstin || "—");
       const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const grossOut = fmt(data.summary?.outputLiability || 0);
       const eligibleItc = fmt(data.summary?.inputTaxCredit || 0);
@@ -5065,7 +5185,7 @@ async function executeNilFilingSubmission() {
       body: JSON.stringify({
         period,
         declarationConfirmed: true,
-        authorisedPerson: appState.gst?.business?.authorisedPerson || "Rajesh Sharma",
+        authorisedPerson: appState.auth?.user?.name || appState.gst?.business?.authorisedPerson || "Authorized Signatory",
         verificationMode: "EVC_OTP"
       })
     });
@@ -5399,7 +5519,7 @@ async function setGuidedStep(step = 1) {
           <div class="p-5 rounded-lg bg-surface border border-outline-variant space-y-3 shadow-xs">
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
               <span class="text-secondary">Taxpayer</span>
-              <span class="font-semibold text-on-surface" id="reviewEntityDisplay">Apex Retailers Pvt Ltd (27AAACA1234A1Z5)</span>
+              <span class="font-semibold text-on-surface" id="reviewEntityDisplay">${escapeHtml(appState.organization?.name || appState.activeGstin?.trade_name || "Taxpayer")} (${escapeHtml(appState.activeGstin?.gstin || "—")})</span>
             </div>
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
               <span class="text-secondary">Filing Period</span>
@@ -5735,7 +5855,7 @@ window.submitNilFiling = async function() {
       body: JSON.stringify({
         period,
         declarationConfirmed: true,
-        authorisedPerson: appState.gst?.business?.authorisedPerson || "Rajesh Sharma",
+        authorisedPerson: appState.auth?.user?.name || appState.gst?.business?.authorisedPerson || "Authorized Signatory",
         mobileOtp: otp
       })
     });
@@ -6905,23 +7025,24 @@ function openOcrReviewModal(docIdOrData, maybeData, type = "purchase_bill", file
 
   // Populate Parties
   const activeGstin = typeof getActiveGstin === "function" ? getActiveGstin() : null;
+  const orgName = appState.organization?.name || appState.activeGstin?.trade_name || "Business Enterprise";
   const sellerNameEl = document.getElementById('ocrReviewSellerName');
-  if (sellerNameEl) sellerNameEl.value = seller.name || data.partyName || (resolvedType === "sales_invoice" ? "Apex Retail Private Limited" : "Supplier Enterprise");
+  if (sellerNameEl) sellerNameEl.value = seller.name || data.partyName || (resolvedType === "sales_invoice" ? orgName : "Supplier Enterprise");
 
   const sellerGstinEl = document.getElementById('ocrReviewSellerGstin');
-  if (sellerGstinEl) sellerGstinEl.value = seller.gstin || (resolvedType === "sales_invoice" ? (activeGstin || "27AAACA1234A1Z5") : (data.gstin || "27AAACM1234B1Z2"));
+  if (sellerGstinEl) sellerGstinEl.value = seller.gstin || (resolvedType === "sales_invoice" ? (activeGstin || "") : (data.gstin || ""));
 
   const sellerStateEl = document.getElementById('ocrReviewSellerState');
-  if (sellerStateEl) sellerStateEl.value = seller.state || seller.stateName || "27-Maharashtra";
+  if (sellerStateEl) sellerStateEl.value = seller.state || seller.stateName || (appState.activeGstin?.state_name || "Maharashtra");
 
   const sellerAddrEl = document.getElementById('ocrReviewSellerAddress');
   if (sellerAddrEl) sellerAddrEl.value = seller.address || "";
 
   const buyerNameEl = document.getElementById('ocrReviewBuyerName');
-  if (buyerNameEl) buyerNameEl.value = buyer.name || (resolvedType === "sales_invoice" ? (data.partyName || "B2B Client Ltd") : "Apex Retail Private Limited");
+  if (buyerNameEl) buyerNameEl.value = buyer.name || (resolvedType === "sales_invoice" ? (data.partyName || "B2B Client Ltd") : orgName);
 
   const buyerGstinEl = document.getElementById('ocrReviewBuyerGstin');
-  if (buyerGstinEl) buyerGstinEl.value = buyer.gstin || (resolvedType === "sales_invoice" ? (data.buyerGstin || "24AAACG9999G1Z2") : (activeGstin || "27AAACA1234A1Z5"));
+  if (buyerGstinEl) buyerGstinEl.value = buyer.gstin || (resolvedType === "sales_invoice" ? (data.buyerGstin || "") : (activeGstin || ""));
 
   const buyerStateEl = document.getElementById('ocrReviewBuyerState');
   if (buyerStateEl) buyerStateEl.value = buyer.state || buyer.stateName || "24-Gujarat";
@@ -7373,11 +7494,12 @@ function closeOcrReviewModal() {
 window.closeOcrReviewModal = closeOcrReviewModal;
 
 async function approveOcrReviewInvoice() {
+  const activeGstin = typeof getActiveGstin === "function" ? getActiveGstin() : null;
   const fields = {
     invoiceNumber: "AOS-4412",
     invoiceDate: "2026-10-22",
-    partyName: "Apex Office Supplies & Stationery",
-    gstin: "27AAACA1234A1Z5",
+    partyName: "Office Supplies & Stationery",
+    gstin: activeGstin || "",
     taxableValue: 28000,
     cgst: 2520,
     sgst: 2520,

@@ -1,4 +1,5 @@
 const http = require("http");
+const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
@@ -119,6 +120,36 @@ async function runCompleteUserVerification() {
   const pngFilename = `Receipt_Scan_${timestamp}.png`;
 
   try {
+    // -------------------------------------------------------------------------
+    // STEP 0: Verify Initial Unauthenticated State & Perform Form Sign In
+    // -------------------------------------------------------------------------
+    console.log(`\n[STEP 0] Verifying initial unauthenticated state and performing explicit UI sign-in...`);
+    const authCheck = await evaluate(`
+      (async () => {
+        const initialLogged = !!(appState && appState.auth && appState.auth.isLoggedIn);
+        const modalOpen = !document.getElementById('modalAuth')?.classList.contains('hidden');
+        
+        // Enter credentials into signin form explicitly
+        document.getElementById('loginIdentifier').value = 'rajesh.sharma@apexretail.com';
+        document.getElementById('loginPassword').value = 'ApexAdmin@2026';
+        await window.handleSignInSubmit({ preventDefault: () => {} });
+        await new Promise(r => setTimeout(r, 600));
+
+        return {
+          initialLogged,
+          modalOpen,
+          afterLogged: !!(appState && appState.auth && appState.auth.isLoggedIn),
+          user: appState?.auth?.user?.name,
+          activeGstin: appState?.activeGstin?.gstin,
+          csrf: !!appState?.csrfToken
+        };
+      })()
+    `);
+    console.log("✔ Auth state transition:", authCheck);
+    assert.strictEqual(authCheck.initialLogged, false, "Initial browser state must be unauthenticated");
+    assert.strictEqual(authCheck.afterLogged, true, "Explicit sign-in must authenticate user");
+    assert.strictEqual(authCheck.activeGstin, "27AAACA1234A1Z5", "Authenticated GSTIN must be restored");
+
     // -------------------------------------------------------------------------
     // STEP 1: Sales Invoice Creation via UI
     // -------------------------------------------------------------------------
@@ -461,3 +492,4 @@ runCompleteUserVerification().catch(err => {
   console.error("FATAL VERIFICATION ERROR:", err);
   process.exit(1);
 });
+
