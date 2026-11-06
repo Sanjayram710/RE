@@ -6546,7 +6546,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
                   <label class="block text-xs font-semibold text-on-surface mb-1" for="onbMobile">Mobile Number <span class="text-error">*</span></label>
                   <div class="relative">
                     <span class="text-xs font-bold text-secondary absolute left-3 top-2.5">+91</span>
-                    <input type="tel" id="onbMobile" class="w-full pl-11 pr-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface font-mono placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="9876543210" maxlength="10" required autocomplete="tel">
+                    <input type="tel" id="onbMobile" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" class="w-full pl-11 pr-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface font-mono placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="9876543210" maxlength="14" required autocomplete="tel">
                   </div>
                 </div>
                 <div>

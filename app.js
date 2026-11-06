@@ -8829,7 +8829,7 @@ window.onOnbGstinInput = onOnbGstinInput;
 
 function formatAadhaarInput(input) {
   if (!input) return;
-  const raw = input.value.replace(/\\D/g, "").slice(0, 12);
+  const raw = input.value.replace(/\D/g, "").slice(0, 12);
   const chunks = raw.match(/.{1,4}/g);
   input.value = chunks ? chunks.join(" ") : raw;
 }
@@ -8883,8 +8883,9 @@ async function submitOnboardingStep1(e) {
   };
 
   if (!fullName) return showError("Please enter your full legal name.");
-  if (!mobile || !/^\\d{10}$/.test(mobile)) return showError("Please enter a valid 10-digit mobile number.");
-  if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return showError("Please enter a valid email address.");
+  const cleanMobile = (mobile || "").replace(/[\s-+]/g, "").slice(-10);
+  if (!cleanMobile || !/^\d{10}$/.test(cleanMobile)) return showError("Please enter a valid 10-digit mobile number.");
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError("Please enter a valid email address.");
   if (!password) return showError("Password is required.");
   if (password !== confirmPassword) return showError("Passwords do not match.");
   if (!checkPasswordStrength(password)) return showError("Password does not meet all policy requirements.");
@@ -8900,7 +8901,7 @@ async function submitOnboardingStep1(e) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
-      body: JSON.stringify({ fullName, mobile, email, password, confirmPassword })
+      body: JSON.stringify({ fullName, mobile: cleanMobile, email, password, confirmPassword })
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.success) {
@@ -8953,8 +8954,8 @@ async function submitOnboardingStep2(e) {
     return showError(`GSTIN embedded PAN (${gstin.slice(2, 12)}) does not match entered PAN (${pan}).`);
   }
   if (aadhaar) {
-    const cleanAadhaar = aadhaar.replace(/[\\s-]+/g, "");
-    if (!/^\\d{12}$/.test(cleanAadhaar)) {
+    const cleanAadhaar = aadhaar.replace(/[\s-]+/g, "");
+    if (!/^\d{12}$/.test(cleanAadhaar)) {
       return showError("Aadhaar must be exactly 12 digits.");
     }
   }
@@ -9013,8 +9014,10 @@ async function submitOnboardingStep3(e) {
   };
 
   if (!accountHolderName) return showError("Account holder name is required.");
-  if (!accountNumber || !/^\\d{9,18}$/.test(accountNumber)) return showError("Account number must be between 9 and 18 digits.");
-  if (accountNumber !== confirmAccountNumber) return showError("Bank account numbers do not match.");
+  const cleanAcc = (accountNumber || "").replace(/[\s-]+/g, "");
+  const cleanConfirmAcc = (confirmAccountNumber || "").replace(/[\s-]+/g, "");
+  if (!cleanAcc || !/^\d{9,18}$/.test(cleanAcc)) return showError("Account number must be between 9 and 18 digits.");
+  if (cleanAcc !== cleanConfirmAcc) return showError("Bank account numbers do not match.");
   if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) return showError("Invalid IFSC format (e.g. SBIN0001234).");
   if (!bankName) return showError("Bank name is required.");
   if (!branchName) return showError("Branch name is required.");
@@ -9029,7 +9032,7 @@ async function submitOnboardingStep3(e) {
     const res = await apiFetch("/api/onboarding/step3", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accountHolderName, accountNumber, confirmAccountNumber, ifsc, bankName, branchName })
+      body: JSON.stringify({ accountHolderName, accountNumber: cleanAcc, confirmAccountNumber: cleanConfirmAcc, ifsc, bankName, branchName })
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.success) {
@@ -9080,11 +9083,12 @@ async function submitOnboardingStep4(e) {
   if (!legalName) return showError("Legal business name is required.");
   if (!businessType) return showError("Business constitution / type is required.");
   if (!businessCategory) return showError("Business category is required.");
-  if (!businessEmail || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(businessEmail)) return showError("Valid business email is required.");
+  if (!businessEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(businessEmail)) return showError("Valid business email is required.");
   if (!businessAddress) return showError("Registered business address is required.");
   if (!state) return showError("Business state is required.");
   if (!city) return showError("City is required.");
-  if (!pincode || !/^\\d{6}$/.test(pincode)) return showError("Valid 6-digit PIN code is required.");
+  const cleanPincode = (pincode || "").trim();
+  if (!cleanPincode || !/^\d{6}$/.test(cleanPincode)) return showError("Valid 6-digit PIN code is required.");
   if (!businessActivity) return showError("Primary business activity is required.");
 
   if (errorEl) errorEl.classList.add("hidden");

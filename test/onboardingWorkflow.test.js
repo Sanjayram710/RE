@@ -347,3 +347,20 @@ test("Onboarding Suite: Resuming Incomplete Onboarding on Login", async () => {
     assert.strictEqual(data.onboardingStep, 2);
   }
 });
+
+test("Onboarding Suite: Mobile Number Parsing and Formatting Variations", async () => {
+  const { req, res, getStatus, getData } = createMockReqRes({
+    method: "POST",
+    body: {
+      fullName: "Sanjay Ram S",
+      mobile: "9043286377",
+      email: "sanjay." + Date.now() + "@example.com",
+      password: "Lee071006@@",
+      confirmPassword: "Lee071006@@"
+    }
+  });
+  await handleFunctionalApi(req, res, "/api/onboarding/step1", "POST", {}, req.body);
+  assert.strictEqual(getStatus(), 201);
+  assert.strictEqual(getData().success, true);
+  assert.strictEqual(getData().user.mobile, "9043286377");
+});
