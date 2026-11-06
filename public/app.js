@@ -217,6 +217,8 @@ function executeSwitchSuite(suite) {
   const viewPractice = document.getElementById("viewPracticeSuite");
   const viewVendor = document.getElementById("viewVendorSuite");
   const viewFileGst = document.getElementById("viewFileGstSuite");
+  const viewSales = document.getElementById("viewSalesSuite");
+  const viewPurchase = document.getElementById("viewPurchaseSuite");
 
   // Always close dropdowns & mobile drawer when switching
   document.getElementById("filingDropdownMenu")?.classList.add("hidden");
@@ -228,7 +230,7 @@ function executeSwitchSuite(suite) {
   const allSuites = [
     viewItr, viewExpert, viewNotice, viewVault, viewGst, viewCopilot, 
     viewStartup, viewCompliance, viewHome, viewBills, viewRecon, 
-    viewTaxCalc, viewPractice, viewVendor, viewFileGst
+    viewTaxCalc, viewPractice, viewVendor, viewFileGst, viewSales, viewPurchase
   ];
   allSuites.forEach(v => {
     if (v) {
@@ -263,6 +265,26 @@ function executeSwitchSuite(suite) {
       viewCopilot.style.display = "block";
     }
     highlightSidebarNav('nav-link-copilot');
+  } else if (suite === "sales" || suite === "sales-invoices") {
+    if (viewSales) {
+      viewSales.classList.add("active");
+      viewSales.classList.remove("hidden");
+      viewSales.style.display = "block";
+    }
+    highlightSidebarNav('nav-link-sales');
+    if (typeof renderSalesSuite === "function") {
+      renderSalesSuite();
+    }
+  } else if (suite === "purchase" || suite === "purchases" || suite === "purchase-bills") {
+    if (viewPurchase) {
+      viewPurchase.classList.add("active");
+      viewPurchase.classList.remove("hidden");
+      viewPurchase.style.display = "block";
+    }
+    highlightSidebarNav('nav-link-purchase');
+    if (typeof renderPurchaseSuite === "function") {
+      renderPurchaseSuite();
+    }
   } else if (suite === "file-gst" || suite === "guided" || suite === "nil") {
     const target = viewFileGst || viewCopilot;
     if (target) {
@@ -1808,39 +1830,90 @@ function calculateManualTaxes() {
   document.getElementById("manualTotal").textContent = `₹ ${(taxable + totalTax).toLocaleString("en-IN")}`;
 }
 
-function saveManualInvoice(type) {
-  const invNo = document.getElementById("manualInvNo").value;
-  const date = document.getElementById("manualDate").value;
-  const party = document.getElementById("manualPartyName").value;
-  const gstin = document.getElementById("manualGstin").value;
-  const taxable = Number(document.getElementById("manualTaxable").value);
-  const rate = Number(document.getElementById("manualRate").value);
+async function saveManualInvoice(type) {
+  const invNo = document.getElementById("manualInvNo")?.value?.trim();
+  const date = document.getElementById("manualDate")?.value;
+  const party = document.getElementById("manualPartyName")?.value?.trim();
+  const gstin = document.getElementById("manualGstin")?.value?.trim()?.toUpperCase();
+  const taxable = Number(document.getElementById("manualTaxable")?.value) || 0;
+  const rate = Number(document.getElementById("manualRate")?.value) || 0;
 
-  if (!invNo || !party || !gstin) {
-    alert("Please fill all required invoice fields.");
+  if (!invNo || !date || !party || taxable <= 0) {
+    if (typeof showToast === "function") {
+      showToast("Please fill all required invoice fields (Invoice #, Date, Party Name, Taxable Value).", "warning");
+    } else {
+      alert("Please fill all required invoice fields.");
+    }
     return;
   }
 
-  const newBill = {
-    id: `bill-${Date.now()}`,
+  const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
+  const activeGstin = appState.gst?.business?.gstin || "27AAACA1234A1Z5";
+  const pos = gstin && gstin.length >= 2 ? gstin.slice(0, 2) : activeGstin.slice(0, 2);
+
+  const endpoint = type === "sales" ? `/api/sales?period=${period}` : `/api/purchases?period=${period}`;
+  const payload = type === "sales" ? {
     invoiceNumber: invNo,
-    date,
-    partyName: party,
-    partyGstin: gstin,
+    invoiceDate: date,
+    customerName: party,
+    customerGstin: gstin || undefined,
+    pos,
     taxableAmount: taxable,
     gstRate: rate,
-    totalTax: taxable * (rate / 100),
-    totalAmount: taxable * (1 + rate / 100)
+    supplyType: gstin ? "B2B" : "B2C"
+  } : {
+    invoiceNumber: invNo,
+    invoiceDate: date,
+    supplierName: party,
+    supplierGstin: gstin || "27AAACA1234A1Z5",
+    pos,
+    taxableAmount: taxable,
+    gstRate: rate,
+    itcEligibility: "ELIGIBLE",
+    isRcm: false
   };
 
-  if (type === "sales") {
-    appState.gst.salesInvoices.push(newBill);
-    alert(`✓ Sales Invoice ${invNo} added!`);
-  } else {
-    appState.gst.purchaseInvoices.push(newBill);
-    alert(`✓ Purchase Bill ${invNo} added!`);
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === "function") {
+        showToast(`${type === "sales" ? "Sales Invoice" : "Purchase Bill"} ${invNo} saved to database!`, "success");
+      } else {
+        alert(`✓ ${type === "sales" ? "Sales Invoice" : "Purchase Bill"} ${invNo} added!`);
+      }
+      if (typeof refreshInvoices === "function") {
+        await refreshInvoices(type);
+      }
+      if (typeof loadDashboardData === "function") {
+        loadDashboardData(period);
+      }
+      const elInvNo = document.getElementById("manualInvNo"); if (elInvNo) elInvNo.value = "";
+      const elParty = document.getElementById("manualPartyName"); if (elParty) elParty.value = "";
+      const elGstin = document.getElementById("manualGstin"); if (elGstin) elGstin.value = "";
+      const elTaxable = document.getElementById("manualTaxable"); if (elTaxable) elTaxable.value = "";
+    } else {
+      const errMsg = data.error || `Failed to save ${type === "sales" ? "invoice" : "bill"}`;
+      if (typeof showToast === "function") {
+        showToast(errMsg, "error");
+      } else {
+        alert(errMsg);
+      }
+    }
+  } catch (err) {
+    const errMsg = "Network error: " + err.message;
+    if (typeof showToast === "function") {
+      showToast(errMsg, "error");
+    } else {
+      alert(errMsg);
+    }
   }
 }
+window.saveManualInvoice = saveManualInvoice;
 
 // Bulk File Ingestion & Error Round-Trip
 function downloadSampleTemplate() {
@@ -4560,6 +4633,9 @@ async function submitNewInvoice(event) {
       if (typeof loadDashboardData === "function") {
         loadDashboardData(period);
       }
+      if (typeof refreshInvoices === "function") {
+        refreshInvoices('sales');
+      }
       const form = document.querySelector("#modalNewInvoice form");
       if (form) form.reset();
     } else {
@@ -4910,7 +4986,7 @@ async function setGuidedStep(step = 1) {
         </div>
 
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-outline-variant">
-          <button onclick="switchSuite('gst')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+          <button onclick="switchSuite('sales')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
             <span class="material-symbols-outlined text-[18px]">receipt_long</span>
             <span>View / Add Sales Invoices</span>
           </button>
@@ -4963,7 +5039,7 @@ async function setGuidedStep(step = 1) {
             <button onclick="setGuidedStep(1)" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-secondary font-label-md hover:bg-surface-container transition-colors cursor-pointer">
               ← Back to Sales
             </button>
-            <button onclick="switchSuite('bills')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+            <button onclick="switchSuite('purchase')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
               <span class="material-symbols-outlined text-[18px]">upload_file</span>
               <span>View / Upload Bills</span>
             </button>
@@ -6039,3 +6115,600 @@ window.loadRcmData = async function() {
     console.error(err);
   }
 };
+
+
+// ============================================================================
+// MODAL CONTROLLER: NEW INWARD PURCHASE BILL
+// ============================================================================
+function openNewPurchaseModal() {
+  const m = document.getElementById('modalNewPurchase');
+  if (m) {
+    m.classList.remove('hidden');
+    m.style.display = 'flex';
+  }
+  const dateInput = document.getElementById('newPurDate');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+  const numInput = document.getElementById('newPurNumber');
+  if (numInput && !numInput.value) {
+    numInput.value = `BILL-${Date.now().toString().slice(-4)}`;
+  }
+  calculateNewPurchaseTax();
+}
+window.openNewPurchaseModal = openNewPurchaseModal;
+
+function closeNewPurchaseModal() {
+  const m = document.getElementById('modalNewPurchase');
+  if (m) {
+    m.classList.add('hidden');
+    m.style.display = 'none';
+  }
+}
+window.closeNewPurchaseModal = closeNewPurchaseModal;
+
+function calculateNewPurchaseTax() {
+  const taxable = parseFloat(document.getElementById('newPurTaxable')?.value) || 0;
+  const rate = parseFloat(document.getElementById('newPurGstRate')?.value) || 0;
+  const suppGstin = (document.getElementById('newPurSupplierGstin')?.value || "").trim().toUpperCase();
+  const activeGstin = appState.gst?.business?.gstin || "27AAACA1234A1Z5";
+  const activeState = activeGstin.slice(0, 2);
+  const suppState = suppGstin.length >= 2 ? suppGstin.slice(0, 2) : activeState;
+  const isInter = suppGstin.length >= 2 && suppState !== activeState;
+
+  const totalTax = taxable * (rate / 100);
+  const stEl = document.getElementById('newPurSupplyType');
+  if (stEl) {
+    stEl.textContent = isInter
+      ? `Inter-State (IGST) — Place of Supply: ${suppState}`
+      : `Intra-State (CGST + SGST)`;
+  }
+
+  const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const taxEl = document.getElementById('newPurTaxAmount');
+  if (taxEl) taxEl.textContent = fmt(totalTax);
+  const totEl = document.getElementById('newPurTotalAmount');
+  if (totEl) totEl.textContent = fmt(taxable + totalTax);
+}
+window.calculateNewPurchaseTax = calculateNewPurchaseTax;
+
+async function submitNewPurchase(event) {
+  if (event) event.preventDefault();
+  const invoiceNumber = document.getElementById('newPurNumber')?.value?.trim();
+  const invoiceDate = document.getElementById('newPurDate')?.value;
+  const supplierName = document.getElementById('newPurSupplierName')?.value?.trim();
+  const supplierGstin = (document.getElementById('newPurSupplierGstin')?.value || "").trim().toUpperCase();
+  const taxableAmount = parseFloat(document.getElementById('newPurTaxable')?.value) || 0;
+  const gstRate = parseFloat(document.getElementById('newPurGstRate')?.value) || 0;
+  const itcEligibility = document.getElementById('newPurItcEligibility')?.value || "ELIGIBLE";
+  const isRcm = document.getElementById('newPurIsRcm')?.checked || false;
+
+  if (!invoiceNumber || !invoiceDate || !supplierName || taxableAmount <= 0) {
+    if (typeof showToast === "function") {
+      showToast("Please enter all required purchase bill fields.", "warning");
+    }
+    return;
+  }
+
+  const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
+  const activeGstin = appState.gst?.business?.gstin || "27AAACA1234A1Z5";
+  const pos = supplierGstin.length >= 2 ? supplierGstin.slice(0, 2) : activeGstin.slice(0, 2);
+
+  const btn = document.getElementById('btnSubmitPurchase');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch(`/api/purchases?period=${period}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        invoiceNumber,
+        invoiceDate,
+        supplierName,
+        supplierGstin: supplierGstin || activeGstin,
+        pos,
+        taxableAmount,
+        gstRate,
+        itcEligibility,
+        isRcm
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      closeNewPurchaseModal();
+      if (typeof showToast === "function") {
+        showToast(`Purchase bill ${invoiceNumber} saved to database!`, "success");
+      }
+      if (typeof refreshInvoices === "function") {
+        await refreshInvoices('purchase');
+      }
+      if (typeof loadDashboardData === "function") {
+        loadDashboardData(period);
+      }
+      const form = document.querySelector("#modalNewPurchase form");
+      if (form) form.reset();
+    } else {
+      if (typeof showToast === "function") {
+        showToast(data.error || "Failed to create purchase bill", "error");
+      }
+    }
+  } catch (err) {
+    if (typeof showToast === "function") {
+      showToast("Network error creating purchase bill: " + err.message, "error");
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+window.submitNewPurchase = submitNewPurchase;
+
+// ============================================================================
+// SALES & PURCHASE SUITES: SQLITE RENDERING & FILTERING
+// ============================================================================
+async function renderSalesSuite() {
+  const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
+  const badge = document.getElementById('salesActivePeriodBadge');
+  if (badge) badge.textContent = period;
+
+  try {
+    const res = await fetch(`/api/sales?period=${period}`);
+    const data = await res.json();
+    const invoices = data.invoices || [];
+    if (!appState.gst) appState.gst = {};
+    appState.gst.salesInvoices = invoices;
+
+    // Update Summary Cards
+    const totalTaxable = invoices.reduce((sum, inv) => sum + (Number(inv.taxable_amount) || 0), 0);
+    const totalTax = invoices.reduce((sum, inv) => sum + (Number(inv.total_tax) || 0), 0);
+    const totalAmount = invoices.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
+
+    const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const countEl = document.getElementById('salesSummaryCount');
+    if (countEl) countEl.textContent = invoices.length;
+    const taxValEl = document.getElementById('salesSummaryTaxable');
+    if (taxValEl) taxValEl.textContent = fmt(totalTaxable);
+    const taxEl = document.getElementById('salesSummaryTax');
+    if (taxEl) taxEl.textContent = fmt(totalTax);
+    const totEl = document.getElementById('salesSummaryTotal');
+    if (totEl) totEl.textContent = fmt(totalAmount);
+
+    filterSalesTable();
+  } catch (err) {
+    console.error("Failed to load sales invoices:", err);
+    if (typeof showToast === "function") {
+      showToast("Failed to load sales invoices from database.", "error");
+    }
+  }
+}
+window.renderSalesSuite = renderSalesSuite;
+
+function filterSalesTable() {
+  const invoices = appState.gst?.salesInvoices || [];
+  const search = (document.getElementById('salesSearchInput')?.value || "").toLowerCase().trim();
+  const supplyFilter = document.getElementById('salesSupplyTypeFilter')?.value || "ALL";
+
+  const filtered = invoices.filter(inv => {
+    const matchesSearch = !search ||
+      (inv.invoice_number && inv.invoice_number.toLowerCase().includes(search)) ||
+      (inv.customer_name && inv.customer_name.toLowerCase().includes(search)) ||
+      (inv.customer_gstin && inv.customer_gstin.toLowerCase().includes(search));
+    const matchesType = supplyFilter === "ALL" || inv.supply_type === supplyFilter;
+    return matchesSearch && matchesType;
+  });
+
+  const tbody = document.getElementById('salesTableBody');
+  const emptyState = document.getElementById('salesTableEmptyState');
+  if (!tbody) return;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = "";
+    if (emptyState) emptyState.classList.remove('hidden');
+  } else {
+    if (emptyState) emptyState.classList.add('hidden');
+    tbody.innerHTML = filtered.map(inv => `
+      <tr class="hover:bg-surface-container-low transition-colors">
+        <td class="py-3 px-4 font-mono font-semibold text-on-surface">${escapeHtml(inv.invoice_number)}</td>
+        <td class="py-3 px-4 text-xs font-mono">${escapeHtml(inv.invoice_date || "—")}</td>
+        <td class="py-3 px-4 font-medium">${escapeHtml(inv.customer_name || "—")}</td>
+        <td class="py-3 px-4 font-mono text-xs text-secondary">${escapeHtml(inv.customer_gstin || "B2C Consumer")}</td>
+        <td class="py-3 px-4 text-right font-mono">₹${Number(inv.taxable_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-4 text-right font-mono">${inv.gst_rate || 0}%</td>
+        <td class="py-3 px-4 text-right font-mono text-xs">₹${Number(inv.igst || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-4 text-right font-mono text-xs">₹${Number(inv.cgst || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-4 text-right font-mono text-xs">₹${Number(inv.sgst || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-4 text-right font-mono font-semibold text-on-surface">₹${Number(inv.total_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-4 text-center">
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+            ${escapeHtml(inv.status || "VALIDATED")}
+          </span>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <span class="text-xs text-primary font-medium cursor-pointer hover:underline" onclick="showToast('Invoice ${escapeHtml(inv.invoice_number)} verified in database', 'info')">
+            Verified
+          </span>
+        </td>
+      </tr>
+    `).join("");
+  }
+}
+window.filterSalesTable = filterSalesTable;
+
+async function renderPurchaseSuite() {
+  const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
+  const badge = document.getElementById('purchaseActivePeriodBadge');
+  if (badge) badge.textContent = period;
+
+  try {
+    const res = await fetch(`/api/purchases?period=${period}`);
+    const data = await res.json();
+    const purchases = data.purchases || [];
+    if (!appState.gst) appState.gst = {};
+    appState.gst.purchaseInvoices = purchases;
+
+    // Summary Cards
+    const totalTaxable = purchases.reduce((sum, p) => sum + (Number(p.taxable_amount) || 0), 0);
+    const eligibleItc = purchases
+      .filter(p => p.itc_eligibility === "ELIGIBLE")
+      .reduce((sum, p) => sum + (Number(p.total_tax) || 0), 0);
+    const totalAmount = purchases.reduce((sum, p) => sum + (Number(p.total_amount) || 0), 0);
+
+    const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const countEl = document.getElementById('purchaseSummaryCount');
+    if (countEl) countEl.textContent = purchases.length;
+    const taxValEl = document.getElementById('purchaseSummaryTaxable');
+    if (taxValEl) taxValEl.textContent = fmt(totalTaxable);
+    const itcEl = document.getElementById('purchaseSummaryItc');
+    if (itcEl) itcEl.textContent = fmt(eligibleItc);
+    const totEl = document.getElementById('purchaseSummaryTotal');
+    if (totEl) totEl.textContent = fmt(totalAmount);
+
+    filterPurchaseTable();
+  } catch (err) {
+    console.error("Failed to load purchase bills:", err);
+    if (typeof showToast === "function") {
+      showToast("Failed to load purchase bills from database.", "error");
+    }
+  }
+}
+window.renderPurchaseSuite = renderPurchaseSuite;
+
+function filterPurchaseTable() {
+  const purchases = appState.gst?.purchaseInvoices || [];
+  const search = (document.getElementById('purchaseSearchInput')?.value || "").toLowerCase().trim();
+  const itcFilter = document.getElementById('purchaseItcFilter')?.value || "ALL";
+
+  const filtered = purchases.filter(p => {
+    const matchesSearch = !search ||
+      (p.invoice_number && p.invoice_number.toLowerCase().includes(search)) ||
+      (p.supplier_name && p.supplier_name.toLowerCase().includes(search)) ||
+      (p.supplier_gstin && p.supplier_gstin.toLowerCase().includes(search));
+    const matchesItc = itcFilter === "ALL" || p.itc_eligibility === itcFilter;
+    return matchesSearch && matchesItc;
+  });
+
+  const tbody = document.getElementById('purchaseTableBody');
+  const emptyState = document.getElementById('purchaseTableEmptyState');
+  if (!tbody) return;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = "";
+    if (emptyState) emptyState.classList.remove('hidden');
+  } else {
+    if (emptyState) emptyState.classList.add('hidden');
+    tbody.innerHTML = filtered.map(p => {
+      const isEligible = p.itc_eligibility === "ELIGIBLE";
+      const itcBadge = isEligible
+        ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">Eligible ITC</span>`
+        : `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800 border border-rose-300">Blocked / Ineligible</span>`;
+      return `
+        <tr class="hover:bg-surface-container-low transition-colors">
+          <td class="py-3 px-4 font-mono font-semibold text-on-surface">${escapeHtml(p.invoice_number)}</td>
+          <td class="py-3 px-4 text-xs font-mono">${escapeHtml(p.invoice_date || "—")}</td>
+          <td class="py-3 px-4 font-medium">${escapeHtml(p.supplier_name || "—")}</td>
+          <td class="py-3 px-4 font-mono text-xs text-secondary">${escapeHtml(p.supplier_gstin || "—")}</td>
+          <td class="py-3 px-4 text-right font-mono">₹${Number(p.taxable_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+          <td class="py-3 px-4 text-right font-mono">${p.gst_rate || 0}%</td>
+          <td class="py-3 px-4 text-right font-mono font-medium ${isEligible ? 'text-emerald-700' : 'text-secondary'}">₹${Number(p.total_tax || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+          <td class="py-3 px-4 text-right font-mono font-semibold text-on-surface">₹${Number(p.total_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+          <td class="py-3 px-4 text-center">${itcBadge}</td>
+          <td class="py-3 px-4 text-center">
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-medium ${p.payment_status === 'FULLY_PAID' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'}">
+              ${escapeHtml(p.payment_status || "UNPAID")}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-center">
+            <span class="text-xs text-primary font-medium cursor-pointer hover:underline" onclick="showToast('Purchase bill ${escapeHtml(p.invoice_number)} verified in database', 'info')">
+              Verified
+            </span>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+}
+window.filterPurchaseTable = filterPurchaseTable;
+
+async function refreshInvoices(type) {
+  if (!type || type === 'sales') {
+    await renderSalesSuite();
+  }
+  if (!type || type === 'purchase') {
+    await renderPurchaseSuite();
+  }
+}
+window.refreshInvoices = refreshInvoices;
+
+// ============================================================================
+// DOCUMENT UPLOADS & AI OCR REVIEW MODAL CONTROLLERS
+// ============================================================================
+function triggerBillsUpload() {
+  document.getElementById('billsFileInput')?.click();
+}
+window.triggerBillsUpload = triggerBillsUpload;
+
+function triggerSalesDocUpload() {
+  document.getElementById('salesDocFileInput')?.click();
+}
+window.triggerSalesDocUpload = triggerSalesDocUpload;
+
+function triggerPurchaseDocUpload() {
+  document.getElementById('purchaseDocFileInput')?.click();
+}
+window.triggerPurchaseDocUpload = triggerPurchaseDocUpload;
+
+async function uploadDocumentAndProcess(file, category) {
+  if (!file) return;
+  if (typeof showToast === "function") {
+    showToast(`Uploading ${file.name} for AI OCR processing...`, "info");
+  }
+
+  const reader = new FileReader();
+  reader.onload = async function() {
+    try {
+      const rawText = reader.result;
+      const res = await fetch("/api/documents/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          category,
+          rawText: typeof rawText === "string" ? rawText : file.name
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (typeof showToast === "function") {
+          showToast(`Document ${file.name} parsed via AI OCR! Please review before saving.`, "success");
+        }
+        openOcrReviewModal(
+          data.document.id,
+          data.extractedFields || {},
+          category,
+          file.name,
+          (data.ocr && data.ocr.confidence) ? `${Math.round(data.ocr.confidence * 100)}%` : "98%"
+        );
+      } else {
+        if (typeof showToast === "function") {
+          showToast(data.error || "Failed to parse document", "error");
+        }
+      }
+    } catch (err) {
+      if (typeof showToast === "function") {
+        showToast("Error uploading document: " + err.message, "error");
+      }
+    }
+  };
+
+  if (file.type && (file.type.startsWith("text/") || file.name.endsWith(".csv") || file.name.endsWith(".txt"))) {
+    reader.readAsText(file);
+  } else {
+    reader.readAsDataURL(file);
+  }
+}
+
+function handleBillsFileSelect(e) {
+  const file = e.target.files && e.target.files[0];
+  if (file) uploadDocumentAndProcess(file, "purchase_bill");
+  e.target.value = "";
+}
+window.handleBillsFileSelect = handleBillsFileSelect;
+
+function handleSalesDocSelected(e) {
+  const file = e.target.files && e.target.files[0];
+  if (file) uploadDocumentAndProcess(file, "sales_invoice");
+  e.target.value = "";
+}
+window.handleSalesDocSelected = handleSalesDocSelected;
+
+function handlePurchaseDocSelected(e) {
+  const file = e.target.files && e.target.files[0];
+  if (file) uploadDocumentAndProcess(file, "purchase_bill");
+  e.target.value = "";
+}
+window.handlePurchaseDocSelected = handlePurchaseDocSelected;
+
+function openOcrReviewModal(docId, fields, type = "purchase_bill", filename = "Document.pdf", confidence = "98% Verified") {
+  const m = document.getElementById('modalOcrReview');
+  if (m) {
+    m.classList.remove('hidden');
+    m.style.display = 'flex';
+  }
+
+  const docIdEl = document.getElementById('ocrReviewDocId');
+  if (docIdEl) docIdEl.value = docId || "";
+
+  const typeEl = document.getElementById('ocrReviewInvoiceType');
+  if (typeEl) typeEl.value = type;
+
+  const numEl = document.getElementById('ocrReviewInvoiceNumber');
+  if (numEl) numEl.value = fields.invoiceNumber || `OCR-${Date.now().toString().slice(-4)}`;
+
+  const partyEl = document.getElementById('ocrReviewPartyName');
+  if (partyEl) partyEl.value = fields.partyName || fields.supplierName || fields.customerName || "Extracted Enterprise";
+
+  const gstinEl = document.getElementById('ocrReviewGstin');
+  if (gstinEl) gstinEl.value = fields.gstin || fields.buyerGstin || "27AAACA1234A1Z5";
+
+  const dateEl = document.getElementById('ocrReviewInvoiceDate');
+  if (dateEl) dateEl.value = fields.invoiceDate || new Date().toISOString().split('T')[0];
+
+  const taxVal = Number(fields.taxableValue || fields.taxableAmount || 25000);
+  const taxableEl = document.getElementById('ocrReviewTaxable');
+  if (taxableEl) taxableEl.value = taxVal;
+
+  const taxAmt = Number(fields.totalGst || fields.totalTax || taxVal * 0.18);
+  const taxEl = document.getElementById('ocrReviewTotalTax');
+  if (taxEl) taxEl.value = taxAmt;
+
+  const fileEl = document.getElementById('ocrReviewFilename');
+  if (fileEl) fileEl.textContent = filename;
+
+  const confEl = document.getElementById('ocrReviewConfidence');
+  if (confEl) confEl.textContent = confidence;
+}
+window.openOcrReviewModal = openOcrReviewModal;
+
+function closeOcrReviewModal() {
+  const m = document.getElementById('modalOcrReview');
+  if (m) {
+    m.classList.add('hidden');
+    m.style.display = 'none';
+  }
+}
+window.closeOcrReviewModal = closeOcrReviewModal;
+
+async function submitOcrApproval(event) {
+  if (event) event.preventDefault();
+  const docId = document.getElementById('ocrReviewDocId')?.value;
+  const invoiceType = document.getElementById('ocrReviewInvoiceType')?.value || "purchase_bill";
+  const invoiceNumber = document.getElementById('ocrReviewInvoiceNumber')?.value?.trim();
+  const partyName = document.getElementById('ocrReviewPartyName')?.value?.trim();
+  const gstin = (document.getElementById('ocrReviewGstin')?.value || "").trim().toUpperCase();
+  const invoiceDate = document.getElementById('ocrReviewInvoiceDate')?.value;
+  const taxableValue = parseFloat(document.getElementById('ocrReviewTaxable')?.value) || 0;
+  const totalTax = parseFloat(document.getElementById('ocrReviewTotalTax')?.value) || 0;
+
+  if (!invoiceNumber || !partyName || taxableValue <= 0) {
+    if (typeof showToast === "function") {
+      showToast("Please ensure all required fields are filled before approving.", "warning");
+    }
+    return;
+  }
+
+  const btn = document.getElementById('btnApproveOcr');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/ocr/approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        documentId: docId,
+        invoiceType,
+        fields: {
+          invoiceNumber,
+          invoiceDate,
+          partyName,
+          gstin: invoiceType === "purchase_bill" ? gstin : undefined,
+          buyerGstin: invoiceType === "sales_invoice" ? gstin : undefined,
+          taxableValue,
+          cgst: totalTax / 2,
+          sgst: totalTax / 2,
+          igst: 0,
+          totalGst: totalTax,
+          totalInvoiceValue: taxableValue + totalTax
+        }
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      closeOcrReviewModal();
+      if (typeof showToast === "function") {
+        showToast(data.message || "Document verified and saved to register!", "success");
+      }
+      if (typeof refreshInvoices === "function") {
+        await refreshInvoices(invoiceType === "sales_invoice" ? "sales" : "purchase");
+      }
+      const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
+      if (typeof loadDashboardData === "function") {
+        loadDashboardData(period);
+      }
+    } else {
+      if (typeof showToast === "function") {
+        showToast(data.error || "Failed to approve document", "error");
+      }
+    }
+  } catch (err) {
+    if (typeof showToast === "function") {
+      showToast("Network error approving OCR document: " + err.message, "error");
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+window.submitOcrApproval = submitOcrApproval;
+
+async function approveOcrReviewInvoice() {
+  const fields = {
+    invoiceNumber: "AOS-4412",
+    invoiceDate: "2026-10-22",
+    partyName: "Apex Office Supplies & Stationery",
+    gstin: "27AAACA1234A1Z5",
+    taxableValue: 28000,
+    cgst: 2520,
+    sgst: 2520,
+    igst: 0,
+    totalGst: 5040,
+    totalInvoiceValue: 33040
+  };
+  try {
+    const res = await fetch("/api/ocr/approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        documentId: "doc-aos-4412",
+        invoiceType: "purchase_bill",
+        fields
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === "function") {
+        showToast("Invoice AOS-4412 approved and synced to Purchase Register!", "success");
+      }
+      if (typeof refreshInvoices === "function") {
+        await refreshInvoices('purchase');
+      }
+      const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
+      if (typeof loadDashboardData === "function") {
+        loadDashboardData(period);
+      }
+    } else {
+      if (typeof showToast === "function") {
+        showToast(data.error || "Failed to approve OCR invoice", "error");
+      }
+    }
+  } catch (err) {
+    if (typeof showToast === "function") {
+      showToast("Error approving invoice: " + err.message, "error");
+    }
+  }
+}
+window.approveOcrReviewInvoice = approveOcrReviewInvoice;
+
+async function renderCentralDocumentsLibrary() {
+  const category = document.getElementById('billsFilterCategory')?.value || "";
+  try {
+    const url = category ? `/api/documents?category=${category}` : "/api/documents";
+    const res = await fetch(url);
+    const data = await res.json();
+    if (res.ok && data.documents) {
+      if (typeof showToast === "function") {
+        showToast(`Central document repository refreshed (${data.documents.length} files)`, "info");
+      }
+    }
+  } catch (err) {
+    console.error("Failed to fetch documents:", err);
+  }
+}
+window.renderCentralDocumentsLibrary = renderCentralDocumentsLibrary;

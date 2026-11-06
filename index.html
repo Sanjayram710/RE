@@ -146,6 +146,22 @@
         </a>
 
         <!-- 3. Bills & OCR Review -->
+        <!-- 2b. Sales Invoices -->
+        <a id="nav-link-sales" onclick="switchSuite('sales'); return false;" class="sidebar-nav-link flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant font-label-lg hover:bg-surface-container transition-colors cursor-pointer" href="#sales">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px]">point_of_sale</span>
+            <span>Sales Invoices</span>
+          </div>
+        </a>
+
+        <!-- 2c. Purchase Bills -->
+        <a id="nav-link-purchase" onclick="switchSuite('purchase'); return false;" class="sidebar-nav-link flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant font-label-lg hover:bg-surface-container transition-colors cursor-pointer" href="#purchases">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
+            <span>Purchases</span>
+          </div>
+        </a>
+
         <a id="nav-link-bills" onclick="switchSuite('bills'); return false;" class="sidebar-nav-link flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant font-label-lg hover:bg-surface-container transition-colors cursor-pointer" href="#bills-docs">
           <div class="flex items-center gap-3">
             <span class="material-symbols-outlined text-[20px]">receipt_long</span>
@@ -389,7 +405,7 @@
 <!-- 1. GREETING & STATUS STRIP -->
 <section class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-outline-variant"><div><div class="flex items-center gap-3"><h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">Good morning, Rajesh</h1><span id="liveGstnSyncBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>Live GSTN Sync</span></div><p class="font-body-md text-secondary mt-1"><span class="dynamic-period-short">Oct 2026</span> return window is open. Statutory filing <strong class="text-on-surface font-semibold">GSTR-3B is due in 6 days</strong>.</p></div><div class="flex items-center gap-3 shrink-0"><button onclick="syncPortalData()" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface font-label-md font-medium transition-colors cursor-pointer"><span class="material-symbols-outlined text-[18px]">sync</span><span class="">Sync Portal</span></button><button onclick="openNewInvoiceModal()" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-container font-label-md font-semibold transition-colors shadow-sm cursor-pointer"><span class="material-symbols-outlined text-[18px]">add</span><span class="">New Invoice</span></button></div></section>
 <!-- 2. HERO "NEXT ACTION" & FILING PROGRESS BANNER -->
-<section class="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm relative overflow-hidden"><div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6"><div class="space-y-2 max-w-2xl"><div class="flex items-center gap-2"><span class="px-2.5 py-0.5 rounded-full font-label-sm font-bold bg-amber-50 text-amber-800 border border-amber-200">Action Required</span><span class="font-label-sm text-secondary" id="homeHeroDeadline">Statutory Deadline: Nov 20, 2026</span></div><h2 class="font-headline-md text-headline-md text-on-surface font-bold" id="homeHeroStepTitle">Step 2: Purchases — Add inward invoices for Oct 2026</h2><p class="font-body-md text-secondary" id="homeHeroDescription">14 Sales invoices recorded (₹8,42,500). Reconcile purchase bills to confirm eligible Input Tax Credit (ITC) before submission.</p></div><div class="flex items-center gap-3 shrink-0"><button onclick="switchSuite('bills')" class="flex items-center gap-2 px-5 py-3 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg font-semibold shadow-sm transition-all cursor-pointer"><span class="">Continue Filing Purchases</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span></button><button onclick="switchSuite('gst')" class="px-4 py-3 rounded-lg bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface font-label-md font-medium transition-colors cursor-pointer"><span class="">Review Step 1 Sales</span></button></div></div><div class="mt-8 pt-6 border-t border-outline-variant"><div class="flex items-center justify-between mb-4"><span class="font-label-sm uppercase tracking-wider font-semibold text-secondary">Filing Flow</span><span class="font-label-md font-bold text-primary">Step 2 of 5</span></div><div class="grid grid-cols-1 md:grid-cols-5 gap-3"><div onclick="switchSuite('gst')" class="flex items-center gap-2.5 p-3 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 cursor-pointer"><span class="material-symbols-outlined text-emerald-700 text-[18px]">check_circle</span><div><p class="font-label-md font-bold">1. Sales</p><p class="font-label-sm text-emerald-700">Completed</p></div></div><div onclick="switchSuite('bills')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface-container-high border-2 border-primary cursor-pointer"><span class="w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs">2</span><div><p class="font-label-md font-bold text-primary">2. Purchases</p><p class="font-label-sm text-on-surface-variant font-medium">In Progress</p></div></div><div onclick="switchSuite('recon')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">3</span><div><p class="font-label-md font-medium text-secondary">3. Input Tax Credit</p><p class="font-label-sm text-secondary">Pending</p></div></div><div onclick="switchSuite('taxcalc')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">4</span><div><p class="font-label-md font-medium text-secondary">4. Tax Calc</p><p class="font-label-sm text-secondary">Pending</p></div></div><div onclick="switchSuite('file-gst')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">5</span><div><p class="font-label-md font-medium text-secondary">5. File GSTR-3B</p><p class="font-label-sm text-secondary">Pending</p></div></div></div></div></section>
+<section class="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm relative overflow-hidden"><div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6"><div class="space-y-2 max-w-2xl"><div class="flex items-center gap-2"><span class="px-2.5 py-0.5 rounded-full font-label-sm font-bold bg-amber-50 text-amber-800 border border-amber-200">Action Required</span><span class="font-label-sm text-secondary" id="homeHeroDeadline">Statutory Deadline: Nov 20, 2026</span></div><h2 class="font-headline-md text-headline-md text-on-surface font-bold" id="homeHeroStepTitle">Step 2: Purchases — Add inward invoices for Oct 2026</h2><p class="font-body-md text-secondary" id="homeHeroDescription">14 Sales invoices recorded (₹8,42,500). Reconcile purchase bills to confirm eligible Input Tax Credit (ITC) before submission.</p></div><div class="flex items-center gap-3 shrink-0"><button onclick="switchSuite('purchase')" class="flex items-center gap-2 px-5 py-3 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg font-semibold shadow-sm transition-all cursor-pointer"><span class="">Continue Filing Purchases</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span></button><button onclick="switchSuite('sales')" class="px-4 py-3 rounded-lg bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface font-label-md font-medium transition-colors cursor-pointer"><span class="">Review Step 1 Sales</span></button></div></div><div class="mt-8 pt-6 border-t border-outline-variant"><div class="flex items-center justify-between mb-4"><span class="font-label-sm uppercase tracking-wider font-semibold text-secondary">Filing Flow</span><span class="font-label-md font-bold text-primary">Step 2 of 5</span></div><div class="grid grid-cols-1 md:grid-cols-5 gap-3"><div onclick="switchSuite('sales')" class="flex items-center gap-2.5 p-3 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 cursor-pointer"><span class="material-symbols-outlined text-emerald-700 text-[18px]">check_circle</span><div><p class="font-label-md font-bold">1. Sales</p><p class="font-label-sm text-emerald-700">Completed</p></div></div><div onclick="switchSuite('purchase')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface-container-high border-2 border-primary cursor-pointer"><span class="w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs">2</span><div><p class="font-label-md font-bold text-primary">2. Purchases</p><p class="font-label-sm text-on-surface-variant font-medium">In Progress</p></div></div><div onclick="switchSuite('recon')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">3</span><div><p class="font-label-md font-medium text-secondary">3. Input Tax Credit</p><p class="font-label-sm text-secondary">Pending</p></div></div><div onclick="switchSuite('taxcalc')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">4</span><div><p class="font-label-md font-medium text-secondary">4. Tax Calc</p><p class="font-label-sm text-secondary">Pending</p></div></div><div onclick="switchSuite('file-gst')" class="flex items-center gap-2.5 p-3 rounded-lg bg-surface text-secondary cursor-pointer hover:bg-surface-container-low transition-colors"><span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-xs">5</span><div><p class="font-label-md font-medium text-secondary">5. File GSTR-3B</p><p class="font-label-sm text-secondary">Pending</p></div></div></div></div></section>
 <!-- 4. FOUR FINANCIAL OVERVIEW CARDS -->
 <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"><div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm"><div class="flex items-center justify-between"><span class="font-label-md text-secondary">Sales (Oct)</span><span class="font-label-sm px-2 py-0.5 rounded bg-surface-container text-secondary font-medium">14 Invoices</span></div><div class="mt-3"><span class="font-numeric-lg text-numeric-lg font-bold text-on-surface font-mono" id="dashSalesTotal">₹8,42,500.00</span></div><p class="font-body-sm text-secondary mt-3 border-t border-outline-variant pt-2">Outward taxable supplies</p></div><div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm"><div class="flex items-center justify-between"><span class="font-label-md text-secondary">Purchases</span><span class="font-label-sm px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-semibold border border-amber-200">8 Bills</span></div><div class="mt-3"><span class="font-numeric-lg text-numeric-lg font-bold text-on-surface font-mono" id="dashPurchasesTotal">₹4,12,300.00</span></div><p class="font-body-sm text-secondary mt-3 border-t border-outline-variant pt-2">3 pending GSTR-2B match</p></div><div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm"><div class="flex items-center justify-between"><span class="font-label-md text-secondary">Net Tax Payable</span><span class="font-label-sm px-2 py-0.5 rounded bg-surface-container text-secondary font-medium">GSTR-3B</span></div><div class="mt-3"><span class="font-numeric-lg text-numeric-lg font-bold text-error font-mono" id="dashNetTaxPayable">₹77,436.00</span></div><p class="font-body-sm text-secondary mt-3 border-t border-outline-variant pt-2">Estimated cash liability</p></div><div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm"><div class="flex items-center justify-between"><span class="font-label-md text-secondary">Eligible ITC</span><span class="font-label-sm px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">Available</span></div><div class="mt-3"><span class="font-numeric-lg text-numeric-lg font-bold text-primary font-mono" id="dashEligibleItc">₹74,214.00</span></div><p class="font-body-sm text-secondary mt-3 border-t border-outline-variant pt-2">₹68,100 auto-drafted</p></div></section>
 <!-- 5. TWO-COLUMN ACTIVITY & INTELLIGENCE GRID -->
@@ -763,6 +779,256 @@
 
       </main>
     </div>\n\n    <!-- ========================================================================= -->
+    
+    <!-- ========================================================================= -->
+    <!-- 2b. SALES INVOICE MANAGEMENT SUITE                                       -->
+    <!-- ========================================================================= -->
+    <div id="viewSalesSuite" class="app-suite-container hidden">
+      <main class="flex-1 p-6 md:p-8 max-w-[1600px] w-full mx-auto flex flex-col gap-6">
+        <!-- Breadcrumbs -->
+        <nav aria-label="Breadcrumb" class="flex items-center gap-2 font-label-md text-label-md text-secondary select-none">
+          <span class="hover:text-primary cursor-pointer" onclick="switchSuite('home')">Home</span>
+          <span class="text-outline-variant">/</span>
+          <span class="hover:text-primary cursor-pointer" onclick="switchSuite('file-gst')">File GST</span>
+          <span class="text-outline-variant">/</span>
+          <span class="text-on-surface font-semibold">Sales Invoice Management</span>
+        </nav>
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+          <div class="space-y-1">
+            <div class="flex items-center gap-3">
+              <h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
+                Sales Invoices (Outward Supplies)
+              </h1>
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                GSTR-1 Ready
+              </span>
+            </div>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+              Record, inspect, and upload outward sales invoices for the active tax period. Real-time tax calculation feeds Table 4 (B2B) and Table 5/7 (B2C) of Form GSTR-1.
+            </p>
+          </div>
+          <div class="flex items-center flex-wrap gap-2.5 shrink-0">
+            <button onclick="triggerSalesDocUpload()" class="h-10 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md flex items-center gap-2 border border-outline-variant transition-colors cursor-pointer shadow-sm">
+              <span class="material-symbols-outlined text-[18px] text-primary">upload_file</span>
+              <span>Upload Sales Invoice PDF</span>
+            </button>
+            <input type="file" id="salesDocFileInput" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="handleSalesDocSelected(event)">
+            <button onclick="openNewInvoiceModal()" class="h-10 px-4 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">add</span>
+              <span>+ Add Sales Invoice</span>
+            </button>
+            <button onclick="window.open('/api/reports/sales/csv')" class="h-10 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md flex items-center gap-2 border border-outline-variant transition-colors cursor-pointer shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">download</span>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+            <span class="text-xs uppercase font-semibold text-secondary">Total Invoices</span>
+            <div id="salesSummaryCount" class="font-numeric-lg text-2xl font-bold text-on-surface mt-1">0</div>
+            <p class="text-xs text-secondary mt-0.5">Recorded in SQLite database</p>
+          </div>
+          <div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+            <span class="text-xs uppercase font-semibold text-secondary">Taxable Turnover</span>
+            <div id="salesSummaryTaxable" class="font-numeric-lg text-2xl font-bold text-on-surface mt-1">₹0.00</div>
+            <p class="text-xs text-secondary mt-0.5">Net outward supplies</p>
+          </div>
+          <div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+            <span class="text-xs uppercase font-semibold text-secondary">Total GST Collected</span>
+            <div id="salesSummaryTax" class="font-numeric-lg text-2xl font-bold text-primary mt-1">₹0.00</div>
+            <p class="text-xs text-secondary mt-0.5">IGST + CGST + SGST</p>
+          </div>
+          <div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+            <span class="text-xs uppercase font-semibold text-secondary">Total Invoice Value</span>
+            <div id="salesSummaryTotal" class="font-numeric-lg text-2xl font-bold text-on-surface mt-1">₹0.00</div>
+            <p class="text-xs text-secondary mt-0.5">Gross billing with tax</p>
+          </div>
+        </div>
+
+        <!-- Search & Filter Bar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <div class="relative w-full sm:w-72">
+              <span class="material-symbols-outlined text-[18px] text-secondary absolute left-3 top-2.5">search</span>
+              <input type="text" id="salesSearchInput" oninput="filterSalesTable()" placeholder="Search invoice, customer, GSTIN..." class="w-full pl-9 pr-3 py-1.5 rounded-lg border border-outline-variant text-sm bg-surface focus:outline-none focus:border-primary">
+            </div>
+            <select id="salesSupplyTypeFilter" onchange="filterSalesTable()" class="px-3 py-1.5 rounded-lg border border-outline-variant text-xs bg-surface text-on-surface">
+              <option value="ALL">All Supply Types</option>
+              <option value="B2B">B2B Registered</option>
+              <option value="B2C">B2C Consumer</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-secondary">
+            <span>Period: <strong id="salesActivePeriodBadge" class="text-on-surface font-mono">102026</strong></span>
+          </div>
+        </div>
+
+        <!-- Invoices Table Card -->
+        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead class="bg-surface-container-low text-xs font-semibold text-secondary uppercase border-b border-outline-variant">
+                <tr>
+                  <th class="py-3 px-4">Invoice #</th>
+                  <th class="py-3 px-4">Date</th>
+                  <th class="py-3 px-4">Customer</th>
+                  <th class="py-3 px-4">Customer GSTIN</th>
+                  <th class="py-3 px-4 text-right">Taxable (₹)</th>
+                  <th class="py-3 px-4 text-right">Rate</th>
+                  <th class="py-3 px-4 text-right">IGST (₹)</th>
+                  <th class="py-3 px-4 text-right">CGST (₹)</th>
+                  <th class="py-3 px-4 text-right">SGST (₹)</th>
+                  <th class="py-3 px-4 text-right">Total (₹)</th>
+                  <th class="py-3 px-4 text-center">Status</th>
+                  <th class="py-3 px-4 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="salesTableBody" class="divide-y divide-outline-variant font-body-sm">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+          <div id="salesTableEmptyState" class="hidden p-12 text-center space-y-3">
+            <div class="w-12 h-12 rounded-full bg-surface-container text-secondary mx-auto flex items-center justify-center">
+              <span class="material-symbols-outlined text-[24px]">receipt_long</span>
+            </div>
+            <p class="font-body-md text-on-surface font-medium">No sales invoices found for this filing period.</p>
+            <p class="text-xs text-secondary">Click <strong>+ Add Sales Invoice</strong> or upload an invoice PDF to record sales.</p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 2c. PURCHASE INVOICE MANAGEMENT SUITE                                     -->
+    <!-- ========================================================================= -->
+    <div id="viewPurchaseSuite" class="app-suite-container hidden">
+      <main class="flex-1 p-6 md:p-8 max-w-[1600px] w-full mx-auto flex flex-col gap-6">
+        <!-- Breadcrumbs -->
+        <nav aria-label="Breadcrumb" class="flex items-center gap-2 font-label-md text-label-md text-secondary select-none">
+          <span class="hover:text-primary cursor-pointer" onclick="switchSuite('home')">Home</span>
+          <span class="text-outline-variant">/</span>
+          <span class="hover:text-primary cursor-pointer" onclick="switchSuite('file-gst')">File GST</span>
+          <span class="text-outline-variant">/</span>
+          <span class="text-on-surface font-semibold">Purchase Invoices & Bills</span>
+        </nav>
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+          <div class="space-y-1">
+            <div class="flex items-center gap-3">
+              <h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
+                Purchase Bills (Inward Supplies)
+              </h1>
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-300 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                Reconciliation & ITC Ready
+              </span>
+            </div>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+              Manage all inward supplier tax invoices. Feeds GSTR-2B ITC reconciliation and Section 16/17(5) statutory eligibility verification before GSTR-3B filing.
+            </p>
+          </div>
+          <div class="flex items-center flex-wrap gap-2.5 shrink-0">
+            <button onclick="triggerPurchaseDocUpload()" class="h-10 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md flex items-center gap-2 border border-outline-variant transition-colors cursor-pointer shadow-sm">
+              <span class="material-symbols-outlined text-[18px] text-primary">upload_file</span>
+              <span>Upload Bill PDF</span>
+            </button>
+            <input type="file" id="purchaseDocFileInput" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="handlePurchaseDocSelected(event)">
+            <button onclick="openNewPurchaseModal()" class="h-10 px-4 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">add</span>
+              <span>+ Add Purchase Bill</span>
+            </button>
+            <button onclick="window.open('/api/reports/purchases/csv')" class="h-10 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md flex items-center gap-2 border border-outline-variant transition-colors cursor-pointer shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">download</span>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+            <span class="text-xs uppercase font-semibold text-secondary">Total Bills</span>
+            <div id="purchaseSummaryCount" class="font-numeric-lg text-2xl font-bold text-on-surface mt-1">0</div>
+            <p class="text-xs text-secondary mt-0.5">Recorded in SQLite database</p>
+          </div>
+          <div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+            <span class="text-xs uppercase font-semibold text-secondary">Taxable Purchases</span>
+            <div id="purchaseSummaryTaxable" class="font-numeric-lg text-2xl font-bold text-on-surface mt-1">₹0.00</div>
+            <p class="text-xs text-secondary mt-0.5">Inward taxable value</p>
+          </div>
+          <div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+            <span class="text-xs uppercase font-semibold text-secondary">Eligible ITC</span>
+            <div id="purchaseSummaryItc" class="font-numeric-lg text-2xl font-bold text-emerald-700 mt-1">₹0.00</div>
+            <p class="text-xs text-secondary mt-0.5">Qualifies for GSTR-3B Table 4</p>
+          </div>
+          <div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+            <span class="text-xs uppercase font-semibold text-secondary">Total Bill Value</span>
+            <div id="purchaseSummaryTotal" class="font-numeric-lg text-2xl font-bold text-on-surface mt-1">₹0.00</div>
+            <p class="text-xs text-secondary mt-0.5">Gross purchase value with tax</p>
+          </div>
+        </div>
+
+        <!-- Search & Filter Bar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <div class="relative w-full sm:w-72">
+              <span class="material-symbols-outlined text-[18px] text-secondary absolute left-3 top-2.5">search</span>
+              <input type="text" id="purchaseSearchInput" oninput="filterPurchaseTable()" placeholder="Search bill, supplier, GSTIN..." class="w-full pl-9 pr-3 py-1.5 rounded-lg border border-outline-variant text-sm bg-surface focus:outline-none focus:border-primary">
+            </div>
+            <select id="purchaseItcFilter" onchange="filterPurchaseTable()" class="px-3 py-1.5 rounded-lg border border-outline-variant text-xs bg-surface text-on-surface">
+              <option value="ALL">All ITC Status</option>
+              <option value="ELIGIBLE">Eligible ITC</option>
+              <option value="INELIGIBLE">Ineligible / Blocked</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-secondary">
+            <span>Period: <strong id="purchaseActivePeriodBadge" class="text-on-surface font-mono">102026</strong></span>
+          </div>
+        </div>
+
+        <!-- Bills Table Card -->
+        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead class="bg-surface-container-low text-xs font-semibold text-secondary uppercase border-b border-outline-variant">
+                <tr>
+                  <th class="py-3 px-4">Bill #</th>
+                  <th class="py-3 px-4">Date</th>
+                  <th class="py-3 px-4">Supplier Name</th>
+                  <th class="py-3 px-4">Supplier GSTIN</th>
+                  <th class="py-3 px-4 text-right">Taxable (₹)</th>
+                  <th class="py-3 px-4 text-right">Rate</th>
+                  <th class="py-3 px-4 text-right">Total Tax (₹)</th>
+                  <th class="py-3 px-4 text-right">Total (₹)</th>
+                  <th class="py-3 px-4 text-center">ITC Eligibility</th>
+                  <th class="py-3 px-4 text-center">Payment</th>
+                  <th class="py-3 px-4 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="purchaseTableBody" class="divide-y divide-outline-variant font-body-sm">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+          <div id="purchaseTableEmptyState" class="hidden p-12 text-center space-y-3">
+            <div class="w-12 h-12 rounded-full bg-surface-container text-secondary mx-auto flex items-center justify-center">
+              <span class="material-symbols-outlined text-[24px]">shopping_bag</span>
+            </div>
+            <p class="font-body-md text-on-surface font-medium">No purchase bills found for this filing period.</p>
+            <p class="text-xs text-secondary">Click <strong>+ Add Purchase Bill</strong> or upload a bill PDF to record inward purchases.</p>
+          </div>
+        </div>
+      </main>
+    </div>
+
     <div id="viewBillsSuite" class="app-suite-container hidden">
       <main class="flex-1 flex flex-col overflow-y-auto bg-background min-w-0">
 <!-- BREADCRUMBS ROW -->
@@ -807,6 +1073,16 @@
 <span class="material-symbols-outlined text-secondary text-base" data-icon="download">download</span>
 <span>Export Extracted XLSX</span>
 </button>
+<div class="flex items-center gap-2 ml-auto">
+  <select id="billsFilterCategory" onchange="renderCentralDocumentsLibrary()" class="px-3 py-1.5 rounded-lg border border-outline-variant text-xs bg-surface text-on-surface">
+    <option value="">All Document Types</option>
+    <option value="sales_invoice">Sales Invoices</option>
+    <option value="purchase_bill">Purchase Bills</option>
+  </select>
+  <button onclick="renderCentralDocumentsLibrary()" class="h-9 px-3 rounded-lg border border-outline-variant hover:bg-surface-container text-xs flex items-center gap-1">
+    <span class="material-symbols-outlined text-[16px]">refresh</span> Refresh
+  </button>
+</div>
 </div>
 </section>
 <!-- 2. TOP DOCUMENT CAROUSEL / MINI-QUEUE BAR -->
@@ -5954,6 +6230,204 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
             <button type="submit" class="px-5 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
               <span class="material-symbols-outlined text-[16px]">save</span>
               Save to Sales Register
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODAL: CREATE NEW INWARD PURCHASE BILL                                    -->
+    <!-- ========================================================================= -->
+    <div aria-labelledby="new-purchase-modal-title" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm hidden" id="modalNewPurchase" role="dialog" style="display: none;" onclick="if (event.target === this) closeNewPurchaseModal()">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl max-w-2xl w-full my-auto shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <!-- Header -->
+        <header class="flex items-start justify-between p-5 border-b border-outline-variant bg-surface-container-lowest">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shrink-0">
+              <span class="material-symbols-outlined text-[24px]">shopping_cart</span>
+            </div>
+            <div>
+              <h2 class="text-headline-sm font-bold text-on-surface" id="new-purchase-modal-title">Record Inward Purchase Bill</h2>
+              <p class="text-body-sm text-secondary text-xs">Saves purchase persistently to SQLite database & feeds GSTR-2B reconciliation</p>
+            </div>
+          </div>
+          <button aria-label="Close Modal" onclick="closeNewPurchaseModal()" class="p-2 text-secondary hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors cursor-pointer" type="button">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </header>
+
+        <!-- Body Form -->
+        <form onsubmit="submitNewPurchase(event)" class="p-6 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Invoice / Bill Number *</label>
+              <input type="text" id="newPurNumber" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none" placeholder="BILL-2026-001">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Bill Date *</label>
+              <input type="date" id="newPurDate" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Supplier / Vendor Name *</label>
+              <input type="text" id="newPurSupplierName" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none" placeholder="Acme Logistics & Supplies">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Supplier GSTIN (15 Digits) *</label>
+              <input type="text" id="newPurSupplierGstin" maxlength="15" required oninput="calculateNewPurchaseTax()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none uppercase" placeholder="27AAACA1234A1Z5">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Taxable Value (₹) *</label>
+              <input type="number" id="newPurTaxable" step="0.01" min="1" required oninput="calculateNewPurchaseTax()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none" placeholder="50000">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">GST Rate *</label>
+              <select id="newPurGstRate" onchange="calculateNewPurchaseTax()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
+                <option value="18" selected>18% (Standard Rate)</option>
+                <option value="12">12% (Standard Lower)</option>
+                <option value="5">5% (Essential Goods)</option>
+                <option value="28">28% (Luxury / Sin)</option>
+                <option value="0">0% (Nil Rated / Exempt)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">ITC Eligibility *</label>
+              <select id="newPurItcEligibility" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
+                <option value="ELIGIBLE" selected>Eligible for Inward ITC</option>
+                <option value="INELIGIBLE">Ineligible / Blocked u/s 17(5)</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-2 pt-6">
+              <input type="checkbox" id="newPurIsRcm" class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4">
+              <label for="newPurIsRcm" class="text-xs font-medium text-on-surface select-none">Reverse Charge (RCM Applicable)</label>
+            </div>
+          </div>
+
+          <!-- Real-Time Calculated Tax Breakdown -->
+          <div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant text-xs space-y-1.5 font-mono">
+            <div class="flex justify-between text-secondary">
+              <span>Supply Type:</span>
+              <strong id="newPurSupplyType" class="text-primary font-sans font-semibold">Intra-State (CGST + SGST)</strong>
+            </div>
+            <div class="flex justify-between text-secondary">
+              <span>Total Tax:</span>
+              <span id="newPurTaxAmount" class="font-bold text-on-surface">₹0.00</span>
+            </div>
+            <div class="flex justify-between border-t border-outline-variant pt-1 text-sm font-bold text-primary">
+              <span>Total Invoice Amount:</span>
+              <span id="newPurTotalAmount">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Form Buttons -->
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <button type="button" onclick="closeNewPurchaseModal()" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface text-xs font-medium cursor-pointer transition-colors">
+              Cancel
+            </button>
+            <button type="submit" id="btnSubmitPurchase" class="px-5 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px]">save</span>
+              Save to Purchase Register
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODAL: OCR REVIEW & CORRECTION MODAL                                      -->
+    <!-- ========================================================================= -->
+    <div aria-labelledby="ocr-review-modal-title" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm hidden" id="modalOcrReview" role="dialog" style="display: none;" onclick="if (event.target === this) closeOcrReviewModal()">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl max-w-3xl w-full my-auto shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <!-- Header -->
+        <header class="flex items-start justify-between p-5 border-b border-outline-variant bg-surface-container-lowest">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-800 border border-amber-300 shrink-0">
+              <span class="material-symbols-outlined text-[24px]">document_scanner</span>
+            </div>
+            <div>
+              <h2 class="text-headline-sm font-bold text-on-surface" id="ocr-review-modal-title">Review Extracted Document Data</h2>
+              <p class="text-body-sm text-secondary text-xs">Verify AI-extracted statutory fields against original before approving to register</p>
+            </div>
+          </div>
+          <button aria-label="Close Modal" onclick="closeOcrReviewModal()" class="p-2 text-secondary hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors cursor-pointer" type="button">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </header>
+
+        <!-- Body Form -->
+        <form onsubmit="submitOcrApproval(event)" class="p-6 space-y-4">
+          <input type="hidden" id="ocrReviewDocId">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Target Document Type *</label>
+              <select id="ocrReviewInvoiceType" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
+                <option value="purchase_bill" selected>Purchase Bill (Inward)</option>
+                <option value="sales_invoice">Sales Invoice (Outward)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Extracted Invoice / Bill # *</label>
+              <input type="text" id="ocrReviewInvoiceNumber" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Party / Supplier / Customer Name *</label>
+              <input type="text" id="ocrReviewPartyName" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Party GSTIN (15 Digits)</label>
+              <input type="text" id="ocrReviewGstin" maxlength="15" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none uppercase">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Invoice Date *</label>
+              <input type="date" id="ocrReviewInvoiceDate" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Taxable Value (₹) *</label>
+              <input type="number" id="ocrReviewTaxable" step="0.01" min="1" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-secondary mb-1">Total Tax (₹) *</label>
+              <input type="number" id="ocrReviewTotalTax" step="0.01" min="0" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Document Central Store Preview -->
+          <div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant text-xs space-y-1">
+            <div class="flex justify-between text-secondary">
+              <span>Original Document Stored:</span>
+              <strong id="ocrReviewFilename" class="text-on-surface font-mono">Document.pdf</strong>
+            </div>
+            <div class="flex justify-between text-secondary">
+              <span>Confidence Score:</span>
+              <span id="ocrReviewConfidence" class="text-emerald-700 font-bold">98% Verified</span>
+            </div>
+          </div>
+
+          <!-- Form Buttons -->
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <button type="button" onclick="closeOcrReviewModal()" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface text-xs font-medium cursor-pointer transition-colors">
+              Cancel
+            </button>
+            <button type="submit" id="btnApproveOcr" class="px-5 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px]">verified</span>
+              Confirm &amp; Approve to Register
             </button>
           </div>
         </form>
