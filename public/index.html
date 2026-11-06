@@ -6455,6 +6455,448 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
       </div>
     </div>
 
+<!-- FOUR-STEP BUSINESS ONBOARDING WIZARD MODAL -->
+    <!-- ========================================================================= -->
+    <div aria-labelledby="onboardingModalTitle" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-900/70 backdrop-blur-sm hidden" id="modalOnboardingWizard" role="dialog" style="display: none;" onclick="if (event.target === this) closeOnboardingWizard()">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl max-w-2xl w-full my-auto shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        
+        <!-- Modal Top Bar -->
+        <header class="flex items-center justify-between px-6 py-4 border-b border-outline-variant bg-surface-container-low/60">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shrink-0">
+              <span class="material-symbols-outlined text-[24px]">domain_add</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-primary/10 text-primary border border-primary/20">Step-by-Step</span>
+                <span class="text-xs text-secondary">SimpleGST Compliance OS</span>
+              </div>
+              <h2 class="text-lg font-bold text-on-surface tracking-tight" id="onboardingModalTitle">Create Your SimpleGST Account</h2>
+            </div>
+          </div>
+          <button aria-label="Close Onboarding Wizard" onclick="closeOnboardingWizard()" class="p-1.5 text-secondary hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors cursor-pointer" type="button">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </header>
+
+        <!-- Four-Step Progress Indicator -->
+        <div class="px-6 py-3.5 bg-surface-container-low/30 border-b border-outline-variant">
+          <div class="flex items-center justify-between relative max-w-lg mx-auto">
+            <!-- Step 1 Indicator -->
+            <div id="onbStepInd1" class="flex flex-col items-center gap-1 z-10 cursor-pointer" onclick="goToOnboardingStep(1)">
+              <div id="onbBadge1" class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs bg-primary text-on-primary shadow-xs transition-all">1</div>
+              <span id="onbLabel1" class="text-[11px] font-bold text-primary">Account</span>
+            </div>
+            <!-- Step 1 -> 2 Line -->
+            <div id="onbLine1" class="flex-1 h-0.5 bg-outline-variant -mt-4 mx-2 transition-all"></div>
+
+            <!-- Step 2 Indicator -->
+            <div id="onbStepInd2" class="flex flex-col items-center gap-1 z-10">
+              <div id="onbBadge2" class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs bg-surface-container text-secondary border border-outline-variant transition-all">2</div>
+              <span id="onbLabel2" class="text-[11px] font-medium text-secondary">Taxpayer ID</span>
+            </div>
+            <!-- Step 2 -> 3 Line -->
+            <div id="onbLine2" class="flex-1 h-0.5 bg-outline-variant -mt-4 mx-2 transition-all"></div>
+
+            <!-- Step 3 Indicator -->
+            <div id="onbStepInd3" class="flex flex-col items-center gap-1 z-10">
+              <div id="onbBadge3" class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs bg-surface-container text-secondary border border-outline-variant transition-all">3</div>
+              <span id="onbLabel3" class="text-[11px] font-medium text-secondary">Bank Details</span>
+            </div>
+            <!-- Step 3 -> 4 Line -->
+            <div id="onbLine3" class="flex-1 h-0.5 bg-outline-variant -mt-4 mx-2 transition-all"></div>
+
+            <!-- Step 4 Indicator -->
+            <div id="onbStepInd4" class="flex flex-col items-center gap-1 z-10">
+              <div id="onbBadge4" class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs bg-surface-container text-secondary border border-outline-variant transition-all">4</div>
+              <span id="onbLabel4" class="text-[11px] font-medium text-secondary">Business</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wizard Panels Body -->
+        <div class="p-6 overflow-y-auto max-h-[calc(85vh-140px)]">
+
+          <!-- =================================================================== -->
+          <!-- STEP 1 PANEL: ACCOUNT REGISTRATION -->
+          <!-- =================================================================== -->
+          <div id="onbPanel1" class="space-y-4">
+            <div>
+              <h3 class="text-base font-bold text-on-surface">Step 1 — Create Your SimpleGST Account</h3>
+              <p class="text-xs text-secondary mt-0.5">Enter your legal name, contact information, and establish a secure password.</p>
+            </div>
+
+            <!-- Inline Error Banner -->
+            <div id="onbError1" class="hidden text-xs text-error bg-error/10 border border-error/20 p-3 rounded-lg flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] shrink-0">error</span>
+              <span id="onbErrorText1">Please correct the errors below.</span>
+            </div>
+
+            <form id="formOnbStep1" onsubmit="submitOnboardingStep1(event)" class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-semibold text-on-surface mb-1" for="onbFullName">Full Legal Name <span class="text-error">*</span></label>
+                <div class="relative">
+                  <span class="material-symbols-outlined text-[18px] text-secondary absolute left-3 top-2.5">person</span>
+                  <input type="text" id="onbFullName" class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. Ramesh Patel" required autocomplete="name">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbMobile">Mobile Number <span class="text-error">*</span></label>
+                  <div class="relative">
+                    <span class="text-xs font-bold text-secondary absolute left-3 top-2.5">+91</span>
+                    <input type="tel" id="onbMobile" class="w-full pl-11 pr-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface font-mono placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="9876543210" maxlength="10" required autocomplete="tel">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbEmail">Email Address <span class="text-error">*</span></label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined text-[18px] text-secondary absolute left-3 top-2.5">mail</span>
+                    <input type="email" id="onbEmail" class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="ramesh.patel@example.com" required autocomplete="email">
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbPassword">Create Password <span class="text-error">*</span></label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined text-[18px] text-secondary absolute left-3 top-2.5">lock</span>
+                    <input type="password" id="onbPassword" oninput="checkPasswordStrength(this.value)" class="w-full pl-9 pr-10 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Create strong password" required autocomplete="new-password">
+                    <button type="button" onclick="togglePassVisibility('onbPassword', 'onbPassIcon1')" class="absolute right-3 top-2.5 text-secondary hover:text-on-surface">
+                      <span class="material-symbols-outlined text-[18px]" id="onbPassIcon1">visibility</span>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbConfirmPassword">Re-enter Password <span class="text-error">*</span></label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined text-[18px] text-secondary absolute left-3 top-2.5">lock_clock</span>
+                    <input type="password" id="onbConfirmPassword" class="w-full pl-9 pr-10 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Confirm password" required autocomplete="new-password">
+                    <button type="button" onclick="togglePassVisibility('onbConfirmPassword', 'onbPassIcon2')" class="absolute right-3 top-2.5 text-secondary hover:text-on-surface">
+                      <span class="material-symbols-outlined text-[18px]" id="onbPassIcon2">visibility</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Password Policy Indicator -->
+              <div class="p-3 bg-surface-container rounded-lg border border-outline-variant/50 text-[11px] text-secondary space-y-1">
+                <div class="font-semibold text-on-surface text-xs mb-1">Password Policy Requirements:</div>
+                <div class="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                  <div id="ruleLength" class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">radio_button_unchecked</span> Minimum 8 characters</div>
+                  <div id="ruleUpper" class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">radio_button_unchecked</span> At least 1 uppercase (A-Z)</div>
+                  <div id="ruleLower" class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">radio_button_unchecked</span> At least 1 lowercase (a-z)</div>
+                  <div id="ruleNumber" class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">radio_button_unchecked</span> At least 1 number (0-9)</div>
+                  <div id="ruleSpecial" class="flex items-center gap-1.5 col-span-2"><span class="material-symbols-outlined text-[14px] text-secondary">radio_button_unchecked</span> At least 1 special character (@#$%^&* etc.)</div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <a href="#" onclick="closeOnboardingWizard(); openAuthModal('signin'); return false;" class="text-xs text-primary hover:underline font-semibold">
+                  Already have an account? Sign In
+                </a>
+                <button type="submit" id="btnOnbContinue1" class="py-2.5 px-6 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:bg-primary-container transition-colors shadow-sm cursor-pointer flex items-center gap-2">
+                  <span>Continue to Taxpayer ID</span>
+                  <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- =================================================================== -->
+          <!-- STEP 2 PANEL: TAXPAYER IDENTIFICATION -->
+          <!-- =================================================================== -->
+          <div id="onbPanel2" class="hidden space-y-4">
+            <div>
+              <h3 class="text-base font-bold text-on-surface">Step 2 — Taxpayer Identification</h3>
+              <p class="text-xs text-secondary mt-0.5">Provide your statutory Permanent Account Number (PAN) and primary GSTIN registration.</p>
+            </div>
+
+            <!-- Inline Error Banner -->
+            <div id="onbError2" class="hidden text-xs text-error bg-error/10 border border-error/20 p-3 rounded-lg flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] shrink-0">error</span>
+              <span id="onbErrorText2">Please correct the identification errors.</span>
+            </div>
+
+            <form id="formOnbStep2" onsubmit="submitOnboardingStep2(event)" class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-semibold text-on-surface mb-1" for="onbPan">Permanent Account Number (PAN) <span class="text-error">*</span></label>
+                <div class="relative">
+                  <span class="material-symbols-outlined text-[18px] text-secondary absolute left-3 top-2.5">badge</span>
+                  <input type="text" id="onbPan" oninput="onOnbPanInput(this.value)" class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface font-mono uppercase tracking-wider placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="ABCDE1234F" maxlength="10" required>
+                </div>
+                <div class="text-[11px] text-secondary mt-1">10-digit PAN of enterprise or individual (e.g. ABCDE1234F)</div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-on-surface mb-1" for="onbGstin">Goods and Services Tax Identification Number (GSTIN) <span class="text-error">*</span></label>
+                <div class="relative">
+                  <span class="material-symbols-outlined text-[18px] text-secondary absolute left-3 top-2.5">verified</span>
+                  <input type="text" id="onbGstin" oninput="onOnbGstinInput(this.value)" class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface font-mono uppercase tracking-wider placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="27ABCDE1234F1Z5" maxlength="15" required>
+                </div>
+                <div class="flex items-center justify-between mt-1 text-[11px]">
+                  <span id="onbGstinFeedback" class="text-secondary">15-character GSTIN (first 2 digits = state code, next 10 = PAN)</span>
+                  <span id="onbStateBadge" class="font-bold text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20 hidden">State: —</span>
+                </div>
+              </div>
+
+              <!-- Aadhaar Field (Optional) -->
+              <div>
+                <label class="block text-xs font-semibold text-on-surface mb-1" for="onbAadhaar">
+                  Aadhaar Number <span class="text-secondary font-normal">(Optional for Proprietorships / Authorized Signatory)</span>
+                </label>
+                <div class="relative">
+                  <span class="material-symbols-outlined text-[18px] text-secondary absolute left-3 top-2.5">fingerprint</span>
+                  <input type="text" id="onbAadhaar" oninput="formatAadhaarInput(this)" class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface font-mono placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="1234 5678 9012" maxlength="14">
+                </div>
+                <div class="text-[11px] text-secondary mt-1 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[13px] text-emerald-600">shield</span>
+                  <span>AES-256 encrypted at rest. Displayed only as masked (<span class="font-mono">•••• •••• 1234</span>).</span>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <button type="button" onclick="goToOnboardingStep(1)" class="py-2 px-4 rounded-lg border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container transition-colors cursor-pointer flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                  <span>Back</span>
+                </button>
+                <button type="submit" id="btnOnbContinue2" class="py-2.5 px-6 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:bg-primary-container transition-colors shadow-sm cursor-pointer flex items-center gap-2">
+                  <span>Continue to Bank Details</span>
+                  <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- =================================================================== -->
+          <!-- STEP 3 PANEL: BUSINESS BANKING INFORMATION -->
+          <!-- =================================================================== -->
+          <div id="onbPanel3" class="hidden space-y-4">
+            <div>
+              <h3 class="text-base font-bold text-on-surface">Step 3 — Business Banking Information</h3>
+              <p class="text-xs text-secondary mt-0.5">Link your primary business bank account for tax payment reconciliations and GST refund disbursements.</p>
+            </div>
+
+            <!-- Inline Error Banner -->
+            <div id="onbError3" class="hidden text-xs text-error bg-error/10 border border-error/20 p-3 rounded-lg flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] shrink-0">error</span>
+              <span id="onbErrorText3">Please verify the banking entries.</span>
+            </div>
+
+            <form id="formOnbStep3" onsubmit="submitOnboardingStep3(event)" class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-semibold text-on-surface mb-1" for="onbAccountHolderName">Account Holder Name <span class="text-error">*</span></label>
+                <input type="text" id="onbAccountHolderName" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. Patel Trading Private Limited" required>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbAccountNumber">Bank Account Number <span class="text-error">*</span></label>
+                  <input type="password" id="onbAccountNumber" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface font-mono placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="9 to 18 digits" minlength="9" maxlength="18" required>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbConfirmAccountNumber">Re-enter Account Number <span class="text-error">*</span></label>
+                  <input type="text" id="onbConfirmAccountNumber" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface font-mono placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Re-enter to confirm" minlength="9" maxlength="18" required>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbIfsc">IFSC Code <span class="text-error">*</span></label>
+                  <input type="text" id="onbIfsc" oninput="onOnbIfscInput(this.value)" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="SBIN0001234" maxlength="11" required>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbBankName">Bank Name <span class="text-error">*</span></label>
+                  <input type="text" id="onbBankName" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" placeholder="State Bank of India" required>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbBranchName">Branch Name <span class="text-error">*</span></label>
+                  <input type="text" id="onbBranchName" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Nariman Point" required>
+                </div>
+              </div>
+
+              <!-- Regulatory Privacy Notice -->
+              <div class="p-3 bg-surface-container rounded-lg border border-outline-variant/50 text-[11px] text-secondary flex items-start gap-2">
+                <span class="material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5">lock_person</span>
+                <span>Bank accounts are protected with military-grade AES-256-GCM encryption. Account numbers are stored masked (<span class="font-mono">••••••••1234</span>) and never stored in unencrypted browser storage.</span>
+              </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <button type="button" onclick="goToOnboardingStep(2)" class="py-2 px-4 rounded-lg border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container transition-colors cursor-pointer flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                  <span>Back</span>
+                </button>
+                <button type="submit" id="btnOnbContinue3" class="py-2.5 px-6 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:bg-primary-container transition-colors shadow-sm cursor-pointer flex items-center gap-2">
+                  <span>Continue to Business Details</span>
+                  <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- =================================================================== -->
+          <!-- STEP 4 PANEL: BUSINESS DETAILS & COMPLETE REGISTRATION -->
+          <!-- =================================================================== -->
+          <div id="onbPanel4" class="hidden space-y-4">
+            <div>
+              <h3 class="text-base font-bold text-on-surface">Step 4 — Business Profile & Complete Registration</h3>
+              <p class="text-xs text-secondary mt-0.5">Confirm your business entity details to initialize your compliance workspace and tax registers.</p>
+            </div>
+
+            <!-- Inline Error Banner -->
+            <div id="onbError4" class="hidden text-xs text-error bg-error/10 border border-error/20 p-3 rounded-lg flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] shrink-0">error</span>
+              <span id="onbErrorText4">Please complete the required business details.</span>
+            </div>
+
+            <form id="formOnbStep4" onsubmit="submitOnboardingStep4(event)" class="space-y-3.5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbLegalName">Legal Business Name <span class="text-error">*</span></label>
+                  <input type="text" id="onbLegalName" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Patel Trading Private Limited" required>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbTradeName">Trade Name <span class="text-secondary font-normal">(if different)</span></label>
+                  <input type="text" id="onbTradeName" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Patel Mart">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbBusinessType">Business Constitution / Type <span class="text-error">*</span></label>
+                  <select id="onbBusinessType" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    <option value="Private Limited Company">Private Limited Company</option>
+                    <option value="Proprietorship">Proprietorship</option>
+                    <option value="Partnership">Partnership</option>
+                    <option value="Public Limited Company">Public Limited Company</option>
+                    <option value="Limited Liability Partnership (LLP)">Limited Liability Partnership (LLP)</option>
+                    <option value="One Person Company (OPC)">One Person Company (OPC)</option>
+                    <option value="Society/Club/Trust/AOP">Society / Club / Trust / AOP</option>
+                    <option value="Government Entity">Government Entity</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbBusinessCategory">Industry / Category <span class="text-error">*</span></label>
+                  <select id="onbBusinessCategory" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    <option value="Retail">Retail & Consumer Goods</option>
+                    <option value="Wholesale/Distribution">Wholesale & Distribution</option>
+                    <option value="Manufacturing">Manufacturing & Production</option>
+                    <option value="Information Technology">Information Technology & Software</option>
+                    <option value="Financial Services">Financial & Accounting Services</option>
+                    <option value="Consulting & Professional">Consulting & Professional Services</option>
+                    <option value="Healthcare">Healthcare & Pharmaceuticals</option>
+                    <option value="E-Commerce">E-Commerce Marketplace</option>
+                    <option value="Other">Other Commercial Enterprise</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbBusinessEmail">Business Email <span class="text-error">*</span></label>
+                  <input type="email" id="onbBusinessEmail" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" placeholder="contact@patelmart.com" required>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbBusinessMobile">Business Mobile / Telephone</label>
+                  <input type="tel" id="onbBusinessMobile" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="02222880000 / 9876543210">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-on-surface mb-1" for="onbBusinessAddress">Registered Business Address <span class="text-error">*</span></label>
+                <input type="text" id="onbBusinessAddress" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" placeholder="101 MG Road, Fort, Mumbai" required>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbState">State <span class="text-error">*</span></label>
+                  <select id="onbState" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    <option value="">Select State</option>
+                    <option value="Andaman & Nicobar Islands">01 - Andaman & Nicobar Islands</option>
+                    <option value="Andhra Pradesh">37 - Andhra Pradesh</option>
+                    <option value="Arunachal Pradesh">12 - Arunachal Pradesh</option>
+                    <option value="Assam">18 - Assam</option>
+                    <option value="Bihar">10 - Bihar</option>
+                    <option value="Chandigarh">04 - Chandigarh</option>
+                    <option value="Chhattisgarh">22 - Chhattisgarh</option>
+                    <option value="Dadra & Nagar Haveli">26 - Dadra & Nagar Haveli</option>
+                    <option value="Daman & Diu">25 - Daman & Diu</option>
+                    <option value="Delhi">07 - Delhi</option>
+                    <option value="Goa">30 - Goa</option>
+                    <option value="Gujarat">24 - Gujarat</option>
+                    <option value="Haryana">06 - Haryana</option>
+                    <option value="Himachal Pradesh">02 - Himachal Pradesh</option>
+                    <option value="Jammu & Kashmir">01 - Jammu & Kashmir</option>
+                    <option value="Jharkhand">20 - Jharkhand</option>
+                    <option value="Karnataka">29 - Karnataka</option>
+                    <option value="Kerala">32 - Kerala</option>
+                    <option value="Ladakh">38 - Ladakh</option>
+                    <option value="Lakshadweep">31 - Lakshadweep</option>
+                    <option value="Madhya Pradesh">23 - Madhya Pradesh</option>
+                    <option value="Maharashtra" selected>27 - Maharashtra</option>
+                    <option value="Manipur">14 - Manipur</option>
+                    <option value="Meghalaya">17 - Meghalaya</option>
+                    <option value="Mizoram">15 - Mizoram</option>
+                    <option value="Nagaland">13 - Nagaland</option>
+                    <option value="Odisha">21 - Odisha</option>
+                    <option value="Puducherry">34 - Puducherry</option>
+                    <option value="Punjab">03 - Punjab</option>
+                    <option value="Rajasthan">08 - Rajasthan</option>
+                    <option value="Sikkim">11 - Sikkim</option>
+                    <option value="Tamil Nadu">33 - Tamil Nadu</option>
+                    <option value="Telangana">36 - Telangana</option>
+                    <option value="Tripura">16 - Tripura</option>
+                    <option value="Uttar Pradesh">09 - Uttar Pradesh</option>
+                    <option value="Uttarakhand">05 - Uttarakhand</option>
+                    <option value="West Bengal">19 - West Bengal</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbCity">City <span class="text-error">*</span></label>
+                  <input type="text" id="onbCity" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Mumbai" required>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1" for="onbPincode">PIN Code <span class="text-error">*</span></label>
+                  <input type="text" id="onbPincode" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="400001" maxlength="6" required>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-on-surface mb-1" for="onbBusinessActivity">Primary Business Activity <span class="text-error">*</span></label>
+                <input type="text" id="onbBusinessActivity" class="w-full px-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Retail Trading of Consumer Electronics and Accessories" required>
+              </div>
+
+              <!-- Summary Box -->
+              <div class="p-3 bg-surface-container rounded-lg border border-outline-variant/60 text-xs space-y-1.5">
+                <div class="font-bold text-on-surface flex items-center justify-between">
+                  <span>Registration Summary</span>
+                  <span class="text-primary font-mono text-[11px]" id="onbSummaryPanGstin">—</span>
+                </div>
+                <div class="text-secondary text-[11px] flex justify-between">
+                  <span>Banking Destination:</span>
+                  <span class="font-medium text-on-surface" id="onbSummaryBank">—</span>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <button type="button" onclick="goToOnboardingStep(3)" class="py-2 px-4 rounded-lg border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container transition-colors cursor-pointer flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                  <span>Back</span>
+                </button>
+                <button type="submit" id="btnOnbContinue4" class="py-2.5 px-6 rounded-lg bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-colors shadow-sm cursor-pointer flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[18px]">verified</span>
+                  <span>Complete Registration</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <div aria-labelledby="modal-title" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm hidden" id="pmt-06-modal" role="dialog" style="display: none;" onclick="if (event.target === this) closePmt06Modal()">
 <!-- Modal Container Card -->
 <div class="bg-surface-container-lowest dark:bg-surface border border-outline-variant rounded-xl max-w-4xl w-full my-auto shadow-2xl flex flex-col max-h-[942px] overflow-hidden animate-in fade-in zoom-in-95 duration-200">

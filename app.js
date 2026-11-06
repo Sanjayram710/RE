@@ -184,6 +184,12 @@ async function initSessionFromBackend() {
     const data = res.ok ? await res.json() : null;
 
     if (data && data.authenticated && data.user) {
+      if (data.onboardingRequired) {
+        if (typeof openOnboardingWizard === "function") {
+          openOnboardingWizard(data.onboardingStep || 2);
+        }
+        return false;
+      }
       appState.csrfToken = data.csrfToken;
       appState.organization = data.organization || null;
       appState.activeGstin = data.activeGstin || null;
@@ -1633,6 +1639,11 @@ function closeAuthModal() {
 window.closeAuthModal = closeAuthModal;
 
 function switchAuthTab(tab) {
+  if (tab === "register") {
+    closeAuthModal();
+    openOnboardingWizard(1);
+    return;
+  }
   const btnSignIn = document.getElementById("tabAuthSignIn");
   const btnRegister = document.getElementById("tabAuthRegister");
   const formSignIn = document.getElementById("formSignIn");
@@ -1731,6 +1742,15 @@ async function handleSignInSubmit(e) {
     }
     if (data.csrfToken) {
       appState.csrfToken = data.csrfToken;
+    }
+
+    if (data.onboardingRequired) {
+      closeAuthModal();
+      if (typeof openOnboardingWizard === "function") {
+        openOnboardingWizard(data.onboardingStep || 2);
+      }
+      showToast("Please complete your business registration to continue.", "info");
+      return;
     }
 
     await initSessionFromBackend();
@@ -8491,3 +8511,637 @@ function closeDocumentPreviewModal() {
   }
 }
 window.closeDocumentPreviewModal = closeDocumentPreviewModal;
+
+
+// =========================================================================
+// FOUR-STEP BUSINESS ONBOARDING WIZARD CONTROLLER
+// =========================================================================
+
+const GST_STATE_LOOKUP = {
+  "01": "Jammu & Kashmir",
+  "02": "Himachal Pradesh",
+  "03": "Punjab",
+  "04": "Chandigarh",
+  "05": "Uttarakhand",
+  "06": "Haryana",
+  "07": "Delhi",
+  "08": "Rajasthan",
+  "09": "Uttar Pradesh",
+  "10": "Bihar",
+  "11": "Sikkim",
+  "12": "Arunachal Pradesh",
+  "13": "Nagaland",
+  "14": "Manipur",
+  "15": "Mizoram",
+  "16": "Tripura",
+  "17": "Meghalaya",
+  "18": "Assam",
+  "19": "West Bengal",
+  "20": "Jharkhand",
+  "21": "Odisha",
+  "22": "Chhattisgarh",
+  "23": "Madhya Pradesh",
+  "24": "Gujarat",
+  "25": "Daman & Diu",
+  "26": "Dadra & Nagar Haveli",
+  "27": "Maharashtra",
+  "28": "Andhra Pradesh (Old)",
+  "29": "Karnataka",
+  "30": "Goa",
+  "31": "Lakshadweep",
+  "32": "Kerala",
+  "33": "Tamil Nadu",
+  "34": "Puducherry",
+  "35": "Andaman & Nicobar Islands",
+  "36": "Telangana",
+  "37": "Andhra Pradesh",
+  "38": "Ladakh",
+  "97": "Other Territory"
+};
+
+let currentOnboardingStep = 1;
+
+function openOnboardingWizard(step = 1) {
+  closeAuthModal();
+  const wizard = document.getElementById("modalOnboardingWizard");
+  if (wizard) {
+    wizard.style.display = "flex";
+    wizard.classList.remove("hidden");
+  }
+  goToOnboardingStep(step);
+
+  // Fetch saved progress if session exists
+  fetch("/api/onboarding/progress", {
+    credentials: "same-origin",
+    headers: appState.sessionToken ? { "Authorization": `Bearer ${appState.sessionToken}` } : {}
+  })
+    .then(res => res.ok ? res.json() : null)
+    .then(data => {
+      if (!data || !data.success) return;
+      if (data.user) {
+        const fn = document.getElementById("onbFullName");
+        if (fn && !fn.value && data.user.fullName) fn.value = data.user.fullName;
+        const em = document.getElementById("onbEmail");
+        if (em && !em.value && data.user.email) em.value = data.user.email;
+        const mob = document.getElementById("onbMobile");
+        if (mob && !mob.value && data.user.mobile) mob.value = data.user.mobile;
+      }
+      if (data.step2) {
+        const pan = document.getElementById("onbPan");
+        if (pan && data.step2.pan) pan.value = data.step2.pan;
+        const gstin = document.getElementById("onbGstin");
+        if (gstin && data.step2.gstin) {
+          gstin.value = data.step2.gstin;
+          onOnbGstinInput(data.step2.gstin);
+        }
+      }
+      if (data.step3) {
+        const hn = document.getElementById("onbAccountHolderName");
+        if (hn && data.step3.accountHolderName) hn.value = data.step3.accountHolderName;
+        const ifsc = document.getElementById("onbIfsc");
+        if (ifsc && data.step3.ifsc) ifsc.value = data.step3.ifsc;
+        const bn = document.getElementById("onbBankName");
+        if (bn && data.step3.bankName) bn.value = data.step3.bankName;
+        const br = document.getElementById("onbBranchName");
+        if (br && data.step3.branchName) br.value = data.step3.branchName;
+      }
+      if (data.step4) {
+        const ln = document.getElementById("onbLegalName");
+        if (ln && data.step4.legalName) ln.value = data.step4.legalName;
+        const tn = document.getElementById("onbTradeName");
+        if (tn && data.step4.tradeName) tn.value = data.step4.tradeName;
+        const bt = document.getElementById("onbBusinessType");
+        if (bt && data.step4.businessType) bt.value = data.step4.businessType;
+        const bc = document.getElementById("onbBusinessCategory");
+        if (bc && data.step4.businessCategory) bc.value = data.step4.businessCategory;
+        const be = document.getElementById("onbBusinessEmail");
+        if (be && data.step4.businessEmail) be.value = data.step4.businessEmail;
+        const bm = document.getElementById("onbBusinessMobile");
+        if (bm && data.step4.businessMobile) bm.value = data.step4.businessMobile;
+        const ba = document.getElementById("onbBusinessAddress");
+        if (ba && data.step4.businessAddress) ba.value = data.step4.businessAddress;
+        const st = document.getElementById("onbState");
+        if (st && data.step4.state) st.value = data.step4.state;
+        const cy = document.getElementById("onbCity");
+        if (cy && data.step4.city) cy.value = data.step4.city;
+        const pc = document.getElementById("onbPincode");
+        if (pc && data.step4.pincode) pc.value = data.step4.pincode;
+        const act = document.getElementById("onbBusinessActivity");
+        if (act && data.step4.businessActivity) act.value = data.step4.businessActivity;
+      }
+    })
+    .catch(() => {});
+}
+window.openOnboardingWizard = openOnboardingWizard;
+
+function closeOnboardingWizard() {
+  const wizard = document.getElementById("modalOnboardingWizard");
+  if (wizard) {
+    wizard.style.display = "none";
+    wizard.classList.add("hidden");
+  }
+}
+window.closeOnboardingWizard = closeOnboardingWizard;
+
+function goToOnboardingStep(step) {
+  if (step < 1 || step > 4) return;
+  currentOnboardingStep = step;
+
+  // Toggle Panels
+  for (let i = 1; i <= 4; i++) {
+    const p = document.getElementById(`onbPanel${i}`);
+    if (p) {
+      if (i === step) p.classList.remove("hidden");
+      else p.classList.add("hidden");
+    }
+  }
+
+  // Update Progress Indicators
+  for (let i = 1; i <= 4; i++) {
+    const badge = document.getElementById(`onbBadge${i}`);
+    const label = document.getElementById(`onbLabel${i}`);
+    if (i < step) {
+      // Completed step
+      if (badge) {
+        badge.innerHTML = "✓";
+        badge.className = "w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs bg-primary/20 text-primary border border-primary/40 transition-all";
+      }
+      if (label) {
+        label.className = "text-[11px] font-semibold text-primary";
+      }
+    } else if (i === step) {
+      // Current active step
+      if (badge) {
+        badge.innerHTML = String(i);
+        badge.className = "w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs bg-primary text-on-primary shadow-xs transition-all";
+      }
+      if (label) {
+        label.className = "text-[11px] font-bold text-primary";
+      }
+    } else {
+      // Pending step
+      if (badge) {
+        badge.innerHTML = String(i);
+        badge.className = "w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs bg-surface-container text-secondary border border-outline-variant transition-all";
+      }
+      if (label) {
+        label.className = "text-[11px] font-medium text-secondary";
+      }
+    }
+  }
+
+  // Update connector lines
+  for (let i = 1; i <= 3; i++) {
+    const line = document.getElementById(`onbLine${i}`);
+    if (line) {
+      if (i < step) {
+        line.className = "flex-1 h-0.5 bg-primary -mt-4 mx-2 transition-all";
+      } else {
+        line.className = "flex-1 h-0.5 bg-outline-variant -mt-4 mx-2 transition-all";
+      }
+    }
+  }
+
+  // If entering step 4, update summary review
+  if (step === 4) {
+    const pan = document.getElementById("onbPan")?.value.trim().toUpperCase() || "—";
+    const gstin = document.getElementById("onbGstin")?.value.trim().toUpperCase() || "—";
+    const bankName = document.getElementById("onbBankName")?.value.trim() || "Commercial Bank";
+    const accNum = document.getElementById("onbAccountNumber")?.value.trim() || "";
+    const last4 = accNum.length >= 4 ? accNum.slice(-4) : "••••";
+
+    const summaryPanEl = document.getElementById("onbSummaryPanGstin");
+    if (summaryPanEl) summaryPanEl.textContent = `PAN: ${pan} | GSTIN: ${gstin}`;
+
+    const summaryBankEl = document.getElementById("onbSummaryBank");
+    if (summaryBankEl) summaryBankEl.textContent = `${bankName} (••••••••${last4})`;
+  }
+}
+window.goToOnboardingStep = goToOnboardingStep;
+
+function togglePassVisibility(inputId, iconId) {
+  const inp = document.getElementById(inputId);
+  const ico = document.getElementById(iconId);
+  if (!inp || !ico) return;
+  if (inp.type === "password") {
+    inp.type = "text";
+    ico.textContent = "visibility_off";
+  } else {
+    inp.type = "password";
+    ico.textContent = "visibility";
+  }
+}
+window.togglePassVisibility = togglePassVisibility;
+
+function checkPasswordStrength(val) {
+  const pwd = val || "";
+  const lenOk = pwd.length >= 8;
+  const upperOk = /[A-Z]/.test(pwd);
+  const lowerOk = /[a-z]/.test(pwd);
+  const numOk = /[0-9]/.test(pwd);
+  const specialOk = /[^A-Za-z0-9]/.test(pwd);
+
+  const updateRule = (id, ok) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const icon = el.querySelector(".material-symbols-outlined");
+    if (ok) {
+      el.className = "flex items-center gap-1.5 text-emerald-600 font-medium";
+      if (icon) {
+        icon.textContent = "check_circle";
+        icon.className = "material-symbols-outlined text-[14px] text-emerald-600";
+      }
+    } else {
+      el.className = "flex items-center gap-1.5 text-secondary";
+      if (icon) {
+        icon.textContent = "radio_button_unchecked";
+        icon.className = "material-symbols-outlined text-[14px] text-secondary";
+      }
+    }
+  };
+
+  updateRule("ruleLength", lenOk);
+  updateRule("ruleUpper", upperOk);
+  updateRule("ruleLower", lowerOk);
+  updateRule("ruleNumber", numOk);
+  updateRule("ruleSpecial", specialOk);
+
+  return lenOk && upperOk && lowerOk && numOk && specialOk;
+}
+window.checkPasswordStrength = checkPasswordStrength;
+
+function onOnbPanInput(val) {
+  const panInput = document.getElementById("onbPan");
+  if (panInput) panInput.value = (val || "").toUpperCase();
+  const gstinInput = document.getElementById("onbGstin");
+  if (gstinInput && gstinInput.value) {
+    onOnbGstinInput(gstinInput.value);
+  }
+}
+window.onOnbPanInput = onOnbPanInput;
+
+function onOnbGstinInput(val) {
+  const clean = (val || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const gstinInput = document.getElementById("onbGstin");
+  if (gstinInput) gstinInput.value = clean;
+
+  const stateBadge = document.getElementById("onbStateBadge");
+  const feedback = document.getElementById("onbGstinFeedback");
+  const pan = (document.getElementById("onbPan")?.value || "").trim().toUpperCase();
+
+  if (clean.length >= 2) {
+    const stCode = clean.slice(0, 2);
+    const stName = GST_STATE_LOOKUP[stCode] || "Other Territory";
+    if (stateBadge) {
+      stateBadge.textContent = `State: ${stCode} - ${stName}`;
+      stateBadge.classList.remove("hidden");
+    }
+    // Auto-select in Step 4 state dropdown
+    const stSelect = document.getElementById("onbState");
+    if (stSelect && stName) {
+      stSelect.value = stName;
+    }
+  } else {
+    if (stateBadge) stateBadge.classList.add("hidden");
+  }
+
+  if (clean.length === 15) {
+    const embeddedPan = clean.slice(2, 12);
+    if (pan && embeddedPan !== pan) {
+      if (feedback) {
+        feedback.textContent = `⚠️ Embedded PAN (${embeddedPan}) does not match entered PAN (${pan})`;
+        feedback.className = "text-[11px] text-error font-medium";
+      }
+    } else {
+      if (feedback) {
+        feedback.textContent = "✓ Valid 15-character GSTIN matching PAN";
+        feedback.className = "text-[11px] text-emerald-600 font-medium";
+      }
+    }
+  } else {
+    if (feedback) {
+      feedback.textContent = "15-character GSTIN (first 2 digits = state code, next 10 = PAN)";
+      feedback.className = "text-[11px] text-secondary";
+    }
+  }
+}
+window.onOnbGstinInput = onOnbGstinInput;
+
+function formatAadhaarInput(input) {
+  if (!input) return;
+  const raw = input.value.replace(/\\D/g, "").slice(0, 12);
+  const chunks = raw.match(/.{1,4}/g);
+  input.value = chunks ? chunks.join(" ") : raw;
+}
+window.formatAadhaarInput = formatAadhaarInput;
+
+let ifscLookupTimeout = null;
+function onOnbIfscInput(val) {
+  const clean = (val || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 11);
+  const ifscInput = document.getElementById("onbIfsc");
+  if (ifscInput) ifscInput.value = clean;
+
+  if (clean.length === 11) {
+    clearTimeout(ifscLookupTimeout);
+    ifscLookupTimeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/bank/lookup-ifsc?ifsc=${clean}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            const bn = document.getElementById("onbBankName");
+            if (bn && data.bankName) bn.value = data.bankName;
+            const br = document.getElementById("onbBranchName");
+            if (br && data.branchName) br.value = data.branchName;
+          }
+        }
+      } catch (_) {}
+    }, 200);
+  }
+}
+window.onOnbIfscInput = onOnbIfscInput;
+
+async function submitOnboardingStep1(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const errorEl = document.getElementById("onbError1");
+  const errorTextEl = document.getElementById("onbErrorText1");
+  const submitBtn = document.getElementById("btnOnbContinue1");
+
+  const fullName = document.getElementById("onbFullName")?.value.trim();
+  const mobile = document.getElementById("onbMobile")?.value.trim();
+  const email = document.getElementById("onbEmail")?.value.trim();
+  const password = document.getElementById("onbPassword")?.value;
+  const confirmPassword = document.getElementById("onbConfirmPassword")?.value;
+
+  const showError = (msg) => {
+    if (errorEl && errorTextEl) {
+      errorTextEl.textContent = msg;
+      errorEl.classList.remove("hidden");
+    } else {
+      showToast(msg, "error");
+    }
+  };
+
+  if (!fullName) return showError("Please enter your full legal name.");
+  if (!mobile || !/^\\d{10}$/.test(mobile)) return showError("Please enter a valid 10-digit mobile number.");
+  if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return showError("Please enter a valid email address.");
+  if (!password) return showError("Password is required.");
+  if (password !== confirmPassword) return showError("Passwords do not match.");
+  if (!checkPasswordStrength(password)) return showError("Password does not meet all policy requirements.");
+
+  if (errorEl) errorEl.classList.add("hidden");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Creating Account...`;
+  }
+
+  try {
+    const res = await fetch("/api/onboarding/step1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ fullName, mobile, email, password, confirmPassword })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      showError(data.error || "Failed to create account. Please check your entries.");
+      return;
+    }
+
+    if (data.sessionToken) appState.sessionToken = data.sessionToken;
+    if (data.csrfToken) appState.csrfToken = data.csrfToken;
+
+    showToast("Account created successfully! Please continue to Taxpayer Identification.", "success");
+    goToOnboardingStep(2);
+  } catch (err) {
+    showError("Network failure while submitting Step 1. Please try again.");
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Continue to Taxpayer ID</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span>`;
+    }
+  }
+}
+window.submitOnboardingStep1 = submitOnboardingStep1;
+
+async function submitOnboardingStep2(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const errorEl = document.getElementById("onbError2");
+  const errorTextEl = document.getElementById("onbErrorText2");
+  const submitBtn = document.getElementById("btnOnbContinue2");
+
+  const pan = (document.getElementById("onbPan")?.value || "").trim().toUpperCase();
+  const gstin = (document.getElementById("onbGstin")?.value || "").trim().toUpperCase();
+  const aadhaar = (document.getElementById("onbAadhaar")?.value || "").trim();
+
+  const showError = (msg) => {
+    if (errorEl && errorTextEl) {
+      errorTextEl.textContent = msg;
+      errorEl.classList.remove("hidden");
+    } else {
+      showToast(msg, "error");
+    }
+  };
+
+  if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
+    return showError("Invalid PAN format. Must be 10 characters (e.g. ABCDE1234F).");
+  }
+  if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstin)) {
+    return showError("Invalid GSTIN format. Must be 15 characters (e.g. 27ABCDE1234F1Z5).");
+  }
+  if (gstin.slice(2, 12) !== pan) {
+    return showError(`GSTIN embedded PAN (${gstin.slice(2, 12)}) does not match entered PAN (${pan}).`);
+  }
+  if (aadhaar) {
+    const cleanAadhaar = aadhaar.replace(/[\\s-]+/g, "");
+    if (!/^\\d{12}$/.test(cleanAadhaar)) {
+      return showError("Aadhaar must be exactly 12 digits.");
+    }
+  }
+
+  if (errorEl) errorEl.classList.add("hidden");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Verifying...`;
+  }
+
+  try {
+    const res = await apiFetch("/api/onboarding/step2", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pan, gstin, aadhaar })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      showError(data.error || "Failed to verify taxpayer identity.");
+      return;
+    }
+
+    showToast("Taxpayer identification verified! Please enter banking details.", "success");
+    goToOnboardingStep(3);
+  } catch (err) {
+    showError("Network failure while verifying Step 2.");
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Continue to Bank Details</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span>`;
+    }
+  }
+}
+window.submitOnboardingStep2 = submitOnboardingStep2;
+
+async function submitOnboardingStep3(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const errorEl = document.getElementById("onbError3");
+  const errorTextEl = document.getElementById("onbErrorText3");
+  const submitBtn = document.getElementById("btnOnbContinue3");
+
+  const accountHolderName = document.getElementById("onbAccountHolderName")?.value.trim();
+  const accountNumber = document.getElementById("onbAccountNumber")?.value.trim();
+  const confirmAccountNumber = document.getElementById("onbConfirmAccountNumber")?.value.trim();
+  const ifsc = (document.getElementById("onbIfsc")?.value || "").trim().toUpperCase();
+  const bankName = document.getElementById("onbBankName")?.value.trim();
+  const branchName = document.getElementById("onbBranchName")?.value.trim();
+
+  const showError = (msg) => {
+    if (errorEl && errorTextEl) {
+      errorTextEl.textContent = msg;
+      errorEl.classList.remove("hidden");
+    } else {
+      showToast(msg, "error");
+    }
+  };
+
+  if (!accountHolderName) return showError("Account holder name is required.");
+  if (!accountNumber || !/^\\d{9,18}$/.test(accountNumber)) return showError("Account number must be between 9 and 18 digits.");
+  if (accountNumber !== confirmAccountNumber) return showError("Bank account numbers do not match.");
+  if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) return showError("Invalid IFSC format (e.g. SBIN0001234).");
+  if (!bankName) return showError("Bank name is required.");
+  if (!branchName) return showError("Branch name is required.");
+
+  if (errorEl) errorEl.classList.add("hidden");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Saving...`;
+  }
+
+  try {
+    const res = await apiFetch("/api/onboarding/step3", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accountHolderName, accountNumber, confirmAccountNumber, ifsc, bankName, branchName })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      showError(data.error || "Failed to save banking information.");
+      return;
+    }
+
+    showToast("Banking information encrypted and saved! Final step: Business Details.", "success");
+    goToOnboardingStep(4);
+  } catch (err) {
+    showError("Network failure while saving banking details.");
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Continue to Business Details</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span>`;
+    }
+  }
+}
+window.submitOnboardingStep3 = submitOnboardingStep3;
+
+async function submitOnboardingStep4(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const errorEl = document.getElementById("onbError4");
+  const errorTextEl = document.getElementById("onbErrorText4");
+  const submitBtn = document.getElementById("btnOnbContinue4");
+
+  const legalName = document.getElementById("onbLegalName")?.value.trim();
+  const tradeName = document.getElementById("onbTradeName")?.value.trim() || legalName;
+  const businessType = document.getElementById("onbBusinessType")?.value;
+  const businessCategory = document.getElementById("onbBusinessCategory")?.value;
+  const businessEmail = document.getElementById("onbBusinessEmail")?.value.trim();
+  const businessMobile = document.getElementById("onbBusinessMobile")?.value.trim();
+  const businessAddress = document.getElementById("onbBusinessAddress")?.value.trim();
+  const state = document.getElementById("onbState")?.value;
+  const city = document.getElementById("onbCity")?.value.trim();
+  const pincode = document.getElementById("onbPincode")?.value.trim();
+  const businessActivity = document.getElementById("onbBusinessActivity")?.value.trim();
+
+  const showError = (msg) => {
+    if (errorEl && errorTextEl) {
+      errorTextEl.textContent = msg;
+      errorEl.classList.remove("hidden");
+    } else {
+      showToast(msg, "error");
+    }
+  };
+
+  if (!legalName) return showError("Legal business name is required.");
+  if (!businessType) return showError("Business constitution / type is required.");
+  if (!businessCategory) return showError("Business category is required.");
+  if (!businessEmail || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(businessEmail)) return showError("Valid business email is required.");
+  if (!businessAddress) return showError("Registered business address is required.");
+  if (!state) return showError("Business state is required.");
+  if (!city) return showError("City is required.");
+  if (!pincode || !/^\\d{6}$/.test(pincode)) return showError("Valid 6-digit PIN code is required.");
+  if (!businessActivity) return showError("Primary business activity is required.");
+
+  if (errorEl) errorEl.classList.add("hidden");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Completing Registration...`;
+  }
+
+  try {
+    const res = await apiFetch("/api/onboarding/step4", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        legalName,
+        tradeName,
+        businessType,
+        businessCategory,
+        businessEmail,
+        businessMobile,
+        businessAddress,
+        state,
+        city,
+        pincode,
+        businessActivity
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      showError(data.error || "Failed to complete onboarding.");
+      return;
+    }
+
+    closeOnboardingWizard();
+
+    // Reinitialize full authenticated state
+    await initSessionFromBackend();
+
+    showToast(`🎉 Registration complete! Welcome to SimpleGST, ${legalName}.`, "success");
+
+    // Navigate to dashboard
+    if (typeof switchView === "function") {
+      switchView("dashboard");
+    } else if (typeof goToItrStep === "function") {
+      goToItrStep(1);
+    }
+
+    if (typeof loadDashboardData === "function") loadDashboardData();
+    if (typeof loadSalesRegister === "function") loadSalesRegister();
+    if (typeof loadPurchaseRegister === "function") loadPurchaseRegister();
+    if (typeof loadBillsRegister === "function") loadBillsRegister();
+  } catch (err) {
+    showError("Network failure while completing onboarding.");
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span class="material-symbols-outlined text-[18px]">verified</span><span>Complete Registration</span>`;
+    }
+  }
+}
+window.submitOnboardingStep4 = submitOnboardingStep4;
