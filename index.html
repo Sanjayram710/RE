@@ -6428,91 +6428,295 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
     <!-- ========================================================================= -->
     <!-- MODAL: OCR REVIEW & CORRECTION MODAL                                      -->
     <!-- ========================================================================= -->
-    <div aria-labelledby="ocr-review-modal-title" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm hidden" id="modalOcrReview" role="dialog" style="display: none;" onclick="if (event.target === this) closeOcrReviewModal()">
-      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl max-w-3xl w-full my-auto shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div aria-labelledby="ocr-review-modal-title" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-900/70 backdrop-blur-sm hidden" id="modalOcrReview" role="dialog" style="display: none;" onclick="if (event.target === this) closeOcrReviewModal()">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl max-w-5xl w-full my-auto shadow-2xl flex flex-col overflow-hidden max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
         <!-- Header -->
-        <header class="flex items-start justify-between p-5 border-b border-outline-variant bg-surface-container-lowest">
+        <header class="flex items-center justify-between p-4 sm:p-5 border-b border-outline-variant bg-surface-container-lowest shrink-0">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-800 border border-amber-300 shrink-0">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shrink-0">
               <span class="material-symbols-outlined text-[24px]">document_scanner</span>
             </div>
             <div>
-              <h2 class="text-headline-sm font-bold text-on-surface" id="ocr-review-modal-title">Review Extracted Document Data</h2>
-              <p class="text-body-sm text-secondary text-xs">Verify AI-extracted statutory fields against original before approving to register</p>
+              <div class="flex items-center gap-2">
+                <h2 class="text-headline-sm font-bold text-on-surface" id="ocr-review-modal-title">Review &amp; Edit Extracted Invoice</h2>
+                <span id="ocrReviewConfidenceBadge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">96% Confidence</span>
+              </div>
+              <p class="text-body-sm text-secondary text-xs">Verify AI-extracted statutory fields and line items before saving to register</p>
             </div>
           </div>
-          <button aria-label="Close Modal" onclick="closeOcrReviewModal()" class="p-2 text-secondary hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors cursor-pointer" type="button">
-            <span class="material-symbols-outlined text-[20px]">close</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <a id="ocrReviewPdfLink" href="#" target="_blank" class="px-3 py-1.5 rounded-lg border border-outline-variant hover:bg-surface-container text-primary font-medium text-xs flex items-center gap-1.5 cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">visibility</span>
+              <span>View Original PDF</span>
+            </a>
+            <button aria-label="Close Modal" onclick="closeOcrReviewModal()" class="p-2 text-secondary hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors cursor-pointer" type="button">
+              <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
         </header>
 
         <!-- Body Form -->
-        <form onsubmit="submitOcrApproval(event)" class="p-6 space-y-4">
-          <input type="hidden" id="ocrReviewDocId">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-secondary mb-1">Target Document Type *</label>
-              <select id="ocrReviewInvoiceType" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
-                <option value="purchase_bill" selected>Purchase Bill (Inward)</option>
-                <option value="sales_invoice">Sales Invoice (Outward)</option>
-              </select>
+        <div class="overflow-y-auto p-4 sm:p-6 space-y-5">
+          <!-- Validation Warnings Alert Container -->
+          <div id="ocrReviewWarningsBox" class="hidden p-3.5 rounded-xl border space-y-1.5 text-xs">
+            <!-- Dynamic alerts inserted here -->
+          </div>
+
+          <!-- Document Metadata Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-secondary font-medium">Source Document:</span>
+              <strong id="ocrReviewFilename" class="text-on-surface font-mono font-semibold">Document.pdf</strong>
+              <span id="ocrReviewConfidence" class="hidden">98% Verified</span>
             </div>
-            <div>
-              <label class="block text-xs font-semibold text-secondary mb-1">Extracted Invoice / Bill # *</label>
-              <input type="text" id="ocrReviewInvoiceNumber" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none">
+            <div class="flex items-center gap-3">
+              <span class="text-secondary font-medium">Document Type:</span>
+              <div class="flex items-center rounded-lg bg-surface border border-outline-variant p-0.5">
+                <button type="button" id="btnTypeSales" onclick="setOcrDocumentType('sales_invoice')" class="px-3 py-1 rounded-md text-xs font-semibold cursor-pointer">
+                  Sales (Outward)
+                </button>
+                <button type="button" id="btnTypePurchase" onclick="setOcrDocumentType('purchase_bill')" class="px-3 py-1 rounded-md text-xs font-semibold cursor-pointer">
+                  Purchase (Inward)
+                </button>
+              </div>
+              <input type="hidden" id="ocrReviewInvoiceType" value="sales_invoice">
+              <input type="hidden" id="ocrReviewDocId" value="">
+              <!-- Hidden legacy compatibility inputs -->
+              <input type="hidden" id="ocrReviewPartyName" value="">
+              <input type="hidden" id="ocrReviewGstin" value="">
+              <input type="hidden" id="ocrReviewTaxable" value="0">
+              <input type="hidden" id="ocrReviewTotalTax" value="0">
+              <input type="hidden" id="ocrReviewGrandTotal" value="0">
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-secondary mb-1">Party / Supplier / Customer Name *</label>
-              <input type="text" id="ocrReviewPartyName" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
+          <!-- Section 1: Invoice Header Details -->
+          <div class="space-y-2">
+            <h3 class="text-xs font-bold text-secondary uppercase tracking-wider">1. Statutory Invoice Information</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-secondary mb-1">Invoice / Bill Number *</label>
+                <input type="text" id="ocrReviewInvoiceNumber" required oninput="markFieldEdited(this); validateOcrInvoiceForm()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-secondary mb-1">Invoice Date *</label>
+                <input type="date" id="ocrReviewInvoiceDate" required onchange="markFieldEdited(this); validateOcrInvoiceForm()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-secondary mb-1">Due Date</label>
+                <input type="date" id="ocrReviewDueDate" onchange="markFieldEdited(this)" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-secondary mb-1">Place of Supply (POS) *</label>
+                <select id="ocrReviewPos" onchange="markFieldEdited(this); recalculateOcrTotals()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none font-mono">
+                  <option value="27">27 - Maharashtra</option>
+                  <option value="24">24 - Gujarat</option>
+                  <option value="29">29 - Karnataka</option>
+                  <option value="07">07 - Delhi</option>
+                  <option value="06">06 - Haryana</option>
+                  <option value="08">08 - Rajasthan</option>
+                  <option value="09">09 - Uttar Pradesh</option>
+                  <option value="19">19 - West Bengal</option>
+                  <option value="33">33 - Tamil Nadu</option>
+                  <option value="36">36 - Telangana</option>
+                  <option value="37">37 - Andhra Pradesh</option>
+                  <option value="32">32 - Kerala</option>
+                  <option value="23">23 - Madhya Pradesh</option>
+                  <option value="10">10 - Bihar</option>
+                  <option value="20">20 - Jharkhand</option>
+                  <option value="21">21 - Odisha</option>
+                  <option value="22">22 - Chhattisgarh</option>
+                  <option value="03">03 - Punjab</option>
+                  <option value="01">01 - Jammu & Kashmir</option>
+                  <option value="02">02 - Himachal Pradesh</option>
+                  <option value="05">05 - Uttarakhand</option>
+                  <option value="30">30 - Goa</option>
+                  <option value="18">18 - Assam</option>
+                  <option value="04">04 - Chandigarh</option>
+                  <option value="38">38 - Ladakh</option>
+                  <option value="97">97 - Other Territory</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label class="block text-xs font-semibold text-secondary mb-1">Party GSTIN (15 Digits)</label>
-              <input type="text" id="ocrReviewGstin" maxlength="15" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none uppercase">
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              <div>
+                <label class="block text-xs font-semibold text-secondary mb-1">Supply Type *</label>
+                <select id="ocrReviewSupplyType" onchange="markFieldEdited(this); recalculateOcrTotals()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
+                  <option value="B2B">B2B (Regular Registered Supply)</option>
+                  <option value="B2C">B2C (Consumer / Unregistered)</option>
+                  <option value="SEZWP">SEZ with Payment</option>
+                  <option value="SEZWOP">SEZ without Payment</option>
+                  <option value="EXPWP">Export with Payment</option>
+                  <option value="EXPWOP">Export without Payment</option>
+                </select>
+              </div>
+              <div id="ocrReviewItcWrapper">
+                <label class="block text-xs font-semibold text-secondary mb-1">ITC Statutory Eligibility *</label>
+                <select id="ocrReviewItcEligibility" onchange="markFieldEdited(this)" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
+                  <option value="ELIGIBLE">Eligible for Inward ITC (Table 4A(5))</option>
+                  <option value="INELIGIBLE_17_5">Ineligible / Blocked u/s 17(5)</option>
+                  <option value="INELIGIBLE_OTHER">Ineligible — Rule 38 / Others</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-2 pt-6">
+                <input type="checkbox" id="ocrReviewIsRcm" onchange="markFieldEdited(this)" class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4">
+                <label for="ocrReviewIsRcm" class="text-xs font-medium text-on-surface select-none">Reverse Charge (RCM Applicable)</label>
+              </div>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-secondary mb-1">Invoice Date *</label>
-              <input type="date" id="ocrReviewInvoiceDate" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-secondary mb-1">Taxable Value (₹) *</label>
-              <input type="number" id="ocrReviewTaxable" step="0.01" min="1" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-secondary mb-1">Total Tax (₹) *</label>
-              <input type="number" id="ocrReviewTotalTax" step="0.01" min="0" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none">
+          <!-- Section 2: Seller & Buyer Details -->
+          <div class="space-y-2">
+            <h3 class="text-xs font-bold text-secondary uppercase tracking-wider">2. Seller &amp; Buyer Parties</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Seller Block -->
+              <div class="p-3.5 rounded-xl border border-outline-variant bg-surface-container-low/50 space-y-2.5">
+                <span class="text-xs font-bold text-primary flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[16px]">store</span>
+                  <span id="ocrReviewSellerLabel">Seller / Supplier Details</span>
+                </span>
+                <div>
+                  <label class="block text-[11px] font-semibold text-secondary mb-0.5">Business Name *</label>
+                  <input type="text" id="ocrReviewSellerName" required oninput="markFieldEdited(this)" class="w-full px-3 py-1.5 rounded-lg bg-surface border border-outline-variant text-on-surface text-xs focus:border-primary focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[11px] font-semibold text-secondary mb-0.5">Seller GSTIN</label>
+                    <input type="text" id="ocrReviewSellerGstin" maxlength="15" oninput="markFieldEdited(this); validateOcrInvoiceForm()" class="w-full px-3 py-1.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-xs focus:border-primary focus:outline-none uppercase">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-secondary mb-0.5">State</label>
+                    <input type="text" id="ocrReviewSellerState" oninput="markFieldEdited(this)" class="w-full px-3 py-1.5 rounded-lg bg-surface border border-outline-variant text-on-surface text-xs focus:border-primary focus:outline-none">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-secondary mb-0.5">Address</label>
+                  <input type="text" id="ocrReviewSellerAddress" oninput="markFieldEdited(this)" class="w-full px-3 py-1.5 rounded-lg bg-surface border border-outline-variant text-on-surface text-xs focus:border-primary focus:outline-none" placeholder="Registered office address">
+                </div>
+              </div>
+
+              <!-- Buyer Block -->
+              <div class="p-3.5 rounded-xl border border-outline-variant bg-surface-container-low/50 space-y-2.5">
+                <span class="text-xs font-bold text-primary flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[16px]">person</span>
+                  <span id="ocrReviewBuyerLabel">Buyer / Customer Details</span>
+                </span>
+                <div>
+                  <label class="block text-[11px] font-semibold text-secondary mb-0.5">Business Name *</label>
+                  <input type="text" id="ocrReviewBuyerName" required oninput="markFieldEdited(this)" class="w-full px-3 py-1.5 rounded-lg bg-surface border border-outline-variant text-on-surface text-xs focus:border-primary focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[11px] font-semibold text-secondary mb-0.5">Buyer GSTIN</label>
+                    <input type="text" id="ocrReviewBuyerGstin" maxlength="15" oninput="markFieldEdited(this); validateOcrInvoiceForm()" class="w-full px-3 py-1.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-xs focus:border-primary focus:outline-none uppercase">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-secondary mb-0.5">State</label>
+                    <input type="text" id="ocrReviewBuyerState" oninput="markFieldEdited(this)" class="w-full px-3 py-1.5 rounded-lg bg-surface border border-outline-variant text-on-surface text-xs focus:border-primary focus:outline-none">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-secondary mb-0.5">Address</label>
+                  <input type="text" id="ocrReviewBuyerAddress" oninput="markFieldEdited(this)" class="w-full px-3 py-1.5 rounded-lg bg-surface border border-outline-variant text-on-surface text-xs focus:border-primary focus:outline-none" placeholder="Billing / Delivery address">
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Document Central Store Preview -->
-          <div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant text-xs space-y-1">
-            <div class="flex justify-between text-secondary">
-              <span>Original Document Stored:</span>
-              <strong id="ocrReviewFilename" class="text-on-surface font-mono">Document.pdf</strong>
+          <!-- Section 3: Dynamic Line Items Table -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold text-secondary uppercase tracking-wider">3. Invoice Line Items</h3>
+              <button type="button" onclick="addOcrLineItem()" class="px-3 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+                <span>Add Item</span>
+              </button>
             </div>
-            <div class="flex justify-between text-secondary">
-              <span>Confidence Score:</span>
-              <span id="ocrReviewConfidence" class="text-emerald-700 font-bold">98% Verified</span>
+            <div class="overflow-x-auto border border-outline-variant rounded-xl bg-surface-container-lowest">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="border-b border-outline-variant bg-surface-container-low text-secondary font-semibold">
+                    <th class="py-2.5 px-3 w-8">#</th>
+                    <th class="py-2.5 px-3 min-w-[140px]">Description</th>
+                    <th class="py-2.5 px-2 w-20">HSN/SAC</th>
+                    <th class="py-2.5 px-2 w-16">Qty</th>
+                    <th class="py-2.5 px-2 w-16">Unit</th>
+                    <th class="py-2.5 px-2 w-24">Rate (₹)</th>
+                    <th class="py-2.5 px-2 w-20">Disc (₹)</th>
+                    <th class="py-2.5 px-2 w-24">Taxable (₹)</th>
+                    <th class="py-2.5 px-2 w-20">GST %</th>
+                    <th class="py-2.5 px-2 w-24 text-right">Tax (₹)</th>
+                    <th class="py-2.5 px-3 w-28 text-right">Total (₹)</th>
+                    <th class="py-2.5 px-2 w-10 text-center">Act</th>
+                  </tr>
+                </thead>
+                <tbody id="ocrReviewLineItemsTbody" class="divide-y divide-outline-variant/60 font-mono">
+                  <!-- Dynamically rendered items -->
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <!-- Form Buttons -->
-          <div class="flex items-center justify-end gap-3 pt-2">
+          <!-- Section 4: Invoice Totals & Tax Breakdown -->
+          <div class="space-y-2">
+            <h3 class="text-xs font-bold text-secondary uppercase tracking-wider">4. Invoice Summary &amp; Taxes</h3>
+            <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant">
+              <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 text-xs font-mono">
+                <div>
+                  <span class="text-secondary block mb-1">Taxable Value</span>
+                  <span id="ocrReviewTaxableDisplay" class="font-bold text-on-surface text-sm">₹0.00</span>
+                </div>
+                <div>
+                  <span class="text-secondary block mb-1">CGST</span>
+                  <span id="ocrReviewCgstDisplay" class="font-bold text-on-surface text-sm">₹0.00</span>
+                </div>
+                <div>
+                  <span class="text-secondary block mb-1">SGST</span>
+                  <span id="ocrReviewSgstDisplay" class="font-bold text-on-surface text-sm">₹0.00</span>
+                </div>
+                <div>
+                  <span class="text-secondary block mb-1">IGST</span>
+                  <span id="ocrReviewIgstDisplay" class="font-bold text-on-surface text-sm">₹0.00</span>
+                </div>
+                <div>
+                  <label class="text-secondary block mb-1">Cess (₹)</label>
+                  <input type="number" id="ocrReviewCess" step="0.01" min="0" value="0" oninput="markFieldEdited(this); recalculateOcrTotals()" class="w-full px-2 py-1 rounded bg-surface border border-outline-variant text-on-surface text-xs focus:border-primary focus:outline-none">
+                </div>
+                <div>
+                  <label class="text-secondary block mb-1">Round-off (₹)</label>
+                  <input type="number" id="ocrReviewRoundOff" step="0.01" value="0" oninput="markFieldEdited(this); recalculateOcrTotals()" class="w-full px-2 py-1 rounded bg-surface border border-outline-variant text-on-surface text-xs focus:border-primary focus:outline-none">
+                </div>
+                <div class="sm:col-span-1 lg:col-span-1 text-right">
+                  <span class="text-primary font-bold uppercase block mb-1">Grand Total</span>
+                  <span id="ocrReviewGrandTotalDisplay" class="font-bold text-primary text-base">₹0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <footer class="flex items-center justify-between p-4 sm:p-5 border-t border-outline-variant bg-surface-container-lowest shrink-0">
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="reExtractCurrentDocument()" id="btnReExtractOcr" class="px-3.5 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-secondary hover:text-on-surface text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span>Re-extract PDF</span>
+            </button>
+          </div>
+          <div class="flex items-center gap-3">
             <button type="button" onclick="closeOcrReviewModal()" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface text-xs font-medium cursor-pointer transition-colors">
               Cancel
             </button>
-            <button type="submit" id="btnApproveOcr" class="px-5 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-[16px]">verified</span>
-              Confirm &amp; Approve to Register
+            <button type="button" onclick="saveExtractedInvoice()" id="btnSaveOcrInvoice" class="px-5 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px]">save</span>
+              <span>Save Invoice to Register</span>
             </button>
+            <button type="button" id="btnApproveOcr" onclick="saveExtractedInvoice()" class="hidden"></button>
           </div>
-        </form>
+        </footer>
       </div>
+    </div>
     </div>
 
     <!-- MODALS & OVERLAYS                                                         -->

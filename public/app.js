@@ -4429,11 +4429,6 @@ function getPeriodDetails(periodStr = "102026") {
 }
 window.getPeriodDetails = getPeriodDetails;
 
-function getActivePeriod() {
-  return appState.activePeriod || appState.gst?.business?.filingPeriod || "102026";
-}
-window.getActivePeriod = getActivePeriod;
-
 function setActivePeriod(newPeriod) {
   const p = String(newPeriod || "102026").trim();
   appState.activePeriod = p;
@@ -6726,10 +6721,10 @@ async function uploadDocumentAndProcess(file, category) {
         }
         openOcrReviewModal(
           data.document.id,
-          data.extractedFields || {},
-          category,
+          data.parsedInvoice || data.extractedFields || {},
+          data.parsedInvoice?.documentType || category,
           file.name,
-          (data.ocr && data.ocr.confidence) ? `${Math.round(data.ocr.confidence * 100)}%` : "98%"
+          data.parsedInvoice?.confidence || ((data.ocr && data.ocr.confidence) ? `${Math.round(data.ocr.confidence * 100)}%` : "98%")
         );
       } else {
         if (typeof showToast === "function") {
@@ -6771,47 +6766,569 @@ function handlePurchaseDocSelected(e) {
 }
 window.handlePurchaseDocSelected = handlePurchaseDocSelected;
 
-function openOcrReviewModal(docId, fields, type = "purchase_bill", filename = "Document.pdf", confidence = "98% Verified") {
+// ============================================================================
+// PDF & OCR EXTRACTION, DYNAMIC EDITING & SAVE WORKFLOW
+// ============================================================================
+let ocrInvoiceState = {
+  docId: null,
+  documentType: "sales_invoice",
+  filename: "Document.pdf",
+  confidence: "96%",
+  lineItems: [],
+  warnings: [],
+  isModified: false
+};
+
+function openOcrReviewModal(docIdOrData, maybeData, type = "purchase_bill", filename = "Document.pdf", confidence = "98% Verified") {
   const m = document.getElementById('modalOcrReview');
   if (m) {
     m.classList.remove('hidden');
     m.style.display = 'flex';
   }
 
+  let docId = docIdOrData;
+  let data = maybeData;
+  if (typeof docIdOrData === "object" && docIdOrData !== null && !maybeData) {
+    data = docIdOrData;
+    docId = data.documentId || data.docId || data.id || "";
+    type = data.documentType || data.type || type;
+    filename = data.filename || filename;
+    confidence = data.confidence || confidence;
+  }
+  data = data || {};
+
+  const parsed = data?.parsedInvoice || data || {};
+  const invoiceInfo = parsed.invoiceInfo || {};
+  const seller = parsed.seller || {};
+  const buyer = parsed.buyer || {};
+  const totals = parsed.totals || {};
+
+  const resolvedType = parsed.documentType || type || (data?.buyerGstin ? "sales_invoice" : "purchase_bill");
+  ocrInvoiceState = {
+    docId: docId || "",
+    documentType: resolvedType,
+    filename: filename || "Invoice.pdf",
+    confidence: parsed.confidence || confidence || "96%",
+    lineItems: Array.isArray(parsed.lineItems) && parsed.lineItems.length > 0 ? JSON.parse(JSON.stringify(parsed.lineItems)) : [],
+    warnings: Array.isArray(parsed.warnings) ? [...parsed.warnings] : (Array.isArray(data?.warnings) ? [...data.warnings] : []),
+    isModified: false
+  };
+
+  // If no line items, create initial default line item
+  if (ocrInvoiceState.lineItems.length === 0) {
+    const taxVal = Number(totals.taxableAmount || data.taxableValue || data.taxableAmount || 25000);
+    const gRate = Number(totals.gstRate || data.gstRate || 18);
+    ocrInvoiceState.lineItems.push({
+      id: "item-1",
+      description: data.description || "Commercial Goods & Supplies",
+      hsnCode: data.hsnCode || "9983",
+      quantity: 1,
+      unit: "NOS",
+      rate: taxVal,
+      discount: 0,
+      taxableValue: taxVal,
+      gstRate: gRate,
+      cgst: totals.cgst || (taxVal * (gRate / 200)),
+      sgst: totals.sgst || (taxVal * (gRate / 200)),
+      igst: totals.igst || 0,
+      totalAmount: totals.totalAmount || (taxVal * (1 + gRate / 100))
+    });
+  }
+
+  // Populate basic inputs
   const docIdEl = document.getElementById('ocrReviewDocId');
   if (docIdEl) docIdEl.value = docId || "";
 
-  const typeEl = document.getElementById('ocrReviewInvoiceType');
-  if (typeEl) typeEl.value = type;
+  const fileEl = document.getElementById('ocrReviewFilename');
+  if (fileEl) fileEl.textContent = filename || "Document.pdf";
+
+  const confBadge = document.getElementById('ocrReviewConfidenceBadge');
+  if (confBadge) confBadge.textContent = ocrInvoiceState.confidence;
+
+  const pdfLink = document.getElementById('ocrReviewPdfLink');
+  if (pdfLink) {
+    pdfLink.href = docId ? `/api/documents/${docId}/download` : "#";
+  }
+
+  setOcrDocumentType(resolvedType, false);
 
   const numEl = document.getElementById('ocrReviewInvoiceNumber');
-  if (numEl) numEl.value = fields.invoiceNumber || `OCR-${Date.now().toString().slice(-4)}`;
-
-  const partyEl = document.getElementById('ocrReviewPartyName');
-  if (partyEl) partyEl.value = fields.partyName || fields.supplierName || fields.customerName || "Extracted Enterprise";
-
-  const activeGstin = getActiveGstin();
-  const gstinEl = document.getElementById('ocrReviewGstin');
-  if (gstinEl) gstinEl.value = fields.gstin || fields.buyerGstin || (activeGstin || "");
+  if (numEl) numEl.value = invoiceInfo.invoiceNumber || data.invoiceNumber || `INV-${Date.now().toString().slice(-4)}`;
 
   const dateEl = document.getElementById('ocrReviewInvoiceDate');
-  if (dateEl) dateEl.value = fields.invoiceDate || new Date().toISOString().split('T')[0];
+  if (dateEl) dateEl.value = invoiceInfo.invoiceDate || data.invoiceDate || new Date().toISOString().split('T')[0];
 
-  const taxVal = Number(fields.taxableValue || fields.taxableAmount || 25000);
-  const taxableEl = document.getElementById('ocrReviewTaxable');
-  if (taxableEl) taxableEl.value = taxVal;
+  const dueEl = document.getElementById('ocrReviewDueDate');
+  if (dueEl) dueEl.value = invoiceInfo.dueDate || "";
 
-  const taxAmt = Number(fields.totalGst || fields.totalTax || taxVal * 0.18);
-  const taxEl = document.getElementById('ocrReviewTotalTax');
-  if (taxEl) taxEl.value = taxAmt;
+  const posEl = document.getElementById('ocrReviewPos');
+  if (posEl) posEl.value = invoiceInfo.pos || (data.pos ? data.pos.slice(0, 2) : "27");
 
-  const fileEl = document.getElementById('ocrReviewFilename');
-  if (fileEl) fileEl.textContent = filename;
+  const rcmEl = document.getElementById('ocrReviewIsRcm');
+  if (rcmEl) rcmEl.checked = Boolean(invoiceInfo.isRcm || data.isRcm);
 
-  const confEl = document.getElementById('ocrReviewConfidence');
-  if (confEl) confEl.textContent = confidence;
+  const itcEl = document.getElementById('ocrReviewItcEligibility');
+  if (itcEl) itcEl.value = data.itcEligibility || "ELIGIBLE";
+
+  const supTypeEl = document.getElementById('ocrReviewSupplyType');
+  if (supTypeEl) supTypeEl.value = data.supplyType || (invoiceInfo.isInterstate ? "B2B" : "B2B");
+
+  // Populate Parties
+  const activeGstin = typeof getActiveGstin === "function" ? getActiveGstin() : null;
+  const sellerNameEl = document.getElementById('ocrReviewSellerName');
+  if (sellerNameEl) sellerNameEl.value = seller.name || data.partyName || (resolvedType === "sales_invoice" ? "Apex Retail Private Limited" : "Supplier Enterprise");
+
+  const sellerGstinEl = document.getElementById('ocrReviewSellerGstin');
+  if (sellerGstinEl) sellerGstinEl.value = seller.gstin || (resolvedType === "sales_invoice" ? (activeGstin || "27AAACA1234A1Z5") : (data.gstin || "27AAACM1234B1Z2"));
+
+  const sellerStateEl = document.getElementById('ocrReviewSellerState');
+  if (sellerStateEl) sellerStateEl.value = seller.state || seller.stateName || "27-Maharashtra";
+
+  const sellerAddrEl = document.getElementById('ocrReviewSellerAddress');
+  if (sellerAddrEl) sellerAddrEl.value = seller.address || "";
+
+  const buyerNameEl = document.getElementById('ocrReviewBuyerName');
+  if (buyerNameEl) buyerNameEl.value = buyer.name || (resolvedType === "sales_invoice" ? (data.partyName || "B2B Client Ltd") : "Apex Retail Private Limited");
+
+  const buyerGstinEl = document.getElementById('ocrReviewBuyerGstin');
+  if (buyerGstinEl) buyerGstinEl.value = buyer.gstin || (resolvedType === "sales_invoice" ? (data.buyerGstin || "24AAACG9999G1Z2") : (activeGstin || "27AAACA1234A1Z5"));
+
+  const buyerStateEl = document.getElementById('ocrReviewBuyerState');
+  if (buyerStateEl) buyerStateEl.value = buyer.state || buyer.stateName || "24-Gujarat";
+
+  const buyerAddrEl = document.getElementById('ocrReviewBuyerAddress');
+  if (buyerAddrEl) buyerAddrEl.value = buyer.address || "";
+
+  // Render Line items & Totals
+  renderOcrLineItems();
+  recalculateOcrTotals();
+  renderOcrWarnings(ocrInvoiceState.warnings);
 }
 window.openOcrReviewModal = openOcrReviewModal;
+
+function setOcrDocumentType(type, triggerRecalc = true) {
+  ocrInvoiceState.documentType = type;
+  const typeInput = document.getElementById('ocrReviewInvoiceType');
+  if (typeInput) typeInput.value = type;
+
+  const btnSales = document.getElementById('btnTypeSales');
+  const btnPurchase = document.getElementById('btnTypePurchase');
+  const itcWrapper = document.getElementById('ocrReviewItcWrapper');
+
+  if (type === "sales_invoice") {
+    if (btnSales) {
+      btnSales.className = "px-3 py-1 rounded-md text-xs font-bold bg-primary text-on-primary shadow-sm cursor-pointer";
+    }
+    if (btnPurchase) {
+      btnPurchase.className = "px-3 py-1 rounded-md text-xs font-semibold text-secondary hover:text-on-surface cursor-pointer";
+    }
+    if (itcWrapper) itcWrapper.style.display = "none";
+  } else {
+    if (btnPurchase) {
+      btnPurchase.className = "px-3 py-1 rounded-md text-xs font-bold bg-primary text-on-primary shadow-sm cursor-pointer";
+    }
+    if (btnSales) {
+      btnSales.className = "px-3 py-1 rounded-md text-xs font-semibold text-secondary hover:text-on-surface cursor-pointer";
+    }
+    if (itcWrapper) itcWrapper.style.display = "block";
+  }
+
+  if (triggerRecalc) {
+    ocrInvoiceState.isModified = true;
+    recalculateOcrTotals();
+    validateOcrInvoiceForm();
+  }
+}
+window.setOcrDocumentType = setOcrDocumentType;
+
+function markFieldEdited(el) {
+  ocrInvoiceState.isModified = true;
+  if (el && el.classList) {
+    el.classList.add('border-primary', 'bg-primary/5');
+  }
+}
+window.markFieldEdited = markFieldEdited;
+
+function renderOcrLineItems() {
+  const tbody = document.getElementById('ocrReviewLineItemsTbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = ocrInvoiceState.lineItems.map((item, idx) => `
+    <tr class="hover:bg-surface-container-low/60 transition-colors">
+      <td class="py-2 px-3 text-secondary text-center">${idx + 1}</td>
+      <td class="py-1 px-2">
+        <input type="text" value="${escapeHtml(item.description || "")}" oninput="updateOcrLineItem(${idx}, 'description', this.value)" class="w-full px-2 py-1 rounded bg-surface border border-outline-variant text-on-surface text-xs focus:border-primary focus:outline-none" placeholder="Item description">
+      </td>
+      <td class="py-1 px-1">
+        <input type="text" value="${escapeHtml(item.hsnCode || "")}" oninput="updateOcrLineItem(${idx}, 'hsnCode', this.value)" class="w-full px-1.5 py-1 rounded bg-surface border border-outline-variant text-on-surface font-mono text-xs focus:border-primary focus:outline-none" placeholder="HSN">
+      </td>
+      <td class="py-1 px-1">
+        <input type="number" step="1" min="1" value="${item.quantity || 1}" oninput="updateOcrLineItem(${idx}, 'quantity', this.value)" class="w-full px-1 py-1 rounded bg-surface border border-outline-variant text-on-surface font-mono text-xs focus:border-primary focus:outline-none text-right">
+      </td>
+      <td class="py-1 px-1">
+        <input type="text" value="${escapeHtml(item.unit || "NOS")}" oninput="updateOcrLineItem(${idx}, 'unit', this.value)" class="w-full px-1 py-1 rounded bg-surface border border-outline-variant text-on-surface text-xs focus:border-primary focus:outline-none uppercase text-center">
+      </td>
+      <td class="py-1 px-1">
+        <input type="number" step="0.01" min="0" value="${item.rate || 0}" oninput="updateOcrLineItem(${idx}, 'rate', this.value)" class="w-full px-1.5 py-1 rounded bg-surface border border-outline-variant text-on-surface font-mono text-xs focus:border-primary focus:outline-none text-right">
+      </td>
+      <td class="py-1 px-1">
+        <input type="number" step="0.01" min="0" value="${item.discount || 0}" oninput="updateOcrLineItem(${idx}, 'discount', this.value)" class="w-full px-1 py-1 rounded bg-surface border border-outline-variant text-on-surface font-mono text-xs focus:border-primary focus:outline-none text-right">
+      </td>
+      <td class="py-2 px-2 text-right font-mono font-semibold">
+        ₹${Number(item.taxableValue || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </td>
+      <td class="py-1 px-1">
+        <select onchange="updateOcrLineItem(${idx}, 'gstRate', this.value)" class="w-full px-1 py-1 rounded bg-surface border border-outline-variant text-on-surface text-xs focus:border-primary focus:outline-none font-mono">
+          <option value="18" ${Number(item.gstRate) === 18 ? "selected" : ""}>18%</option>
+          <option value="12" ${Number(item.gstRate) === 12 ? "selected" : ""}>12%</option>
+          <option value="5" ${Number(item.gstRate) === 5 ? "selected" : ""}>5%</option>
+          <option value="28" ${Number(item.gstRate) === 28 ? "selected" : ""}>28%</option>
+          <option value="0" ${Number(item.gstRate) === 0 ? "selected" : ""}>0%</option>
+        </select>
+      </td>
+      <td class="py-2 px-2 text-right font-mono text-secondary">
+        ₹${Number((item.cgst || 0) + (item.sgst || 0) + (item.igst || 0)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </td>
+      <td class="py-2 px-3 text-right font-mono font-bold text-on-surface">
+        ₹${Number(item.totalAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </td>
+      <td class="py-1 px-1 text-center">
+        <button type="button" onclick="removeOcrLineItem(${idx})" class="p-1 text-secondary hover:text-error hover:bg-surface-container rounded cursor-pointer" title="Delete item">
+          <span class="material-symbols-outlined text-[16px]">delete</span>
+        </button>
+      </td>
+    </tr>
+  `).join("");
+}
+window.renderOcrLineItems = renderOcrLineItems;
+
+function addOcrLineItem() {
+  ocrInvoiceState.isModified = true;
+  ocrInvoiceState.lineItems.push({
+    id: `item-${Date.now()}`,
+    description: "New Item",
+    hsnCode: "9983",
+    quantity: 1,
+    unit: "NOS",
+    rate: 1000,
+    discount: 0,
+    taxableValue: 1000,
+    gstRate: 18,
+    cgst: 90,
+    sgst: 90,
+    igst: 0,
+    totalAmount: 1180
+  });
+  renderOcrLineItems();
+  recalculateOcrTotals();
+}
+window.addOcrLineItem = addOcrLineItem;
+
+function removeOcrLineItem(index) {
+  ocrInvoiceState.isModified = true;
+  if (ocrInvoiceState.lineItems.length <= 1) {
+    if (typeof showToast === "function") {
+      showToast("Invoice must contain at least one line item.", "warning");
+    }
+    return;
+  }
+  ocrInvoiceState.lineItems.splice(index, 1);
+  renderOcrLineItems();
+  recalculateOcrTotals();
+}
+window.removeOcrLineItem = removeOcrLineItem;
+
+function updateOcrLineItem(index, field, value) {
+  ocrInvoiceState.isModified = true;
+  const item = ocrInvoiceState.lineItems[index];
+  if (!item) return;
+
+  if (["quantity", "rate", "discount", "gstRate"].includes(field)) {
+    item[field] = parseFloat(value) || 0;
+    const qty = Math.max(0, item.quantity);
+    const rate = Math.max(0, item.rate);
+    const disc = Math.max(0, item.discount);
+    item.taxableValue = Math.max(0, Math.round((qty * rate - disc) * 100) / 100);
+
+    const pos = (document.getElementById('ocrReviewPos')?.value || "27").slice(0, 2);
+    const sellerGstin = (document.getElementById('ocrReviewSellerGstin')?.value || "27").slice(0, 2);
+    const isInterstate = pos !== sellerGstin;
+    const gRate = item.gstRate || 0;
+    const totalTax = Math.round(item.taxableValue * (gRate / 100) * 100) / 100;
+
+    if (isInterstate) {
+      item.igst = totalTax;
+      item.cgst = 0;
+      item.sgst = 0;
+    } else {
+      item.igst = 0;
+      item.cgst = Math.round(totalTax / 2 * 100) / 100;
+      item.sgst = Math.round(totalTax / 2 * 100) / 100;
+    }
+    item.totalAmount = Math.round((item.taxableValue + totalTax) * 100) / 100;
+  } else {
+    item[field] = value;
+  }
+
+  // Update table cells directly or re-render
+  recalculateOcrTotals();
+}
+window.updateOcrLineItem = updateOcrLineItem;
+
+function recalculateOcrTotals() {
+  const pos = (document.getElementById('ocrReviewPos')?.value || "27").slice(0, 2);
+  const sellerGstin = (document.getElementById('ocrReviewSellerGstin')?.value || "27").slice(0, 2);
+  const isInterstate = pos !== sellerGstin;
+
+  let totalTaxable = 0;
+  let totalCgst = 0;
+  let totalSgst = 0;
+  let totalIgst = 0;
+
+  ocrInvoiceState.lineItems.forEach(item => {
+    const qty = Math.max(0, Number(item.quantity !== undefined ? item.quantity : 1));
+    const rate = Math.max(0, Number(item.rate || 0));
+    const disc = Math.max(0, Number(item.discount || 0));
+    item.taxableValue = Number(item.taxableValue !== undefined ? item.taxableValue : (item.taxableAmount !== undefined ? item.taxableAmount : (qty * rate - disc)));
+    totalTaxable += item.taxableValue;
+    const gRate = Number(item.gstRate || 0);
+    const tax = Math.round(item.taxableValue * (gRate / 100) * 100) / 100;
+    if (isInterstate) {
+      item.igst = tax;
+      item.cgst = 0;
+      item.sgst = 0;
+      totalIgst += tax;
+    } else {
+      item.igst = 0;
+      item.cgst = Math.round(tax / 2 * 100) / 100;
+      item.sgst = Math.round(tax / 2 * 100) / 100;
+      totalCgst += item.cgst;
+      totalSgst += item.sgst;
+    }
+    item.totalAmount = Math.round((item.taxableValue + tax) * 100) / 100;
+  });
+
+  const cess = parseFloat(document.getElementById('ocrReviewCess')?.value) || 0;
+  const roundOff = parseFloat(document.getElementById('ocrReviewRoundOff')?.value) || 0;
+  const grandTotal = Math.round((totalTaxable + totalCgst + totalSgst + totalIgst + cess + roundOff) * 100) / 100;
+
+  const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const taxDisp = document.getElementById('ocrReviewTaxableDisplay');
+  if (taxDisp) taxDisp.textContent = fmt(totalTaxable);
+
+  const cgstDisp = document.getElementById('ocrReviewCgstDisplay');
+  if (cgstDisp) cgstDisp.textContent = fmt(totalCgst);
+
+  const sgstDisp = document.getElementById('ocrReviewSgstDisplay');
+  if (sgstDisp) sgstDisp.textContent = fmt(totalSgst);
+
+  const igstDisp = document.getElementById('ocrReviewIgstDisplay');
+  if (igstDisp) igstDisp.textContent = fmt(totalIgst);
+
+  const totDisp = document.getElementById('ocrReviewGrandTotalDisplay');
+  if (totDisp) totDisp.textContent = fmt(grandTotal);
+
+  // Synchronize legacy inputs for backward compatibility
+  const legTaxable = document.getElementById('ocrReviewTaxable');
+  if (legTaxable) legTaxable.value = totalTaxable;
+
+  const legTax = document.getElementById('ocrReviewTotalTax');
+  if (legTax) legTax.value = totalCgst + totalSgst + totalIgst + cess;
+
+  const legTotal = document.getElementById('ocrReviewGrandTotal');
+  if (legTotal) legTotal.value = grandTotal;
+}
+window.recalculateOcrTotals = recalculateOcrTotals;
+
+function renderOcrWarnings(warnings = []) {
+  const box = document.getElementById('ocrReviewWarningsBox');
+  if (!box) return;
+
+  if (!warnings || warnings.length === 0) {
+    box.classList.add('hidden');
+    box.innerHTML = "";
+    return;
+  }
+
+  box.classList.remove('hidden');
+  box.className = "p-3.5 rounded-xl border bg-amber-50 text-amber-950 border-amber-300 space-y-1.5 text-xs";
+
+  box.innerHTML = `
+    <div class="font-bold flex items-center gap-1.5 text-amber-900">
+      <span class="material-symbols-outlined text-[16px]">warning</span>
+      <span>Document Extraction Review Notices (${warnings.length}):</span>
+    </div>
+    <ul class="list-disc list-inside space-y-0.5 text-[11px] text-amber-800">
+      ${warnings.map(w => `<li><strong>${escapeHtml(w.field || "Notice")}:</strong> ${escapeHtml(w.message || w)}</li>`).join("")}
+    </ul>
+  `;
+}
+window.renderOcrWarnings = renderOcrWarnings;
+
+function validateOcrInvoiceForm() {
+  const num = document.getElementById('ocrReviewInvoiceNumber')?.value?.trim();
+  const date = document.getElementById('ocrReviewInvoiceDate')?.value;
+  const sellerGstin = (document.getElementById('ocrReviewSellerGstin')?.value || "").trim().toUpperCase();
+  const buyerGstin = (document.getElementById('ocrReviewBuyerGstin')?.value || "").trim().toUpperCase();
+
+  const newWarnings = [];
+  if (!num) {
+    newWarnings.push({ field: "Invoice Number", message: "Invoice number is required." });
+  }
+  if (!date) {
+    newWarnings.push({ field: "Invoice Date", message: "Invoice date is required." });
+  }
+  if (sellerGstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(sellerGstin)) {
+    newWarnings.push({ field: "Seller GSTIN", message: "Seller GSTIN format is invalid." });
+  }
+  if (buyerGstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(buyerGstin)) {
+    newWarnings.push({ field: "Buyer GSTIN", message: "Buyer GSTIN format is invalid." });
+  }
+  renderOcrWarnings([...newWarnings, ...ocrInvoiceState.warnings.filter(w => w.code === "DUPLICATE_INVOICE_NUMBER" || w.code === "SCANNED_DOCUMENT_NOTICE")]);
+}
+window.validateOcrInvoiceForm = validateOcrInvoiceForm;
+
+async function reExtractCurrentDocument() {
+  const docId = ocrInvoiceState.docId || document.getElementById('ocrReviewDocId')?.value;
+  if (!docId) {
+    if (typeof showToast === "function") showToast("No document ID available for re-extraction.", "error");
+    return;
+  }
+
+  const btn = document.getElementById('btnReExtractOcr');
+  if (btn) btn.disabled = true;
+
+  if (typeof showToast === "function") {
+    showToast("Re-extracting document content with active heuristics...", "info");
+  }
+
+  try {
+    const res = await apiFetch(`/api/documents/${docId}/re-extract`, {
+      method: "POST",
+      body: JSON.stringify({ category: ocrInvoiceState.documentType })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === "function") {
+        showToast("Document re-extracted successfully!", "success");
+      }
+      openOcrReviewModal(docId, data.parsedInvoice || data.extractedFields, ocrInvoiceState.documentType, data.document?.original_filename || "Document.pdf", data.parsedInvoice?.confidence || "96%");
+    } else {
+      if (typeof showToast === "function") showToast(data.error || "Failed to re-extract document", "error");
+    }
+  } catch (err) {
+    if (typeof showToast === "function") showToast("Network error re-extracting: " + err.message, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+window.reExtractCurrentDocument = reExtractCurrentDocument;
+
+async function saveExtractedInvoice() {
+  const invoiceNumber = document.getElementById('ocrReviewInvoiceNumber')?.value?.trim();
+  const invoiceDate = document.getElementById('ocrReviewInvoiceDate')?.value;
+  const invoiceType = document.getElementById('ocrReviewInvoiceType')?.value || ocrInvoiceState.documentType;
+  const pos = (document.getElementById('ocrReviewPos')?.value || "27").slice(0, 2);
+  const sellerName = document.getElementById('ocrReviewSellerName')?.value?.trim();
+  const sellerGstin = (document.getElementById('ocrReviewSellerGstin')?.value || "").trim().toUpperCase();
+  const buyerName = document.getElementById('ocrReviewBuyerName')?.value?.trim();
+  const buyerGstin = (document.getElementById('ocrReviewBuyerGstin')?.value || "").trim().toUpperCase();
+  const supplyType = document.getElementById('ocrReviewSupplyType')?.value || "B2B";
+  const itcEligibility = document.getElementById('ocrReviewItcEligibility')?.value || "ELIGIBLE";
+  const isRcm = Boolean(document.getElementById('ocrReviewIsRcm')?.checked);
+  const cess = parseFloat(document.getElementById('ocrReviewCess')?.value) || 0;
+
+  let totalTaxable = 0;
+  let totalCgst = 0;
+  let totalSgst = 0;
+  let totalIgst = 0;
+
+  ocrInvoiceState.lineItems.forEach(item => {
+    totalTaxable += Number(item.taxableValue || 0);
+    totalCgst += Number(item.cgst || 0);
+    totalSgst += Number(item.sgst || 0);
+    totalIgst += Number(item.igst || 0);
+  });
+
+  if (!invoiceNumber) {
+    if (typeof showToast === "function") showToast("Please enter a valid Invoice Number.", "warning");
+    return;
+  }
+  if (!invoiceDate) {
+    if (typeof showToast === "function") showToast("Please select an Invoice Date.", "warning");
+    return;
+  }
+  if (totalTaxable <= 0) {
+    if (typeof showToast === "function") showToast("Taxable value must be greater than zero.", "warning");
+    return;
+  }
+
+  const btn = document.getElementById('btnSaveOcrInvoice');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await apiFetch("/api/ocr/approve", {
+      method: "POST",
+      body: JSON.stringify({
+        documentId: ocrInvoiceState.docId,
+        invoiceType,
+        fields: {
+          invoiceNumber,
+          invoiceDate,
+          customerName: buyerName,
+          customerGstin: buyerGstin,
+          supplierName: sellerName,
+          supplierGstin: sellerGstin,
+          partyName: invoiceType === "sales_invoice" ? buyerName : sellerName,
+          gstin: invoiceType === "sales_invoice" ? buyerGstin : sellerGstin,
+          buyerGstin,
+          pos,
+          supplyType,
+          isRcm,
+          itcEligibility,
+          taxableValue: totalTaxable,
+          taxableAmount: totalTaxable,
+          cgst: totalCgst,
+          sgst: totalSgst,
+          igst: totalIgst,
+          cess,
+          totalTax: totalCgst + totalSgst + totalIgst + cess,
+          totalAmount: Math.round((totalTaxable + totalCgst + totalSgst + totalIgst + cess) * 100) / 100,
+          totalInvoiceValue: Math.round((totalTaxable + totalCgst + totalSgst + totalIgst + cess) * 100) / 100,
+          lineItems: ocrInvoiceState.lineItems
+        }
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      closeOcrReviewModal();
+      if (typeof showToast === "function") {
+        showToast(data.message || "Invoice successfully saved to register!", "success");
+      }
+      if (invoiceType === "sales_invoice") {
+        if (typeof renderSalesSuite === "function") await renderSalesSuite();
+      } else {
+        if (typeof renderPurchaseSuite === "function") await renderPurchaseSuite();
+      }
+      const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
+      if (typeof loadDashboardData === "function") loadDashboardData(period);
+    } else {
+      if (typeof showToast === "function") {
+        showToast(data.error || "Failed to save invoice to register.", "error");
+      }
+    }
+  } catch (err) {
+    if (typeof showToast === "function") {
+      showToast("Network error saving invoice: " + err.message, "error");
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+window.saveExtractedInvoice = saveExtractedInvoice;
+window.submitOcrApproval = saveExtractedInvoice; // Alias for backward compatibility
 
 function closeOcrReviewModal() {
   const m = document.getElementById('modalOcrReview');
@@ -6821,76 +7338,6 @@ function closeOcrReviewModal() {
   }
 }
 window.closeOcrReviewModal = closeOcrReviewModal;
-
-async function submitOcrApproval(event) {
-  if (event) event.preventDefault();
-  const docId = document.getElementById('ocrReviewDocId')?.value;
-  const invoiceType = document.getElementById('ocrReviewInvoiceType')?.value || "purchase_bill";
-  const invoiceNumber = document.getElementById('ocrReviewInvoiceNumber')?.value?.trim();
-  const partyName = document.getElementById('ocrReviewPartyName')?.value?.trim();
-  const gstin = (document.getElementById('ocrReviewGstin')?.value || "").trim().toUpperCase();
-  const invoiceDate = document.getElementById('ocrReviewInvoiceDate')?.value;
-  const taxableValue = parseFloat(document.getElementById('ocrReviewTaxable')?.value) || 0;
-  const totalTax = parseFloat(document.getElementById('ocrReviewTotalTax')?.value) || 0;
-
-  if (!invoiceNumber || !partyName || taxableValue <= 0) {
-    if (typeof showToast === "function") {
-      showToast("Please ensure all required fields are filled before approving.", "warning");
-    }
-    return;
-  }
-
-  const btn = document.getElementById('btnApproveOcr');
-  if (btn) btn.disabled = true;
-
-  try {
-    const res = await apiFetch("/api/ocr/approve", {
-      method: "POST",
-      body: JSON.stringify({
-        documentId: docId,
-        invoiceType,
-        fields: {
-          invoiceNumber,
-          invoiceDate,
-          partyName,
-          gstin: invoiceType === "purchase_bill" ? gstin : undefined,
-          buyerGstin: invoiceType === "sales_invoice" ? gstin : undefined,
-          taxableValue,
-          cgst: totalTax / 2,
-          sgst: totalTax / 2,
-          igst: 0,
-          totalGst: totalTax,
-          totalInvoiceValue: taxableValue + totalTax
-        }
-      })
-    });
-    const data = await res.json();
-    if (res.ok && data.success) {
-      closeOcrReviewModal();
-      if (typeof showToast === "function") {
-        showToast(data.message || "Document verified and saved to register!", "success");
-      }
-      if (typeof refreshInvoices === "function") {
-        await refreshInvoices(invoiceType === "sales_invoice" ? "sales" : "purchase");
-      }
-      const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
-      if (typeof loadDashboardData === "function") {
-        loadDashboardData(period);
-      }
-    } else {
-      if (typeof showToast === "function") {
-        showToast(data.error || "Failed to approve document", "error");
-      }
-    }
-  } catch (err) {
-    if (typeof showToast === "function") {
-      showToast("Network error approving OCR document: " + err.message, "error");
-    }
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-window.submitOcrApproval = submitOcrApproval;
 
 async function approveOcrReviewInvoice() {
   const fields = {

@@ -89,7 +89,10 @@ async function runBrowserTest() {
       else resolve(msg.result);
     } else if (msg.method === "Runtime.consoleAPICalled") {
       const text = msg.params.args.map((a) => (a.value !== undefined ? a.value : a.description)).join(" ");
+      console.log(`[Browser Console ${msg.params.type}] ${text}`);
       consoleLogs.push(`[Browser Console ${msg.params.type}] ${text}`);
+    } else if (msg.method === "Runtime.exceptionThrown") {
+      console.error(`[Browser Exception]`, msg.params.exceptionDetails);
     } else if (msg.method === "Network.responseReceived") {
       const status = msg.params.response.status;
       const url = msg.params.response.url;
@@ -124,8 +127,19 @@ async function runBrowserTest() {
     await sendCommand("Runtime.enable");
     await sendCommand("Network.enable");
 
-    console.log("[CDP] Waiting for page DOM ready...");
-    await sleep(2000);
+    console.log("[CDP] Waiting for page scripts & app.js to load...");
+    let appJsReady = false;
+    for (let i = 0; i < 30; i++) {
+      try {
+        const isReady = await evaluate("typeof window.initSessionFromBackend === 'function'");
+        if (isReady) {
+          appJsReady = true;
+          break;
+        }
+      } catch (e) {}
+      await sleep(500);
+    }
+    console.log(`[CDP] app.js loaded and ready: ${appJsReady}`);
 
     // Step 1: Verify Initial Page Load
     const title = await evaluate("document.title");
@@ -360,6 +374,125 @@ async function runBrowserTest() {
     console.log(`✔ CSRF 403 Failures: ${csrfFailures.length}`);
     if (csrfFailures.length > 0) {
       throw new Error(`Encountered 403 CSRF failure during browser session: ${JSON.stringify(csrfFailures)}`);
+    }
+
+    // Step 11: Test PDF OCR Review Modal, Line Items Editing, and Database Save
+    console.log("\n[Step 11] Testing PDF OCR Review Modal, multi-line item editing and save...");
+    const ocrInvNo = "INV-OCR-" + Math.floor(Math.random() * 89999 + 10000);
+    const modalCheck = await evaluate(`
+      (async () => {
+        const sampleExtraction = {
+          documentId: "doc-test-cdp-01",
+          documentType: "sales_invoice",
+          confidenceScore: 0.94,
+          isScanned: false,
+          warnings: [],
+          invoiceInfo: {
+            invoiceNumber: "${ocrInvNo}",
+            invoiceDate: "2026-10-25",
+            dueDate: "2026-11-25",
+            pos: "27",
+            posStateName: "Maharashtra",
+            isInterstate: false,
+            isRcm: false,
+            period: "102026",
+            supplyType: "INTRA_STATE"
+          },
+          seller: {
+            name: "Apex Retail Private Limited",
+            gstin: "27AABCU9603R1ZX",
+            state: "27"
+          },
+          buyer: {
+            name: "Alpha Logistics Corp",
+            gstin: "27AABCA1234F1Z9",
+            state: "27"
+          },
+          lineItems: [
+            {
+              id: "item-1",
+              description: "High Performance Cloud Server",
+              hsn: "998315",
+              quantity: 2,
+              unit: "NOS",
+              rate: 25000,
+              discount: 0,
+              taxableAmount: 50000,
+              gstRate: 18,
+              cgst: 4500,
+              sgst: 4500,
+              igst: 0,
+              taxAmount: 9000,
+              totalAmount: 59000
+            }
+          ],
+          totals: {
+            taxableAmount: 50000,
+            gstRate: 18,
+            cgst: 4500,
+            sgst: 4500,
+            igst: 0,
+            cess: 0,
+            roundOff: 0,
+            totalTax: 9000,
+            totalAmount: 59000
+          }
+        };
+
+        window.openOcrReviewModal(sampleExtraction);
+        await new Promise(r => setTimeout(r, 200));
+
+        // Add a second line item
+        window.addOcrLineItem();
+        
+        // Populate newly added item (index 1)
+        window.updateOcrLineItem(1, 'description', "Maintenance & Support SLA");
+        window.updateOcrLineItem(1, 'hsnCode', "998316");
+        window.updateOcrLineItem(1, 'quantity', 1);
+        window.updateOcrLineItem(1, 'rate', 10000);
+        window.updateOcrLineItem(1, 'gstRate', 18);
+
+        window.recalculateOcrTotals();
+
+        const invNoVal = document.getElementById('ocrReviewInvoiceNumber')?.value;
+        const buyerVal = document.getElementById('ocrReviewBuyerName')?.value;
+        const taxableVal = parseFloat(document.getElementById('ocrReviewTaxable')?.value) || 0;
+        const totalVal = parseFloat(document.getElementById('ocrReviewGrandTotal')?.value) || 0;
+        const rowsCount = document.querySelectorAll('#ocrReviewLineItemsTbody tr').length;
+
+        // Now trigger save
+        await window.saveExtractedInvoice();
+
+        return {
+          invNoVal,
+          buyerVal,
+          taxableVal,
+          totalVal,
+          rowsCount
+        };
+      })()
+    `);
+    console.log("✔ OCR Review Modal & Line Item Recalculation Result:", modalCheck);
+    if (modalCheck.rowsCount !== 2 || modalCheck.taxableVal !== 60000 || modalCheck.totalVal !== 70800) {
+      throw new Error(`OCR Line item calculation mismatch: expected 2 rows, 60000 taxable, 70800 total, got: ${JSON.stringify(modalCheck)}`);
+    }
+
+    await sleep(1000);
+
+    // Verify persisted in DOM sales register
+    const ocrSavedFoundInDom = await evaluate(`
+      (() => {
+        const table = document.getElementById('salesTableBody');
+        const text = table ? table.innerText : '';
+        return {
+          found: text.includes('${ocrInvNo}'),
+          tableSnippet: text.split('\\n').slice(0, 5).join(' | ')
+        };
+      })()
+    `);
+    console.log("✔ OCR Extracted & Edited Invoice persisted into Sales Register DOM:", ocrSavedFoundInDom);
+    if (!ocrSavedFoundInDom.found) {
+      throw new Error(`OCR Invoice ${ocrInvNo} not found in Sales Register after save!`);
     }
 
     console.log(`✔ Console log messages captured: ${consoleLogs.length}`);
