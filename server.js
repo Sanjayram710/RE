@@ -186,6 +186,33 @@ export async function handleRequest(req, res) {
     }
 
     // ---------------------------------------------------------
+    // 0b. GET /api or /api/ (API Catalog & Directory)
+    // ---------------------------------------------------------
+    if ((pathname === "/api" || pathname === "/api/") && method === "GET") {
+      return sendJson(res, 200, {
+        service: "SimpleGST Functional API Gateway",
+        version: "2.0.0",
+        status: "ONLINE",
+        webApp: "http://localhost:3000/",
+        activeGstin: "27AAACA1234A1Z5",
+        endpoints: {
+          session: "/api/auth/session",
+          devSession: "/api/auth/dev-session",
+          sales: "/api/sales",
+          purchases: "/api/purchases",
+          documentUpload: "/api/documents/upload",
+          ocrApprove: "/api/ocr/approve",
+          periodContext: "/api/context/period",
+          dashboard: "/api/dashboard",
+          reconciliation: "/api/reconciliation",
+          taxCalculation: "/api/tax-calculation",
+          electronicLedgers: "/api/ledgers",
+          reportsExport: "/api/export/:report?format=(excel|csv)"
+        }
+      });
+    }
+
+    // ---------------------------------------------------------
     // 1. GET /api/mode
     // ---------------------------------------------------------
     if (pathname === "/api/mode" && method === "GET") {
