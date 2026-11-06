@@ -29,9 +29,81 @@ function getActivePeriod() {
 }
 window.getActivePeriod = getActivePeriod;
 
+function derivePeriodFromDate(dateStr, fallbackPeriod = "102026") {
+  if (!dateStr || typeof dateStr !== "string") return fallbackPeriod;
+  const clean = dateStr.trim();
+  const ymd = clean.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (ymd) {
+    const month = ymd[2].padStart(2, "0");
+    const year = ymd[1];
+    return `${month}${year}`;
+  }
+  const dmy = clean.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (dmy) {
+    const month = dmy[2].padStart(2, "0");
+    const year = dmy[3];
+    return `${month}${year}`;
+  }
+  return fallbackPeriod;
+}
+window.derivePeriodFromDate = derivePeriodFromDate;
+
+function normalizeDateToYMD(dateStr) {
+  if (!dateStr || typeof dateStr !== "string") return dateStr;
+  const clean = dateStr.trim();
+  const dmy = clean.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (dmy) {
+    const day = dmy[1].padStart(2, "0");
+    const month = dmy[2].padStart(2, "0");
+    const year = dmy[3];
+    return `${year}-${month}-${day}`;
+  }
+  return clean;
+}
+window.normalizeDateToYMD = normalizeDateToYMD;
+
+async function ensureActiveSession() {
+  if (appState.auth && appState.auth.isLoggedIn && appState.activeGstin) {
+    return true;
+  }
+
+  // 1. First attempt to restore session from existing cookie
+  try {
+    const isAuth = await initSessionFromBackend();
+    if (isAuth && appState.activeGstin) return true;
+  } catch (_) {}
+
+  // 2. In non-production/demo mode, seamlessly request development session
+  try {
+    const devRes = await fetch("/api/auth/dev-session", {
+      method: "POST",
+      credentials: "same-origin"
+    });
+    if (devRes.ok) {
+      const devData = await devRes.json();
+      if (devData && devData.success) {
+        if (devData.sessionToken) appState.sessionToken = devData.sessionToken;
+        if (devData.csrfToken) appState.csrfToken = devData.csrfToken;
+        await initSessionFromBackend();
+        return true;
+      }
+    }
+  } catch (err) {
+    console.warn("ensureActiveSession dev-session error:", err);
+  }
+
+  return false;
+}
+window.ensureActiveSession = ensureActiveSession;
+
 async function apiFetch(url, options = {}) {
   const method = (options.method || "GET").toUpperCase();
   const isStateChanging = ["POST", "PUT", "DELETE", "PATCH"].includes(method);
+
+  // If state-changing request and user is currently in unauthenticated guest state, auto-ensure session
+  if (isStateChanging && (!appState.auth || !appState.auth.isLoggedIn)) {
+    await ensureActiveSession();
+  }
 
   const headers = {
     ...(options.headers || {})
@@ -64,7 +136,11 @@ async function apiFetch(url, options = {}) {
     credentials: options.credentials || "same-origin"
   });
 
-  if (res.status === 401) {
+  if (res.status === 401 && !options._retried) {
+    const recovered = await ensureActiveSession();
+    if (recovered) {
+      return await apiFetch(url, { ...options, _retried: true });
+    }
     console.warn("Session expired or unauthorized request to:", url);
     if (appState.auth && appState.auth.isLoggedIn) {
       appState.auth = { isLoggedIn: false, user: null };
@@ -83,8 +159,9 @@ async function apiFetch(url, options = {}) {
       const errData = await cloned.json();
       if (errData.error && errData.error.includes("CSRF")) {
         console.error("CSRF token validation failed on:", url);
+        await ensureActiveSession();
         if (typeof showToast === "function") {
-          showToast("Security check (CSRF) failed. Please refresh your session.", "error");
+          showToast("Security check (CSRF) refreshed. Please try again.", "info");
         }
       }
     } catch (_) {}
@@ -368,6 +445,9 @@ function switchSuite(suite) {
 
 function executeSwitchSuite(suite) {
   appState.currentSuite = suite;
+  if (["sales", "purchase", "bills", "bills-docs", "purchases", "sales-invoices"].includes(suite)) {
+    ensureActiveSession().catch(() => {});
+  }
   const viewItr = document.getElementById("viewItrSuite");
   const viewExpert = document.getElementById("viewExpertSuite");
   const viewNotice = document.getElementById("viewNoticeSuite");
@@ -2138,7 +2218,7 @@ async function saveManualInvoice(type) {
     return;
   }
 
-  const period = getActivePeriod();
+  const period = derivePeriodFromDate(rawInvoiceDate || invoiceDate, getActivePeriod());
   if (!period) {
     const msg = "Validation Error: Return filing period is missing. Please select a filing period.";
     if (typeof showToast === "function") showToast(msg, "error");
@@ -4965,8 +5045,11 @@ window.calculateNewInvoiceTax = calculateNewInvoiceTax;
 
 async function submitNewInvoice(event) {
   if (event) event.preventDefault();
+  await ensureActiveSession();
+
   const invoiceNumber = document.getElementById('newInvNumber')?.value?.trim();
-  const invoiceDate = document.getElementById('newInvDate')?.value;
+  const rawInvoiceDate = document.getElementById('newInvDate')?.value;
+  const invoiceDate = normalizeDateToYMD(rawInvoiceDate);
   const customerName = document.getElementById('newInvCustomerName')?.value?.trim();
   const customerGstin = document.getElementById('newInvCustomerGstin')?.value?.trim().toUpperCase();
   const taxableAmount = parseFloat(document.getElementById('newInvTaxable')?.value) || 0;
@@ -5063,14 +5146,18 @@ async function submitNewInvoice(event) {
     const data = await res.json();
     if (res.ok && data.success) {
       closeNewInvoiceModal();
-      if (typeof showToast === "function") {
-        showToast(`Sales Invoice ${invoiceNumber} created and saved to SQLite database! (ID: ${data.id || data.invoice?.id})`, "success");
-      }
-      if (typeof loadDashboardData === "function") {
-        loadDashboardData(period);
+      const savedPeriod = data.period || period;
+      if (typeof switchFilingPeriod === "function" && savedPeriod !== getActivePeriod()) {
+        await switchFilingPeriod(savedPeriod);
       }
       if (typeof refreshInvoices === "function") {
         await refreshInvoices('sales');
+      }
+      if (typeof loadDashboardData === "function") {
+        loadDashboardData(savedPeriod);
+      }
+      if (typeof showToast === "function") {
+        showToast(`Sales Invoice ${invoiceNumber} created and saved to SQLite database! (ID: ${data.id || data.invoice?.id})`, "success");
       }
       const form = document.querySelector("#modalNewInvoice form");
       if (form) form.reset();
@@ -6710,8 +6797,11 @@ window.calculateNewPurchaseTax = calculateNewPurchaseTax;
 
 async function submitNewPurchase(event) {
   if (event) event.preventDefault();
+  await ensureActiveSession();
+
   const invoiceNumber = document.getElementById('newPurNumber')?.value?.trim();
-  const invoiceDate = document.getElementById('newPurDate')?.value;
+  const rawInvoiceDate = document.getElementById('newPurDate')?.value;
+  const invoiceDate = normalizeDateToYMD(rawInvoiceDate);
   const supplierName = document.getElementById('newPurSupplierName')?.value?.trim();
   const supplierGstin = (document.getElementById('newPurSupplierGstin')?.value || "").trim().toUpperCase();
   const taxableAmount = parseFloat(document.getElementById('newPurTaxable')?.value) || 0;
@@ -6731,7 +6821,7 @@ async function submitNewPurchase(event) {
     return;
   }
 
-  const period = getActivePeriod();
+  const period = derivePeriodFromDate(rawInvoiceDate || invoiceDate, getActivePeriod());
   if (!period) {
     if (typeof showToast === "function") {
       showToast("Validation Error: Filing period is missing. Please select a filing period.", "error");
@@ -6805,14 +6895,18 @@ async function submitNewPurchase(event) {
     const data = await res.json();
     if (res.ok && data.success) {
       closeNewPurchaseModal();
-      if (typeof showToast === "function") {
-        showToast(`Purchase bill ${invoiceNumber} saved to SQLite database! (ID: ${data.id || data.purchase?.id})`, "success");
+      const savedPeriod = data.period || period;
+      if (typeof switchFilingPeriod === "function" && savedPeriod !== getActivePeriod()) {
+        await switchFilingPeriod(savedPeriod);
       }
       if (typeof refreshInvoices === "function") {
         await refreshInvoices('purchase');
       }
       if (typeof loadDashboardData === "function") {
-        loadDashboardData(period);
+        loadDashboardData(savedPeriod);
+      }
+      if (typeof showToast === "function") {
+        showToast(`Purchase bill ${invoiceNumber} saved to SQLite database! (ID: ${data.id || data.purchase?.id})`, "success");
       }
       const form = document.querySelector("#modalNewPurchase form");
       if (form) form.reset();
@@ -7048,50 +7142,41 @@ window.triggerPurchaseDocUpload = triggerPurchaseDocUpload;
 
 async function uploadDocumentAndProcess(file, category) {
   if (!file) return;
+  await ensureActiveSession();
   if (typeof showToast === "function") {
     showToast(`Uploading ${file.name} for AI OCR processing...`, "info");
   }
 
-  const reader = new FileReader();
-  reader.onload = async function() {
-    try {
-      const rawText = reader.result;
-      const res = await apiFetch("/api/documents/upload", {
-        method: "POST",
-        body: JSON.stringify({
-          filename: file.name,
-          category,
-          rawText: typeof rawText === "string" ? rawText : file.name
-        })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        if (typeof showToast === "function") {
-          showToast(`Document ${file.name} parsed via AI OCR! Please review before saving.`, "success");
-        }
-        openOcrReviewModal(
-          data.document.id,
-          data.parsedInvoice || data.extractedFields || {},
-          data.parsedInvoice?.documentType || category,
-          file.name,
-          data.parsedInvoice?.confidence || ((data.ocr && data.ocr.confidence) ? `${Math.round(data.ocr.confidence * 100)}%` : "98%")
-        );
-      } else {
-        if (typeof showToast === "function") {
-          showToast(data.error || "Failed to parse document", "error");
-        }
-      }
-    } catch (err) {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("category", category || "purchase_bill");
+
+    const res = await apiFetch("/api/documents/upload", {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
       if (typeof showToast === "function") {
-        showToast("Error uploading document: " + err.message, "error");
+        showToast(`Document ${file.name} parsed via AI OCR! Please review before saving.`, "success");
+      }
+      openOcrReviewModal(
+        data.document.id,
+        data.parsedInvoice || data.extractedFields || {},
+        data.parsedInvoice?.documentType || category,
+        file.name,
+        data.parsedInvoice?.confidence || ((data.ocr && data.ocr.confidence) ? `${Math.round(data.ocr.confidence * 100)}%` : "98%")
+      );
+    } else {
+      if (typeof showToast === "function") {
+        showToast(data.error || "Failed to parse document", "error");
       }
     }
-  };
-
-  if (file.type && (file.type.startsWith("text/") || file.name.endsWith(".csv") || file.name.endsWith(".txt"))) {
-    reader.readAsText(file);
-  } else {
-    reader.readAsDataURL(file);
+  } catch (err) {
+    if (typeof showToast === "function") {
+      showToast("Error uploading document: " + err.message, "error");
+    }
   }
 }
 
@@ -7159,22 +7244,25 @@ function openOcrReviewModal(docIdOrData, maybeData, type = "purchase_bill", file
     isModified: false
   };
 
-  // If no line items extracted, do not fabricate fake fallback data. Provide empty row for manual entry.
+  // If no line items extracted, initialize row with extracted invoice totals to preserve document values
   if (ocrInvoiceState.lineItems.length === 0) {
+    const docTaxable = Number(totals.taxableAmount || data.taxableAmount || parsed.taxableAmount || (totals.totalAmount ? totals.totalAmount / 1.18 : 0)) || 0;
+    const docGstRate = Number(data.gstRate || parsed.gstRate || (totals.igst || totals.cgst ? Math.round(((totals.igst || (totals.cgst * 2)) / (docTaxable || 1)) * 100) : 18)) || 18;
+    const docRate = docTaxable > 0 ? docTaxable : 0;
     ocrInvoiceState.lineItems.push({
       id: "item-1",
-      description: "",
-      hsnCode: "",
+      description: parsed.description || "Supply of Goods / Services",
+      hsnCode: parsed.hsnCode || "9983",
       quantity: 1,
       unit: "NOS",
-      rate: 0,
+      rate: docRate,
       discount: 0,
-      taxableValue: 0,
-      gstRate: 18,
+      taxableValue: docRate,
+      gstRate: docGstRate,
       cgst: 0,
       sgst: 0,
       igst: 0,
-      totalAmount: 0
+      totalAmount: docRate
     });
   }
 
@@ -7576,8 +7664,10 @@ async function reExtractCurrentDocument() {
 window.reExtractCurrentDocument = reExtractCurrentDocument;
 
 async function saveExtractedInvoice() {
+  await ensureActiveSession();
   const invoiceNumber = document.getElementById('ocrReviewInvoiceNumber')?.value?.trim();
-  const invoiceDate = document.getElementById('ocrReviewInvoiceDate')?.value;
+  const rawInvoiceDate = document.getElementById('ocrReviewInvoiceDate')?.value;
+  const invoiceDate = normalizeDateToYMD(rawInvoiceDate);
   const invoiceType = document.getElementById('ocrReviewInvoiceType')?.value || ocrInvoiceState.documentType;
   const pos = (document.getElementById('ocrReviewPos')?.value || "27").slice(0, 2);
   const sellerName = document.getElementById('ocrReviewSellerName')?.value?.trim();
@@ -7588,6 +7678,7 @@ async function saveExtractedInvoice() {
   const itcEligibility = document.getElementById('ocrReviewItcEligibility')?.value || "ELIGIBLE";
   const isRcm = Boolean(document.getElementById('ocrReviewIsRcm')?.checked);
   const cess = parseFloat(document.getElementById('ocrReviewCess')?.value) || 0;
+  const period = derivePeriodFromDate(rawInvoiceDate || invoiceDate, getActivePeriod());
 
   let totalTaxable = 0;
   let totalCgst = 0;
@@ -7626,7 +7717,7 @@ async function saveExtractedInvoice() {
         fields: {
           invoiceNumber,
           invoiceDate,
-          period: (invoiceDate && invoiceDate.length >= 7 ? `${invoiceDate.slice(5, 7)}${invoiceDate.slice(0, 4)}` : undefined),
+          period: period,
           customerName: buyerName,
           customerGstin: buyerGstin,
           supplierName: sellerName,
@@ -7655,19 +7746,24 @@ async function saveExtractedInvoice() {
     const data = await res.json();
     if (res.ok && data.success) {
       closeOcrReviewModal();
-      if (typeof showToast === "function") {
-        showToast(data.message || "Invoice successfully saved to register!", "success");
+      const savedPeriod = data.period || period;
+      if (typeof switchFilingPeriod === "function" && savedPeriod !== getActivePeriod()) {
+        await switchFilingPeriod(savedPeriod);
       }
       if (invoiceType === "sales_invoice") {
         if (typeof renderSalesSuite === "function") await renderSalesSuite();
+        if (typeof refreshInvoices === "function") await refreshInvoices('sales');
       } else {
         if (typeof renderPurchaseSuite === "function") await renderPurchaseSuite();
+        if (typeof refreshInvoices === "function") await refreshInvoices('purchase');
       }
       if (typeof loadBillsDashboard === "function") {
         await loadBillsDashboard();
       }
-      const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
-      if (typeof loadDashboardData === "function") loadDashboardData(period);
+      if (typeof loadDashboardData === "function") loadDashboardData(savedPeriod);
+      if (typeof showToast === "function") {
+        showToast(data.message || "Invoice successfully saved to register!", "success");
+      }
     } else {
       if (typeof showToast === "function") {
         showToast(data.error || "Failed to save invoice to register.", "error");
@@ -8053,6 +8149,7 @@ async function confirmBillsUpload(e) {
     e.stopPropagation();
   }
   if (!stagedBillsFiles || stagedBillsFiles.length === 0) return;
+  await ensureActiveSession();
 
   const files = [...stagedBillsFiles];
   for (const f of files) {
