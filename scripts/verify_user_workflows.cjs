@@ -111,7 +111,14 @@ async function runCompleteUserVerification() {
 
   await sendCommand("Network.enable");
   await sendCommand("Page.enable");
-  await sleep(2000);
+  await sleep(2500);
+
+  // Ensure window and app scripts are initialized
+  for (let i = 0; i < 40; i++) {
+    const ready = await evaluate(`typeof window.handleSignInSubmit === 'function'`);
+    if (ready) break;
+    await sleep(200);
+  }
 
   const timestamp = Date.now().toString().slice(-5);
   const salesInvNumber = `INV-UI-SALES-${timestamp}`;
@@ -151,20 +158,65 @@ async function runCompleteUserVerification() {
     assert.strictEqual(authCheck.activeGstin, "27AAACA1234A1Z5", "Authenticated GSTIN must be restored");
 
     // -------------------------------------------------------------------------
-    // STEP 1: Sales Invoice Creation via UI
+    // STEP 1: Sales Invoice Creation via UI & Form Blank Verification
     // -------------------------------------------------------------------------
-    console.log(`\n[STEP 1] Testing Sales Invoice Creation (${salesInvNumber})...`);
-    const salesResult = await evaluate(`
+    console.log(`\n[STEP 1] Testing Sales Invoice Creation (${salesInvNumber}) & Blank Modal Verification...`);
+    const salesBlankCheck = await evaluate(`
       (async () => {
         window.switchSuite('sales');
         await new Promise(r => setTimeout(r, 400));
         window.openNewInvoiceModal();
         await new Promise(r => setTimeout(r, 300));
 
+        const numVal = document.getElementById('newInvNumber')?.value;
+        const numDef = document.getElementById('newInvNumber')?.defaultValue;
+        const custVal = document.getElementById('newInvCustomerName')?.value;
+        const custDef = document.getElementById('newInvCustomerName')?.defaultValue;
+        const gstinVal = document.getElementById('newInvCustomerGstin')?.value;
+        const taxableVal = document.getElementById('newInvTaxable')?.value;
+        const rateVal = document.getElementById('newInvGstRate')?.value;
+        const posVal = document.getElementById('newInvPos')?.value;
+        const supplyVal = document.getElementById('newInvSupplyTypeSelect')?.value;
+        const totalAmount = document.getElementById('newInvTotalAmount')?.innerText;
+
+        // Test manual generate number button
+        window.generateNewInvoiceNumber();
+        const generatedNum = document.getElementById('newInvNumber')?.value;
+
+        return {
+          numVal,
+          numDef,
+          custVal,
+          custDef,
+          gstinVal,
+          taxableVal,
+          rateVal,
+          posVal,
+          supplyVal,
+          totalAmount,
+          generatedNum
+        };
+      })()
+    `);
+    console.log("✔ Sales initial blank check:", salesBlankCheck);
+    assert.strictEqual(salesBlankCheck.numVal, "", "Sales invoice number must initially be empty");
+    assert.strictEqual(salesBlankCheck.numDef, "", "Sales invoice number defaultValue must be empty");
+    assert.strictEqual(salesBlankCheck.custVal, "", "Customer name must initially be empty (no Zenith)");
+    assert.strictEqual(salesBlankCheck.gstinVal, "", "Customer GSTIN must initially be empty (no fake GSTIN)");
+    assert.strictEqual(salesBlankCheck.taxableVal, "", "Taxable value must initially be empty (no 250000)");
+    assert.strictEqual(salesBlankCheck.rateVal, "", "GST rate must require explicit selection (no default 18%)");
+    assert.strictEqual(salesBlankCheck.posVal, "", "Place of supply must require explicit selection");
+    assert.strictEqual(salesBlankCheck.supplyVal, "", "Supply type must require explicit selection");
+    assert.strictEqual(salesBlankCheck.totalAmount, "₹0.00", "Total amount must show ₹0.00 initially");
+    assert.ok(salesBlankCheck.generatedNum.startsWith("INV-"), "Generate # button must generate a valid INV- prefix");
+
+    const salesResult = await evaluate(`
+      (async () => {
         document.getElementById('newInvNumber').value = '${salesInvNumber}';
         document.getElementById('newInvDate').value = '2026-10-26';
         document.getElementById('newInvCustomerName').value = 'Bharat Industrial Supplies';
         document.getElementById('newInvCustomerGstin').value = '27AAACB2222F1Z5';
+        window.onCustomerGstinInput(); // Auto-selects POS 27 & Supply Type B2B
         document.getElementById('newInvTaxable').value = '75000';
         document.getElementById('newInvGstRate').value = '18';
         window.calculateNewInvoiceTax();
@@ -216,21 +268,90 @@ async function runCompleteUserVerification() {
       total_amount: salesSqlite[0].total_amount
     });
 
+    // Verify Sales Modal is completely clean when re-opened
+    const salesReopenCheck = await evaluate(`
+      (() => {
+        window.openNewInvoiceModal();
+        return {
+          numVal: document.getElementById('newInvNumber')?.value,
+          numDef: document.getElementById('newInvNumber')?.defaultValue,
+          custVal: document.getElementById('newInvCustomerName')?.value,
+          taxableVal: document.getElementById('newInvTaxable')?.value,
+          rateVal: document.getElementById('newInvGstRate')?.value,
+          posVal: document.getElementById('newInvPos')?.value
+        };
+      })()
+    `);
+    assert.strictEqual(salesReopenCheck.numVal, "", "Sales modal must reopen completely blank for invoice #");
+    assert.strictEqual(salesReopenCheck.custVal, "", "Sales modal must reopen blank for customer name");
+    assert.strictEqual(salesReopenCheck.taxableVal, "", "Sales modal must reopen blank for taxable value");
+    assert.strictEqual(salesReopenCheck.rateVal, "", "Sales modal must reopen blank for rate");
+    await evaluate(`window.closeNewInvoiceModal()`);
+
     // -------------------------------------------------------------------------
-    // STEP 2: Purchase Bill Creation via UI
+    // STEP 2: Purchase Bill Creation via UI & Form Blank Verification
     // -------------------------------------------------------------------------
-    console.log(`\n[STEP 2] Testing Purchase Bill Creation (${purchaseBillNumber})...`);
-    const purchaseResult = await evaluate(`
+    console.log(`\n[STEP 2] Testing Purchase Bill Creation (${purchaseBillNumber}) & Blank Modal Verification...`);
+    const purchaseBlankCheck = await evaluate(`
       (async () => {
         window.switchSuite('purchase');
         await new Promise(r => setTimeout(r, 400));
         window.openNewPurchaseModal();
         await new Promise(r => setTimeout(r, 300));
 
+        const numVal = document.getElementById('newPurNumber')?.value;
+        const numDef = document.getElementById('newPurNumber')?.defaultValue;
+        const supVal = document.getElementById('newPurSupplierName')?.value;
+        const supDef = document.getElementById('newPurSupplierName')?.defaultValue;
+        const gstinVal = document.getElementById('newPurSupplierGstin')?.value;
+        const taxableVal = document.getElementById('newPurTaxable')?.value;
+        const rateVal = document.getElementById('newPurGstRate')?.value;
+        const posVal = document.getElementById('newPurPos')?.value;
+        const itcVal = document.getElementById('newPurItcEligibility')?.value;
+        const rcmVal = document.getElementById('newPurIsRcm')?.checked;
+        const taxAmount = document.getElementById('newPurTaxAmount')?.innerText;
+
+        // Test manual generate number button
+        window.generateNewPurchaseNumber();
+        const generatedNum = document.getElementById('newPurNumber')?.value;
+
+        return {
+          numVal,
+          numDef,
+          supVal,
+          supDef,
+          gstinVal,
+          taxableVal,
+          rateVal,
+          posVal,
+          itcVal,
+          rcmVal,
+          taxAmount,
+          generatedNum
+        };
+      })()
+    `);
+    console.log("✔ Purchase initial blank check:", purchaseBlankCheck);
+    assert.strictEqual(purchaseBlankCheck.numVal, "", "Purchase bill number must initially be empty");
+    assert.strictEqual(purchaseBlankCheck.numDef, "", "Purchase bill number defaultValue must be empty");
+    assert.strictEqual(purchaseBlankCheck.supVal, "", "Supplier name must initially be empty");
+    assert.strictEqual(purchaseBlankCheck.gstinVal, "", "Supplier GSTIN must initially be empty");
+    assert.strictEqual(purchaseBlankCheck.taxableVal, "", "Taxable value must initially be empty");
+    assert.strictEqual(purchaseBlankCheck.rateVal, "", "GST rate must require explicit selection");
+    assert.strictEqual(purchaseBlankCheck.posVal, "", "Place of supply must require explicit selection");
+    assert.strictEqual(purchaseBlankCheck.itcVal, "", "ITC eligibility must require explicit selection");
+    assert.strictEqual(purchaseBlankCheck.rcmVal, false, "RCM must default to false");
+    assert.strictEqual(purchaseBlankCheck.taxAmount, "₹0.00", "Tax amount must show ₹0.00 initially");
+    assert.ok(purchaseBlankCheck.generatedNum.startsWith("BILL-"), "Generate # button must generate a valid BILL- prefix");
+
+    const purchaseResult = await evaluate(`
+      (async () => {
         document.getElementById('newPurNumber').value = '${purchaseBillNumber}';
         document.getElementById('newPurDate').value = '2026-10-26';
         document.getElementById('newPurSupplierName').value = 'Tata Consultancy Services';
         document.getElementById('newPurSupplierGstin').value = '27AAACT2727Q1ZW';
+        window.onSupplierGstinInput(); // Auto-selects POS 27
+        document.getElementById('newPurItcEligibility').value = 'ELIGIBLE';
         document.getElementById('newPurTaxable').value = '120000';
         document.getElementById('newPurGstRate').value = '18';
         window.calculateNewPurchaseTax();
@@ -281,6 +402,29 @@ async function runCompleteUserVerification() {
       taxable_amount: purchaseSqlite[0].taxable_amount,
       total_amount: purchaseSqlite[0].total_amount
     });
+
+    // Verify Purchase Modal is completely clean when re-opened
+    const purchaseReopenCheck = await evaluate(`
+      (() => {
+        window.openNewPurchaseModal();
+        return {
+          numVal: document.getElementById('newPurNumber')?.value,
+          numDef: document.getElementById('newPurNumber')?.defaultValue,
+          supVal: document.getElementById('newPurSupplierName')?.value,
+          taxableVal: document.getElementById('newPurTaxable')?.value,
+          rateVal: document.getElementById('newPurGstRate')?.value,
+          posVal: document.getElementById('newPurPos')?.value,
+          itcVal: document.getElementById('newPurItcEligibility')?.value
+        };
+      })()
+    `);
+    assert.strictEqual(purchaseReopenCheck.numVal, "", "Purchase modal must reopen completely blank for bill #");
+    assert.strictEqual(purchaseReopenCheck.supVal, "", "Purchase modal must reopen blank for supplier name");
+    assert.strictEqual(purchaseReopenCheck.taxableVal, "", "Purchase modal must reopen blank for taxable value");
+    assert.strictEqual(purchaseReopenCheck.rateVal, "", "Purchase modal must reopen blank for rate");
+    assert.strictEqual(purchaseReopenCheck.posVal, "", "Purchase modal must reopen blank for POS");
+    assert.strictEqual(purchaseReopenCheck.itcVal, "", "Purchase modal must reopen blank for ITC");
+    await evaluate(`window.closeNewPurchaseModal()`);
 
     // -------------------------------------------------------------------------
     // STEP 3: Bills & Docs PDF Upload via File Picker & Action

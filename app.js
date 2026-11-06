@@ -4814,6 +4814,18 @@ window.renderCopilotWorkspace = renderCopilotWorkspace;
 // ============================================================================
 // Modal Controllers: New Sales Invoice Modal
 // ============================================================================
+// MODAL CONTROLLER: NEW OUTWARD SALES INVOICE
+// ============================================================================
+function generateNewInvoiceNumber() {
+  const numInput = document.getElementById('newInvNumber');
+  if (numInput) {
+    const num = `INV-${Date.now().toString().slice(-4)}`;
+    numInput.value = num;
+    numInput.defaultValue = num;
+  }
+}
+window.generateNewInvoiceNumber = generateNewInvoiceNumber;
+
 function openNewInvoiceModal() {
   const activeGstin = getActiveGstin();
   if (!activeGstin) {
@@ -4836,30 +4848,41 @@ function openNewInvoiceModal() {
     m.style.display = 'flex';
   }
 
-  // Ensure clean blank form on open — no fabricated prefilled values
+  // Ensure clean blank form on open — explicitly wipe all values and defaultValues to prevent browser autofill/cached restoration
   const form = document.querySelector('#modalNewInvoice form');
   if (form) form.reset();
 
-  const custName = document.getElementById('newInvCustomerName');
-  if (custName) custName.value = '';
-  const custGstin = document.getElementById('newInvCustomerGstin');
-  if (custGstin) custGstin.value = '';
-  const taxableInput = document.getElementById('newInvTaxable');
-  if (taxableInput) taxableInput.value = '';
-
-  const dateInput = document.getElementById('newInvDate');
-  if (dateInput) {
-    dateInput.value = new Date().toISOString().split('T')[0];
-  }
   const numInput = document.getElementById('newInvNumber');
-  if (numInput) {
-    numInput.value = `INV-${Date.now().toString().slice(-4)}`;
-  }
+  if (numInput) { numInput.value = ''; numInput.defaultValue = ''; }
+
+  const custName = document.getElementById('newInvCustomerName');
+  if (custName) { custName.value = ''; custName.defaultValue = ''; }
+
+  const custGstin = document.getElementById('newInvCustomerGstin');
+  if (custGstin) { custGstin.value = ''; custGstin.defaultValue = ''; }
+
+  const taxableInput = document.getElementById('newInvTaxable');
+  if (taxableInput) { taxableInput.value = ''; taxableInput.defaultValue = ''; }
+
+  const gstRateSelect = document.getElementById('newInvGstRate');
+  if (gstRateSelect) { gstRateSelect.value = ''; }
+
+  const supplyTypeSelect = document.getElementById('newInvSupplyTypeSelect');
+  if (supplyTypeSelect) { supplyTypeSelect.value = ''; delete supplyTypeSelect.dataset.autoSet; }
+
   const posSelect = document.getElementById('newInvPos');
   if (posSelect) {
     delete posSelect.dataset.userModified;
-    posSelect.value = activeGstin.slice(0, 2);
+    posSelect.value = '';
   }
+
+  const dateInput = document.getElementById('newInvDate');
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+    dateInput.defaultValue = today;
+  }
+
   calculateNewInvoiceTax();
 }
 window.openNewInvoiceModal = openNewInvoiceModal;
@@ -4876,9 +4899,20 @@ window.closeNewInvoiceModal = closeNewInvoiceModal;
 function onCustomerGstinInput() {
   const custGstin = (document.getElementById('newInvCustomerGstin')?.value || "").trim().toUpperCase();
   const posSelect = document.getElementById('newInvPos');
-  if (custGstin.length >= 2 && posSelect && !posSelect.dataset.userModified) {
+  const supplySelect = document.getElementById('newInvSupplyTypeSelect');
+
+  if (custGstin.length >= 2) {
     const stateCode = custGstin.slice(0, 2);
-    posSelect.value = stateCode;
+    if (/^\d{2}$/.test(stateCode) && posSelect && !posSelect.dataset.userModified) {
+      posSelect.value = stateCode;
+    }
+    if (supplySelect && (!supplySelect.value || supplySelect.dataset.autoSet)) {
+      supplySelect.value = "B2B";
+      supplySelect.dataset.autoSet = "true";
+    }
+  } else if (!custGstin && supplySelect && supplySelect.dataset.autoSet) {
+    supplySelect.value = "";
+    delete supplySelect.dataset.autoSet;
   }
   calculateNewInvoiceTax();
 }
@@ -4886,33 +4920,35 @@ window.onCustomerGstinInput = onCustomerGstinInput;
 
 function calculateNewInvoiceTax() {
   const taxable = parseFloat(document.getElementById('newInvTaxable')?.value) || 0;
-  const rate = parseFloat(document.getElementById('newInvGstRate')?.value) || 0;
+  const gstRateRaw = document.getElementById('newInvGstRate')?.value;
+  const rate = (gstRateRaw !== "" && gstRateRaw !== null && !isNaN(parseFloat(gstRateRaw))) ? parseFloat(gstRateRaw) : 0;
 
   const activeGstin = getActiveGstin();
   const activeState = (activeGstin && activeGstin.length >= 2) ? activeGstin.slice(0, 2) : "27";
 
   const posSelect = document.getElementById('newInvPos');
-  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : activeState;
+  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : "";
 
   // Inter-State if Place of Supply differs from seller state
-  const isInter = pos !== activeState;
+  const isInter = pos ? (pos !== activeState) : false;
 
-  const totalTax = taxable * (rate / 100);
+  const totalTax = (taxable > 0 && gstRateRaw !== "" && gstRateRaw !== null) ? taxable * (rate / 100) : 0;
   let cgst = 0, sgst = 0, igst = 0;
   let cgstRate = 0, sgstRate = 0, igstRate = 0;
 
-  if (isInter) {
+  const stEl = document.getElementById('newInvSupplyType');
+  if (!pos) {
+    if (stEl) stEl.textContent = "— (Pending POS)";
+  } else if (isInter) {
     igst = totalTax;
     igstRate = rate;
-    const stEl = document.getElementById('newInvSupplyType');
-    if (stEl) stEl.textContent = `Inter-State Supply (IGST) — Place of Supply: ${pos}`;
+    if (stEl) stEl.textContent = `Inter-State Supply (IGST) — POS: ${pos}`;
   } else {
     cgst = totalTax / 2;
     sgst = totalTax / 2;
     cgstRate = rate / 2;
     sgstRate = rate / 2;
-    const stEl = document.getElementById('newInvSupplyType');
-    if (stEl) stEl.textContent = `Intra-State Supply (CGST + SGST) — Place of Supply: ${pos}`;
+    if (stEl) stEl.textContent = `Intra-State Supply (CGST + SGST) — POS: ${pos}`;
   }
 
   const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -4934,8 +4970,7 @@ async function submitNewInvoice(event) {
   const customerName = document.getElementById('newInvCustomerName')?.value?.trim();
   const customerGstin = document.getElementById('newInvCustomerGstin')?.value?.trim().toUpperCase();
   const taxableAmount = parseFloat(document.getElementById('newInvTaxable')?.value) || 0;
-  const gstRate = parseFloat(document.getElementById('newInvGstRate')?.value) || 0;
-  const supplyType = document.getElementById('newInvSupplyTypeSelect')?.value || (customerGstin ? "B2B" : "B2C");
+  const gstRateRaw = document.getElementById('newInvGstRate')?.value;
 
   const activeGstin = getActiveGstin();
   if (!activeGstin) {
@@ -4953,15 +4988,45 @@ async function submitNewInvoice(event) {
     return;
   }
 
-  if (!invoiceNumber || !invoiceDate || !customerName || taxableAmount <= 0) {
+  if (!invoiceNumber) {
     if (typeof showToast === "function") {
-      showToast("Please enter all required invoice fields (Invoice #, Date, Customer, Taxable Value).", "warning");
+      showToast("Please enter an Invoice Number or click 'Generate #'.", "warning");
     }
     return;
   }
 
+  if (!invoiceDate || !customerName || taxableAmount <= 0) {
+    if (typeof showToast === "function") {
+      showToast("Please enter all required invoice fields (Date, Customer Name, Taxable Value).", "warning");
+    }
+    return;
+  }
+
+  if (gstRateRaw === "" || gstRateRaw === null || isNaN(parseFloat(gstRateRaw))) {
+    if (typeof showToast === "function") {
+      showToast("Please select the applicable GST rate for this invoice.", "warning");
+    }
+    return;
+  }
+  const gstRate = parseFloat(gstRateRaw);
+
   const posSelect = document.getElementById('newInvPos');
-  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : activeGstin.slice(0, 2);
+  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : (customerGstin ? customerGstin.slice(0, 2) : (activeGstin ? activeGstin.slice(0, 2) : ""));
+  if (!pos) {
+    if (typeof showToast === "function") {
+      showToast("Please select the Place of Supply (POS).", "warning");
+    }
+    return;
+  }
+
+  const supplyType = document.getElementById('newInvSupplyTypeSelect')?.value || (customerGstin ? "B2B" : "B2C");
+  if (!supplyType) {
+    if (typeof showToast === "function") {
+      showToast("Please select the Supply Type.", "warning");
+    }
+    return;
+  }
+
   const isInterstate = pos !== activeGstin.slice(0, 2);
 
   const btn = document.querySelector("#modalNewInvoice button[type='submit']");
@@ -6494,6 +6559,16 @@ window.loadRcmData = async function() {
 // ============================================================================
 // MODAL CONTROLLER: NEW INWARD PURCHASE BILL
 // ============================================================================
+function generateNewPurchaseNumber() {
+  const numInput = document.getElementById('newPurNumber');
+  if (numInput) {
+    const num = `BILL-${Date.now().toString().slice(-4)}`;
+    numInput.value = num;
+    numInput.defaultValue = num;
+  }
+}
+window.generateNewPurchaseNumber = generateNewPurchaseNumber;
+
 function openNewPurchaseModal() {
   const activeGstin = getActiveGstin();
   if (!activeGstin) {
@@ -6516,30 +6591,46 @@ function openNewPurchaseModal() {
     m.style.display = 'flex';
   }
 
-  // Ensure clean blank form on open — no fabricated prefilled values
+  // Ensure clean blank form on open — explicitly wipe all values and defaultValues to prevent browser autofill/cached restoration
   const form = document.querySelector('#modalNewPurchase form');
   if (form) form.reset();
 
-  const supName = document.getElementById('newPurSupplierName');
-  if (supName) supName.value = '';
-  const supGstin = document.getElementById('newPurSupplierGstin');
-  if (supGstin) supGstin.value = '';
-  const taxableInput = document.getElementById('newPurTaxable');
-  if (taxableInput) taxableInput.value = '';
-
-  const dateInput = document.getElementById('newPurDate');
-  if (dateInput) {
-    dateInput.value = new Date().toISOString().split('T')[0];
-  }
   const numInput = document.getElementById('newPurNumber');
-  if (numInput) {
-    numInput.value = `BILL-${Date.now().toString().slice(-4)}`;
-  }
+  if (numInput) { numInput.value = ''; numInput.defaultValue = ''; }
+
+  const supName = document.getElementById('newPurSupplierName');
+  if (supName) { supName.value = ''; supName.defaultValue = ''; }
+
+  const supGstin = document.getElementById('newPurSupplierGstin');
+  if (supGstin) { supGstin.value = ''; supGstin.defaultValue = ''; }
+
+  const taxableInput = document.getElementById('newPurTaxable');
+  if (taxableInput) { taxableInput.value = ''; taxableInput.defaultValue = ''; }
+
+  const gstRateSelect = document.getElementById('newPurGstRate');
+  if (gstRateSelect) { gstRateSelect.value = ''; }
+
+  const itcSelect = document.getElementById('newPurItcEligibility');
+  if (itcSelect) { itcSelect.value = ''; }
+
   const posSelect = document.getElementById('newPurPos');
   if (posSelect) {
     delete posSelect.dataset.userModified;
-    posSelect.value = activeGstin.slice(0, 2);
+    posSelect.value = '';
   }
+
+  const rcmCheckbox = document.getElementById('newPurIsRcm');
+  if (rcmCheckbox) {
+    rcmCheckbox.checked = false;
+  }
+
+  const dateInput = document.getElementById('newPurDate');
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+    dateInput.defaultValue = today;
+  }
+
   calculateNewPurchaseTax();
 }
 window.openNewPurchaseModal = openNewPurchaseModal;
@@ -6556,39 +6647,63 @@ window.closeNewPurchaseModal = closeNewPurchaseModal;
 function onSupplierGstinInput() {
   const suppGstin = (document.getElementById('newPurSupplierGstin')?.value || "").trim().toUpperCase();
   const posSelect = document.getElementById('newPurPos');
-  const activeGstin = getActiveGstin();
-  if (posSelect && !posSelect.dataset.userModified && activeGstin) {
-    posSelect.value = activeGstin.slice(0, 2);
+  if (suppGstin.length >= 2) {
+    const stateCode = suppGstin.slice(0, 2);
+    if (/^\d{2}$/.test(stateCode) && posSelect && !posSelect.dataset.userModified) {
+      posSelect.value = stateCode;
+    }
   }
   calculateNewPurchaseTax();
 }
 window.onSupplierGstinInput = onSupplierGstinInput;
 
 function calculateNewPurchaseTax() {
-  const taxable = parseFloat(document.getElementById('newPurTaxable')?.value) || 0;
-  const rate = parseFloat(document.getElementById('newPurGstRate')?.value) || 0;
+  const taxableInput = document.getElementById('newPurTaxable');
+  const taxable = parseFloat(taxableInput?.value) || 0;
+  const rateSelect = document.getElementById('newPurGstRate');
+  const rateValue = rateSelect ? rateSelect.value : '';
+  const rate = rateValue !== '' ? parseFloat(rateValue) : null;
 
   const activeGstin = getActiveGstin();
-  const activeState = (activeGstin && activeGstin.length >= 2) ? activeGstin.slice(0, 2) : "27";
+  const activeState = (activeGstin && activeGstin.length >= 2) ? activeGstin.slice(0, 2) : "";
 
   const posSelect = document.getElementById('newPurPos');
-  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : activeState;
-
-  // Inter-state if Place of Supply is outside the recipient branch state
-  const isInter = pos !== activeState;
-  const totalTax = taxable * (rate / 100);
+  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : "";
 
   const stEl = document.getElementById('newPurSupplyType');
+  const taxEl = document.getElementById('newPurTaxAmount');
+  const totEl = document.getElementById('newPurTotalAmount');
+  const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  if (rate === null || taxable <= 0) {
+    if (stEl) {
+      stEl.textContent = pos
+        ? (pos === activeState ? `Intra-State Inward Supply — State: ${pos}` : `Inter-State Inward Supply — POS: ${pos}`)
+        : "— (Select Place of Supply & GST Rate)";
+    }
+    if (taxEl) taxEl.textContent = "₹0.00";
+    if (totEl) totEl.textContent = taxable > 0 ? fmt(taxable) : "₹0.00";
+    return;
+  }
+
+  if (!pos) {
+    if (stEl) stEl.textContent = "— (Pending Place of Supply)";
+    if (taxEl) taxEl.textContent = fmt(taxable * (rate / 100));
+    if (totEl) totEl.textContent = fmt(taxable * (1 + rate / 100));
+    return;
+  }
+
+  // Inter-state if Place of Supply is outside the recipient branch state
+  const isInter = activeState && pos !== activeState;
+  const totalTax = taxable * (rate / 100);
+
   if (stEl) {
     stEl.textContent = isInter
       ? `Inter-State Inward Supply (IGST) — Place of Supply: ${pos}`
       : `Intra-State Inward Supply (CGST + SGST) — Place of Supply: ${pos}`;
   }
 
-  const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const taxEl = document.getElementById('newPurTaxAmount');
   if (taxEl) taxEl.textContent = fmt(totalTax);
-  const totEl = document.getElementById('newPurTotalAmount');
   if (totEl) totEl.textContent = fmt(taxable + totalTax);
 }
 window.calculateNewPurchaseTax = calculateNewPurchaseTax;
@@ -6600,9 +6715,13 @@ async function submitNewPurchase(event) {
   const supplierName = document.getElementById('newPurSupplierName')?.value?.trim();
   const supplierGstin = (document.getElementById('newPurSupplierGstin')?.value || "").trim().toUpperCase();
   const taxableAmount = parseFloat(document.getElementById('newPurTaxable')?.value) || 0;
-  const gstRate = parseFloat(document.getElementById('newPurGstRate')?.value) || 0;
-  const itcEligibility = document.getElementById('newPurItcEligibility')?.value || "ELIGIBLE";
+  const rateSelect = document.getElementById('newPurGstRate');
+  const gstRateVal = rateSelect ? rateSelect.value : "";
+  const gstRate = gstRateVal !== "" ? parseFloat(gstRateVal) : null;
+  const itcEligibility = document.getElementById('newPurItcEligibility')?.value;
   const isRcm = document.getElementById('newPurIsRcm')?.checked || false;
+  const posSelect = document.getElementById('newPurPos');
+  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : "";
 
   const activeGstin = getActiveGstin();
   if (!activeGstin) {
@@ -6620,15 +6739,35 @@ async function submitNewPurchase(event) {
     return;
   }
 
-  if (!invoiceNumber || !invoiceDate || !supplierName || taxableAmount <= 0) {
-    if (typeof showToast === "function") {
-      showToast("Please enter all required purchase bill fields (Bill #, Date, Supplier, Taxable Value).", "warning");
-    }
+  if (!invoiceNumber) {
+    if (typeof showToast === "function") showToast("Please enter or generate a Purchase Bill / Invoice Number.", "warning");
+    return;
+  }
+  if (!invoiceDate) {
+    if (typeof showToast === "function") showToast("Please select a valid Bill Date.", "warning");
+    return;
+  }
+  if (!supplierName) {
+    if (typeof showToast === "function") showToast("Please enter the Supplier Name.", "warning");
+    return;
+  }
+  if (!pos) {
+    if (typeof showToast === "function") showToast("Please select a valid Place of Supply (POS).", "warning");
+    return;
+  }
+  if (!itcEligibility) {
+    if (typeof showToast === "function") showToast("Please select ITC Eligibility.", "warning");
+    return;
+  }
+  if (taxableAmount <= 0) {
+    if (typeof showToast === "function") showToast("Taxable Value must be greater than zero.", "warning");
+    return;
+  }
+  if (gstRate === null || isNaN(gstRate)) {
+    if (typeof showToast === "function") showToast("Please select the applicable GST Rate.", "warning");
     return;
   }
 
-  const posSelect = document.getElementById('newPurPos');
-  const pos = posSelect?.value ? posSelect.value.slice(0, 2) : activeGstin.slice(0, 2);
   const isInterstate = pos !== activeGstin.slice(0, 2);
 
   const btn = document.getElementById('btnSubmitPurchase');
@@ -6641,7 +6780,7 @@ async function submitNewPurchase(event) {
         invoiceNumber,
         invoiceDate,
         supplierName,
-        supplierGstin: supplierGstin || activeGstin,
+        supplierGstin: supplierGstin || undefined,
         pos,
         taxableAmount,
         gstRate,
