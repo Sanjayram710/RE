@@ -294,9 +294,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (typeof loadDashboardData === "function") loadDashboardData();
     if (typeof renderCopilotWorkspace === "function") renderCopilotWorkspace();
   } else {
-    // Unauthenticated initial state: render logged out state and present the sign in modal
+    // Unauthenticated initial state: render logged out state without intrusive blocking modal
     renderAuthState();
-    openAuthModal("signin");
+    // Login and Signup UI modal is deferred from popping up automatically on page load
   }
 
   // Close dropdowns on outside click
@@ -4835,16 +4835,29 @@ function openNewInvoiceModal() {
     m.classList.remove('hidden');
     m.style.display = 'flex';
   }
+
+  // Ensure clean blank form on open — no fabricated prefilled values
+  const form = document.querySelector('#modalNewInvoice form');
+  if (form) form.reset();
+
+  const custName = document.getElementById('newInvCustomerName');
+  if (custName) custName.value = '';
+  const custGstin = document.getElementById('newInvCustomerGstin');
+  if (custGstin) custGstin.value = '';
+  const taxableInput = document.getElementById('newInvTaxable');
+  if (taxableInput) taxableInput.value = '';
+
   const dateInput = document.getElementById('newInvDate');
-  if (dateInput && !dateInput.value) {
+  if (dateInput) {
     dateInput.value = new Date().toISOString().split('T')[0];
   }
   const numInput = document.getElementById('newInvNumber');
-  if (numInput && !numInput.value) {
+  if (numInput) {
     numInput.value = `INV-${Date.now().toString().slice(-4)}`;
   }
   const posSelect = document.getElementById('newInvPos');
-  if (posSelect && !posSelect.dataset.userModified) {
+  if (posSelect) {
+    delete posSelect.dataset.userModified;
     posSelect.value = activeGstin.slice(0, 2);
   }
   calculateNewInvoiceTax();
@@ -4949,6 +4962,7 @@ async function submitNewInvoice(event) {
 
   const posSelect = document.getElementById('newInvPos');
   const pos = posSelect?.value ? posSelect.value.slice(0, 2) : activeGstin.slice(0, 2);
+  const isInterstate = pos !== activeGstin.slice(0, 2);
 
   const btn = document.querySelector("#modalNewInvoice button[type='submit']");
   if (btn) btn.disabled = true;
@@ -4964,14 +4978,28 @@ async function submitNewInvoice(event) {
         pos,
         taxableAmount,
         gstRate,
-        supplyType
+        supplyType,
+        lineItems: [
+          {
+            description: "Goods / Taxable Supply",
+            hsn: "9983",
+            quantity: 1,
+            rate: taxableAmount,
+            taxableAmount,
+            gstRate,
+            igst: isInterstate ? (taxableAmount * gstRate) / 100 : 0,
+            cgst: isInterstate ? 0 : (taxableAmount * gstRate) / 200,
+            sgst: isInterstate ? 0 : (taxableAmount * gstRate) / 200,
+            total: taxableAmount + (taxableAmount * gstRate) / 100
+          }
+        ]
       })
     });
     const data = await res.json();
     if (res.ok && data.success) {
       closeNewInvoiceModal();
       if (typeof showToast === "function") {
-        showToast(`Sales Invoice ${invoiceNumber} created and saved to SQLite database!`, "success");
+        showToast(`Sales Invoice ${invoiceNumber} created and saved to SQLite database! (ID: ${data.id || data.invoice?.id})`, "success");
       }
       if (typeof loadDashboardData === "function") {
         loadDashboardData(period);
@@ -6487,16 +6515,29 @@ function openNewPurchaseModal() {
     m.classList.remove('hidden');
     m.style.display = 'flex';
   }
+
+  // Ensure clean blank form on open — no fabricated prefilled values
+  const form = document.querySelector('#modalNewPurchase form');
+  if (form) form.reset();
+
+  const supName = document.getElementById('newPurSupplierName');
+  if (supName) supName.value = '';
+  const supGstin = document.getElementById('newPurSupplierGstin');
+  if (supGstin) supGstin.value = '';
+  const taxableInput = document.getElementById('newPurTaxable');
+  if (taxableInput) taxableInput.value = '';
+
   const dateInput = document.getElementById('newPurDate');
-  if (dateInput && !dateInput.value) {
+  if (dateInput) {
     dateInput.value = new Date().toISOString().split('T')[0];
   }
   const numInput = document.getElementById('newPurNumber');
-  if (numInput && !numInput.value) {
+  if (numInput) {
     numInput.value = `BILL-${Date.now().toString().slice(-4)}`;
   }
   const posSelect = document.getElementById('newPurPos');
-  if (posSelect && !posSelect.dataset.userModified) {
+  if (posSelect) {
+    delete posSelect.dataset.userModified;
     posSelect.value = activeGstin.slice(0, 2);
   }
   calculateNewPurchaseTax();
@@ -6588,6 +6629,7 @@ async function submitNewPurchase(event) {
 
   const posSelect = document.getElementById('newPurPos');
   const pos = posSelect?.value ? posSelect.value.slice(0, 2) : activeGstin.slice(0, 2);
+  const isInterstate = pos !== activeGstin.slice(0, 2);
 
   const btn = document.getElementById('btnSubmitPurchase');
   if (btn) btn.disabled = true;
@@ -6604,14 +6646,28 @@ async function submitNewPurchase(event) {
         taxableAmount,
         gstRate,
         itcEligibility,
-        isRcm
+        isRcm,
+        lineItems: [
+          {
+            description: "Goods / Inward Supply",
+            hsn: "9983",
+            quantity: 1,
+            rate: taxableAmount,
+            taxableAmount,
+            gstRate,
+            igst: isInterstate ? (taxableAmount * gstRate) / 100 : 0,
+            cgst: isInterstate ? 0 : (taxableAmount * gstRate) / 200,
+            sgst: isInterstate ? 0 : (taxableAmount * gstRate) / 200,
+            total: taxableAmount + (taxableAmount * gstRate) / 100
+          }
+        ]
       })
     });
     const data = await res.json();
     if (res.ok && data.success) {
       closeNewPurchaseModal();
       if (typeof showToast === "function") {
-        showToast(`Purchase bill ${invoiceNumber} saved to SQLite database!`, "success");
+        showToast(`Purchase bill ${invoiceNumber} saved to SQLite database! (ID: ${data.id || data.purchase?.id})`, "success");
       }
       if (typeof refreshInvoices === "function") {
         await refreshInvoices('purchase');

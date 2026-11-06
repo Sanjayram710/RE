@@ -5769,7 +5769,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">Invoice Number *</label>
-              <input type="text" id="newInvNumber" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none" placeholder="INV-2026-089">
+              <input type="text" id="newInvNumber" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none" placeholder="e.g. INV-001">
             </div>
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">Invoice Date *</label>
@@ -5780,11 +5780,11 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">Customer / Buyer Name *</label>
-              <input type="text" id="newInvCustomerName" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none" placeholder="Zenith Logistics Hub">
+              <input type="text" id="newInvCustomerName" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none" placeholder="Enter customer legal or trade name">
             </div>
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">Customer GSTIN (15 Digits)</label>
-              <input type="text" id="newInvCustomerGstin" maxlength="15" oninput="calculateNewInvoiceTax()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none uppercase" placeholder="27AAACZ1234F1Z5">
+              <input type="text" id="newInvCustomerGstin" maxlength="15" oninput="calculateNewInvoiceTax()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none uppercase" placeholder="e.g. 27AAAAA0000A1Z5">
             </div>
           </div>
 
@@ -5838,7 +5838,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">Taxable Value (₹) *</label>
-              <input type="number" id="newInvTaxable" step="0.01" min="1" required oninput="calculateNewInvoiceTax()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none" placeholder="100000">
+              <input type="number" id="newInvTaxable" step="0.01" min="1" required oninput="calculateNewInvoiceTax()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none" placeholder="0.00">
             </div>
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">GST Rate *</label>
@@ -5917,7 +5917,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">Invoice / Bill Number *</label>
-              <input type="text" id="newPurNumber" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none" placeholder="BILL-2026-001">
+              <input type="text" id="newPurNumber" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none" placeholder="e.g. BILL-001">
             </div>
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">Bill Date *</label>
@@ -5928,11 +5928,11 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">Supplier / Vendor Name *</label>
-              <input type="text" id="newPurSupplierName" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none" placeholder="Acme Logistics & Supplies">
+              <input type="text" id="newPurSupplierName" required class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface text-sm focus:border-primary focus:outline-none" placeholder="Enter supplier trade or legal name">
             </div>
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">Supplier GSTIN (15 Digits) *</label>
-              <input type="text" id="newPurSupplierGstin" maxlength="15" required oninput="onSupplierGstinInput()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none uppercase" placeholder="27AAACA1234A1Z5">
+              <input type="text" id="newPurSupplierGstin" maxlength="15" required oninput="onSupplierGstinInput()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none uppercase" placeholder="e.g. 27AAAAA0000A1Z5">
             </div>
           </div>
 
@@ -5982,7 +5982,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">Taxable Value (₹) *</label>
-              <input type="number" id="newPurTaxable" step="0.01" min="1" required oninput="calculateNewPurchaseTax()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none" placeholder="50000">
+              <input type="number" id="newPurTaxable" step="0.01" min="1" required oninput="calculateNewPurchaseTax()" class="w-full px-3 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface font-mono text-sm focus:border-primary focus:outline-none" placeholder="0.00">
             </div>
             <div>
               <label class="block text-xs font-semibold text-secondary mb-1">GST Rate *</label>
