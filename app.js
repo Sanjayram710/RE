@@ -194,6 +194,7 @@ async function initSessionFromBackend() {
       appState.organization = data.organization || null;
       appState.activeGstin = data.activeGstin || null;
       appState.allGstins = data.allGstins || [];
+      appState.onboardingProfile = data.onboardingProfile || null;
       appState.activePeriod = data.activePeriod || appState.activePeriod || "102026";
       if (!appState.gst) appState.gst = {};
       if (!appState.gst.business) appState.gst.business = {};
@@ -1422,9 +1423,185 @@ function selectFilingEntity(pan, name, subtitle) {
 }
 
 function toggleProfileDropdown(e) {
-  e.stopPropagation();
-  document.getElementById("profileDropdownMenu")?.classList.toggle("active");
+  if (e) e.stopPropagation();
+  if (!appState?.auth?.isLoggedIn) {
+    openAuthModal("signin");
+    return;
+  }
+  const menu = document.getElementById("profileDropdownMenu");
+  if (!menu) return;
+  const isHidden = menu.classList.contains("hidden");
+  if (isHidden) {
+    populateProfileData();
+    menu.classList.remove("hidden");
+    menu.classList.add("active");
+  } else {
+    menu.classList.add("hidden");
+    menu.classList.remove("active");
+  }
 }
+window.toggleProfileDropdown = toggleProfileDropdown;
+
+function closeProfileDropdown() {
+  const menu = document.getElementById("profileDropdownMenu");
+  if (menu) {
+    menu.classList.add("hidden");
+    menu.classList.remove("active");
+  }
+}
+window.closeProfileDropdown = closeProfileDropdown;
+
+// Close dropdown on outside click
+document.addEventListener("click", function(e) {
+  const container = document.getElementById("navUserProfileContainer");
+  const menu = document.getElementById("profileDropdownMenu");
+  if (container && !container.contains(e.target) && menu && !menu.classList.contains("hidden")) {
+    menu.classList.add("hidden");
+    menu.classList.remove("active");
+  }
+});
+
+async function openProfileModal() {
+  closeProfileDropdown();
+  await populateProfileData();
+  const modal = document.getElementById("modalProfileDetails");
+  if (modal) {
+    modal.style.display = "flex";
+    modal.classList.remove("hidden");
+  }
+}
+window.openProfileModal = openProfileModal;
+
+function closeProfileModal() {
+  const modal = document.getElementById("modalProfileDetails");
+  if (modal) {
+    modal.style.display = "none";
+    modal.classList.add("hidden");
+  }
+}
+window.closeProfileModal = closeProfileModal;
+
+async function populateProfileData() {
+  if (!appState.onboardingProfile && (appState.sessionToken || document.cookie.includes("simplegst_session"))) {
+    try {
+      const res = await fetch("/api/onboarding/progress", {
+        credentials: "same-origin",
+        headers: appState.sessionToken ? { "Authorization": "Bearer " + appState.sessionToken } : {}
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success) {
+          appState.onboardingProfile = {
+            pan: data.step2?.pan,
+            gstin: data.step2?.gstin,
+            aadhaarMasked: data.step2?.aadhaarMasked,
+            aadhaarLast4: data.step2?.aadhaarLast4,
+            bank: {
+              holderName: data.step3?.accountHolderName,
+              accountMasked: data.step3?.accountMasked,
+              accountLast4: data.step3?.accountLast4,
+              ifsc: data.step3?.ifsc,
+              bankName: data.step3?.bankName,
+              branchName: data.step3?.branchName
+            },
+            business: {
+              legalName: data.step4?.legalName,
+              tradeName: data.step4?.tradeName,
+              type: data.step4?.businessType,
+              category: data.step4?.businessCategory,
+              email: data.step4?.businessEmail,
+              mobile: data.step4?.businessMobile,
+              address: data.step4?.businessAddress,
+              state: data.step4?.state,
+              city: data.step4?.city,
+              pincode: data.step4?.pincode,
+              activity: data.step4?.businessActivity
+            }
+          };
+          if (data.user && appState.auth?.user) {
+            if (data.user.mobile) appState.auth.user.mobile = data.user.mobile;
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  const user = appState.auth?.user || {};
+  const profile = appState.onboardingProfile || {};
+  const org = appState.organization || {};
+  const activeGst = appState.activeGstin || {};
+
+  const nameVal = user.name || user.fullName || profile.business?.legalName || org.name || "Valued Taxpayer";
+  const emailVal = user.email || profile.business?.email || "—";
+  const mobileVal = user.mobile || profile.business?.mobile || "—";
+  const panVal = profile.pan || org.pan || (activeGst.gstin ? activeGst.gstin.slice(2, 12) : "—");
+  const gstinVal = profile.gstin || activeGst.gstin || "—";
+  const stateVal = profile.business?.state || activeGst.state_name || org.state || "—";
+  const aadhaarVal = profile.aadhaarMasked || (profile.aadhaarLast4 ? "•••• •••• " + profile.aadhaarLast4 : "Not Provided");
+
+  const bankHolderVal = profile.bank?.holderName || nameVal;
+  const bankNameVal = profile.bank?.bankName || "Commercial Bank";
+  const branchVal = profile.bank?.branchName || "Main Branch";
+  const ifscVal = profile.bank?.ifsc || "—";
+  const accMaskedVal = profile.bank?.accountMasked || (profile.bank?.accountLast4 ? "••••••••" + profile.bank.accountLast4 : "••••••••1234");
+
+  const legalNameVal = profile.business?.legalName || org.name || nameVal;
+  const tradeNameVal = profile.business?.tradeName || activeGst.trade_name || legalNameVal;
+  const typeVal = profile.business?.type || org.legal_type || "Private Limited Company";
+  const catVal = profile.business?.category || "General Commercial";
+  const bEmailVal = profile.business?.email || emailVal;
+  const bMobileVal = profile.business?.mobile || mobileVal;
+  const addressVal = profile.business?.address || org.registered_address || "—";
+  const cityVal = profile.business?.city || "—";
+  const pincodeVal = profile.business?.pincode || "—";
+  const locationVal = (cityVal !== "—" ? cityVal + ", " : "") + (stateVal !== "—" ? stateVal : "") + (pincodeVal !== "—" ? " - " + pincodeVal : "");
+  const activityVal = profile.business?.activity || "Commercial Trading / Services";
+
+  // Update Dropdown Elements
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+
+  setText("menuUserFullName", nameVal);
+  setText("menuUserEmail", emailVal);
+  setText("menuUserMobile", mobileVal !== "—" ? "+91 " + mobileVal : "—");
+  setText("menuPan", panVal);
+  setText("menuGstin", gstinVal);
+  setText("menuState", stateVal);
+  setText("menuBankName", bankNameVal);
+  setText("menuBankAccount", accMaskedVal);
+  setText("menuBusinessName", legalNameVal);
+  setText("menuBusinessTypeCategory", typeVal + " • " + catVal);
+
+  // Update Profile Modal Elements
+  setText("profFullName", nameVal);
+  setText("profMobile", mobileVal !== "—" ? "+91 " + mobileVal : "—");
+  setText("profEmail", emailVal);
+  setText("profRoleBadge", user.role || "Owner");
+  setText("profPan", panVal);
+  setText("profGstin", gstinVal);
+  setText("profState", stateVal);
+  setText("profAadhaar", aadhaarVal);
+
+  setText("profBankHolder", bankHolderVal);
+  setText("profBankAccount", accMaskedVal);
+  setText("profBankName", bankNameVal);
+  setText("profBankBranch", branchVal);
+  setText("profBankIfsc", ifscVal);
+
+  setText("profLegalName", legalNameVal);
+  setText("profTradeName", tradeNameVal);
+  setText("profBusinessType", typeVal);
+  setText("profBusinessTypeBadge", typeVal);
+  setText("profBusinessCategory", catVal);
+  setText("profBusinessEmail", bEmailVal);
+  setText("profBusinessMobile", bMobileVal !== "—" ? "+91 " + bMobileVal : "—");
+  setText("profBusinessAddress", addressVal);
+  setText("profBusinessLocation", locationVal);
+  setText("profBusinessActivity", activityVal);
+}
+window.populateProfileData = populateProfileData;
 
 window.toggleMoreServicesMenu = function(e) {
   if (e) e.stopPropagation();
@@ -1434,9 +1611,6 @@ window.toggleMoreServicesMenu = function(e) {
 
 function viewMyReturns() {
   alert("📋 My GST Returns:\n• October 2026: GSTR-3B Ready to File (₹70,200)\n• September 2026: Filed & Verified (ARN: AA320926019284A)\n• August 2026: Filed & Verified (ARN: AA320826982104A)");
-}
-function openProfileModal() {
-  alert("🏢 Business Profile:\nLegal Name: Malabar Spice Traders\nGSTIN: 32ABCDE1234F1Z5\nState: 32-Kerala\nFiling Frequency: Monthly (GSTR-1 & GSTR-3B)\nStatus: Active (100% Compliant)");
 }
 function openOrdersModal() { alert("🎁 Referral Rewards & Credits:\nAvailable Wallet: ₹1,500\nReferral Code: MALABAR500\nCashback: ₹500 instant discount on filings."); }
 function openRewardsModal() { alert("My Rewards: ₹500 Referral voucher available with code REWARD500."); }
@@ -1621,6 +1795,7 @@ function renderAuthState() {
     }
   }
   if (typeof updatePersonalInfoState === "function") updatePersonalInfoState();
+  if (typeof populateProfileData === "function") populateProfileData();
   renderFilingDropdownItems();
 }
 window.renderAuthState = renderAuthState;
