@@ -1808,8 +1808,27 @@ function renderAuthState() {
 window.renderAuthState = renderAuthState;
 
 function openAuthModal(tab = "signin") {
+  const idInput = document.getElementById("loginIdentifier");
+  const passInput = document.getElementById("loginPassword");
+  if (idInput) idInput.value = "";
+  if (passInput) passInput.value = "";
+  const errEl = document.getElementById("loginErrorMessage");
+  if (errEl) errEl.classList.add("hidden");
+
   openModal("modalAuth");
   switchAuthTab(tab);
+
+  // Prevent browser password managers from auto-injecting saved localhost credentials
+  const clearInputs = () => {
+    const id = document.getElementById("loginIdentifier");
+    const pass = document.getElementById("loginPassword");
+    if (id && document.activeElement !== id) id.value = "";
+    if (pass && document.activeElement !== pass) pass.value = "";
+  };
+  requestAnimationFrame(clearInputs);
+  setTimeout(clearInputs, 50);
+  setTimeout(clearInputs, 150);
+  setTimeout(clearInputs, 350);
 }
 window.openAuthModal = openAuthModal;
 
