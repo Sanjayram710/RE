@@ -380,7 +380,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   } else {
     // Unauthenticated initial state: render logged out state without intrusive blocking modal
     renderAuthState();
-    // Login and Signup UI modal is deferred from popping up automatically on page load
+    // Open Sign In modal automatically if arrived from landing page with ?auth=signin
+    const urlParams = new URLSearchParams(window.location.search);
+    const authAction = urlParams.get("auth") || (window.location.hash ? window.location.hash.replace("#", "") : "");
+    if (authAction === "signin" || authAction === "login") {
+      openAuthModal("signin");
+    } else if (authAction === "signup" || authAction === "register") {
+      openAuthModal("signup");
+    }
   }
 
   // Close dropdowns on outside click
