@@ -369,13 +369,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   initKioskEventListeners();
   await fetchAppMode();
   
-  // Default to stunning Landing Page on initial load, or respect hash if specified
-  const initialHash = window.location.hash.replace(/^#/, "");
-  if (initialHash && ["home", "sales", "purchase", "file-gst", "bills", "recon", "taxcalc", "itr", "expert", "notice", "vault", "gst", "copilot", "startup", "compliance", "practice", "vendor"].includes(initialHash)) {
-    switchSuite(initialHash);
-  } else {
-    switchSuite('landing');
-  }
+  // Default to GST Return Assistant on load
+  switchSuite('home');
 
   if (isAuthenticated && appState.activeGstin) {
     selectFilingEntity(appState.activeGstin.gstin, appState.activeGstin.trade_name || appState.organization?.name || "Taxpayer", appState.activeGstin.state_name || "");
@@ -457,7 +452,6 @@ function switchSuite(suite) {
 
 function executeSwitchSuite(suite) {
   appState.currentSuite = suite;
-  const viewLanding = document.getElementById("viewLandingSuite");
   if (["sales", "purchase", "bills", "bills-docs", "purchases", "sales-invoices"].includes(suite)) {
     ensureActiveSession().catch(() => {});
   }
@@ -487,7 +481,7 @@ function executeSwitchSuite(suite) {
 
   // Reset all suites
   const allSuites = [
-    viewLanding, viewItr, viewExpert, viewNotice, viewVault, viewGst, viewCopilot, 
+    viewItr, viewExpert, viewNotice, viewVault, viewGst, viewCopilot, 
     viewStartup, viewCompliance, viewHome, viewBills, viewRecon, 
     viewTaxCalc, viewPractice, viewVendor, viewFileGst, viewSales, viewPurchase
   ];
@@ -509,17 +503,7 @@ function executeSwitchSuite(suite) {
     b.classList.add('text-secondary');
   });
 
-  if (suite === "landing") {
-    if (viewLanding) {
-      viewLanding.classList.add("active");
-      viewLanding.classList.remove("hidden");
-      viewLanding.style.display = "block";
-    }
-    highlightSidebarNav('nav-link-landing');
-    if (typeof initLandingCarousel === "function") {
-      initLandingCarousel();
-    }
-  } else if (suite === "home") {
+  if (suite === "home") {
     if (viewHome) {
       viewHome.classList.add("active");
       viewHome.classList.remove("hidden");
