@@ -5388,6 +5388,13 @@ async function submitNewInvoice(event) {
       if (typeof switchFilingPeriod === "function" && savedPeriod !== getActivePeriod()) {
         await switchFilingPeriod(savedPeriod);
       }
+      if (typeof switchSuite === "function") {
+        switchSuite('sales');
+      }
+      const searchInput = document.getElementById('salesSearchInput');
+      if (searchInput) searchInput.value = "";
+      const filterSelect = document.getElementById('salesSupplyTypeFilter');
+      if (filterSelect) filterSelect.value = "ALL";
       if (typeof refreshInvoices === "function") {
         await refreshInvoices('sales');
       }
@@ -5400,6 +5407,7 @@ async function submitNewInvoice(event) {
       const form = document.querySelector("#modalNewInvoice form");
       if (form) form.reset();
       if (posSelect) delete posSelect.dataset.userModified;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       if (typeof showToast === "function") {
         showToast(data.error || "Failed to create invoice", "error");
@@ -7463,6 +7471,13 @@ async function submitNewPurchase(event) {
       if (typeof switchFilingPeriod === "function" && savedPeriod !== getActivePeriod()) {
         await switchFilingPeriod(savedPeriod);
       }
+      if (typeof switchSuite === "function") {
+        switchSuite('purchase');
+      }
+      const searchInput = document.getElementById('purchaseSearchInput');
+      if (searchInput) searchInput.value = "";
+      const filterSelect = document.getElementById('purchaseItcFilter');
+      if (filterSelect) filterSelect.value = "ALL";
       if (typeof refreshInvoices === "function") {
         await refreshInvoices('purchase');
       }
@@ -7475,6 +7490,7 @@ async function submitNewPurchase(event) {
       const form = document.querySelector("#modalNewPurchase form");
       if (form) form.reset();
       if (posSelect) delete posSelect.dataset.userModified;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       if (typeof showToast === "function") {
         showToast(data.error || "Failed to create purchase bill", "error");
@@ -8342,9 +8358,19 @@ async function saveExtractedInvoice() {
         await switchFilingPeriod(savedPeriod);
       }
       if (invoiceType === "sales_invoice") {
+        if (typeof switchSuite === "function") switchSuite('sales');
+        const searchInput = document.getElementById('salesSearchInput');
+        if (searchInput) searchInput.value = "";
+        const filterSelect = document.getElementById('salesSupplyTypeFilter');
+        if (filterSelect) filterSelect.value = "ALL";
         if (typeof renderSalesSuite === "function") await renderSalesSuite();
         if (typeof refreshInvoices === "function") await refreshInvoices('sales');
       } else {
+        if (typeof switchSuite === "function") switchSuite('purchase');
+        const searchInput = document.getElementById('purchaseSearchInput');
+        if (searchInput) searchInput.value = "";
+        const filterSelect = document.getElementById('purchaseItcFilter');
+        if (filterSelect) filterSelect.value = "ALL";
         if (typeof renderPurchaseSuite === "function") await renderPurchaseSuite();
         if (typeof refreshInvoices === "function") await refreshInvoices('purchase');
       }
@@ -8355,6 +8381,7 @@ async function saveExtractedInvoice() {
       if (typeof showToast === "function") {
         showToast(data.message || "Invoice successfully saved to register!", "success");
       }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       if (typeof showToast === "function") {
         showToast(data.error || "Failed to save invoice to register.", "error");
@@ -8408,6 +8435,13 @@ async function approveOcrReviewInvoice() {
       if (typeof showToast === "function") {
         showToast("Invoice AOS-4412 approved and synced to Purchase Register!", "success");
       }
+      if (typeof switchSuite === "function") {
+        switchSuite('purchase');
+      }
+      const searchInput = document.getElementById('purchaseSearchInput');
+      if (searchInput) searchInput.value = "";
+      const filterSelect = document.getElementById('purchaseItcFilter');
+      if (filterSelect) filterSelect.value = "ALL";
       if (typeof refreshInvoices === "function") {
         await refreshInvoices('purchase');
       }
@@ -8415,6 +8449,7 @@ async function approveOcrReviewInvoice() {
       if (typeof loadDashboardData === "function") {
         loadDashboardData(period);
       }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       if (typeof showToast === "function") {
         showToast(data.error || "Failed to approve OCR invoice", "error");
