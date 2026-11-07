@@ -5,16 +5,16 @@
    ========================================================================== */
 
 :root {
-  --primary-blue: #0F67FE;
-  --primary-hover: #0052D9;
-  --dark-navy: #0A1E42;
-  --bg-slate: #F8FAFC;
+  --primary-blue: #2563EB;
+  --primary-hover: #1D4ED8;
+  --dark-navy: #0B192C;
+  --bg-slate: #FAFAFD;
   --white: #FFFFFF;
   --text-main: #0F172A;
   --text-body: #334155;
   --text-muted: #64748B;
   --border-light: #E2E8F0;
-  --border-card: #E5E7EB;
+  --border-card: #E2E8F0;
   
   --success-green: #059669;
   --success-light: #ECFDF5;
