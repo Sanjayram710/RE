@@ -66,6 +66,49 @@
     };
   </script>
 
+
+  <style>
+    @keyframes laserSweep {
+      0% { top: 0%; opacity: 0.8; }
+      50% { top: 88%; opacity: 1; }
+      100% { top: 0%; opacity: 0.8; }
+    }
+    @keyframes floatGentle {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes textShimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    .laser-scanner-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #2563eb, #008378, #10b981, transparent);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.7);
+      animation: laserSweep 3.2s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .landing-float {
+      animation: floatGentle 4s ease-in-out infinite;
+    }
+    .landing-shimmer-text {
+      background: linear-gradient(90deg, #0b1c30 0%, #2563eb 35%, #008378 70%, #0b1c30 100%);
+      background-size: 200% auto;
+      color: transparent;
+      -webkit-background-clip: text;
+      animation: textShimmer 6s linear infinite;
+    }
+    .landing-card-hover {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .landing-card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 32px -8px rgba(11, 28, 48, 0.12);
+    }
+  </style>
 </head>
 <body class="bg-surface text-on-surface antialiased font-sans flex min-h-screen">
   <!-- Floating Kiosk Mode Exit Banner (Pinned at Top in Kiosk Mode) -->
@@ -94,7 +137,7 @@
     <div class="flex flex-col gap-5 overflow-y-auto">
       <!-- Brand Logo & Mobile Close -->
       <div class="flex items-center justify-between pb-3 border-b border-outline-variant">
-        <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchSuite('home')">
+        <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchSuite('landing')">
           <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-sm">
             <span class="material-symbols-outlined text-2xl">account_balance</span>
           </div>
@@ -127,6 +170,14 @@
 
       <!-- Navigation Destinations -->
       <nav class="flex flex-col gap-1" id="mainSidebarNav">
+        <!-- 0. Welcome Landing Page -->
+        <a id="nav-link-landing" onclick="switchSuite('landing'); return false;" class="sidebar-nav-link flex items-center justify-between px-3 py-2.5 rounded-xl bg-primary text-on-primary font-bold shadow-xs transition-colors cursor-pointer mb-1" href="#landing">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+            <span>Welcome Landing</span>
+          </div>
+          <span class="font-label-sm text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-semibold">Featured</span>
+        </a>
         <!-- 1. Home Dashboard -->
         <a id="nav-link-home" onclick="switchSuite('home'); return false;" class="sidebar-nav-link flex items-center justify-between px-3 py-2.5 rounded-xl bg-surface-container-high text-primary font-bold border-l-4 border-primary transition-colors cursor-pointer" href="#home">
           <div class="flex items-center gap-3">
@@ -450,7 +501,591 @@
     <!-- ========================================================================= -->
     <!-- 1. HOME DASHBOARD SUITE (Stitch Screen 1)                                -->
     <!-- ========================================================================= -->
-    <div id="viewHomeSuite" class="app-suite-container active">
+    
+    <!-- ========================================================================= -->
+    <!-- 0. ULTRA-PREMIUM ANIMATED LANDING PAGE SUITE (ClearTax Style with Photos) -->
+    <!-- ========================================================================= -->
+    <div id="viewLandingSuite" class="app-suite-container active">
+      <main class="space-y-12 max-w-[1600px] w-full mx-auto pb-24">
+        
+        <!-- ===================================================================== -->
+        <!-- A. HERO SECTION: Dynamic Gradient, Notice Protect & Dual Cards        -->
+        <!-- ===================================================================== -->
+        <section class="relative overflow-hidden rounded-3xl bg-surface-container-lowest border border-outline-variant p-6 sm:p-10 lg:p-12 shadow-sm">
+          <!-- Background Ambient Glow -->
+          <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-3/4 h-96 bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-teal-500/5 blur-3xl pointer-events-none rounded-full"></div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center relative z-10">
+            
+            <!-- Left 7 Cols: Value Prop, Notice Protect & Action Cards -->
+            <div class="lg:col-span-7 space-y-6">
+              
+              <!-- Trust Rating Pill -->
+              <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-surface-container-low border border-outline-variant shadow-xs">
+                <span class="font-label-sm font-bold text-on-surface">8 M+ Users Trust Us</span>
+                <span class="text-outline-variant">|</span>
+                <div class="flex items-center gap-0.5 text-amber-500">
+                  <span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+                  <span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+                  <span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+                  <span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+                  <span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+                </div>
+                <span class="font-label-sm font-bold text-on-surface">4.9</span>
+                <span class="font-label-sm text-secondary hidden sm:inline">(35,000+ Verified Reviews)</span>
+              </div>
+
+              <!-- Main Hero Heading -->
+              <div class="space-y-2">
+                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-on-surface leading-[1.12]">
+                  India's Most Trusted <br />
+                  <span class="landing-shimmer-text">Tax & GST Platform</span>
+                </h1>
+                <p class="text-base sm:text-lg text-secondary max-w-2xl leading-relaxed pt-2">
+                  <strong class="text-on-surface font-semibold">100% Accuracy and Maximum Tax Refund.</strong> File your ITR, GST, and business returns in minutes with zero guesswork, automated deduction scanning, and statutory notice protection.
+                </p>
+              </div>
+
+              <!-- Notice Protect Guarantee Banner (From Uploaded Photo 5) -->
+              <div class="flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-teal-50/80 to-emerald-50/60 border border-emerald-300 shadow-xs">
+                <div class="w-11 h-11 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+                  <span class="material-symbols-outlined text-2xl">verified_user</span>
+                </div>
+                <div class="space-y-0.5">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-headline-sm font-bold text-primary tracking-tight text-sm sm:text-base">SimpleGST NOTICE PROTECT™</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary text-on-primary uppercase tracking-wider">Guarantee</span>
+                  </div>
+                  <p class="text-xs sm:text-sm text-secondary">
+                    Received a tax notice? <strong class="text-on-surface font-semibold">We Handle It Free</strong> &bull; Computation Error? <strong class="text-on-surface font-semibold">100% Refund Guarantee</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Dual Action Cards (From Uploaded Photo 5) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 max-w-xl">
+                <!-- Card 1: File ITR / GST -->
+                <div class="landing-card-hover p-5 rounded-2xl bg-surface-container-low border border-outline-variant flex flex-col justify-between space-y-4">
+                  <div class="space-y-1">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center mb-3">
+                      <span class="material-symbols-outlined text-xl">description</span>
+                    </div>
+                    <h3 class="font-bold text-base text-on-surface">File your return / ITR</h3>
+                    <p class="text-xs text-secondary">In just <span class="text-emerald-700 font-bold">2 minutes</span> with auto-prefill</p>
+                  </div>
+                  <button onclick="switchSuite('home')" class="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-label-md font-semibold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer">
+                    <span>File Now</span>
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  </button>
+                </div>
+
+                <!-- Card 2: Hire an Expert -->
+                <div class="landing-card-hover p-5 rounded-2xl bg-surface-container-low border border-outline-variant flex flex-col justify-between space-y-4">
+                  <div class="space-y-1">
+                    <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center mb-3">
+                      <span class="material-symbols-outlined text-xl">support_agent</span>
+                    </div>
+                    <h3 class="font-bold text-base text-on-surface">Hire a Tax Expert</h3>
+                    <p class="text-xs text-secondary">For year-round tax & notice needs</p>
+                  </div>
+                  <button onclick="switchSuite('expert')" class="w-full py-2.5 px-4 rounded-xl bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-primary font-label-md font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer">
+                    <span>Hire an Expert</span>
+                    <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right 5 Cols: High-Res Real Photo & Floating AI Laser Scanner HUD -->
+            <div class="lg:col-span-5 relative flex justify-center">
+              
+              <!-- Portrait Frame -->
+              <div class="relative w-full max-w-[440px] rounded-3xl overflow-hidden border border-outline-variant shadow-2xl bg-slate-900">
+                <img src="photo/cleartax-hero-woman.jpg" alt="Tax Filing Professional" class="w-full h-[420px] sm:h-[460px] object-cover block" />
+                
+                <!-- Bottom Dark Gradient Overlay -->
+                <div class="absolute bottom-0 inset-x-0 h-36 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent p-6 flex flex-col justify-end text-white">
+                  <span class="text-[10px] uppercase font-bold tracking-widest text-emerald-400">AI-Powered Compliance</span>
+                  <span class="text-base font-bold text-white">100% Tax Notice Protection Guaranteed</span>
+                </div>
+              </div>
+
+              <!-- Floating Live AI Deduction Scanner HUD (From Photo 5) -->
+              <div class="landing-float hidden sm:block absolute top-6 -right-6 w-80 p-4 rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-2xl z-20 overflow-hidden text-left">
+                <!-- Sweeping Laser Line -->
+                <div class="laser-scanner-line"></div>
+
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs font-bold text-on-surface">Auto-applying deductions...</span>
+                  <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full animate-pulse">LIVE SCAN</span>
+                </div>
+
+                <div class="space-y-2 text-xs">
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <span class="text-secondary font-medium">Standard Deduction</span>
+                    <span class="text-emerald-700 font-bold">₹ 50,000 ✓</span>
+                  </div>
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <span class="text-secondary font-medium">Section 80C (PPF/ELSS)</span>
+                    <span class="text-emerald-700 font-bold">₹ 1,50,000 ✓</span>
+                  </div>
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-blue-50 border border-blue-100">
+                    <span class="text-blue-700 font-medium">Section 80D Mediclaim</span>
+                    <span class="text-blue-700 font-bold">SCANNING...</span>
+                  </div>
+                </div>
+
+                <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                  <span class="text-[11px] text-secondary">Tax Saved So Far:</span>
+                  <span class="text-sm font-bold text-emerald-600">+ ₹ 89,090</span>
+                </div>
+              </div>
+
+              <!-- Floating Lifetime Stat Pill -->
+              <div class="hidden sm:flex absolute -bottom-5 -left-5 p-3.5 rounded-2xl bg-white border border-outline-variant shadow-xl items-center gap-3 z-20">
+                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                  <span class="material-symbols-outlined text-[18px]">verified</span>
+                </div>
+                <div>
+                  <div class="text-sm font-bold text-on-surface">₹ 5,346 Cr+</div>
+                  <div class="text-[11px] text-secondary">Lifetime Tax Refunds Delivered</div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- B. PROOF STATS RIBBON                                                 -->
+        <!-- ===================================================================== -->
+        <section class="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 sm:p-8 shadow-xs">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center divide-y lg:divide-y-0 lg:divide-x divide-outline-variant">
+            <div class="pt-4 lg:pt-0">
+              <div class="text-2xl sm:text-4xl font-extrabold text-on-surface font-headline-lg tracking-tight">₹ 5,346 Cr+</div>
+              <div class="text-xs sm:text-sm text-secondary font-medium mt-1">Lifetime Tax Refund Delivered</div>
+            </div>
+            <div class="pt-4 lg:pt-0">
+              <div class="text-2xl sm:text-4xl font-extrabold text-primary font-headline-lg tracking-tight">8 M+</div>
+              <div class="text-xs sm:text-sm text-secondary font-medium mt-1">Users Trust Us Across India</div>
+            </div>
+            <div class="pt-4 lg:pt-0">
+              <div class="text-2xl sm:text-4xl font-extrabold text-blue-600 font-headline-lg tracking-tight">99.98%</div>
+              <div class="text-xs sm:text-sm text-secondary font-medium mt-1">Notice-Free Filing Accuracy</div>
+            </div>
+            <div class="pt-4 lg:pt-0">
+              <div class="text-2xl sm:text-4xl font-extrabold text-amber-600 font-headline-lg tracking-tight">80+</div>
+              <div class="text-xs sm:text-sm text-secondary font-medium mt-1">Direct Broker & Bank Integrations</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- C. INTERACTIVE 3D CAROUSEL: WHY CHOOSE SIMPLEGST (PHOTOS 1, 3, 4)     -->
+        <!-- ===================================================================== -->
+        <section id="landingCarouselSection" class="space-y-8" onmouseenter="stopLandingCarouselAuto()" onmouseleave="startLandingCarouselAuto()">
+          
+          <div class="text-center space-y-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary uppercase tracking-wider">
+              <span class="material-symbols-outlined text-[15px]">auto_awesome</span>
+              Why Choose SimpleGST
+            </span>
+            <h2 class="text-2xl sm:text-4xl font-bold tracking-tight text-on-surface">
+              Why choose SimpleGST to file your taxes
+            </h2>
+            <p class="text-sm sm:text-base text-secondary max-w-xl mx-auto">
+              Automated statutory verification and expert chartered accountants combine to guarantee maximum refunds and zero notice risk.
+            </p>
+          </div>
+
+          <!-- Carousel Tabs -->
+          <div class="flex justify-center gap-2 flex-wrap">
+            <button id="landingTab-0" onclick="setLandingSlide(0); stopLandingCarouselAuto();" class="px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold border transition-all cursor-pointer bg-white text-primary border-primary shadow-xs flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>Maximum Tax Refund</span>
+            </button>
+            <button id="landingTab-1" onclick="setLandingSlide(1); stopLandingCarouselAuto();" class="px-5 py-2.5 rounded-full text-xs sm:text-sm font-medium border border-outline-variant text-secondary hover:text-on-surface transition-all cursor-pointer flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              <span>100% Statutory Accuracy</span>
+            </button>
+            <button id="landingTab-2" onclick="setLandingSlide(2); stopLandingCarouselAuto();" class="px-5 py-2.5 rounded-full text-xs sm:text-sm font-medium border border-outline-variant text-secondary hover:text-on-surface transition-all cursor-pointer flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+              <span>24x7 Expert CA Support</span>
+            </button>
+          </div>
+
+          <!-- Big Showcase Carousel Box -->
+          <div class="rounded-3xl border border-outline-variant bg-surface-container-lowest p-6 sm:p-10 shadow-sm relative overflow-hidden">
+            
+            <!-- SLIDE 0: MAXIMUM TAX REFUND (PHOTO 1) -->
+            <div id="landingSlide-0" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <!-- Left Visual -->
+              <div class="lg:col-span-6 relative flex justify-center">
+                <div class="relative w-full max-w-[420px] rounded-2xl overflow-hidden shadow-xl border border-outline-variant bg-slate-900">
+                  <img src="photo/cleartax-refund-phone.jpg" alt="Maximum Tax Refund on Mobile" class="w-full h-[360px] sm:h-[400px] object-cover block" />
+                </div>
+                <!-- Floating Card Widget -->
+                <div class="landing-float hidden sm:block absolute bottom-4 -right-4 w-64 p-4 rounded-xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl">
+                  <span class="text-[10px] font-bold text-secondary uppercase tracking-wider">Total Refund</span>
+                  <div class="text-2xl font-black text-emerald-600">₹ 89,090</div>
+                  <div class="mt-1 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 inline-block">100% Notice Protected</div>
+                  <div class="mt-2 pt-2 border-t border-slate-100 text-[11px] text-secondary space-y-1">
+                    <div class="flex justify-between"><span>Gross Income:</span> <strong class="text-on-surface font-mono">₹ 30,28,152</strong></div>
+                    <div class="flex justify-between"><span>Deductions:</span> <strong class="text-emerald-700 font-mono">₹ 3,99,673</strong></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Right Copy -->
+              <div class="lg:col-span-6 space-y-5 text-left">
+                <span class="px-3 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">OPTIMIZED DEDUCTIONS</span>
+                <h3 class="text-2xl sm:text-4xl font-bold tracking-tight text-on-surface">Maximum Tax Refund</h3>
+                <p class="text-secondary text-sm sm:text-base leading-relaxed">
+                  Whether you file by yourself or with our tax experts, we scan 40+ statutory exemptions to identify every deduction you qualify for.
+                </p>
+                <div class="space-y-2.5 text-xs sm:text-sm text-on-surface">
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span><span>Automated multi-regime choice (Old vs New Regime calculated live)</span></div>
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span><span>Comprehensive scan across 80C, 80D, 80CCD, 24(b) & HRA exemptions</span></div>
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span><span>Section 89 tax relief calculation for salary arrears and bonuses</span></div>
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span><span>Direct bank account pre-validation for accelerated 7-day refund credit</span></div>
+                </div>
+                <div class="pt-2 flex items-center gap-4">
+                  <button onclick="switchSuite('taxcalc')" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-label-md font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer">
+                    <span>Calculate Your Refund</span>
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  </button>
+                  <div class="flex gap-2">
+                    <button onclick="prevLandingSlide()" class="w-9 h-9 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors cursor-pointer" title="Previous"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>
+                    <button onclick="nextLandingSlide()" class="w-9 h-9 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors cursor-pointer" title="Next"><span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SLIDE 1: 100% STATUTORY ACCURACY (PHOTO 3) -->
+            <div id="landingSlide-1" class="hidden grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <!-- Left Visual -->
+              <div class="lg:col-span-6 relative flex justify-center">
+                <div class="relative w-full max-w-[420px] rounded-2xl overflow-hidden shadow-xl border border-outline-variant bg-slate-900">
+                  <img src="photo/cleartax-accuracy-girl.jpg" alt="100% Accuracy Report" class="w-full h-[360px] sm:h-[400px] object-cover block" />
+                </div>
+                <div class="landing-float hidden sm:block absolute bottom-4 -right-4 w-64 p-4 rounded-xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl">
+                  <span class="text-[10px] font-bold text-secondary uppercase tracking-wider">Accuracy Score</span>
+                  <div class="text-2xl font-black text-blue-600">100% Verified</div>
+                  <div class="mt-1 text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 inline-block">120+ Rules Evaluated</div>
+                  <div class="mt-2 pt-2 border-t border-slate-100 text-[11px] text-secondary space-y-1">
+                    <div class="flex justify-between"><span>Salary Check:</span> <strong class="text-on-surface font-mono">₹ 20,54,672 ✓</strong></div>
+                    <div class="flex justify-between"><span>Receipts Check:</span> <strong class="text-blue-700 font-mono">₹ 5,13,588 ✓</strong></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Right Copy -->
+              <div class="lg:col-span-6 space-y-5 text-left">
+                <span class="px-3 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">ZERO ERROR TECHNOLOGY</span>
+                <h3 class="text-2xl sm:text-4xl font-bold tracking-tight text-on-surface">100% Statutory Accuracy</h3>
+                <p class="text-secondary text-sm sm:text-base leading-relaxed">
+                  Our error-detection technology reviews your return against 120+ statutory rules, catching mistakes and missed entries — so you can file confidently.
+                </p>
+                <div class="space-y-2.5 text-xs sm:text-sm text-on-surface">
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-blue-600 text-[18px]">check_circle</span><span>Triangulates Form 16, AIS, TIS, and 26AS data to eliminate mismatches</span></div>
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-blue-600 text-[18px]">check_circle</span><span>Automated Place of Supply & GSTIN checksum mathematical verification</span></div>
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-blue-600 text-[18px]">check_circle</span><span>Cross-checks capital gains and dividend schedules against broker trades</span></div>
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-blue-600 text-[18px]">check_circle</span><span>Notice Protect guarantee: We defend any statutory scrutiny at zero fee</span></div>
+                </div>
+                <div class="pt-2 flex items-center gap-4">
+                  <button onclick="switchSuite('sales')" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-label-md font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer">
+                    <span>Verify Your Data</span>
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  </button>
+                  <div class="flex gap-2">
+                    <button onclick="prevLandingSlide()" class="w-9 h-9 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors cursor-pointer" title="Previous"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>
+                    <button onclick="nextLandingSlide()" class="w-9 h-9 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors cursor-pointer" title="Next"><span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SLIDE 2: 24X7 EXPERT CA SUPPORT (PHOTO 4) -->
+            <div id="landingSlide-2" class="hidden grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <!-- Left Visual -->
+              <div class="lg:col-span-6 relative flex justify-center">
+                <div class="relative w-full max-w-[420px] rounded-2xl overflow-hidden shadow-xl border border-outline-variant bg-slate-900">
+                  <img src="photo/cleartax-support-expert.jpg" alt="Tax Support Expert" class="w-full h-[360px] sm:h-[400px] object-cover block" />
+                </div>
+                <div class="landing-float hidden sm:block absolute bottom-4 -right-4 w-64 p-4 rounded-xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl">
+                  <span class="text-[10px] font-bold text-secondary uppercase tracking-wider">CA Concierge</span>
+                  <div class="text-xl font-black text-teal-700">Call Connected</div>
+                  <div class="mt-1 text-[10px] font-bold px-2 py-0.5 rounded bg-teal-50 text-teal-800 inline-block">Active Call (30:21)</div>
+                  <div class="mt-2 pt-2 border-t border-slate-100 text-[11px] text-secondary space-y-1">
+                    <div class="flex justify-between"><span>Assigned CA:</span> <strong class="text-on-surface">Rajesh K. (FCA)</strong></div>
+                    <div class="flex justify-between"><span>Review:</span> <strong class="text-teal-700">Audit Ready ✓</strong></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Right Copy -->
+              <div class="lg:col-span-6 space-y-5 text-left">
+                <span class="px-3 py-1 rounded-md text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200">HUMAN + AI ASSISTANCE</span>
+                <h3 class="text-2xl sm:text-4xl font-bold tracking-tight text-on-surface">24x7 Dedicated Expert Support</h3>
+                <p class="text-secondary text-sm sm:text-base leading-relaxed">
+                  Our team of chartered accountants and tax professionals is available around the clock — via chat, phone, or video screen share — ready to guide you through every step.
+                </p>
+                <div class="space-y-2.5 text-xs sm:text-sm text-on-surface">
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-teal-700 text-[18px]">check_circle</span><span>Instant 1-on-1 audio/video call consultation with senior tax attorneys</span></div>
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-teal-700 text-[18px]">check_circle</span><span>Expert document review before final tax authority portal submission</span></div>
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-teal-700 text-[18px]">check_circle</span><span>Specialized guidance for capital gains, ESOPs, RSUs, and foreign income</span></div>
+                  <div class="flex items-center gap-2"><span class="material-symbols-outlined text-teal-700 text-[18px]">check_circle</span><span>End-to-end e-verification and post-filing statutory compliance tracking</span></div>
+                </div>
+                <div class="pt-2 flex items-center gap-4">
+                  <button onclick="switchSuite('expert')" class="px-5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-label-md font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer">
+                    <span>Talk to a Tax Expert</span>
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  </button>
+                  <div class="flex gap-2">
+                    <button onclick="prevLandingSlide()" class="w-9 h-9 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors cursor-pointer" title="Previous"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>
+                    <button onclick="nextLandingSlide()" class="w-9 h-9 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors cursor-pointer" title="Next"><span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- D. PERSONA MATRIX: "FOR EVERY TAXPAYER" (FROM PHOTO 2)                -->
+        <!-- ===================================================================== -->
+        <section class="space-y-8">
+          <div class="text-center space-y-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary uppercase tracking-wider">
+              <span class="material-symbols-outlined text-[15px]">group</span>
+              Tailored Solutions
+            </span>
+            <h2 class="text-2xl sm:text-4xl font-bold tracking-tight text-on-surface">
+              India's Most Trusted Tax Filing Platform
+            </h2>
+            <p class="text-sm sm:text-base text-secondary max-w-xl mx-auto">
+              From salaried freshers to high-frequency algo traders and multinational business owners — SimpleGST has a specialized workflow for you.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- 1. Salaried Professionals -->
+            <div onclick="switchSuite('home')" class="landing-card-hover p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant flex flex-col justify-between space-y-4 cursor-pointer">
+              <div class="space-y-3">
+                <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-2xl">work</span>
+                </div>
+                <h3 class="text-lg font-bold text-on-surface">Salaried Professionals</h3>
+                <p class="text-xs sm:text-sm text-secondary">Simple, accurate filing for every salaried taxpayer. 1-click Form 16 auto-upload.</p>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs font-bold text-blue-700 pt-2">
+                <span>Start Filing Salaried ITR</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </div>
+            </div>
+
+            <!-- 2. Investors and Traders -->
+            <div onclick="switchSuite('taxcalc')" class="landing-card-hover p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant flex flex-col justify-between space-y-4 cursor-pointer">
+              <div class="space-y-3">
+                <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-2xl">trending_up</span>
+                </div>
+                <h3 class="text-lg font-bold text-on-surface">Investors and Traders</h3>
+                <p class="text-xs sm:text-sm text-secondary">1-click capital gains import from 80+ brokers (Zerodha, Groww, AngelOne, Upstox).</p>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 pt-2">
+                <span>Import Broker Trades</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </div>
+            </div>
+
+            <!-- 3. Freelancers & Professionals -->
+            <div onclick="switchSuite('sales')" class="landing-card-hover p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant flex flex-col justify-between space-y-4 cursor-pointer">
+              <div class="space-y-3">
+                <div class="w-11 h-11 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-2xl">laptop_mac</span>
+                </div>
+                <h3 class="text-lg font-bold text-on-surface">Freelancers & Professionals</h3>
+                <p class="text-xs sm:text-sm text-secondary">Consulting fees, TDS deductions, advance tax, and Section 44ADA 50% presumptive savings.</p>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs font-bold text-cyan-700 pt-2">
+                <span>File 44ADA Return</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </div>
+            </div>
+
+            <!-- 4. Advanced Traders -->
+            <div onclick="switchSuite('taxcalc')" class="landing-card-hover p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant flex flex-col justify-between space-y-4 cursor-pointer">
+              <div class="space-y-3">
+                <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-2xl">paid</span>
+                </div>
+                <h3 class="text-lg font-bold text-on-surface">Advanced Traders</h3>
+                <p class="text-xs sm:text-sm text-secondary">F&O, intraday or complex capital gains — balance sheet audit reviews & automated loss carry-forward.</p>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs font-bold text-amber-700 pt-2">
+                <span>File F&O Return</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </div>
+            </div>
+
+            <!-- 5. NRIs & RSU/ESOPs Holders -->
+            <div onclick="switchSuite('expert')" class="landing-card-hover p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant flex flex-col justify-between space-y-4 cursor-pointer">
+              <div class="space-y-3">
+                <div class="w-11 h-11 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-2xl">public</span>
+                </div>
+                <h3 class="text-lg font-bold text-on-surface">NRIs & RSU/ESOPs Holders</h3>
+                <p class="text-xs sm:text-sm text-secondary">Protect RSUs/ESOPs gains, foreign income, DTAA tax relief & accurate Schedule FA filing by experts.</p>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs font-bold text-purple-700 pt-2">
+                <span>Schedule FA Assistance</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </div>
+            </div>
+
+            <!-- 6. Hire an Expert Card -->
+            <div onclick="switchSuite('expert')" class="landing-card-hover p-6 rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 border-2 border-primary flex flex-col justify-between space-y-4 cursor-pointer">
+              <div class="space-y-3">
+                <div class="w-11 h-11 rounded-xl bg-primary text-on-primary flex items-center justify-center shadow-xs">
+                  <span class="material-symbols-outlined text-2xl">handshake</span>
+                </div>
+                <h3 class="text-lg font-bold text-primary">Hire a Chartered Accountant</h3>
+                <p class="text-xs sm:text-sm text-secondary">Get a dedicated CA to manage your business books, quarterly advance tax & end-to-end audit defense.</p>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs font-bold text-primary pt-2">
+                <span>Book Free CA Consultation</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- E. INTERACTIVE OLD VS NEW REGIME TAX CALCULATOR                       -->
+        <!-- ===================================================================== -->
+        <section class="rounded-3xl border border-outline-variant bg-surface-container-lowest p-6 sm:p-10 shadow-sm space-y-8">
+          <div class="text-center space-y-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 uppercase tracking-wider">
+              <span class="material-symbols-outlined text-[15px]">tune</span>
+              Interactive Statutory Simulator
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-on-surface">
+              Instant Old vs New Tax Regime Comparator
+            </h2>
+            <p class="text-xs sm:text-sm text-secondary max-w-xl mx-auto">
+              Drag the income slider to see how SimpleGST automatically identifies your highest tax savings with zero math errors.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            <!-- Sliders -->
+            <div class="lg:col-span-7 space-y-5 bg-surface-container-low p-6 rounded-2xl border border-outline-variant">
+              <div>
+                <div class="flex justify-between items-center mb-1.5">
+                  <span class="text-xs sm:text-sm font-bold text-on-surface">Annual Gross Income (CTC / Turnover)</span>
+                  <span id="landingIncomeDisplay" class="text-base sm:text-lg font-black text-blue-600 font-mono">₹ 15,00,000</span>
+                </div>
+                <input id="landingIncomeInput" type="range" min="500000" max="5000000" step="50000" value="1500000" oninput="updateLandingTaxCalc()" class="w-full accent-blue-600 cursor-pointer h-2 bg-slate-200 rounded-lg" />
+                <div class="flex justify-between text-[11px] text-secondary mt-1"><span>₹ 5 Lakh</span><span>₹ 25 Lakh</span><span>₹ 50 Lakh</span></div>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1.5">
+                  <span class="text-xs font-semibold text-secondary">Section 80C (PPF, ELSS, EPF, LIC)</span>
+                  <span id="landing80cDisplay" class="text-xs font-bold text-on-surface font-mono">₹ 1,50,000</span>
+                </div>
+                <input id="landing80cInput" type="range" min="0" max="150000" step="10000" value="150000" oninput="updateLandingTaxCalc()" class="w-full accent-emerald-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg" />
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1.5">
+                  <span class="text-xs font-semibold text-secondary">Section 80D (Health Insurance)</span>
+                  <span id="landing80dDisplay" class="text-xs font-bold text-on-surface font-mono">₹ 25,000</span>
+                </div>
+                <input id="landing80dInput" type="range" min="0" max="75000" step="5000" value="25000" oninput="updateLandingTaxCalc()" class="w-full accent-emerald-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg" />
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1.5">
+                  <span class="text-xs font-semibold text-secondary">HRA / Home Loan Interest Exemption</span>
+                  <span id="landingHraDisplay" class="text-xs font-bold text-on-surface font-mono">₹ 1,20,000</span>
+                </div>
+                <input id="landingHraInput" type="range" min="0" max="400000" step="20000" value="120000" oninput="updateLandingTaxCalc()" class="w-full accent-emerald-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg" />
+              </div>
+            </div>
+
+            <!-- Comparison Box -->
+            <div class="lg:col-span-5 p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant space-y-4 shadow-sm">
+              <div class="flex items-center justify-between pb-3 border-b border-outline-variant">
+                <span class="text-xs font-bold text-secondary uppercase tracking-wider">Recommended Regime</span>
+                <span id="landingSavingsBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Saves ₹ 0!</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant">
+                  <span class="text-[11px] text-secondary">Old Regime Tax</span>
+                  <div id="landingOldTaxDisplay" class="text-xl font-black text-on-surface font-mono mt-1">₹ 0</div>
+                  <span class="text-[10px] text-secondary mt-1 block">With All Deductions</span>
+                </div>
+                <div class="p-4 rounded-xl bg-blue-50 border border-blue-200">
+                  <span class="text-[11px] text-blue-700">New Regime Tax</span>
+                  <div id="landingNewTaxDisplay" class="text-xl font-black text-blue-700 font-mono mt-1">₹ 0</div>
+                  <span id="landingRecommendedBadge" class="text-[10px] font-bold text-blue-700 mt-1 block">New Tax Regime</span>
+                </div>
+              </div>
+
+              <p class="text-[11px] text-secondary leading-normal">
+                Deterministic calculation under CBDT FY 2025-26 & 2026-27 Finance Act rules with 4% Health & Education cess.
+              </p>
+
+              <button onclick="switchSuite('taxcalc')" class="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-label-md font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs">
+                <span id="landingRegimeBtnText">File with Recommended Regime Now</span>
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ========================================================================= -->
+      <!-- F. FLOATING STICKY CONVERSION BAR (PHOTOS 1, 3, 4, 5)                     -->
+      <!-- ========================================================================= -->
+      <aside id="landingStickyBottomBar" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-4xl bg-slate-950 text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-slate-700/60 z-50 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-xl">auto_awesome</span>
+          </div>
+          <div class="text-left">
+            <div class="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+              <span>File ITR & GST in minutes with 100% accuracy</span>
+              <span class="text-[9px] bg-emerald-600 text-white font-bold px-1.5 py-0.5 rounded hidden sm:inline">FY 2026-27 ACTIVE</span>
+            </div>
+            <div class="text-[11px] text-slate-400 hidden sm:block">Trusted by 8M+ taxpayers to get their maximum tax refund with zero notice risk.</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <button onclick="switchSuite('home')" class="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-label-md font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition-all cursor-pointer whitespace-nowrap">
+            <span>Start Filing</span>
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </button>
+          <button onclick="dismissLandingStickyBar()" class="p-1 rounded-full text-slate-400 hover:text-white transition-colors cursor-pointer" title="Dismiss">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+      </aside>
+
+    </div>
+
+    <div id="viewHomeSuite" class="app-suite-container hidden" style="display: none;">
       <main class="p-6 md:p-8 space-y-6 max-w-[1600px] w-full mx-auto">
 <!-- 1. GREETING & STATUS STRIP -->
 <section class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-outline-variant"><div><div class="flex items-center gap-3"><h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold" id="dashboardGreetingHeader">Welcome to SimpleGST</h1><span id="liveGstnSyncBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>Live GSTN Sync</span></div><p class="font-body-md text-secondary mt-1"><span class="dynamic-period-short">Oct 2026</span> return window is open. Statutory filing <strong class="text-on-surface font-semibold">GSTR-3B is due in 6 days</strong>.</p></div><div class="flex items-center gap-3 shrink-0"><button onclick="syncPortalData()" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface font-label-md font-medium transition-colors cursor-pointer"><span class="material-symbols-outlined text-[18px]">sync</span><span class="">Sync Portal</span></button><button onclick="openNewInvoiceModal()" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-container font-label-md font-semibold transition-colors shadow-sm cursor-pointer"><span class="material-symbols-outlined text-[18px]">add</span><span class="">New Invoice</span></button></div></section>
