@@ -51,11 +51,26 @@ window.derivePeriodFromDate = derivePeriodFromDate;
 function normalizeDateToYMD(dateStr) {
   if (!dateStr || typeof dateStr !== "string") return dateStr;
   const clean = dateStr.trim();
-  const dmy = clean.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
+  const dmy = clean.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
   if (dmy) {
     const day = dmy[1].padStart(2, "0");
     const month = dmy[2].padStart(2, "0");
-    const year = dmy[3];
+    let year = dmy[3];
+    if (year.length === 2) year = `20${year}`;
+    return `${year}-${month}-${day}`;
+  }
+  const monthMap = {
+    jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+    jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12"
+  };
+  const namedMatch = clean.match(/^(\d{1,2})[\s\-\/\.]*([A-Za-z]{3,9})[\s\-\/\.]*(\d{2,4})$/);
+  if (namedMatch) {
+    const day = namedMatch[1].padStart(2, "0");
+    const mStr = namedMatch[2].slice(0, 3).toLowerCase();
+    const month = monthMap[mStr] || "01";
+    let year = namedMatch[3];
+    if (year.length === 2) year = `20${year}`;
     return `${year}-${month}-${day}`;
   }
   return clean;
@@ -7835,11 +7850,13 @@ function openOcrReviewModal(docIdOrData, maybeData, type = "purchase_bill", file
   const numEl = document.getElementById('ocrReviewInvoiceNumber');
   if (numEl) numEl.value = invoiceInfo.invoiceNumber || parsed.invoiceNumber || data.invoiceNumber || "";
 
+  const rawDate = invoiceInfo.invoiceDate || parsed.invoiceDate || data.invoiceDate || "";
   const dateEl = document.getElementById('ocrReviewInvoiceDate');
-  if (dateEl) dateEl.value = invoiceInfo.invoiceDate || parsed.invoiceDate || data.invoiceDate || "";
+  if (dateEl) dateEl.value = normalizeDateToYMD(rawDate) || "";
 
+  const rawDue = invoiceInfo.dueDate || parsed.dueDate || data.dueDate || "";
   const dueEl = document.getElementById('ocrReviewDueDate');
-  if (dueEl) dueEl.value = invoiceInfo.dueDate || parsed.dueDate || data.dueDate || "";
+  if (dueEl) dueEl.value = normalizeDateToYMD(rawDue) || "";
 
   const posEl = document.getElementById('ocrReviewPos');
   if (posEl) posEl.value = invoiceInfo.pos || parsed.pos || (data.pos ? data.pos.slice(0, 2) : "27");
@@ -7853,14 +7870,27 @@ function openOcrReviewModal(docIdOrData, maybeData, type = "purchase_bill", file
   const supTypeEl = document.getElementById('ocrReviewSupplyType');
   if (supTypeEl) supTypeEl.value = data.supplyType || (invoiceInfo.isInterstate ? "B2B" : "B2B");
 
-  // Populate Parties without fabricating fallback company names
+  // Populate Parties with priority to extracted document data
   const activeGstin = typeof getActiveGstin === "function" ? getActiveGstin() : null;
   const orgName = appState.organization?.name || appState.activeGstin?.trade_name || "";
+
   const sellerNameEl = document.getElementById('ocrReviewSellerName');
-  if (sellerNameEl) sellerNameEl.value = seller.name || data.supplierName || (resolvedType === "sales_invoice" ? orgName : "");
+  if (sellerNameEl) {
+    if (resolvedType === "sales_invoice") {
+      sellerNameEl.value = (seller.name && activeGstin && seller.gstin === activeGstin) ? seller.name : (orgName || seller.name || data.supplierName || "");
+    } else {
+      sellerNameEl.value = seller.name || data.supplierName || "";
+    }
+  }
 
   const sellerGstinEl = document.getElementById('ocrReviewSellerGstin');
-  if (sellerGstinEl) sellerGstinEl.value = seller.gstin || data.supplierGstin || (resolvedType === "sales_invoice" ? (activeGstin || "") : "");
+  if (sellerGstinEl) {
+    if (resolvedType === "sales_invoice") {
+      sellerGstinEl.value = activeGstin || seller.gstin || data.supplierGstin || "";
+    } else {
+      sellerGstinEl.value = seller.gstin || data.supplierGstin || "";
+    }
+  }
 
   const sellerStateEl = document.getElementById('ocrReviewSellerState');
   if (sellerStateEl) sellerStateEl.value = seller.state || seller.stateName || (resolvedType === "sales_invoice" ? (appState.activeGstin?.state_name || "") : "");
@@ -7869,10 +7899,22 @@ function openOcrReviewModal(docIdOrData, maybeData, type = "purchase_bill", file
   if (sellerAddrEl) sellerAddrEl.value = seller.address || "";
 
   const buyerNameEl = document.getElementById('ocrReviewBuyerName');
-  if (buyerNameEl) buyerNameEl.value = buyer.name || data.customerName || (resolvedType === "purchase_bill" ? orgName : "");
+  if (buyerNameEl) {
+    if (resolvedType === "purchase_bill") {
+      buyerNameEl.value = (buyer.name && activeGstin && buyer.gstin === activeGstin) ? buyer.name : (orgName || buyer.name || data.customerName || "");
+    } else {
+      buyerNameEl.value = buyer.name || data.customerName || "";
+    }
+  }
 
   const buyerGstinEl = document.getElementById('ocrReviewBuyerGstin');
-  if (buyerGstinEl) buyerGstinEl.value = buyer.gstin || data.customerGstin || (resolvedType === "purchase_bill" ? (activeGstin || "") : "");
+  if (buyerGstinEl) {
+    if (resolvedType === "purchase_bill") {
+      buyerGstinEl.value = activeGstin || buyer.gstin || data.customerGstin || "";
+    } else {
+      buyerGstinEl.value = buyer.gstin || data.customerGstin || "";
+    }
+  }
 
   const buyerStateEl = document.getElementById('ocrReviewBuyerState');
   if (buyerStateEl) buyerStateEl.value = buyer.state || buyer.stateName || (resolvedType === "purchase_bill" ? (appState.activeGstin?.state_name || "") : "");
