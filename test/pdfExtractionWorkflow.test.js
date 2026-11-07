@@ -780,3 +780,119 @@ test("Scenario 13: Phase 5 Mandatory Multi-Item Real PDF Regression Test (ABC/20
   assert.equal(savedItems[1].hsnCode, "6203");
 });
 
+// ============================================================================
+// SCENARIO 14: Phase 5 Mandatory Real Purchase PDF Regression Test
+// ============================================================================
+test("Scenario 14: Phase 5 Mandatory Multi-Item Real Purchase PDF Regression Test (PUR/2026-27/014)", async () => {
+  setupAuth();
+
+  const realPdfPath = path.join(process.cwd(), "data", "uploads", "5abfec51-895c-4a64-8168-776000f2c0d8_sample_purchase_invoice_simplegst.pdf");
+  let pdfBuf;
+  if (fs.existsSync(realPdfPath)) {
+    pdfBuf = fs.readFileSync(realPdfPath);
+  } else {
+    const lines = [
+      "TAX PURCHASE INVOICE",
+      "SELLER / SUPPLIER",
+      "Sunrise Wholesale Distributors",
+      "No. 18, Market Road, Bengaluru, Karnataka – 560001",
+      "GSTIN: 29ABCDE1234F1Z5",
+      "State: Karnataka (29)",
+      "BUYER",
+      "ABC Retail Private Limited",
+      "12, Anna Salai, Chennai, Tamil Nadu – 600002",
+      "GSTIN: 33PQRST1234K1Z5",
+      "State: Tamil Nadu (33)",
+      "Invoice Number PUR/2026-27/014 Invoice Date 06-Nov-2026",
+      "Due Date 21-Nov-2026 Place of Supply Tamil Nadu (33)",
+      "Reverse Charge No Payment Terms 15 days",
+      "Supply Type Inter-State B2B Currency INR",
+      "Items",
+      "# Description HSN/SAC Qty Unit Rate Taxable GST",
+      "1 Packaged grocery supplies 1905 20 Pack 100.00 2,000.00 5%",
+      "2 Household cleaning products 3402 10 Pcs 500.00 5,000.00 18%",
+      "3 Edible cooking oil 1512 10 Ltr 150.00 1,500.00 5%",
+      "Taxable Value 8,500.00",
+      "IGST @ 5% on 3,500.00 175.00",
+      "IGST @ 18% on 5,000.00 900.00",
+      "CGST 0.00",
+      "SGST 0.00",
+      "Cess 0.00",
+      "Round Off 0.00",
+      "GRAND TOTAL 9,575.00"
+    ];
+    pdfBuf = createPdfBuffer(lines);
+  }
+
+  const base64Content = `data:application/pdf;base64,${pdfBuf.toString("base64")}`;
+
+  // 1. Direct Extractor Engine Test
+  const extracted = extractTextFromPdf(pdfBuf);
+  assert.equal(extracted.isPdf, true);
+  assert.ok(extracted.text.length > 50, "Extracted text should not be empty");
+
+  const parsed = parseInvoiceFromText(extracted.text, {
+    originalFilename: "sample_purchase_invoice_simplegst.pdf",
+    categoryHint: "purchase_bill"
+  });
+
+  assert.equal(parsed.invoiceNumber, "PUR/2026-27/014");
+  assert.equal(parsed.invoiceDate, "2026-11-06");
+  assert.equal(parsed.dueDate, "2026-11-21");
+  assert.equal(parsed.seller.gstin, "29ABCDE1234F1Z5");
+  assert.equal(parsed.buyer.gstin, "33PQRST1234K1Z5");
+  assert.equal(parsed.lineItems.length, 3);
+  assert.equal(parsed.totals.taxableAmount, 8500);
+  assert.equal(parsed.totals.igst, 1075);
+  assert.equal(parsed.totals.totalAmount, 9575);
+
+  // 2. Upload via API (Purchase Workflow)
+  const uploadRes = createMockRes();
+  await handleFunctionalApi(getAuthReq(), uploadRes, "/api/documents/upload", "POST", {}, {
+    filename: "sample_purchase_invoice_simplegst.pdf",
+    category: "purchase_bill",
+    content: base64Content
+  });
+  assert.equal(uploadRes.statusCode, 201);
+  const uploadData = JSON.parse(uploadRes.body);
+  assert.equal(uploadData.parsedInvoice.invoiceNumber, "PUR/2026-27/014");
+  assert.equal(uploadData.parsedInvoice.lineItems.length, 3);
+
+  // Clean up if duplicate invoice already in db
+  db.prepare("DELETE FROM purchase_invoices WHERE invoice_number = 'PUR/2026-27/014'").run();
+
+  // Approve & Save to Purchase Register
+  const approveRes = createMockRes();
+  await handleFunctionalApi(getAuthReq(), approveRes, "/api/ocr/approve", "POST", {}, {
+    documentId: uploadData.document.id,
+    invoiceType: "purchase_bill",
+    fields: {
+      invoiceNumber: "PUR/2026-27/014",
+      invoiceDate: "2026-11-06",
+      supplierName: "Sunrise Wholesale Distributors",
+      supplierGstin: "29ABCDE1234F1Z5",
+      pos: "33",
+      isInterstate: true,
+      taxableAmount: 8500,
+      gstRate: 18,
+      igst: 1075,
+      cgst: 0,
+      sgst: 0,
+      cess: 0,
+      totalTax: 1075,
+      totalAmount: 9575,
+      lineItems: uploadData.parsedInvoice.lineItems
+    }
+  });
+
+  assert.equal(approveRes.statusCode, 200);
+  const savedPurchase = db.prepare("SELECT * FROM purchase_invoices WHERE invoice_number = 'PUR/2026-27/014'").get();
+  assert.ok(savedPurchase);
+  assert.equal(savedPurchase.taxable_amount, 8500);
+  assert.equal(savedPurchase.igst, 1075);
+  assert.equal(savedPurchase.total_amount, 9575);
+  assert.ok(savedPurchase.line_items_json);
+  const savedItems = JSON.parse(savedPurchase.line_items_json);
+  assert.equal(savedItems.length, 3);
+});
+

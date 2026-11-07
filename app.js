@@ -7901,7 +7901,7 @@ function openOcrReviewModal(docIdOrData, maybeData, type = "purchase_bill", file
   const buyerNameEl = document.getElementById('ocrReviewBuyerName');
   if (buyerNameEl) {
     if (resolvedType === "purchase_bill") {
-      buyerNameEl.value = (buyer.name && activeGstin && buyer.gstin === activeGstin) ? buyer.name : (orgName || buyer.name || data.customerName || "");
+      buyerNameEl.value = buyer.name || orgName || data.customerName || "";
     } else {
       buyerNameEl.value = buyer.name || data.customerName || "";
     }
@@ -7910,7 +7910,7 @@ function openOcrReviewModal(docIdOrData, maybeData, type = "purchase_bill", file
   const buyerGstinEl = document.getElementById('ocrReviewBuyerGstin');
   if (buyerGstinEl) {
     if (resolvedType === "purchase_bill") {
-      buyerGstinEl.value = activeGstin || buyer.gstin || data.customerGstin || "";
+      buyerGstinEl.value = buyer.gstin || activeGstin || data.customerGstin || "";
     } else {
       buyerGstinEl.value = buyer.gstin || data.customerGstin || "";
     }
