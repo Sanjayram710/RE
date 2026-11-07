@@ -67,13 +67,20 @@ async function ensureActiveSession() {
     return true;
   }
 
-  // 1. First attempt to restore session from existing cookie
+  // 1. First attempt to restore session from existing cookie or saved token
   try {
     const isAuth = await initSessionFromBackend();
     if (isAuth && appState.activeGstin) return true;
   } catch (_) {}
 
-  // 2. In non-production/demo mode, seamlessly request development session
+  // If a genuine user session or token exists in localStorage, DO NOT silently overwrite with dev session!
+  const hasSavedToken = localStorage.getItem("simplegst_session_token");
+  const hasSavedUser = localStorage.getItem("simplegst_user_session");
+  if (hasSavedToken || hasSavedUser) {
+    return false;
+  }
+
+  // 2. In unauthenticated demo/guest mode, seamlessly request development session
   try {
     const devRes = await fetch("/api/auth/dev-session", {
       method: "POST",
@@ -82,7 +89,9 @@ async function ensureActiveSession() {
     if (devRes.ok) {
       const devData = await devRes.json();
       if (devData && devData.success) {
-        if (devData.sessionToken) appState.sessionToken = devData.sessionToken;
+        if (devData.sessionToken) {
+          appState.sessionToken = devData.sessionToken;
+        }
         if (devData.csrfToken) appState.csrfToken = devData.csrfToken;
         await initSessionFromBackend();
         return true;
@@ -173,6 +182,12 @@ window.apiFetch = apiFetch;
 
 async function initSessionFromBackend() {
   try {
+    if (!appState.sessionToken) {
+      const savedToken = localStorage.getItem("simplegst_session_token");
+      if (savedToken) {
+        appState.sessionToken = savedToken;
+      }
+    }
     const headers = {};
     if (appState.sessionToken) {
       headers["Authorization"] = `Bearer ${appState.sessionToken}`;
@@ -184,6 +199,12 @@ async function initSessionFromBackend() {
     const data = res.ok ? await res.json() : null;
 
     if (data && data.authenticated && data.user) {
+      if (data.sessionToken) {
+        appState.sessionToken = data.sessionToken;
+        localStorage.setItem("simplegst_session_token", data.sessionToken);
+      } else if (appState.sessionToken) {
+        localStorage.setItem("simplegst_session_token", appState.sessionToken);
+      }
       if (data.onboardingRequired) {
         if (typeof openOnboardingWizard === "function") {
           openOnboardingWizard(data.onboardingStep || 2);
@@ -228,6 +249,7 @@ async function initSessionFromBackend() {
         user: null,
         csrfToken: null
       };
+      localStorage.removeItem("simplegst_session_token");
       localStorage.removeItem("simplegst_user_session");
       if (typeof renderAuthState === "function") renderAuthState();
       return false;
@@ -236,6 +258,7 @@ async function initSessionFromBackend() {
     console.warn("Could not retrieve session from /api/auth/session:", err);
     appState.sessionToken = null;
     appState.auth = { isLoggedIn: false, user: null, csrfToken: null };
+    localStorage.removeItem("simplegst_session_token");
     localStorage.removeItem("simplegst_user_session");
     if (typeof renderAuthState === "function") renderAuthState();
     return false;
@@ -405,6 +428,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Global escape key handler to smoothly dismiss open modals without alerts
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
+      if (typeof closeEvcOtpModal === "function") closeEvcOtpModal();
       if (typeof closePmt06Modal === "function") closePmt06Modal();
       if (typeof closeArnModal === "function") closeArnModal();
       if (typeof closeHealthScoreModal === "function") closeHealthScoreModal();
@@ -722,10 +746,13 @@ function closePmt06Modal() {
 }
 window.closePmt06Modal = closePmt06Modal;
 
-function submitChallanPayment() {
+async function submitChallanPayment() {
+  const otp = window._pendingGstr3bFilingOtp || "123456";
   closePmt06Modal();
-  if (typeof showToast === "function") {
-    showToast("Form GST PMT-06 Payment Approved: ₹62,436 credited to Cash Ledger (CIN: HDFC2410270081)", "success");
+  if (typeof completeReturnFiling === "function") {
+    await completeReturnFiling({ otp, paymentDone: true });
+  } else {
+    showToast("Form GST PMT-06 Payment Approved: Cash ledger credited and liability offset.", "success");
   }
 }
 window.submitChallanPayment = submitChallanPayment;
@@ -1914,6 +1941,7 @@ async function handleSignInSubmit(e) {
 
     if (data.sessionToken) {
       appState.sessionToken = data.sessionToken;
+      localStorage.setItem("simplegst_session_token", data.sessionToken);
     }
     if (data.csrfToken) {
       appState.csrfToken = data.csrfToken;
@@ -5648,26 +5676,48 @@ async function setGuidedStep(step = 1) {
   if (!container) return;
 
   try {
-    const period = appState.gst?.business?.filingPeriod || "102026";
-    if (!cachedDashboardMetrics) {
-      const res = await fetch(`/api/dashboard/summary?period=${period}`);
+    const period = appState.gst?.business?.filingPeriod || appState.activePeriod || "102026";
+    const res = await apiFetch(`/api/dashboard/summary?period=${period}`);
+    if (res.ok) {
       const data = await res.json();
-      cachedDashboardMetrics = data.metrics || {};
+      if (data && data.metrics) {
+        cachedDashboardMetrics = data.metrics;
+      }
+    }
+    const taxCalcRes = await apiFetch(`/api/returns/tax-calc?period=${period}`);
+    if (taxCalcRes.ok) {
+      const taxData = await taxCalcRes.json();
+      appState.activeTaxCalc = taxData;
     }
   } catch (err) {
     console.warn("Could not fetch dashboard metrics for stepper:", err);
   }
 
-  const m = cachedDashboardMetrics || {
-    salesCount: 14,
-    taxableSales: 842500,
-    totalOutputLiability: 151650,
-    purchasesCount: 8,
-    taxablePurchases: 412300,
-    totalEligibleItc: 74214,
-    blockedItc: 0,
-    netCashPayable: 77436
+  const m = cachedDashboardMetrics || {};
+  const salesCount = Number(m.salesCount ?? 0);
+  const taxableSales = Number(m.taxableSales ?? 0);
+  const totalOutputLiability = Number(m.totalOutputLiability ?? 0);
+  const purchasesCount = Number(m.purchasesCount ?? 0);
+  const taxablePurchases = Number(m.taxablePurchases ?? 0);
+  const totalEligibleItc = Number(m.totalEligibleItc ?? 0);
+  const blockedItc = Number(m.blockedItc ?? 0);
+  const netCashPayable = Number(m.netCashPayable ?? 0);
+
+  appState.activeFilingSummary = {
+    salesCount,
+    taxableSales,
+    totalOutputLiability,
+    purchasesCount,
+    taxablePurchases,
+    totalEligibleItc,
+    blockedItc,
+    netCashPayable,
+    liability: appState.activeTaxCalc?.liability || { igst: 0, cgst: 0, sgst: 0 },
+    inputCredit: appState.activeTaxCalc?.inputCredit || { igst: 0, cgst: 0, sgst: 0 },
+    setoffMatrix: appState.activeTaxCalc?.setoffMatrix || {}
   };
+
+  const fmtCurrency = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   if (step === 1) {
     container.innerHTML = `
@@ -5683,17 +5733,17 @@ async function setGuidedStep(step = 1) {
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-secondary">Recorded Sales</span>
-              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">${m.salesCount} Invoices</div>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">${salesCount} Invoices</div>
               <p class="text-xs text-secondary mt-0.5">B2B & B2C transactions</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-secondary">Taxable Sales</span>
-              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">₹${(m.taxableSales || 842500).toLocaleString("en-IN")}</div>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">${fmtCurrency(taxableSales)}</div>
               <p class="text-xs text-secondary mt-0.5">Net turnover before GST</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-secondary">Tax Collected</span>
-              <div class="font-numeric-lg text-xl font-bold text-primary mt-1">₹${(m.totalOutputLiability || 151650).toLocaleString("en-IN")}</div>
+              <div class="font-numeric-lg text-xl font-bold text-primary mt-1">${fmtCurrency(totalOutputLiability)}</div>
               <p class="text-xs text-secondary mt-0.5">IGST, CGST & SGST output tax</p>
             </div>
           </div>
@@ -5732,17 +5782,17 @@ async function setGuidedStep(step = 1) {
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-secondary">Recorded Bills</span>
-              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">${m.purchasesCount} Bills</div>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">${purchasesCount} Bills</div>
               <p class="text-xs text-secondary mt-0.5">Scanned & verified inward bills</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-secondary">Taxable Purchases</span>
-              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">₹${(m.taxablePurchases || 412300).toLocaleString("en-IN")}</div>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">${fmtCurrency(taxablePurchases)}</div>
               <p class="text-xs text-secondary mt-0.5">Value of purchases before tax</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-secondary">Tax on Purchases</span>
-              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">₹${((m.totalEligibleItc || 74214) + (m.blockedItc || 0)).toLocaleString("en-IN")}</div>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">${fmtCurrency(totalEligibleItc + blockedItc)}</div>
               <p class="text-xs text-secondary mt-0.5">Total GST paid to suppliers</p>
             </div>
           </div>
@@ -5786,17 +5836,17 @@ async function setGuidedStep(step = 1) {
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-emerald-800">Available Credit</span>
-              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">₹${(m.totalEligibleItc || 74214).toLocaleString("en-IN")}</div>
+              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">${fmtCurrency(totalEligibleItc)}</div>
               <p class="text-xs text-secondary mt-0.5">Matched with supplier GSTR-2B</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-secondary">Ineligible / Blocked Credit</span>
-              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">₹${(m.blockedItc || 0).toLocaleString("en-IN")}</div>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">${fmtCurrency(blockedItc)}</div>
               <p class="text-xs text-secondary mt-0.5">Section 17(5) restricted credit</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-amber-800">Pending Supplier Filing</span>
-              <div class="font-numeric-lg text-xl font-bold text-amber-700 mt-1">3 Bills</div>
+              <div class="font-numeric-lg text-xl font-bold text-amber-700 mt-1">0 Bills</div>
               <p class="text-xs text-secondary mt-0.5">Suppliers yet to file GSTR-1</p>
             </div>
           </div>
@@ -5840,17 +5890,17 @@ async function setGuidedStep(step = 1) {
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-secondary">Total Tax on Sales</span>
-              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">₹${(m.totalOutputLiability || 151650).toLocaleString("en-IN")}</div>
+              <div class="font-numeric-lg text-xl font-bold text-on-surface mt-1">${fmtCurrency(totalOutputLiability)}</div>
               <p class="text-xs text-secondary mt-0.5">Gross liability assessed</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-emerald-800">Less: Available Credit</span>
-              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">-₹${(m.totalEligibleItc || 74214).toLocaleString("en-IN")}</div>
+              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">-${fmtCurrency(totalEligibleItc)}</div>
               <p class="text-xs text-secondary mt-0.5">Auto-offset applied u/r 88A</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-error">Amount to Pay</span>
-              <div class="font-numeric-lg text-xl font-bold text-error mt-1">₹${(m.netCashPayable || 77436).toLocaleString("en-IN")}</div>
+              <div class="font-numeric-lg text-xl font-bold text-error mt-1">${fmtCurrency(netCashPayable)}</div>
               <p class="text-xs text-secondary mt-0.5">Cash payment required</p>
             </div>
           </div>
@@ -5881,6 +5931,10 @@ async function setGuidedStep(step = 1) {
       </div>
     `;
   } else if (step === 5) {
+    const activeOrgName = appState.organization?.name || appState.activeGstin?.trade_name || "Taxpayer Workspace";
+    const activeGstinNum = appState.activeGstin?.gstin || "—";
+    const activePeriodLabel = appState.gst?.business?.filingPeriod ? `Period ${appState.gst.business.filingPeriod}` : "October 2026";
+
     container.innerHTML = `
       <div class="space-y-6">
         <div class="p-6 rounded-xl border border-outline-variant bg-surface-container-low/50 space-y-4">
@@ -5894,29 +5948,29 @@ async function setGuidedStep(step = 1) {
           <div class="p-5 rounded-lg bg-surface border border-outline-variant space-y-3 shadow-xs">
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
               <span class="text-secondary">Taxpayer</span>
-              <span class="font-semibold text-on-surface" id="reviewEntityDisplay">${escapeHtml(appState.organization?.name || appState.activeGstin?.trade_name || "Taxpayer")} (${escapeHtml(appState.activeGstin?.gstin || "—")})</span>
+              <span class="font-semibold text-on-surface" id="reviewEntityDisplay">${escapeHtml(activeOrgName)} (${escapeHtml(activeGstinNum)})</span>
             </div>
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
               <span class="text-secondary">Filing Period</span>
-              <span class="font-semibold text-on-surface dynamic-period-label">October 2026</span>
+              <span class="font-semibold text-on-surface dynamic-period-label">${escapeHtml(activePeriodLabel)}</span>
             </div>
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
               <span class="text-secondary">Gross Output Tax (Sales)</span>
-              <span class="font-mono font-medium text-on-surface">₹${(m.totalOutputLiability || 151650).toLocaleString("en-IN")}</span>
+              <span class="font-mono font-medium text-on-surface" id="reviewGrossOutputTax">${fmtCurrency(totalOutputLiability)}</span>
             </div>
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
               <span class="text-secondary">Input Tax Credit Offset</span>
-              <span class="font-mono font-medium text-emerald-700">-₹${(m.totalEligibleItc || 74214).toLocaleString("en-IN")}</span>
+              <span class="font-mono font-medium text-emerald-700" id="reviewItcOffset">-${fmtCurrency(totalEligibleItc)}</span>
             </div>
             <div class="flex items-center justify-between py-2 text-base font-bold">
               <span class="text-on-surface">Net Amount to Pay</span>
-              <span class="font-mono text-error">₹${(m.netCashPayable || 77436).toLocaleString("en-IN")}</span>
+              <span class="font-mono text-error" id="reviewNetAmountToPay">${fmtCurrency(netCashPayable)}</span>
             </div>
           </div>
 
           <div class="p-3.5 rounded-lg bg-surface-container text-xs text-secondary flex items-start gap-2.5">
             <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">verified_user</span>
-            <span><strong>Notice:</strong> Submitting in simulation mode prepares your Form GSTR-3B and updates your electronic ledgers. No live GSTN transmission will occur without live credentials.</span>
+            <span><strong>Notice:</strong> Submitting prepares your Form GSTR-3B with EVC OTP authorization and updates your electronic ledgers persistently.</span>
           </div>
         </div>
 
@@ -5924,7 +5978,7 @@ async function setGuidedStep(step = 1) {
           <button onclick="setGuidedStep(4)" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-secondary font-label-md hover:bg-surface-container transition-colors cursor-pointer">
             ← Back to Tax Summary
           </button>
-          <button onclick="executeFinalFiling()" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+          <button onclick="startGstr3bFilingFlow()" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
             <span class="material-symbols-outlined text-[18px]">verified</span>
             <span>File GSTR-3B Return (Simulated)</span>
           </button>
@@ -5935,16 +5989,316 @@ async function setGuidedStep(step = 1) {
 }
 window.setGuidedStep = setGuidedStep;
 
-function executeFinalFiling() {
-  if (typeof window.executeGstr3bOffsetFiling === "function") {
-    return window.executeGstr3bOffsetFiling();
-  }
-  showToast("Simulated GSTR-3B Return filed successfully!", "success");
-  if (typeof openArnModal === "function") {
-    openArnModal();
+function startGstr3bFilingFlow() {
+  const filing = appState.activeFilingSummary || {};
+  const taxpayerName = appState.organization?.name || appState.activeGstin?.trade_name || "Taxpayer Workspace";
+  const gstin = appState.activeGstin?.gstin || "—";
+  const periodLabel = appState.gst?.business?.filingPeriod ? `Period: ${appState.gst.business.filingPeriod}` : "October 2026";
+
+  const taxNameEl = document.getElementById("evcOtpTaxpayerName");
+  if (taxNameEl) taxNameEl.textContent = taxpayerName;
+  const gstinEl = document.getElementById("evcOtpGstin");
+  if (gstinEl) gstinEl.textContent = gstin;
+  const periodEl = document.getElementById("evcOtpPeriod");
+  if (periodEl) periodEl.textContent = periodLabel;
+
+  const grossTaxEl = document.getElementById("evcOtpGrossTax");
+  if (grossTaxEl) grossTaxEl.textContent = `₹${Number(filing.totalOutputLiability || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const itcOffsetEl = document.getElementById("evcOtpItcOffset");
+  if (itcOffsetEl) itcOffsetEl.textContent = `-₹${Number(filing.totalEligibleItc || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const netPayableEl = document.getElementById("evcOtpNetPayable");
+  if (netPayableEl) netPayableEl.textContent = `₹${Number(filing.netCashPayable || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const otpInput = document.getElementById("evcOtpInput");
+  if (otpInput) otpInput.value = "";
+  const errEl = document.getElementById("evcOtpError");
+  if (errEl) errEl.classList.add("hidden");
+
+  openEvcOtpModal();
+}
+window.startGstr3bFilingFlow = startGstr3bFilingFlow;
+window.executeFinalFiling = startGstr3bFilingFlow;
+
+function openEvcOtpModal() {
+  const m = document.getElementById("modalEvcOtpConfirmation");
+  if (m) {
+    m.classList.remove("hidden");
+    m.style.display = "flex";
   }
 }
-window.executeFinalFiling = executeFinalFiling;
+window.openEvcOtpModal = openEvcOtpModal;
+
+function closeEvcOtpModal() {
+  const m = document.getElementById("modalEvcOtpConfirmation");
+  if (m) {
+    m.classList.add("hidden");
+    m.style.display = "none";
+  }
+}
+window.closeEvcOtpModal = closeEvcOtpModal;
+
+function autoFillEvcOtp() {
+  const otpInput = document.getElementById("evcOtpInput");
+  if (otpInput) {
+    otpInput.value = "123456";
+    showToast("EVC OTP 123456 auto-filled (Demo Mode)", "info");
+  }
+}
+window.autoFillEvcOtp = autoFillEvcOtp;
+
+async function submitEvcOtpVerification() {
+  const otpInput = document.getElementById("evcOtpInput");
+  const errEl = document.getElementById("evcOtpError");
+  const otpVal = (otpInput?.value || "").trim();
+
+  if (!otpVal || !/^\d{6}$/.test(otpVal)) {
+    if (errEl) {
+      errEl.textContent = "Please enter a valid 6-digit EVC OTP (e.g. 123456).";
+      errEl.classList.remove("hidden");
+    }
+    return;
+  }
+  if (errEl) errEl.classList.add("hidden");
+
+  closeEvcOtpModal();
+
+  const filing = appState.activeFilingSummary || {};
+  const netCash = Number(filing.netCashPayable || 0);
+
+  // If net cash liability remains, direct user to payment section (Form GST PMT-06)!
+  if (netCash > 0) {
+    showToast(`EVC OTP verified! Net liability of ₹${netCash.toLocaleString("en-IN")} requires cash payment. Directing to Payment section...`, "info");
+    openPmt06ModalWithValues({
+      grossTax: filing.totalOutputLiability || 0,
+      itcOffset: filing.totalEligibleItc || 0,
+      netCash: netCash,
+      liability: filing.liability || {},
+      period: appState.activePeriod || "102026",
+      verifiedOtp: otpVal
+    });
+  } else {
+    // Nil return or fully offset by ITC: complete filing directly
+    await completeReturnFiling({ otp: otpVal, paymentDone: false });
+  }
+}
+window.submitEvcOtpVerification = submitEvcOtpVerification;
+
+function openPmt06ModalWithValues({ grossTax, itcOffset, netCash, liability, period, verifiedOtp }) {
+  window._pendingGstr3bFilingOtp = verifiedOtp;
+
+  const grossEl = document.getElementById("pmt06GrossLiability");
+  if (grossEl) grossEl.textContent = `₹${Number(grossTax).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const itcEl = document.getElementById("pmt06ItcOffset");
+  if (itcEl) itcEl.textContent = `-₹${Number(itcOffset).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const deficitEl = document.getElementById("pmt06DeficitAmount");
+  if (deficitEl) deficitEl.textContent = `₹${Number(netCash).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const totalShortfallEl = document.getElementById("pmt06TotalShortfall");
+  if (totalShortfallEl) totalShortfallEl.textContent = `₹${Number(netCash).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const btnText = document.getElementById("pmt06PayBtnText");
+  if (btnText) btnText.textContent = `Pay ₹${Number(netCash).toLocaleString("en-IN")} & Complete Filing (Sandbox)`;
+
+  // Update headwise matrix in PMT-06 table
+  const tbody = document.getElementById("pmt06TableBody");
+  if (tbody) {
+    const igstLiability = Number(liability?.igst || 0);
+    const cgstLiability = Number(liability?.cgst || 0);
+    const sgstLiability = Number(liability?.sgst || 0);
+
+    const igstCash = Math.min(netCash, igstLiability);
+    const remAfterIgst = Math.max(0, netCash - igstCash);
+    const cgstCash = Math.min(remAfterIgst / 2, cgstLiability);
+    const sgstCash = Math.min(remAfterIgst / 2, sgstLiability);
+
+    tbody.innerHTML = `
+      <tr class="hover:bg-surface-container-low/50 transition-colors">
+        <td class="py-3 px-4 font-sans font-medium text-on-surface flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-outline"></span> Integrated Tax (IGST)
+        </td>
+        <td class="py-3 px-3 text-center text-on-surface-variant">0005</td>
+        <td class="py-3 px-4 text-right">₹${igstLiability.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-4 text-right">₹0.00</td>
+        <td class="py-3 px-4 text-right font-semibold text-primary">₹${igstCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+      </tr>
+      <tr class="hover:bg-surface-container-low/50 transition-colors bg-surface-container-lowest">
+        <td class="py-3 px-4 font-sans font-medium text-on-surface flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-primary"></span> Central Tax (CGST)
+        </td>
+        <td class="py-3 px-3 text-center text-on-surface-variant">0006</td>
+        <td class="py-3 px-4 text-right">₹${cgstLiability.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-4 text-right text-on-surface-variant">₹0.00</td>
+        <td class="py-3 px-4 text-right font-bold text-primary">₹${cgstCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+      </tr>
+      <tr class="hover:bg-surface-container-low/50 transition-colors">
+        <td class="py-3 px-4 font-sans font-medium text-on-surface flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-primary"></span> State Tax (SGST)
+        </td>
+        <td class="py-3 px-3 text-center text-on-surface-variant">0008</td>
+        <td class="py-3 px-4 text-right">₹${sgstLiability.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="py-3 px-4 text-right text-on-surface-variant">₹0.00</td>
+        <td class="py-3 px-4 text-right font-bold text-primary">₹${sgstCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+      </tr>
+      <tr class="hover:bg-surface-container-low/50 transition-colors">
+        <td class="py-3 px-4 font-sans font-medium text-on-surface flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-outline"></span> Cess
+        </td>
+        <td class="py-3 px-3 text-center text-on-surface-variant">0009</td>
+        <td class="py-3 px-4 text-right">₹0.00</td>
+        <td class="py-3 px-4 text-right">₹0.00</td>
+        <td class="py-3 px-4 text-right font-semibold">₹0.00</td>
+      </tr>
+    `;
+  }
+
+  openPmt06Modal();
+}
+window.openPmt06ModalWithValues = openPmt06ModalWithValues;
+
+async function submitChallanPayment() {
+  const otp = window._pendingGstr3bFilingOtp || "123456";
+  closePmt06Modal();
+  await completeReturnFiling({ otp, paymentDone: true });
+}
+window.submitChallanPayment = submitChallanPayment;
+
+async function completeReturnFiling({ otp = "123456", paymentDone = false } = {}) {
+  const period = appState.activePeriod || appState.gst?.business?.filingPeriod || "102026";
+  try {
+    const res = await apiFetch("/api/returns/gstr3b/file", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        period,
+        otp,
+        paymentDone
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      showToast(data.error || "Failed to file GSTR-3B return.", "error");
+      return;
+    }
+
+    showToast("🎉 GSTR-3B Return successfully verified & filed in sandbox database!", "success");
+    openArnModalWithData(data);
+    if (typeof loadDashboardData === "function") loadDashboardData(period);
+  } catch (err) {
+    console.error("GSTR-3B filing network failure:", err);
+    showToast("Filing submission failed. Please check network connection.", "error");
+  }
+}
+window.completeReturnFiling = completeReturnFiling;
+
+function openArnModalWithData(data = {}) {
+  const arn = data.arn || "SIM-AA271026098124B";
+  const filedAt = data.filingTimestamp ? new Date(data.filingTimestamp).toLocaleString("en-IN") + " IST" : new Date().toLocaleString("en-IN") + " IST";
+  const filing = appState.activeFilingSummary || {};
+  const liability = data.liabilitySummary?.liability || filing.liability || { igst: 0, cgst: 0, sgst: 0 };
+  const inputCredit = data.itcSummary?.inputCredit || filing.inputCredit || { igst: 0, cgst: 0, sgst: 0 };
+
+  const outwardTaxable = Number(data.liabilitySummary?.taxableSales ?? filing.taxableSales ?? 0);
+  const invoicesCount = Number(data.liabilitySummary?.salesCount ?? filing.salesCount ?? 0);
+  const grossTax = Number(data.liabilitySummary?.totalGrossLiability ?? filing.totalOutputLiability ?? 0);
+
+  const arnValEl = document.getElementById("arnDisplayVal");
+  if (arnValEl) arnValEl.textContent = arn;
+
+  const timestampEl = document.getElementById("arnTimestampDisplay");
+  if (timestampEl) timestampEl.textContent = filedAt;
+
+  const outwardEl = document.getElementById("arnOutwardTaxable");
+  if (outwardEl) outwardEl.textContent = `₹${outwardTaxable.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const invCountEl = document.getElementById("arnInvoicesCount");
+  if (invCountEl) invCountEl.textContent = `Total Invoices Disclosed: ${invoicesCount}`;
+
+  const grossTaxEl = document.getElementById("arnGrossTaxLiability");
+  if (grossTaxEl) grossTaxEl.textContent = `₹${grossTax.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const netOutstandingEl = document.getElementById("arnNetOutstanding");
+  if (netOutstandingEl) netOutstandingEl.textContent = "₹0.00";
+
+  // Table 6.1 dynamic rendering
+  const tableBody = document.getElementById("arnTable61Body");
+  if (tableBody) {
+    const igstAssessed = Number(liability.igst || 0);
+    const cgstAssessed = Number(liability.cgst || 0);
+    const sgstAssessed = Number(liability.sgst || 0);
+
+    const igstItc = Math.min(igstAssessed, Number(inputCredit.igst || 0));
+    const igstCash = Math.max(0, igstAssessed - igstItc);
+
+    const cgstItc = Math.min(cgstAssessed, Number(inputCredit.cgst || 0));
+    const cgstCash = Math.max(0, cgstAssessed - cgstItc);
+
+    const sgstItc = Math.min(sgstAssessed, Number(inputCredit.sgst || 0));
+    const sgstCash = Math.max(0, sgstAssessed - sgstItc);
+
+    const totalAssessed = igstAssessed + cgstAssessed + sgstAssessed;
+    const totalItc = igstItc + cgstItc + sgstItc;
+    const totalCash = igstCash + cgstCash + sgstCash;
+
+    tableBody.innerHTML = `
+      <tr class="hover:bg-surface-container-low/60 transition-colors h-11">
+        <td class="px-5 py-2 font-medium text-on-surface flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-primary"></span> Integrated Tax (IGST)
+        </td>
+        <td class="px-4 py-2 text-right font-mono font-medium">₹${igstAssessed.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="px-4 py-2 text-right font-mono text-primary font-medium">₹${igstItc.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="px-4 py-2 text-right font-mono text-secondary">₹${igstCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="px-5 py-2 text-right font-mono text-emerald-700 font-semibold">₹0.00</td>
+      </tr>
+      <tr class="hover:bg-surface-container-low/60 transition-colors h-11">
+        <td class="px-5 py-2 font-medium text-on-surface flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Central Tax (CGST)
+        </td>
+        <td class="px-4 py-2 text-right font-mono font-medium">₹${cgstAssessed.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="px-4 py-2 text-right font-mono text-primary font-medium">₹${cgstItc.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="px-4 py-2 text-right font-mono text-on-surface font-medium">₹${cgstCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="px-5 py-2 text-right font-mono text-emerald-700 font-semibold">₹0.00</td>
+      </tr>
+      <tr class="hover:bg-surface-container-low/60 transition-colors h-11">
+        <td class="px-5 py-2 font-medium text-on-surface flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> State / UT Tax (SGST)
+        </td>
+        <td class="px-4 py-2 text-right font-mono font-medium">₹${sgstAssessed.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="px-4 py-2 text-right font-mono text-primary font-medium">₹${sgstItc.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="px-4 py-2 text-right font-mono text-on-surface font-medium">₹${sgstCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="px-5 py-2 text-right font-mono text-emerald-700 font-semibold">₹0.00</td>
+      </tr>
+      <tr class="hover:bg-surface-container-low/60 transition-colors h-11">
+        <td class="px-5 py-2 font-medium text-secondary flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span> Cess
+        </td>
+        <td class="px-4 py-2 text-right font-mono text-secondary">₹0.00</td>
+        <td class="px-4 py-2 text-right font-mono text-secondary">₹0.00</td>
+        <td class="px-4 py-2 text-right font-mono text-secondary">₹0.00</td>
+        <td class="px-5 py-2 text-right font-mono text-emerald-700 font-semibold">₹0.00</td>
+      </tr>
+    `;
+
+    const foot = document.getElementById("arnTable61Foot");
+    if (foot) {
+      foot.innerHTML = `
+        <tr class="bg-surface-container-low font-semibold text-on-surface border-t border-outline-variant h-11">
+          <td class="px-5 py-2">Total Tax Offset (INR)</td>
+          <td class="px-4 py-2 text-right font-mono">₹${totalAssessed.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+          <td class="px-4 py-2 text-right font-mono text-primary">₹${totalItc.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+          <td class="px-4 py-2 text-right font-mono text-on-surface">₹${totalCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+          <td class="px-5 py-2 text-right font-mono text-emerald-700">₹0.00</td>
+        </tr>
+      `;
+    }
+  }
+
+  openArnModal();
+}
+window.openArnModalWithData = openArnModalWithData;
 
 // Retain legacy submitNilReturn for backward compatibility
 async function submitNilReturn() {
@@ -9084,7 +9438,10 @@ async function submitOnboardingStep1(e) {
       return;
     }
 
-    if (data.sessionToken) appState.sessionToken = data.sessionToken;
+    if (data.sessionToken) {
+      appState.sessionToken = data.sessionToken;
+      localStorage.setItem("simplegst_session_token", data.sessionToken);
+    }
     if (data.csrfToken) appState.csrfToken = data.csrfToken;
 
     showToast("Account created successfully! Please continue to Taxpayer Identification.", "success");
