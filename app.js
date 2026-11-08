@@ -5698,8 +5698,10 @@ window.startGuidedFiling = startGuidedFiling;
 
 function goToGuidedPurchases() {
   appState.inGuidedFlow = true;
-  switchSuite('file-gst');
-  startGuidedFiling(2);
+  switchSuite('purchase');
+  if (typeof renderPurchaseSuite === 'function') {
+    renderPurchaseSuite();
+  }
 }
 window.goToGuidedPurchases = goToGuidedPurchases;
 
@@ -7663,9 +7665,14 @@ function filterSalesTable() {
           </span>
         </td>
         <td class="py-3 px-4 text-center">
-          <span class="text-xs text-primary font-medium cursor-pointer hover:underline" onclick="showToast('Invoice ${escapeHtml(inv.invoice_number)} verified in database', 'info')">
-            Verified
-          </span>
+          <div class="inline-flex items-center gap-2 justify-center">
+            <span class="text-xs text-primary font-medium cursor-pointer hover:underline" onclick="showToast('Invoice ${escapeHtml(inv.invoice_number)} verified in database', 'info')">
+              Verified
+            </span>
+            <button type="button" title="Delete sales invoice" onclick="deleteSalesInvoice('${inv.id}', '${escapeHtml(inv.invoice_number)}')" class="text-rose-600 hover:text-rose-800 transition-colors p-1 rounded hover:bg-rose-50 cursor-pointer flex items-center">
+              <span class="material-symbols-outlined text-[15px]">delete</span>
+            </button>
+          </div>
         </td>
       </tr>
     `).join("");
@@ -7757,9 +7764,14 @@ function filterPurchaseTable() {
             </span>
           </td>
           <td class="py-3 px-4 text-center">
-            <span class="text-xs text-primary font-medium cursor-pointer hover:underline" onclick="showToast('Purchase bill ${escapeHtml(p.invoice_number)} verified in database', 'info')">
-              Verified
-            </span>
+            <div class="inline-flex items-center gap-2 justify-center">
+              <span class="text-xs text-primary font-medium cursor-pointer hover:underline" onclick="showToast('Purchase bill ${escapeHtml(p.invoice_number)} verified in database', 'info')">
+                Verified
+              </span>
+              <button type="button" title="Delete purchase bill" onclick="deletePurchaseInvoice('${p.id}', '${escapeHtml(p.invoice_number)}')" class="text-rose-600 hover:text-rose-800 transition-colors p-1 rounded hover:bg-rose-50 cursor-pointer flex items-center">
+                <span class="material-symbols-outlined text-[15px]">delete</span>
+              </button>
+            </div>
           </td>
         </tr>
       `;
@@ -7777,6 +7789,42 @@ async function refreshInvoices(type) {
   }
 }
 window.refreshInvoices = refreshInvoices;
+
+async function deleteSalesInvoice(id, invNum) {
+  if (!confirm(`Are you sure you want to delete sales invoice ${invNum || ''}?`)) return;
+  try {
+    const res = await apiFetch(`/api/sales/${id}`, { method: 'DELETE' });
+    const json = await res.json();
+    if (res.ok && json.success) {
+      showToast(`Sales invoice ${invNum || ''} deleted successfully`, 'success');
+      await renderSalesSuite();
+      if (typeof loadDashboardData === 'function') loadDashboardData();
+    } else {
+      showToast(json.error || 'Failed to delete sales invoice', 'error');
+    }
+  } catch (e) {
+    showToast('Failed to delete invoice: ' + e.message, 'error');
+  }
+}
+window.deleteSalesInvoice = deleteSalesInvoice;
+
+async function deletePurchaseInvoice(id, invNum) {
+  if (!confirm(`Are you sure you want to delete purchase bill ${invNum || ''}?`)) return;
+  try {
+    const res = await apiFetch(`/api/purchases/${id}`, { method: 'DELETE' });
+    const json = await res.json();
+    if (res.ok && json.success) {
+      showToast(`Purchase bill ${invNum || ''} deleted successfully`, 'success');
+      await renderPurchaseSuite();
+      if (typeof loadDashboardData === 'function') loadDashboardData();
+    } else {
+      showToast(json.error || 'Failed to delete purchase bill', 'error');
+    }
+  } catch (e) {
+    showToast('Failed to delete purchase bill: ' + e.message, 'error');
+  }
+}
+window.deletePurchaseInvoice = deletePurchaseInvoice;
 
 // ============================================================================
 // DOCUMENT UPLOADS & AI OCR REVIEW MODAL CONTROLLERS
@@ -9147,6 +9195,12 @@ async function deleteDocument(docId) {
     if (res.ok && data.success) {
       if (typeof showToast === "function") showToast("Document deleted successfully.", "success");
       await loadBillsDashboard();
+      if (typeof refreshInvoices === "function") {
+        await refreshInvoices();
+      }
+      if (typeof loadDashboardData === "function") {
+        loadDashboardData();
+      }
     } else {
       if (typeof showToast === "function") showToast(data.error || "Failed to delete document.", "error");
     }
