@@ -5430,6 +5430,7 @@ let currentGuidedStep = 1;
 let cachedDashboardMetrics = null;
 
 function resetFileGstChoice() {
+  appState.inGuidedFlow = false;
   const choiceSec = document.getElementById("fileGstChoiceSection");
   const nilSec = document.getElementById("fileGstNilSection");
   const guidedSec = document.getElementById("fileGstGuidedSection");
@@ -5651,6 +5652,7 @@ async function executeNilFilingSubmission() {
 window.executeNilFilingSubmission = executeNilFilingSubmission;
 
 function startGuidedFiling(step = 1) {
+  appState.inGuidedFlow = true;
   const choiceSec = document.getElementById("fileGstChoiceSection");
   const nilSec = document.getElementById("fileGstNilSection");
   const guidedSec = document.getElementById("fileGstGuidedSection");
@@ -5662,6 +5664,40 @@ function startGuidedFiling(step = 1) {
   setGuidedStep(step);
 }
 window.startGuidedFiling = startGuidedFiling;
+
+function goToGuidedPurchases() {
+  appState.inGuidedFlow = true;
+  switchSuite('file-gst');
+  startGuidedFiling(2);
+}
+window.goToGuidedPurchases = goToGuidedPurchases;
+
+function goToGuidedItc() {
+  appState.inGuidedFlow = true;
+  switchSuite('file-gst');
+  startGuidedFiling(3);
+}
+window.goToGuidedItc = goToGuidedItc;
+
+function goToGuidedSalesOrCancel() {
+  if (appState.inGuidedFlow) {
+    switchSuite('file-gst');
+    startGuidedFiling(1);
+  } else {
+    switchSuite('file-gst');
+  }
+}
+window.goToGuidedSalesOrCancel = goToGuidedSalesOrCancel;
+
+function goToGuidedPurchasesOrCancel() {
+  if (appState.inGuidedFlow) {
+    switchSuite('file-gst');
+    startGuidedFiling(2);
+  } else {
+    switchSuite('file-gst');
+  }
+}
+window.goToGuidedPurchasesOrCancel = goToGuidedPurchasesOrCancel;
 
 async function setGuidedStep(step = 1) {
   currentGuidedStep = step;
@@ -7471,15 +7507,24 @@ async function submitNewPurchase(event) {
       if (typeof switchFilingPeriod === "function" && savedPeriod !== getActivePeriod()) {
         await switchFilingPeriod(savedPeriod);
       }
-      if (typeof switchSuite === "function") {
-        switchSuite('purchase');
-      }
-      const searchInput = document.getElementById('purchaseSearchInput');
-      if (searchInput) searchInput.value = "";
-      const filterSelect = document.getElementById('purchaseItcFilter');
-      if (filterSelect) filterSelect.value = "ALL";
-      if (typeof refreshInvoices === "function") {
-        await refreshInvoices('purchase');
+      if (appState.inGuidedFlow) {
+        if (typeof switchSuite === "function") {
+          switchSuite('file-gst');
+        }
+        if (typeof startGuidedFiling === "function") {
+          startGuidedFiling(3);
+        }
+      } else {
+        if (typeof switchSuite === "function") {
+          switchSuite('purchase');
+        }
+        const searchInput = document.getElementById('purchaseSearchInput');
+        if (searchInput) searchInput.value = "";
+        const filterSelect = document.getElementById('purchaseItcFilter');
+        if (filterSelect) filterSelect.value = "ALL";
+        if (typeof refreshInvoices === "function") {
+          await refreshInvoices('purchase');
+        }
       }
       if (typeof loadDashboardData === "function") {
         loadDashboardData(savedPeriod);
@@ -7959,6 +8004,7 @@ function setOcrDocumentType(type, triggerRecalc = true) {
   const btnSales = document.getElementById('btnTypeSales');
   const btnPurchase = document.getElementById('btnTypePurchase');
   const itcWrapper = document.getElementById('ocrReviewItcWrapper');
+  const btnSave = document.getElementById('btnSaveOcrInvoice');
 
   if (type === "sales_invoice") {
     if (btnSales) {
@@ -7968,6 +8014,9 @@ function setOcrDocumentType(type, triggerRecalc = true) {
       btnPurchase.className = "px-3 py-1 rounded-md text-xs font-semibold text-secondary hover:text-on-surface cursor-pointer";
     }
     if (itcWrapper) itcWrapper.style.display = "none";
+    if (btnSave) {
+      btnSave.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span> <span>Save to Sales Register</span>`;
+    }
   } else {
     if (btnPurchase) {
       btnPurchase.className = "px-3 py-1 rounded-md text-xs font-bold bg-primary text-on-primary shadow-sm cursor-pointer";
@@ -7976,6 +8025,9 @@ function setOcrDocumentType(type, triggerRecalc = true) {
       btnSales.className = "px-3 py-1 rounded-md text-xs font-semibold text-secondary hover:text-on-surface cursor-pointer";
     }
     if (itcWrapper) itcWrapper.style.display = "block";
+    if (btnSave) {
+      btnSave.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span> <span>Save to Purchase Register</span>`;
+    }
   }
 
   if (triggerRecalc) {
@@ -8366,13 +8418,18 @@ async function saveExtractedInvoice() {
         if (typeof renderSalesSuite === "function") await renderSalesSuite();
         if (typeof refreshInvoices === "function") await refreshInvoices('sales');
       } else {
-        if (typeof switchSuite === "function") switchSuite('purchase');
-        const searchInput = document.getElementById('purchaseSearchInput');
-        if (searchInput) searchInput.value = "";
-        const filterSelect = document.getElementById('purchaseItcFilter');
-        if (filterSelect) filterSelect.value = "ALL";
-        if (typeof renderPurchaseSuite === "function") await renderPurchaseSuite();
-        if (typeof refreshInvoices === "function") await refreshInvoices('purchase');
+        if (appState.inGuidedFlow) {
+          if (typeof switchSuite === "function") switchSuite('file-gst');
+          if (typeof startGuidedFiling === "function") startGuidedFiling(3);
+        } else {
+          if (typeof switchSuite === "function") switchSuite('purchase');
+          const searchInput = document.getElementById('purchaseSearchInput');
+          if (searchInput) searchInput.value = "";
+          const filterSelect = document.getElementById('purchaseItcFilter');
+          if (filterSelect) filterSelect.value = "ALL";
+          if (typeof renderPurchaseSuite === "function") await renderPurchaseSuite();
+          if (typeof refreshInvoices === "function") await refreshInvoices('purchase');
+        }
       }
       if (typeof loadBillsDashboard === "function") {
         await loadBillsDashboard();
@@ -8435,15 +8492,20 @@ async function approveOcrReviewInvoice() {
       if (typeof showToast === "function") {
         showToast("Invoice AOS-4412 approved and synced to Purchase Register!", "success");
       }
-      if (typeof switchSuite === "function") {
-        switchSuite('purchase');
-      }
-      const searchInput = document.getElementById('purchaseSearchInput');
-      if (searchInput) searchInput.value = "";
-      const filterSelect = document.getElementById('purchaseItcFilter');
-      if (filterSelect) filterSelect.value = "ALL";
-      if (typeof refreshInvoices === "function") {
-        await refreshInvoices('purchase');
+      if (appState.inGuidedFlow) {
+        if (typeof switchSuite === "function") switchSuite('file-gst');
+        if (typeof startGuidedFiling === "function") startGuidedFiling(3);
+      } else {
+        if (typeof switchSuite === "function") {
+          switchSuite('purchase');
+        }
+        const searchInput = document.getElementById('purchaseSearchInput');
+        if (searchInput) searchInput.value = "";
+        const filterSelect = document.getElementById('purchaseItcFilter');
+        if (filterSelect) filterSelect.value = "ALL";
+        if (typeof refreshInvoices === "function") {
+          await refreshInvoices('purchase');
+        }
       }
       const period = typeof getActivePeriod === "function" ? getActivePeriod() : "102026";
       if (typeof loadDashboardData === "function") {

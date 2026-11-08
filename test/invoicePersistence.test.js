@@ -456,3 +456,43 @@ test("UI Suite Navigation: submitNewPurchase, submitNewInvoice, and saveExtracte
     "saveExtractedInvoice must invoke switchSuite for both sales and purchase types"
   );
 });
+
+test("Guided 5-Step Filing Navigation: Sales transitions to Step 2 (Purchases) and Purchase transitions to Step 3 (ITC)", () => {
+  const indexHtml = fs.readFileSync(path.resolve("index.html"), "utf8");
+  const appJs = fs.readFileSync(path.resolve("app.js"), "utf8");
+
+  // Validate goToGuidedPurchases button on Sales screen
+  assert.match(
+    indexHtml,
+    /id=["']btnSalesToPurchaseRegister["'][\s\S]*?goToGuidedPurchases\(\)/,
+    "Sales screen must include a button with id btnSalesToPurchaseRegister invoking goToGuidedPurchases()"
+  );
+
+  // Validate goToGuidedItc button on Purchase screen
+  assert.match(
+    indexHtml,
+    /id=["']btnPurchaseToItcRegister["'][\s\S]*?goToGuidedItc\(\)/,
+    "Purchase screen must include a button with id btnPurchaseToItcRegister invoking goToGuidedItc()"
+  );
+
+  // Validate goToGuidedPurchases switches to file-gst and starts step 2 (Purchases)
+  assert.match(
+    appJs,
+    /function goToGuidedPurchases\(\)[\s\S]*?switchSuite\(['"]file-gst['"]\)[\s\S]*?startGuidedFiling\(2\)/,
+    "goToGuidedPurchases must transition to file-gst and start step 2"
+  );
+
+  // Validate goToGuidedItc switches to file-gst and starts step 3 (ITC)
+  assert.match(
+    appJs,
+    /function goToGuidedItc\(\)[\s\S]*?switchSuite\(['"]file-gst['"]\)[\s\S]*?startGuidedFiling\(3\)/,
+    "goToGuidedItc must transition to file-gst and start step 3"
+  );
+
+  // Validate OCR Review modal button displays Save to Purchase Register for purchase bills
+  assert.match(
+    appJs,
+    /Save to Purchase Register/,
+    "app.js must dynamically set Save to Purchase Register on OCR review button"
+  );
+});
