@@ -84,7 +84,7 @@ function sendJson(res, statusCode, data) {
 }
 
 function readBody(req) {
-  // Support pre-parsed request body in serverless environments (e.g. Vercel)
+  // Support pre-parsed request body if provided
   if (req.body !== undefined && req.body !== null) {
     if (typeof req.body === "object") {
       return Promise.resolve(req.body);
@@ -129,21 +129,9 @@ function readBody(req) {
 
 export async function handleRequest(req, res) {
   try {
-    // Seamless URL resolution across local Node and Vercel Serverless
-    let requestPath = req.url || "/";
-    const vercelOriginal = req.headers["x-vercel-original-path"] || req.headers["x-matched-path"] || req.headers["x-forwarded-uri"] || req.headers["x-original-url"];
-    if (vercelOriginal && !vercelOriginal.endsWith("index.js")) {
-      requestPath = vercelOriginal;
-    } else if (req.query && req.query.path) {
-      const slug = Array.isArray(req.query.path) ? req.query.path.join("/") : req.query.path;
-      requestPath = `/api/${slug}`;
-    }
-
+    const requestPath = req.url || "/";
     const parsedUrl = new URL(requestPath, `http://${req.headers.host || "localhost"}`);
     let pathname = parsedUrl.pathname;
-    if (pathname === "/api/index.js" || pathname === "/api/index") {
-      pathname = "/api";
-    }
     const method = req.method;
     const query = Object.assign({}, Object.fromEntries(parsedUrl.searchParams.entries()), req.query || {});
 
@@ -1429,7 +1417,7 @@ export async function handleRequest(req, res) {
     // ---------------------------------------------------------
     let relativePath = (pathname === "/" || pathname === "/startup-express") ? "index.html" : pathname.replace(/^\//, "");
 
-    // Check multiple candidate locations across local Node and Vercel serverless bundles
+    // Check candidate locations across public/ and root directory
     const candidatePaths = [
       path.join(__dirname, "public", relativePath),
       path.join(__dirname, relativePath),
@@ -1507,9 +1495,8 @@ function escapeXmlVal(str) {
     .replace(/'/g, "&apos;");
 }
 
-// Start server if executed directly (and not in a serverless environment like Vercel)
-const isVercelEnv = Boolean(process.env.VERCEL || process.env.NOW_REGION || process.env.AWS_LAMBDA_FUNCTION_NAME);
-if (!isVercelEnv && process.argv[1] && process.argv[1].endsWith("server.js")) {
+// Start server if executed directly
+if (process.argv[1] && process.argv[1].endsWith("server.js")) {
   const server = createServer();
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {
