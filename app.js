@@ -124,8 +124,13 @@ async function apiFetch(url, options = {}) {
   const method = (options.method || "GET").toUpperCase();
   const isStateChanging = ["POST", "PUT", "DELETE", "PATCH"].includes(method);
 
+  const isAuthRoute = typeof url === "string" && (
+    url.startsWith("/api/auth/") ||
+    url.startsWith("/api/onboarding/step1")
+  );
+
   // If state-changing request and user is currently in unauthenticated guest state, auto-ensure session
-  if (isStateChanging && (!appState.auth || !appState.auth.isLoggedIn)) {
+  if (isStateChanging && !isAuthRoute && (!appState.auth || !appState.auth.isLoggedIn)) {
     await ensureActiveSession();
   }
 
@@ -9589,10 +9594,9 @@ async function submitOnboardingStep1(e) {
   }
 
   try {
-    const res = await fetch("/api/onboarding/step1", {
+    const res = await apiFetch("/api/onboarding/step1", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "same-origin",
       body: JSON.stringify({ fullName, mobile: cleanMobile, email, password, confirmPassword })
     });
     const data = await res.json().catch(() => ({}));
@@ -9606,6 +9610,13 @@ async function submitOnboardingStep1(e) {
       localStorage.setItem("simplegst_session_token", data.sessionToken);
     }
     if (data.csrfToken) appState.csrfToken = data.csrfToken;
+    if (data.user) {
+      appState.auth = {
+        isLoggedIn: true,
+        user: data.user
+      };
+      if (typeof renderAuthState === "function") renderAuthState();
+    }
 
     showToast("Account created successfully! Please continue to Taxpayer Identification.", "success");
     goToOnboardingStep(2);
