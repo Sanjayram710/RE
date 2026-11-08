@@ -139,6 +139,15 @@
           <span class="w-2 h-2 rounded-full bg-primary"></span>
         </a>
 
+        <!-- Startup Express -->
+        <a id="nav-link-startup-express" onclick="switchSuite('startup-express'); return false;" class="sidebar-nav-link flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant font-label-lg hover:bg-surface-container transition-colors cursor-pointer" href="/startup-express">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px] text-primary">rocket_launch</span>
+            <span class="font-semibold">Startup Express</span>
+          </div>
+          <span class="font-label-sm text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">NEW</span>
+        </a>
+
         <!-- 2. File GST (Guided / Nil) -->
         <a id="nav-link-file-gst" onclick="switchSuite('file-gst'); return false;" class="sidebar-nav-link flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant font-label-lg hover:bg-surface-container transition-colors cursor-pointer" href="#file-gst">
           <div class="flex items-center gap-3">
@@ -177,22 +186,6 @@
           <div class="flex items-center gap-3">
             <span class="material-symbols-outlined text-[20px]">sync_alt</span>
             <span>Reconciliation</span>
-          </div>
-        </a>
-
-        <!-- 5. Tax Calc & GSTR-3B -->
-        <a id="nav-link-taxcalc" onclick="switchSuite('taxcalc'); return false;" class="sidebar-nav-link flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant font-label-lg hover:bg-surface-container transition-colors cursor-pointer" href="#tax-calc">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-[20px]">calculate</span>
-            <span>Tax Calc (3B)</span>
-          </div>
-        </a>
-
-        <!-- 6. Ledgers & Reports -->
-        <a id="nav-link-reports" onclick="switchSuite('gst'); return false;" class="sidebar-nav-link flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant font-label-lg hover:bg-surface-container transition-colors cursor-pointer" href="#reports">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-[20px]">analytics</span>
-            <span>Ledgers & Reports</span>
           </div>
         </a>
 
@@ -441,7 +434,911 @@
   </header>
 
 
+        <!-- ========================================================================= -->
+    <!-- 0. STARTUP EXPRESS SUITE (From Business Formation to GST Compliance)      -->
     <!-- ========================================================================= -->
+    <div id="viewStartupExpressSuite" class="app-suite-container hidden">
+      <main class="p-6 md:p-8 space-y-8 max-w-[1600px] w-full mx-auto">
+
+        <!-- Top Breadcrumbs & Mode Controls -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-outline-variant">
+          <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-xs font-label-md text-secondary select-none">
+            <span class="hover:text-primary cursor-pointer transition-colors" onclick="switchSuite('home')">Home</span>
+            <span class="text-outline-variant">/</span>
+            <span class="text-on-surface font-semibold flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-sm text-primary">rocket_launch</span>
+              Startup Express
+            </span>
+          </nav>
+          <div class="flex items-center gap-2">
+            <button id="tabStartupLanding" type="button" onclick="showStartupView('landing')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-surface-container-high text-primary border border-primary/30 transition-all cursor-pointer">
+              Overview &amp; Landing
+            </button>
+            <button id="tabStartupWizard" type="button" onclick="showStartupView('wizard')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-surface-container-low hover:bg-surface-container text-on-surface transition-all cursor-pointer">
+              7-Stage Guided Setup
+            </button>
+            <button id="tabStartupDashboard" type="button" onclick="showStartupView('dashboard')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-surface-container-low hover:bg-surface-container text-on-surface transition-all cursor-pointer">
+              Progress &amp; Tracker
+            </button>
+          </div>
+        </div>
+
+        <!-- VIEW A: LANDING PAGE -->
+        <section id="startupLandingView" class="space-y-10">
+          <!-- Hero Banner -->
+          <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white p-8 md:p-12 shadow-xl border border-emerald-500/20">
+            <div class="relative z-10 max-w-3xl space-y-4">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                <span class="material-symbols-outlined text-[16px]">rocket_launch</span>
+                <span>SimpleGST Startup Express &bull; Full-Lifecycle Business Setup</span>
+              </div>
+              <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
+                Start your business with confidence.
+              </h1>
+              <p class="text-base md:text-lg text-emerald-100/90 leading-relaxed font-normal">
+                From starting your business to filing your GST &mdash; one digital platform.
+              </p>
+              <div class="flex flex-wrap items-center gap-4 pt-4">
+                <button type="button" onclick="startStartupExpressJourney()" class="px-7 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg hover:shadow-emerald-500/25 active:scale-98 transition-all cursor-pointer flex items-center gap-2">
+                  <span>START MY BUSINESS</span>
+                  <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </button>
+                <button type="button" onclick="resumeStartupExpress()" id="btnResumeStartupHero" class="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-sm border border-white/20 transition-all cursor-pointer flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[18px]">play_circle</span>
+                  <span id="txtResumeStartupHero">Resume Setup</span>
+                </button>
+              </div>
+              <p class="text-xs text-emerald-200/70 pt-2">
+                Already established? <button type="button" onclick="switchSuite('home')" class="text-white underline hover:text-emerald-300 cursor-pointer">Access your active GST workspace &rarr;</button>
+              </p>
+            </div>
+            <!-- Decorative Glow -->
+            <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          </div>
+
+          <!-- Business Structure Options -->
+          <div class="space-y-4">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-2">
+              <div>
+                <h2 class="text-xl font-bold text-on-surface">Choose the right business structure</h2>
+                <p class="text-sm text-secondary">Select your organizational structure to unlock tailored statutory checklists and registration paths.</p>
+              </div>
+              <span class="text-xs text-secondary italic">5 recognized frameworks supported</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <!-- Proprietorship Card -->
+              <div onclick="selectStructureFromLanding('PROPRIETORSHIP')" class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group">
+                <div class="space-y-3">
+                  <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                    <span class="material-symbols-outlined text-2xl">person</span>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-on-surface group-hover:text-primary transition-colors">Proprietorship</h3>
+                    <p class="text-xs text-secondary mt-1">Single owner with complete operational control.</p>
+                  </div>
+                  <div class="text-xs space-y-1.5 pt-2 border-t border-outline-variant">
+                    <p class="text-on-surface-variant font-medium">Best for:</p>
+                    <p class="text-secondary">Freelancers, retail traders, local service providers starting with low risk.</p>
+                    <p class="text-on-surface-variant font-medium pt-1">Key Checklist:</p>
+                    <p class="text-secondary">PAN, Aadhaar, Electricity Bill, Udyam MSME.</p>
+                  </div>
+                </div>
+                <button type="button" class="mt-4 w-full py-2 rounded-lg bg-surface-container hover:bg-primary hover:text-on-primary text-xs font-semibold text-primary transition-colors">
+                  Select Proprietorship
+                </button>
+              </div>
+
+              <!-- Partnership Card -->
+              <div onclick="selectStructureFromLanding('PARTNERSHIP')" class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group">
+                <div class="space-y-3">
+                  <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
+                    <span class="material-symbols-outlined text-2xl">handshake</span>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-on-surface group-hover:text-primary transition-colors">Partnership</h3>
+                    <p class="text-xs text-secondary mt-1">Two or more partners pooling capital &amp; sharing profits.</p>
+                  </div>
+                  <div class="text-xs space-y-1.5 pt-2 border-t border-outline-variant">
+                    <p class="text-on-surface-variant font-medium">Best for:</p>
+                    <p class="text-secondary">Traditional co-founders and family businesses sharing operational risk.</p>
+                    <p class="text-on-surface-variant font-medium pt-1">Key Checklist:</p>
+                    <p class="text-secondary">Partnership Deed, Partner KYC, Firm PAN card.</p>
+                  </div>
+                </div>
+                <button type="button" class="mt-4 w-full py-2 rounded-lg bg-surface-container hover:bg-primary hover:text-on-primary text-xs font-semibold text-primary transition-colors">
+                  Select Partnership
+                </button>
+              </div>
+
+              <!-- LLP Card -->
+              <div onclick="selectStructureFromLanding('LLP')" class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group">
+                <div class="space-y-3">
+                  <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+                    <span class="material-symbols-outlined text-2xl">shield</span>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-on-surface group-hover:text-primary transition-colors">LLP</h3>
+                    <p class="text-xs text-secondary mt-1">Limited Liability Partnership governed by MCA.</p>
+                  </div>
+                  <div class="text-xs space-y-1.5 pt-2 border-t border-outline-variant">
+                    <p class="text-on-surface-variant font-medium">Best for:</p>
+                    <p class="text-secondary">Professional consulting agencies, studios, and multi-partner firms.</p>
+                    <p class="text-on-surface-variant font-medium pt-1">Key Checklist:</p>
+                    <p class="text-secondary">DSC, DPIN, RUN-LLP name approval, FiLLiP form.</p>
+                  </div>
+                </div>
+                <button type="button" class="mt-4 w-full py-2 rounded-lg bg-surface-container hover:bg-primary hover:text-on-primary text-xs font-semibold text-primary transition-colors">
+                  Select LLP
+                </button>
+              </div>
+
+              <!-- Private Limited Card -->
+              <div onclick="selectStructureFromLanding('PRIVATE_LIMITED')" class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group">
+                <div class="space-y-3">
+                  <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center font-bold">
+                    <span class="material-symbols-outlined text-2xl">corporate_fare</span>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-on-surface group-hover:text-primary transition-colors">Private Limited</h3>
+                    <p class="text-xs text-secondary mt-1">Corporate entity with equity shares &amp; limited liability.</p>
+                  </div>
+                  <div class="text-xs space-y-1.5 pt-2 border-t border-outline-variant">
+                    <p class="text-on-surface-variant font-medium">Best for:</p>
+                    <p class="text-secondary">Startups raising equity investment, tech ventures, high-scale enterprises.</p>
+                    <p class="text-on-surface-variant font-medium pt-1">Key Checklist:</p>
+                    <p class="text-secondary">2+ Directors, DSC, SPICe+ Part A/B, MoA/AoA, CIN.</p>
+                  </div>
+                </div>
+                <button type="button" class="mt-4 w-full py-2 rounded-lg bg-surface-container hover:bg-primary hover:text-on-primary text-xs font-semibold text-primary transition-colors">
+                  Select Pvt Ltd
+                </button>
+              </div>
+
+              <!-- Other Structures Card -->
+              <div onclick="selectStructureFromLanding('OTHER')" class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group">
+                <div class="space-y-3">
+                  <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+                    <span class="material-symbols-outlined text-2xl">domain_add</span>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-on-surface group-hover:text-primary transition-colors">Other Structures</h3>
+                    <p class="text-xs text-secondary mt-1">One Person Company (OPC), Trust, Section 8 Non-Profit.</p>
+                  </div>
+                  <div class="text-xs space-y-1.5 pt-2 border-t border-outline-variant">
+                    <p class="text-on-surface-variant font-medium">Best for:</p>
+                    <p class="text-secondary">Single-promoter corporate liability or charitable statutory missions.</p>
+                    <p class="text-on-surface-variant font-medium pt-1">Key Checklist:</p>
+                    <p class="text-secondary">Nominee consent, Trust deed or Section 8 license.</p>
+                  </div>
+                </div>
+                <button type="button" class="mt-4 w-full py-2 rounded-lg bg-surface-container hover:bg-primary hover:text-on-primary text-xs font-semibold text-primary transition-colors">
+                  Select Other
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seven-Stage Journey Overview -->
+          <div class="space-y-4">
+            <h2 class="text-xl font-bold text-on-surface">The 7-Stage Guided Journey</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3">
+              <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest space-y-2">
+                <span class="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">1</span>
+                <h4 class="font-bold text-xs text-on-surface">Business Structure</h4>
+                <p class="text-[11px] text-secondary">Choose legal framework and trade details.</p>
+              </div>
+              <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest space-y-2">
+                <span class="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">2</span>
+                <h4 class="font-bold text-xs text-on-surface">PAN &amp; Identity</h4>
+                <p class="text-[11px] text-secondary">Verify founder &amp; entity PAN documents.</p>
+              </div>
+              <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest space-y-2">
+                <span class="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">3</span>
+                <h4 class="font-bold text-xs text-on-surface">Business Registration</h4>
+                <p class="text-[11px] text-secondary">MSME Udyam, MCA or Deed reference.</p>
+              </div>
+              <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest space-y-2">
+                <span class="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">4</span>
+                <h4 class="font-bold text-xs text-on-surface">GST Registration</h4>
+                <p class="text-[11px] text-secondary">Eligibility rules, ARN &amp; GSTIN tracker.</p>
+              </div>
+              <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest space-y-2">
+                <span class="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">5</span>
+                <h4 class="font-bold text-xs text-on-surface">Bank &amp; Accounting</h4>
+                <p class="text-[11px] text-secondary">Current account setup &amp; tax scheme.</p>
+              </div>
+              <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest space-y-2">
+                <span class="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">6</span>
+                <h4 class="font-bold text-xs text-on-surface">Invoicing Setup</h4>
+                <p class="text-[11px] text-secondary">Rule 46 sequential invoice numbering.</p>
+              </div>
+              <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest space-y-2">
+                <span class="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">7</span>
+                <h4 class="font-bold text-xs text-on-surface">GST Activation</h4>
+                <p class="text-[11px] text-secondary">Launch live returns, registers &amp; ledger.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Benefits of Startup Express -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+            <div class="p-6 rounded-xl border border-outline-variant bg-surface-container-lowest space-y-2">
+              <span class="material-symbols-outlined text-primary text-3xl">verified_user</span>
+              <h3 class="font-bold text-base text-on-surface">Zero Bureaucratic Jargon</h3>
+              <p class="text-xs text-secondary leading-relaxed">
+                Step-by-step guidance written for first-time founders. We clearly distinguish between what must be filed on government portals and what SimpleGST automates.
+              </p>
+            </div>
+            <div class="p-6 rounded-xl border border-outline-variant bg-surface-container-lowest space-y-2">
+              <span class="material-symbols-outlined text-primary text-3xl">hub</span>
+              <h3 class="font-bold text-base text-on-surface">Connected to Live Workspace</h3>
+              <p class="text-xs text-secondary leading-relaxed">
+                No disjointed onboarding. Your business name, GSTIN, invoice sequence, and bank settings flow directly into your Sales and Purchase registers on day one.
+              </p>
+            </div>
+            <div class="p-6 rounded-xl border border-outline-variant bg-surface-container-lowest space-y-2">
+              <span class="material-symbols-outlined text-primary text-3xl">support_agent</span>
+              <h3 class="font-bold text-base text-on-surface">Integrated CA &amp; Assistant Support</h3>
+              <p class="text-xs text-secondary leading-relaxed">
+                Contextual AI assistance explains every single form and document requirement. Certified CA practice access available whenever your business needs advice.
+              </p>
+            </div>
+          </div>
+
+          <!-- Statutory Disclaimer Banner -->
+          <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant flex items-start gap-3">
+            <span class="material-symbols-outlined text-secondary text-xl shrink-0 mt-0.5">info</span>
+            <div class="text-xs text-secondary leading-relaxed">
+              <strong>Statutory Guidance Disclaimer:</strong> SimpleGST Startup Express provides informational, digital onboarding workflows and document preparation aids. Information provided does not constitute definitive legal or chartered accountancy counsel. Business registration and taxation requirements depend on your trade scope and current state and central legislation.
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW B: SEVEN-STAGE GUIDED WIZARD + DASHBOARD -->
+        <section id="startupWizardView" class="space-y-6 hidden">
+          <!-- Stepper Navigation Header -->
+          <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary uppercase tracking-wider">Guided Onboarding</span>
+                  <span class="text-xs font-semibold text-secondary" id="txtStartupCurrentStructure">Proprietorship</span>
+                </div>
+                <h2 class="text-xl font-bold text-on-surface mt-1" id="txtStartupStageHeading">Stage 1: Business Structure &amp; Identity</h2>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="text-right">
+                  <span class="text-xs font-semibold text-secondary">Overall Progress</span>
+                  <div class="text-base font-bold font-mono text-primary" id="startupProgressPct">0% Completed</div>
+                </div>
+                <div class="w-12 h-12 rounded-full border-4 border-surface-container flex items-center justify-center font-bold text-xs text-primary" id="startupProgressGauge">
+                  0%
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Stepper -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 pt-2 border-t border-outline-variant" id="startupStepperPills">
+              <!-- Rendered dynamically by renderStartupStepper() -->
+            </div>
+          </div>
+
+          <!-- Split Layout: Stage Form (Left 8 Cols) & Dashboard/Assistant (Right 4 Cols) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- Main Stage Form Area (8 cols) -->
+            <div class="lg:col-span-8 space-y-6">
+
+              <!-- STAGE 1: BUSINESS STRUCTURE -->
+              <div id="startupStage1Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                <div class="space-y-1">
+                  <h3 class="font-bold text-lg text-on-surface">1. Select Business Structure &amp; Trade Details</h3>
+                  <p class="text-xs text-secondary">Choose the organizational framework that matches your founders, liability goals, and operations.</p>
+                </div>
+
+                <!-- 5 Structure Radios -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="structureRadioGroup">
+                  <label class="p-4 rounded-xl border-2 border-primary bg-primary/5 cursor-pointer flex flex-col justify-between structure-card" data-structure="PROPRIETORSHIP">
+                    <div>
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-on-surface">Proprietorship</span>
+                        <input type="radio" name="startupStructure" value="PROPRIETORSHIP" checked class="text-primary focus:ring-primary">
+                      </div>
+                      <p class="text-xs text-secondary mt-1">Single founder, lowest compliance cost.</p>
+                    </div>
+                    <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded mt-3 self-start">MSME Udyam + GST</span>
+                  </label>
+
+                  <label class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/50 cursor-pointer flex flex-col justify-between structure-card" data-structure="PARTNERSHIP">
+                    <div>
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-on-surface">Partnership</span>
+                        <input type="radio" name="startupStructure" value="PARTNERSHIP" class="text-primary focus:ring-primary">
+                      </div>
+                      <p class="text-xs text-secondary mt-1">2+ partners with shared deed.</p>
+                    </div>
+                    <span class="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded mt-3 self-start">Deed + RoF</span>
+                  </label>
+
+                  <label class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/50 cursor-pointer flex flex-col justify-between structure-card" data-structure="LLP">
+                    <div>
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-on-surface">LLP</span>
+                        <input type="radio" name="startupStructure" value="LLP" class="text-primary focus:ring-primary">
+                      </div>
+                      <p class="text-xs text-secondary mt-1">Limited liability for professionals.</p>
+                    </div>
+                    <span class="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded mt-3 self-start">MCA FiLLiP</span>
+                  </label>
+
+                  <label class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/50 cursor-pointer flex flex-col justify-between structure-card" data-structure="PRIVATE_LIMITED">
+                    <div>
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-on-surface">Private Limited</span>
+                        <input type="radio" name="startupStructure" value="PRIVATE_LIMITED" class="text-primary focus:ring-primary">
+                      </div>
+                      <p class="text-xs text-secondary mt-1">High scale, external equity shares.</p>
+                    </div>
+                    <span class="text-[10px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded mt-3 self-start">MCA SPICe+</span>
+                  </label>
+
+                  <label class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/50 cursor-pointer flex flex-col justify-between structure-card sm:col-span-2 lg:col-span-2" data-structure="OTHER">
+                    <div>
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-on-surface">Other (OPC / Section 8 / Trust)</span>
+                        <input type="radio" name="startupStructure" value="OTHER" class="text-primary focus:ring-primary">
+                      </div>
+                      <p class="text-xs text-secondary mt-1">One Person Company, non-profit society, or trust charters.</p>
+                    </div>
+                    <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded mt-3 self-start">Custom Charter</span>
+                  </label>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="space-y-4 pt-2 border-t border-outline-variant">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Proposed Trade / Business Name <span class="text-error">*</span></label>
+                      <input type="text" id="supProposedName" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. Apex Retail Enterprises" required>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Primary Business Activity <span class="text-error">*</span></label>
+                      <select id="supActivity" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="Trade (Retail / Wholesale)">Trade (Retail / Wholesale)</option>
+                        <option value="Services / Consulting" selected>Services / Consulting</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                        <option value="E-Commerce / Digital Supplies">E-Commerce / Digital Supplies</option>
+                        <option value="Logistics & Warehousing">Logistics &amp; Warehousing</option>
+                        <option value="Other Commercial Supply">Other Commercial Supply</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Description of Goods or Services</label>
+                    <textarea id="supDescription" rows="2" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Briefly describe what your business sells or supplies..."></textarea>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">State of Operations <span class="text-error">*</span></label>
+                      <select id="supState" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <!-- Populated with all 36 Indian states/UTs -->
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">PIN Code <span class="text-error">*</span></label>
+                      <input type="text" id="supPincode" maxlength="6" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="400001">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Principal Place Address</label>
+                      <input type="text" id="supAddress" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Shop / Unit #, Street name">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant">
+                  <button type="button" onclick="saveStage1()" class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+                    <span>Save &amp; Continue to Stage 2</span>
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- STAGE 2: PAN & IDENTITY PREPARATION -->
+              <div id="startupStage2Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm hidden">
+                <div class="space-y-1">
+                  <h3 class="font-bold text-lg text-on-surface">2. PAN &amp; Identity Preparation</h3>
+                  <p class="text-xs text-secondary">Verify founder and entity identity records for statutory registration.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Founder / Primary Signatory Name <span class="text-error">*</span></label>
+                    <input type="text" id="supFounderName" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Full name matching Aadhaar">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Founder / Proprietor PAN <span class="text-error">*</span></label>
+                    <input type="text" id="supFounderPan" maxlength="10" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="ABCDE1234F">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Entity PAN <span class="text-secondary">(Required for Partnership, LLP, Company)</span></label>
+                    <input type="text" id="supEntityPan" maxlength="10" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Optional for sole proprietors">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Aadhaar / DIN Number <span class="text-secondary">(Encrypted storage)</span></label>
+                    <input type="password" id="supAadhaarMasked" maxlength="14" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="•••• •••• 1234">
+                  </div>
+                </div>
+
+                <!-- Document Preparation Checklist -->
+                <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant space-y-3">
+                  <h4 class="font-bold text-xs text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px] text-primary">checklist</span>
+                    <span>Stage 2 Document Preparation Checklist</span>
+                  </h4>
+                  <div class="space-y-2 text-xs">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="chkDocId" onchange="toggleChecklistItem('doc_identity', this.checked)" class="rounded text-primary focus:ring-primary">
+                      <span>Identity Proof: Self-attested copy of PAN &amp; Aadhaar / Passport</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="chkDocAddress" onchange="toggleChecklistItem('doc_address', this.checked)" class="rounded text-primary focus:ring-primary">
+                      <span>Address Proof: Electricity bill / Property tax receipt (&lt; 60 days old)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="chkDocPhoto" onchange="toggleChecklistItem('doc_photo', this.checked)" class="rounded text-primary focus:ring-primary">
+                      <span>Passport size photograph (JPEG format &lt; 100KB)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="chkDocRent" onchange="toggleChecklistItem('doc_rent_noc', this.checked)" class="rounded text-primary focus:ring-primary">
+                      <span>Rent Agreement &amp; Owner NOC (if premise is leased)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-outline-variant">
+                  <button type="button" onclick="goToStage(1)" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold cursor-pointer">
+                    &larr; Back
+                  </button>
+                  <button type="button" onclick="saveStage2()" class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+                    <span>Save &amp; Continue to Stage 3</span>
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- STAGE 3: BUSINESS REGISTRATION -->
+              <div id="startupStage3Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm hidden">
+                <div class="space-y-1">
+                  <h3 class="font-bold text-lg text-on-surface">3. Business Registration &amp; Constitution</h3>
+                  <p class="text-xs text-secondary" id="txtStage3Sub">Execute government registration on the designated central/state portal.</p>
+                </div>
+
+                <!-- Guidance Box -->
+                <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant space-y-2.5" id="boxStage3Guidance">
+                  <!-- Dynamically populated based on structure -->
+                </div>
+
+                <!-- Portal Link -->
+                <div class="flex items-center gap-3">
+                  <a id="btnStage3Portal" href="https://udyamregistration.gov.in/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-primary font-semibold text-xs transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                    <span id="txtStage3PortalLabel">Open Official Registration Portal</span>
+                  </a>
+                  <span class="text-xs text-secondary">Free government registration (Zero third-party fee required)</span>
+                </div>
+
+                <!-- Registration Tracker Inputs -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-outline-variant">
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Application Reference / Acknowledgement Number</label>
+                    <input type="text" id="supRegRef" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. UDYAM-MH-01-0012345 or SRN">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Registration Status <span class="text-error">*</span></label>
+                    <select id="supRegStatus" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                      <option value="NOT_STARTED">Not Started</option>
+                      <option value="DRAFTED">Application Prepared</option>
+                      <option value="SUBMITTED">Submitted on Government Portal</option>
+                      <option value="APPROVED" selected>Approved &bull; Certificate Issued</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-outline-variant">
+                  <button type="button" onclick="goToStage(2)" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold cursor-pointer">
+                    &larr; Back
+                  </button>
+                  <button type="button" onclick="saveStage3()" class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+                    <span>Save &amp; Continue to Stage 4</span>
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- STAGE 4: GST REGISTRATION -->
+              <div id="startupStage4Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm hidden">
+                <div class="space-y-1">
+                  <h3 class="font-bold text-lg text-on-surface">4. GST Registration (Form GST REG-01)</h3>
+                  <p class="text-xs text-secondary">Obtain your statutory Goods and Services Tax Identification Number (GSTIN).</p>
+                </div>
+
+                <!-- Eligibility Card -->
+                <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant space-y-2">
+                  <h4 class="font-bold text-xs text-on-surface">Statutory GST Registration Thresholds:</h4>
+                  <ul class="text-xs text-secondary list-disc pl-5 space-y-1">
+                    <li><strong>Suppliers of Goods:</strong> Mandatory if aggregate annual turnover exceeds &rupee;40 Lakhs (&rupee;20L in special category states).</li>
+                    <li><strong>Suppliers of Services:</strong> Mandatory if aggregate annual turnover exceeds &rupee;20 Lakhs (&rupee;10L in special category states).</li>
+                    <li><strong>Inter-State Supplies:</strong> Mandatory irrespective of turnover under Section 24 of CGST Act.</li>
+                    <li><strong>Voluntary:</strong> Recommended to claim Input Tax Credit and bill registered B2B clients.</li>
+                  </ul>
+                </div>
+
+                <!-- GST Portal Action Link -->
+                <div class="flex items-center gap-3">
+                  <a href="https://reg.gst.gov.in/registration/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 font-semibold text-xs transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                    <span>Apply on Official GST Common Portal (REG-01)</span>
+                  </a>
+                  <span class="text-xs text-secondary">Government filing is free &bull; Takes 3-7 business days</span>
+                </div>
+
+                <!-- ARN & GSTIN Inputs -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-outline-variant">
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Application Reference Number (ARN)</label>
+                    <input type="text" id="supGstArn" maxlength="15" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. AA271126001234Z">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">GST Registration Status</label>
+                    <select id="supGstStatus" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                      <option value="NOT_APPLIED">Not Applied</option>
+                      <option value="ARN_GENERATED">ARN Generated &bull; Awaiting Officer</option>
+                      <option value="UNDER_PROCESSING">Under Verification</option>
+                      <option value="CLARIFICATION_REQUIRED">Clarification Notice (REG-03)</option>
+                      <option value="APPROVED_ACTIVE" selected>Approved &bull; Form REG-06 Issued</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1">Issued GSTIN <span class="text-secondary">(Once certificate is issued)</span></label>
+                  <input type="text" id="supGstin" maxlength="15" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. 27ABCDE1234F1Z5">
+                  <p class="text-[11px] text-secondary mt-1">Entering your approved GSTIN will immediately connect to SimpleGST filing and live GSTR-2B syncing.</p>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-outline-variant">
+                  <button type="button" onclick="goToStage(3)" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold cursor-pointer">
+                    &larr; Back
+                  </button>
+                  <button type="button" onclick="saveStage4()" class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+                    <span>Save &amp; Continue to Stage 5</span>
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- STAGE 5: BANK & ACCOUNTING SETUP -->
+              <div id="startupStage5Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm hidden">
+                <div class="space-y-1">
+                  <h3 class="font-bold text-lg text-on-surface">5. Bank &amp; Accounting Configuration</h3>
+                  <p class="text-xs text-secondary">Set up commercial banking details and statutory accounting methods.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Bank Name <span class="text-error">*</span></label>
+                    <input type="text" id="supBankName" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. HDFC Bank / ICICI Bank">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Account Holder Name <span class="text-error">*</span></label>
+                    <input type="text" id="supBankHolder" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Business or Proprietor Name">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Bank IFSC Code <span class="text-error">*</span></label>
+                    <input type="text" id="supBankIfsc" maxlength="11" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="HDFC0001234">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Account Number <span class="text-secondary">(Stored safely as last 4 digits)</span></label>
+                    <input type="password" id="supBankAccount" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="••••••••5678">
+                  </div>
+                </div>
+
+                <!-- Accounting Scheme & Opening Balance -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-outline-variant">
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">GST Tax Scheme</label>
+                    <select id="supTaxScheme" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                      <option value="REGULAR" selected>Regular Scheme (Full ITC eligibility)</option>
+                      <option value="COMPOSITION">Composition Scheme (Section 10 &bull; 1% to 6% flat tax)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Opening Cash/Bank Balance <span class="text-secondary">(Optional &bull; Defaults to &rupee;0.00)</span></label>
+                    <input type="number" id="supOpeningBalance" step="0.01" min="0" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00">
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-outline-variant">
+                  <button type="button" onclick="goToStage(4)" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold cursor-pointer">
+                    &larr; Back
+                  </button>
+                  <button type="button" onclick="saveStage5()" class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+                    <span>Save &amp; Continue to Stage 6</span>
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- STAGE 6: INVOICING SETUP -->
+              <div id="startupStage6Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm hidden">
+                <div class="space-y-1">
+                  <h3 class="font-bold text-lg text-on-surface">6. GST Invoicing Setup (Rule 46)</h3>
+                  <p class="text-xs text-secondary">Configure statutory invoice prefix, starting numbers, and default HSN/tax rates.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Invoice Numbering Prefix <span class="text-error">*</span></label>
+                    <input type="text" id="supInvPrefix" oninput="updateInvoicePreview()" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="INV/2026-27/" value="INV/2026-27/">
+                    <span class="text-[10px] text-secondary">Statutory rule: Sequential within fiscal year</span>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Starting Serial Number</label>
+                    <input type="number" id="supInvStart" min="1" oninput="updateInvoicePreview()" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" value="1">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Default HSN / SAC Code</label>
+                    <input type="text" id="supHsn" oninput="updateInvoicePreview()" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="9983" value="9983">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Default GST Rate</label>
+                    <select id="supGstRate" onchange="updateInvoicePreview()" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                      <option value="0">0% (Nil Rated / Exempt)</option>
+                      <option value="5">5% (Essential supplies / Logistics)</option>
+                      <option value="12">12% (Standard goods &amp; foods)</option>
+                      <option value="18" selected>18% (Standard commercial &amp; services)</option>
+                      <option value="28">28% (Luxury / De-merit goods)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Live Invoice Preview Card -->
+                <div class="p-4 rounded-xl bg-surface border border-outline-variant space-y-3">
+                  <div class="flex items-center justify-between border-b border-outline-variant pb-2">
+                    <span class="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[16px] text-primary">receipt</span>
+                      <span>Live GST Tax Invoice Preview (Rule 46)</span>
+                    </span>
+                    <span class="text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">ORIGINAL FOR RECIPIENT</span>
+                  </div>
+                  <div class="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant text-xs space-y-3">
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <div class="font-bold text-sm text-on-surface" id="prevInvBusinessName">Your Business Name</div>
+                        <div class="text-[11px] text-secondary font-mono" id="prevInvGstin">GSTIN: 27ABCDE1234F1Z5</div>
+                      </div>
+                      <div class="text-right">
+                        <div class="font-mono font-bold text-primary" id="prevInvNumber">INV/2026-27/001</div>
+                        <div class="text-[11px] text-secondary font-mono">Date: 2026-11-08</div>
+                      </div>
+                    </div>
+                    <table class="w-full text-left border-collapse border border-outline-variant text-[11px]">
+                      <thead class="bg-surface-container-low">
+                        <tr>
+                          <th class="p-1.5 border border-outline-variant">Description</th>
+                          <th class="p-1.5 border border-outline-variant">HSN</th>
+                          <th class="p-1.5 border border-outline-variant text-right">Taxable</th>
+                          <th class="p-1.5 border border-outline-variant text-right">Rate</th>
+                          <th class="p-1.5 border border-outline-variant text-right">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td class="p-1.5 border border-outline-variant">Consulting / Supply of Goods</td>
+                          <td class="p-1.5 border border-outline-variant font-mono" id="prevTableHsn">9983</td>
+                          <td class="p-1.5 border border-outline-variant text-right font-mono">&rupee;10,000.00</td>
+                          <td class="p-1.5 border border-outline-variant text-right font-mono" id="prevTableRate">18%</td>
+                          <td class="p-1.5 border border-outline-variant text-right font-mono font-bold" id="prevTableTotal">&rupee;11,800.00</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-outline-variant">
+                  <button type="button" onclick="goToStage(5)" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold cursor-pointer">
+                    &larr; Back
+                  </button>
+                  <button type="button" onclick="saveStage6()" class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+                    <span>Save &amp; Continue to Stage 7</span>
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- STAGE 7: GST COMPLIANCE ACTIVATION -->
+              <div id="startupStage7Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm hidden">
+                <div class="space-y-1">
+                  <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                    <span>Ready for Launch</span>
+                  </div>
+                  <h3 class="font-bold text-xl text-on-surface">7. GST Compliance Activation</h3>
+                  <p class="text-xs text-secondary">Your business profile is prepared. Connect to live SimpleGST statutory filing and ledger management.</p>
+                </div>
+
+                <!-- Activation Matrix -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-low space-y-2">
+                    <span class="material-symbols-outlined text-primary text-xl">point_of_sale</span>
+                    <h4 class="font-bold text-xs text-on-surface">Sales Invoices &bull; GSTR-1</h4>
+                    <p class="text-[11px] text-secondary">Pre-wired with your invoice sequence, Place of Supply, and default GST rates.</p>
+                  </div>
+                  <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-low space-y-2">
+                    <span class="material-symbols-outlined text-primary text-xl">shopping_bag</span>
+                    <h4 class="font-bold text-xs text-on-surface">Purchases &bull; GSTR-2B</h4>
+                    <p class="text-[11px] text-secondary">Direct ITC reconciliation under Rule 88A and Section 16(2) compliance tracking.</p>
+                  </div>
+                  <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-low space-y-2">
+                    <span class="material-symbols-outlined text-primary text-xl">receipt_long</span>
+                    <h4 class="font-bold text-xs text-on-surface">Bills &amp; Docs Vault</h4>
+                    <p class="text-[11px] text-secondary">AI OCR PDF extraction ready to parse vendor vouchers and generate purchase records.</p>
+                  </div>
+                  <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-low space-y-2">
+                    <span class="material-symbols-outlined text-primary text-xl">event_available</span>
+                    <h4 class="font-bold text-xs text-on-surface">Statutory Calendar</h4>
+                    <p class="text-[11px] text-secondary">Automatic deadline alerts for GSTR-1 (11th) and GSTR-3B (20th) monthly cycles.</p>
+                  </div>
+                </div>
+
+                <!-- Launch Banner -->
+                <div class="p-6 rounded-2xl bg-gradient-to-r from-primary to-primary-container text-on-primary shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div class="space-y-1 text-center sm:text-left">
+                    <h4 class="text-lg font-bold">Launch your live business workspace</h4>
+                    <p class="text-xs text-on-primary/90">Commence outward billing, supplier expense recording, and automated GST compliance.</p>
+                  </div>
+                  <button type="button" onclick="launchStartupWorkspace()" class="px-6 py-3 rounded-xl bg-white text-slate-900 font-extrabold text-xs shadow hover:bg-slate-50 transition-all cursor-pointer shrink-0 flex items-center gap-2">
+                    <span>LAUNCH WORKSPACE</span>
+                    <span class="material-symbols-outlined text-[16px] text-primary">rocket_launch</span>
+                  </button>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-outline-variant">
+                  <button type="button" onclick="goToStage(6)" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold cursor-pointer">
+                    &larr; Back
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right Sidebar: Progress Dashboard & Assistant (4 cols) -->
+            <div class="lg:col-span-4 space-y-6">
+
+              <!-- Progress Dashboard Card -->
+              <div id="startupDashboardCard" class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="font-bold text-sm text-on-surface flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-primary text-[18px]">speed</span>
+                    <span>Startup Progress Dashboard</span>
+                  </h3>
+                  <button type="button" onclick="resetStartupOnboarding()" class="text-[11px] text-secondary hover:text-error transition-colors cursor-pointer" title="Reset setup">Reset</button>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex justify-between text-xs">
+                    <span class="text-secondary" id="dashBusinessName">Business Setup</span>
+                    <span class="font-bold font-mono text-primary" id="dashProgressPct">0%</span>
+                  </div>
+                  <div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+                    <div id="dashProgressBar" class="h-full bg-primary rounded-full transition-all duration-300" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <!-- Next Recommended Action Box -->
+                <div class="p-3.5 rounded-lg bg-emerald-50/70 border border-emerald-200 text-xs space-y-2">
+                  <div class="font-bold text-emerald-950 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-emerald-700 text-[16px]">play_circle</span>
+                    <span>Next Recommended Action</span>
+                  </div>
+                  <p class="text-emerald-900 leading-relaxed" id="dashNextActionText">
+                    Select your legal structure and enter your proposed business trade name.
+                  </p>
+                  <button type="button" onclick="resumeStartupExpress()" class="w-full py-2 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-semibold transition-colors cursor-pointer">
+                    Continue Setup &rarr;
+                  </button>
+                </div>
+
+                <!-- Document Checklist -->
+                <div class="space-y-2 pt-2 border-t border-outline-variant">
+                  <h4 class="font-bold text-xs text-on-surface flex items-center justify-between">
+                    <span>Document Checklist</span>
+                    <span class="text-[10px] text-secondary font-mono" id="dashChecklistCounter">0 / 4 ready</span>
+                  </h4>
+                  <div class="space-y-1.5 text-xs text-secondary" id="dashChecklistItems">
+                    <!-- Dynamic Checklist items -->
+                  </div>
+                </div>
+
+                <!-- Registration Tracker Badges -->
+                <div class="space-y-2 pt-2 border-t border-outline-variant text-xs">
+                  <h4 class="font-bold text-on-surface">Registration Status</h4>
+                  <div class="space-y-1.5">
+                    <div class="flex justify-between items-center">
+                      <span class="text-secondary">Entity Registration:</span>
+                      <span class="font-mono text-[11px] px-2 py-0.5 rounded bg-surface-container font-semibold" id="dashRegBadge">NOT_STARTED</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-secondary">GST Registration:</span>
+                      <span class="font-mono text-[11px] px-2 py-0.5 rounded bg-surface-container font-semibold" id="dashGstBadge">NOT_APPLIED</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Business Setup Assistant Card -->
+              <div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm space-y-3.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[16px]">smart_toy</span>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-xs text-on-surface">Business Setup Assistant</h3>
+                    <p class="text-[10px] text-secondary">Step-by-step statutory guidance</p>
+                  </div>
+                </div>
+
+                <div class="space-y-3 text-xs" id="assistantContent">
+                  <!-- Dynamically populated via updateAssistantCard(stage) -->
+                  <div>
+                    <span class="font-bold text-on-surface block">What is this step?</span>
+                    <p class="text-secondary mt-0.5" id="asstWhat">Selection of your legal business structure.</p>
+                  </div>
+                  <div>
+                    <span class="font-bold text-on-surface block">Why is it required?</span>
+                    <p class="text-secondary mt-0.5" id="asstWhy">Determines liability and statutory compliance mandates.</p>
+                  </div>
+                  <div>
+                    <span class="font-bold text-on-surface block">Documents Needed:</span>
+                    <ul class="text-secondary list-disc pl-4 mt-0.5 space-y-0.5" id="asstDocs">
+                      <li>Identity proof of founder</li>
+                      <li>Address proof for place of business</li>
+                    </ul>
+                  </div>
+                  <div id="asstPortalBox" class="p-2.5 rounded bg-surface-container-low border border-outline-variant">
+                    <span class="font-bold text-on-surface block text-[11px]">Where to complete:</span>
+                    <a id="asstPortalLink" href="#" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline text-[11px] font-semibold flex items-center gap-1 mt-0.5">
+                      <span id="asstPortalName">SimpleGST Onboarding</span>
+                      <span class="material-symbols-outlined text-[12px]">open_in_new</span>
+                    </a>
+                  </div>
+                </div>
+
+                <p class="text-[10px] text-secondary/80 border-t border-outline-variant pt-2 leading-relaxed">
+                  Notice: Guidance provided for preparation purposes only. Requirements depend on business jurisdiction and activity.
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+<!-- ========================================================================= -->
     <!-- 1. HOME DASHBOARD SUITE (Stitch Screen 1)                                -->
     <!-- ========================================================================= -->
     <div id="viewHomeSuite" class="app-suite-container active">
@@ -8034,9 +8931,10 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
       <span class="material-symbols-outlined text-[20px]">receipt_long</span>
       <span class="text-[10px]">Bills</span>
     </button>
-    <button id="bottom-nav-reports" onclick="switchSuite('gst')" class="bottom-nav-btn flex flex-col items-center gap-0.5 text-secondary hover:text-primary transition-colors p-1.5 cursor-pointer">
-      <span class="material-symbols-outlined text-[20px]">analytics</span>
-      <span class="text-[10px]">Reports</span>
+    <button id="bottom-nav-startup" onclick="switchSuite('startup-express')" class="bottom-nav-btn flex flex-col items-center gap-0.5 text-secondary hover:text-primary transition-colors p-1.5 cursor-pointer relative" title="Startup Express">
+      <span class="material-symbols-outlined text-[20px] text-primary">rocket_launch</span>
+      <span class="text-[10px] font-medium">Startup</span>
+      <span class="absolute -top-1 -right-0.5 text-[8px] bg-primary text-on-primary px-1 rounded-full font-bold">NEW</span>
     </button>
     <button id="bottom-nav-experts" onclick="switchSuite('expert')" class="bottom-nav-btn flex flex-col items-center gap-0.5 text-secondary hover:text-primary transition-colors p-1.5 cursor-pointer">
       <span class="material-symbols-outlined text-[20px]">support_agent</span>

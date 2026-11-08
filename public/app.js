@@ -412,8 +412,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   initKioskEventListeners();
   await fetchAppMode();
   
-  // Default to GST Return Assistant on load
-  switchSuite('home');
+  // Default to GST Return Assistant on load or route directly to requested URL
+  if (window.location.pathname === "/startup-express" || window.location.hash === "#startup-express") {
+    switchSuite('startup-express');
+  } else {
+    switchSuite('home');
+  }
+
+  window.addEventListener("popstate", () => {
+    if (window.location.pathname === "/startup-express") {
+      switchSuite('startup-express');
+    } else if (appState.currentSuite === "startup-express") {
+      switchSuite('home');
+    }
+  });
 
   if (isAuthenticated && appState.activeGstin) {
     selectFilingEntity(appState.activeGstin.gstin, appState.activeGstin.trade_name || appState.organization?.name || "Taxpayer", appState.activeGstin.state_name || "");
@@ -523,6 +535,7 @@ function executeSwitchSuite(suite) {
   const viewFileGst = document.getElementById("viewFileGstSuite");
   const viewSales = document.getElementById("viewSalesSuite");
   const viewPurchase = document.getElementById("viewPurchaseSuite");
+  const viewStartupExpress = document.getElementById("viewStartupExpressSuite");
 
   // Always close dropdowns & mobile drawer when switching
   document.getElementById("filingDropdownMenu")?.classList.add("hidden");
@@ -534,7 +547,8 @@ function executeSwitchSuite(suite) {
   const allSuites = [
     viewItr, viewExpert, viewNotice, viewVault, viewGst, viewCopilot, 
     viewStartup, viewCompliance, viewHome, viewBills, viewRecon, 
-    viewTaxCalc, viewPractice, viewVendor, viewFileGst, viewSales, viewPurchase
+    viewTaxCalc, viewPractice, viewVendor, viewFileGst, viewSales, viewPurchase,
+    viewStartupExpress
   ];
   allSuites.forEach(v => {
     if (v) {
@@ -554,7 +568,28 @@ function executeSwitchSuite(suite) {
     b.classList.add('text-secondary');
   });
 
-  if (suite === "home") {
+  if (suite === "startup-express" || suite === "startup_express" || suite === "startupExpress") {
+    if (viewStartupExpress) {
+      viewStartupExpress.classList.add("active");
+      viewStartupExpress.classList.remove("hidden");
+      viewStartupExpress.style.display = "block";
+    }
+    highlightSidebarNav('nav-link-startup-express');
+    highlightBottomNav('bottom-nav-startup');
+    if (window.location.pathname !== "/startup-express") {
+      try {
+        window.history.pushState({ suite: 'startup-express' }, '', '/startup-express');
+      } catch (e) {}
+    }
+    if (typeof loadStartupExpress === "function") {
+      loadStartupExpress();
+    }
+  } else if (suite === "home") {
+    if (window.location.pathname === "/startup-express") {
+      try {
+        window.history.pushState({}, '', '/');
+      } catch (e) {}
+    }
     if (viewHome) {
       viewHome.classList.add("active");
       viewHome.classList.remove("hidden");
@@ -6251,11 +6286,12 @@ function openPmt06ModalWithValues({ grossTax, itcOffset, netCash, liability, per
 }
 window.openPmt06ModalWithValues = openPmt06ModalWithValues;
 
-async function submitChallanPayment() {
+// submitChallanPayment is declared at line 799; reassigned here to ensure latest closure
+submitChallanPayment = async function submitChallanPayment() {
   const otp = window._pendingGstr3bFilingOtp || "123456";
   closePmt06Modal();
   await completeReturnFiling({ otp, paymentDone: true });
-}
+};
 window.submitChallanPayment = submitChallanPayment;
 
 async function completeReturnFiling({ otp = "123456", paymentDone = false } = {}) {
@@ -9909,3 +9945,763 @@ async function submitOnboardingStep4(e) {
   }
 }
 window.submitOnboardingStep4 = submitOnboardingStep4;
+
+// ============================================================================
+// STARTUP EXPRESS MODULE (From Business Formation to GST Compliance)
+// ============================================================================
+
+const STARTUP_INDIAN_STATES = [
+  "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam",
+  "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir",
+  "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh",
+  "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha",
+  "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
+  "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
+];
+
+let startupExpressState = {
+  profile: null,
+  activeStage: 1,
+  activeView: 'landing', // 'landing', 'wizard', 'dashboard'
+  loading: false
+};
+
+async function loadStartupExpress() {
+  populateStartupStates();
+  renderStartupStepper();
+  setupStructureRadioListeners();
+  updateInvoicePreview();
+
+  try {
+    const res = await fetch('/api/startup-express/profile', { credentials: 'same-origin' });
+    const data = await res.json();
+    if (data && data.success && data.profile) {
+      startupExpressState.profile = data.profile;
+      applyProfileToStartupForm(data.profile);
+      applyProfileToDashboard(data.profile);
+    } else {
+      updateAssistantCard(1);
+    }
+  } catch (err) {
+    console.warn("Could not load startup express profile:", err);
+    updateAssistantCard(1);
+  }
+}
+
+function populateStartupStates() {
+  const select = document.getElementById('supState');
+  if (!select || select.children.length > 5) return;
+  select.innerHTML = STARTUP_INDIAN_STATES.map(s => 
+    `<option value="${s}" ${s === "Maharashtra" ? "selected" : ""}>${s}</option>`
+  ).join('');
+}
+
+function setupStructureRadioListeners() {
+  const radios = document.querySelectorAll('input[name="startupStructure"]');
+  radios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      selectStructure(e.target.value);
+    });
+  });
+}
+
+function selectStructure(structure) {
+  const radios = document.querySelectorAll('input[name="startupStructure"]');
+  radios.forEach(r => {
+    r.checked = (r.value === structure);
+  });
+
+  document.querySelectorAll('.structure-card').forEach(card => {
+    if (card.dataset.structure === structure) {
+      card.classList.remove('border-outline-variant', 'bg-surface-container-lowest');
+      card.classList.add('border-2', 'border-primary', 'bg-primary/5');
+    } else {
+      card.classList.remove('border-2', 'border-primary', 'bg-primary/5');
+      card.classList.add('border-outline-variant', 'bg-surface-container-lowest');
+    }
+  });
+
+  const txtStruct = document.getElementById('txtStartupCurrentStructure');
+  if (txtStruct) {
+    const names = {
+      'PROPRIETORSHIP': 'Sole Proprietorship',
+      'PARTNERSHIP': 'Partnership Firm',
+      'LLP': 'Limited Liability Partnership (LLP)',
+      'PRIVATE_LIMITED': 'Private Limited Company',
+      'OTHER': 'Other Legal Entity'
+    };
+    txtStruct.textContent = names[structure] || structure;
+  }
+
+  updateStage3Guidance(structure);
+  updateAssistantCard(startupExpressState.activeStage, structure);
+}
+
+function selectStructureFromLanding(structure) {
+  selectStructure(structure);
+  showStartupView('wizard');
+  goToStage(1);
+}
+
+function startStartupExpressJourney() {
+  showStartupView('wizard');
+  const stage = (startupExpressState.profile && startupExpressState.profile.current_stage) || 1;
+  goToStage(stage);
+}
+
+function resumeStartupExpress() {
+  showStartupView('wizard');
+  const stage = (startupExpressState.profile && startupExpressState.profile.current_stage) || 1;
+  goToStage(stage);
+}
+
+function showStartupView(viewName) {
+  startupExpressState.activeView = viewName;
+  const landing = document.getElementById('startupLandingView');
+  const wizard = document.getElementById('startupWizardView');
+  const tabLanding = document.getElementById('tabStartupLanding');
+  const tabWizard = document.getElementById('tabStartupWizard');
+  const tabDash = document.getElementById('tabStartupDashboard');
+
+  if (viewName === 'landing') {
+    if (landing) landing.classList.remove('hidden');
+    if (wizard) wizard.classList.add('hidden');
+    setActiveTab(tabLanding, [tabWizard, tabDash]);
+  } else if (viewName === 'wizard') {
+    if (landing) landing.classList.add('hidden');
+    if (wizard) wizard.classList.remove('hidden');
+    setActiveTab(tabWizard, [tabLanding, tabDash]);
+  } else if (viewName === 'dashboard') {
+    if (landing) landing.classList.add('hidden');
+    if (wizard) wizard.classList.remove('hidden');
+    setActiveTab(tabDash, [tabLanding, tabWizard]);
+    const dashElem = document.getElementById('startupDashboardCard');
+    if (dashElem) dashElem.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function setActiveTab(active, others) {
+  if (active) {
+    active.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-surface-container-high text-primary border border-primary/30 transition-all cursor-pointer";
+  }
+  others.forEach(o => {
+    if (o) {
+      o.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-surface-container-low hover:bg-surface-container text-on-surface transition-all cursor-pointer";
+    }
+  });
+}
+
+const STAGE_TITLES = [
+  "1. Business Structure & Trade Details",
+  "2. PAN & Identity Preparation",
+  "3. Business Registration & Constitution",
+  "4. GST Registration Eligibility & Status",
+  "5. Bank & Accounting Configuration",
+  "6. Invoicing Setup (Rule 46 Compliance)",
+  "7. GST Compliance Workspace Activation"
+];
+
+function renderStartupStepper() {
+  const container = document.getElementById('startupStepperPills');
+  if (!container) return;
+
+  const cur = startupExpressState.activeStage || 1;
+  const completed = (startupExpressState.profile && startupExpressState.profile.completed_stages) || [];
+
+  container.innerHTML = [1, 2, 3, 4, 5, 6, 7].map(s => {
+    const isCompleted = completed.includes(s);
+    const isCurrent = s === cur;
+    let badgeClass = "bg-surface-container text-secondary";
+    let pillClass = "border-outline-variant bg-surface-container-lowest text-secondary";
+
+    if (isCompleted) {
+      badgeClass = "bg-emerald-100 text-emerald-800";
+      pillClass = "border-emerald-200 bg-emerald-50/50 text-emerald-900";
+    }
+    if (isCurrent) {
+      badgeClass = "bg-primary text-on-primary";
+      pillClass = "border-primary bg-primary/10 text-primary font-bold ring-2 ring-primary/20";
+    }
+
+    const shortTitles = ["Structure", "PAN / KYC", "Registration", "GST", "Banking", "Invoicing", "Activation"];
+
+    return `
+      <div onclick="goToStage(${s})" class="p-2.5 rounded-lg border ${pillClass} transition-all cursor-pointer flex items-center gap-2 select-none">
+        <span class="w-5 h-5 rounded-full ${badgeClass} text-[11px] font-bold flex items-center justify-center shrink-0">
+          ${isCompleted && !isCurrent ? '<span class="material-symbols-outlined text-[13px]">check</span>' : s}
+        </span>
+        <div class="truncate">
+          <p class="text-[11px] font-semibold truncate leading-tight">${shortTitles[s - 1]}</p>
+          <span class="text-[9px] ${isCurrent ? 'text-primary' : 'text-secondary'} block truncate">
+            ${isCurrent ? 'Current' : isCompleted ? 'Done' : 'Step ' + s}
+          </span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function goToStage(stageNum) {
+  if (stageNum < 1) stageNum = 1;
+  if (stageNum > 7) stageNum = 7;
+  startupExpressState.activeStage = stageNum;
+
+  for (let s = 1; s <= 7; s++) {
+    const form = document.getElementById(`startupStage${s}Form`);
+    if (form) {
+      if (s === stageNum) {
+        form.classList.remove('hidden');
+      } else {
+        form.classList.add('hidden');
+      }
+    }
+  }
+
+  const heading = document.getElementById('txtStartupStageHeading');
+  if (heading) {
+    heading.textContent = `Stage ${stageNum}: ${STAGE_TITLES[stageNum - 1]}`;
+  }
+
+  renderStartupStepper();
+  const structure = document.querySelector('input[name="startupStructure"]:checked')?.value || 'PROPRIETORSHIP';
+  updateAssistantCard(stageNum, structure);
+}
+
+function updateStage3Guidance(structure) {
+  const box = document.getElementById('boxStage3Guidance');
+  const btn = document.getElementById('btnStage3Portal');
+  const txt = document.getElementById('txtStage3PortalLabel');
+  if (!box) return;
+
+  if (structure === 'PROPRIETORSHIP') {
+    box.innerHTML = `
+      <div class="flex items-start gap-2.5">
+        <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">verified</span>
+        <div class="space-y-1 text-xs">
+          <p class="font-bold text-on-surface">Recommended: MSME Udyam Registration</p>
+          <p class="text-secondary">A Sole Proprietorship does not have a central MCA incorporation. Instead, register directly on the Ministry of MSME Udyam portal to obtain legal proof of enterprise and MSME priority lending benefits.</p>
+        </div>
+      </div>
+    `;
+    if (btn) btn.href = "https://udyamregistration.gov.in/";
+    if (txt) txt.textContent = "Open Udyam MSME Portal";
+  } else if (structure === 'PARTNERSHIP') {
+    box.innerHTML = `
+      <div class="flex items-start gap-2.5">
+        <span class="material-symbols-outlined text-blue-600 text-[20px] shrink-0 mt-0.5">draw</span>
+        <div class="space-y-1 text-xs">
+          <p class="font-bold text-on-surface">Partnership Deed &amp; Registrar of Firms (RoF)</p>
+          <p class="text-secondary">Draft a formal Partnership Deed executed on non-judicial stamp paper with partner profit-sharing ratios. Optionally file Form 1 with your state Registrar of Firms (RoF) for statutory enforceability.</p>
+        </div>
+      </div>
+    `;
+    if (btn) btn.href = "https://www.incometax.gov.in/";
+    if (txt) txt.textContent = "Apply for Firm PAN (IT Portal)";
+  } else if (structure === 'LLP') {
+    box.innerHTML = `
+      <div class="flex items-start gap-2.5">
+        <span class="material-symbols-outlined text-indigo-600 text-[20px] shrink-0 mt-0.5">shield</span>
+        <div class="space-y-1 text-xs">
+          <p class="font-bold text-on-surface">MCA LLP Incorporation (RUN-LLP &amp; FiLLiP)</p>
+          <p class="text-secondary">Obtain Digital Signature Certificates (DSC) for designated partners, reserve name via RUN-LLP, and file FiLLiP (Form for Incorporation of LLP) on the Ministry of Corporate Affairs portal.</p>
+        </div>
+      </div>
+    `;
+    if (btn) btn.href = "https://www.mca.gov.in/content/mca/global/en/home.html";
+    if (txt) txt.textContent = "Open MCA Services Portal";
+  } else if (structure === 'PRIVATE_LIMITED') {
+    box.innerHTML = `
+      <div class="flex items-start gap-2.5">
+        <span class="material-symbols-outlined text-purple-600 text-[20px] shrink-0 mt-0.5">corporate_fare</span>
+        <div class="space-y-1 text-xs">
+          <p class="font-bold text-on-surface">MCA SPICe+ (INC-32) Integrated Incorporation</p>
+          <p class="text-secondary">File SPICe+ Part A for name reservation and Part B for simultaneous incorporation, PAN, TAN, EPFO, ESIC, and corporate bank account generation through the MCA V3 portal.</p>
+        </div>
+      </div>
+    `;
+    if (btn) btn.href = "https://www.mca.gov.in/content/mca/global/en/home.html";
+    if (txt) txt.textContent = "Open MCA SPICe+ Portal";
+  } else {
+    box.innerHTML = `
+      <div class="flex items-start gap-2.5">
+        <span class="material-symbols-outlined text-amber-600 text-[20px] shrink-0 mt-0.5">domain_add</span>
+        <div class="space-y-1 text-xs">
+          <p class="font-bold text-on-surface">Statutory Charter Execution</p>
+          <p class="text-secondary">Ensure trust deeds, society bye-laws, or section 8 license applications are filed with the relevant state charity commissioner or central MCA registrar.</p>
+        </div>
+      </div>
+    `;
+    if (btn) btn.href = "https://www.mca.gov.in/";
+    if (txt) txt.textContent = "Open Central Filing Portal";
+  }
+}
+
+async function updateAssistantCard(stageNum, structure) {
+  if (!structure) {
+    structure = document.querySelector('input[name="startupStructure"]:checked')?.value || 'PROPRIETORSHIP';
+  }
+
+  try {
+    const res = await fetch(`/api/startup-express/assistant?stage=${stageNum}&structure=${structure}`, { credentials: 'same-origin' });
+    const data = await res.json();
+    if (data && data.success && data.guidance) {
+      const g = data.guidance;
+      const what = document.getElementById('asstWhat');
+      const why = document.getElementById('asstWhy');
+      const docs = document.getElementById('asstDocs');
+      const pName = document.getElementById('asstPortalName');
+      const pLink = document.getElementById('asstPortalLink');
+
+      if (what) what.textContent = g.what;
+      if (why) why.textContent = g.why;
+      if (docs) {
+        docs.innerHTML = (g.documents || []).map(d => `<li>${d}</li>`).join('');
+      }
+      if (pName) pName.textContent = g.portal_name || 'Official Portal';
+      if (pLink) pLink.href = g.portal_url || '#';
+    }
+  } catch (err) {
+    console.warn("Assistant guidance fetch error:", err);
+  }
+}
+
+// Stage Save Handlers
+async function saveStage1() {
+  const name = document.getElementById('supProposedName')?.value?.trim();
+  const activity = document.getElementById('supActivity')?.value;
+  const description = document.getElementById('supDescription')?.value?.trim();
+  const state = document.getElementById('supState')?.value;
+  const pincode = document.getElementById('supPincode')?.value?.trim();
+  const address = document.getElementById('supAddress')?.value?.trim();
+  const structure = document.querySelector('input[name="startupStructure"]:checked')?.value || 'PROPRIETORSHIP';
+
+  if (!name) {
+    if (typeof showToast === "function") showToast("Please enter your proposed business or trade name.", "error");
+    document.getElementById('supProposedName')?.focus();
+    return;
+  }
+  if (!state) {
+    if (typeof showToast === "function") showToast("Please select the state of business operations.", "error");
+    return;
+  }
+
+  const payload = {
+    stage: 1,
+    business_structure: structure,
+    proposed_business_name: name,
+    business_activity: activity,
+    business_description: description,
+    business_state: state,
+    business_pincode: pincode,
+    business_address: address
+  };
+
+  await submitStartupStage(payload, 2);
+}
+
+async function saveStage2() {
+  const founderName = document.getElementById('supFounderName')?.value?.trim();
+  const founderPan = document.getElementById('supFounderPan')?.value?.trim().toUpperCase();
+  const entityPan = document.getElementById('supEntityPan')?.value?.trim().toUpperCase();
+  const identityStatus = 'PREPARED';
+
+  if (!founderName) {
+    if (typeof showToast === "function") showToast("Please enter the founder / primary signatory name.", "error");
+    document.getElementById('supFounderName')?.focus();
+    return;
+  }
+  if (!founderPan) {
+    if (typeof showToast === "function") showToast("Please enter the founder / proprietor PAN.", "error");
+    document.getElementById('supFounderPan')?.focus();
+    return;
+  }
+  if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(founderPan)) {
+    if (typeof showToast === "function") showToast("Invalid PAN format. PAN must be 10 characters (e.g. ABCDE1234F).", "error");
+    return;
+  }
+  if (entityPan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(entityPan)) {
+    if (typeof showToast === "function") showToast("Invalid Entity PAN format (e.g. ABCDE1234F).", "error");
+    return;
+  }
+
+  const payload = {
+    stage: 2,
+    founder_name: founderName,
+    founder_pan: founderPan,
+    entity_pan: entityPan || null,
+    identity_doc_status: identityStatus
+  };
+
+  await submitStartupStage(payload, 3);
+}
+
+async function saveStage3() {
+  const refNum = document.getElementById('supRegRef')?.value?.trim().toUpperCase();
+  const status = document.getElementById('supRegStatus')?.value || 'NOT_STARTED';
+
+  const payload = {
+    stage: 3,
+    registration_reference_number: refNum || null,
+    registration_status: status
+  };
+
+  await submitStartupStage(payload, 4);
+}
+
+async function saveStage4() {
+  const eligibility = document.getElementById('supGstEligibility')?.value;
+  const arn = document.getElementById('supGstArn')?.value?.trim().toUpperCase();
+  const status = document.getElementById('supGstStatus')?.value || 'NOT_APPLIED';
+  const gstin = document.getElementById('supGstin')?.value?.trim().toUpperCase();
+
+  if (gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstin)) {
+    if (typeof showToast === "function") showToast("Invalid GSTIN format. Expected 15 alphanumeric characters (e.g. 27ABCDE1234F1Z5).", "error");
+    return;
+  }
+
+  const payload = {
+    stage: 4,
+    gst_eligibility_type: eligibility,
+    gst_arn: arn || null,
+    gst_status: status,
+    gstin: gstin || null
+  };
+
+  await submitStartupStage(payload, 5);
+}
+
+async function saveStage5() {
+  const bankName = document.getElementById('supBankName')?.value?.trim();
+  const ifsc = document.getElementById('supBankIfsc')?.value?.trim().toUpperCase();
+  const holder = document.getElementById('supBankHolder')?.value?.trim();
+  const account = document.getElementById('supBankAccount')?.value?.trim();
+  const scheme = document.getElementById('supAccountingScheme')?.value;
+  const openingBalance = parseFloat(document.getElementById('supOpeningBalance')?.value) || 0;
+
+  if (ifsc && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
+    if (typeof showToast === "function") showToast("Invalid IFSC code format (e.g. HDFC0001234).", "error");
+    return;
+  }
+
+  const payload = {
+    stage: 5,
+    bank_name: bankName || null,
+    bank_ifsc: ifsc || null,
+    bank_holder_name: holder || null,
+    bank_account_number: account || null,
+    accounting_scheme: scheme,
+    opening_balance: openingBalance
+  };
+
+  await submitStartupStage(payload, 6);
+}
+
+async function saveStage6() {
+  const prefix = document.getElementById('supInvoicePrefix')?.value?.trim().toUpperCase() || 'INV';
+  const startNum = parseInt(document.getElementById('supInvoiceStartNum')?.value, 10) || 1;
+  const hsn = document.getElementById('supDefaultHsn')?.value?.trim();
+  const rate = parseFloat(document.getElementById('supDefaultGstRate')?.value) || 18;
+
+  const payload = {
+    stage: 6,
+    invoice_prefix: prefix,
+    invoice_starting_number: startNum,
+    default_hsn: hsn || null,
+    default_gst_rate: rate
+  };
+
+  await submitStartupStage(payload, 7);
+}
+
+async function saveStage7() {
+  const payload = {
+    stage: 7
+  };
+
+  await submitStartupStage(payload, 7);
+  if (typeof showToast === "function") showToast("Startup Express completed! Your business workspace is activated.", "success");
+}
+
+async function submitStartupStage(payload, nextStageNum) {
+  try {
+    const res = await fetch('/api/startup-express/save-stage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      if (typeof showToast === "function") showToast(data.error || "Failed to save stage data.", "error");
+      return;
+    }
+
+    startupExpressState.profile = data.profile;
+    applyProfileToStartupForm(data.profile);
+    applyProfileToDashboard(data.profile);
+    if (typeof showToast === "function") showToast(`Stage ${payload.stage} saved successfully.`, "success");
+
+    if (nextStageNum && nextStageNum !== payload.stage) {
+      goToStage(nextStageNum);
+    } else {
+      renderStartupStepper();
+    }
+  } catch (err) {
+    if (typeof showToast === "function") showToast("Network error while saving progress.", "error");
+  }
+}
+
+async function toggleChecklistItem(itemKey, completed) {
+  try {
+    const res = await fetch('/api/startup-express/checklist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ item_key: itemKey, completed })
+    });
+    const data = await res.json();
+    if (data && data.success && data.profile) {
+      startupExpressState.profile = data.profile;
+      applyProfileToDashboard(data.profile);
+    }
+  } catch (err) {
+    console.warn("Could not update checklist item:", err);
+  }
+}
+
+async function resetStartupOnboarding() {
+  if (!confirm("Are you sure you want to reset your Startup Express onboarding progress? This will reset stages 1 through 7 for this organization.")) {
+    return;
+  }
+  try {
+    const res = await fetch('/api/startup-express/reset', {
+      method: 'POST',
+      credentials: 'same-origin'
+    });
+    const data = await res.json();
+    if (data && data.success) {
+      if (typeof showToast === "function") showToast("Startup Express progress has been reset.", "success");
+      await loadStartupExpress();
+      goToStage(1);
+    } else {
+      if (typeof showToast === "function") showToast(data.error || "Could not reset profile.", "error");
+    }
+  } catch (err) {
+    if (typeof showToast === "function") showToast("Network error while resetting onboarding.", "error");
+  }
+}
+
+function updateInvoicePreview() {
+  const prefix = document.getElementById('supInvoicePrefix')?.value?.trim().toUpperCase() || 'INV';
+  const startNum = parseInt(document.getElementById('supInvoiceStartNum')?.value, 10) || 1;
+  const preview = document.getElementById('invoicePreviewNumber');
+  if (preview) {
+    preview.textContent = `${prefix}/2026-27/${String(startNum).padStart(3, '0')}`;
+  }
+}
+
+function applyProfileToStartupForm(p) {
+  if (!p) return;
+
+  if (p.business_structure) {
+    selectStructure(p.business_structure);
+  }
+
+  if (p.proposed_business_name && document.getElementById('supProposedName')) {
+    document.getElementById('supProposedName').value = p.proposed_business_name;
+  }
+  if (p.business_activity && document.getElementById('supActivity')) {
+    document.getElementById('supActivity').value = p.business_activity;
+  }
+  if (p.business_description && document.getElementById('supDescription')) {
+    document.getElementById('supDescription').value = p.business_description;
+  }
+  if (p.business_state && document.getElementById('supState')) {
+    document.getElementById('supState').value = p.business_state;
+  }
+  if (p.business_pincode && document.getElementById('supPincode')) {
+    document.getElementById('supPincode').value = p.business_pincode;
+  }
+  if (p.business_address && document.getElementById('supAddress')) {
+    document.getElementById('supAddress').value = p.business_address;
+  }
+
+  if (p.founder_name && document.getElementById('supFounderName')) {
+    document.getElementById('supFounderName').value = p.founder_name;
+  }
+  if (p.founder_pan && document.getElementById('supFounderPan')) {
+    document.getElementById('supFounderPan').value = p.founder_pan;
+  }
+  if (p.entity_pan && document.getElementById('supEntityPan')) {
+    document.getElementById('supEntityPan').value = p.entity_pan;
+  }
+
+  if (p.registration_reference_number && document.getElementById('supRegRef')) {
+    document.getElementById('supRegRef').value = p.registration_reference_number;
+  }
+  if (p.registration_status && document.getElementById('supRegStatus')) {
+    document.getElementById('supRegStatus').value = p.registration_status;
+  }
+
+  if (p.gst_eligibility_type && document.getElementById('supGstEligibility')) {
+    document.getElementById('supGstEligibility').value = p.gst_eligibility_type;
+  }
+  if (p.gst_arn && document.getElementById('supGstArn')) {
+    document.getElementById('supGstArn').value = p.gst_arn;
+  }
+  if (p.gst_status && document.getElementById('supGstStatus')) {
+    document.getElementById('supGstStatus').value = p.gst_status;
+  }
+  if (p.gstin && document.getElementById('supGstin')) {
+    document.getElementById('supGstin').value = p.gstin;
+  }
+
+  if (p.bank_name && document.getElementById('supBankName')) {
+    document.getElementById('supBankName').value = p.bank_name;
+  }
+  if (p.bank_ifsc && document.getElementById('supBankIfsc')) {
+    document.getElementById('supBankIfsc').value = p.bank_ifsc;
+  }
+  if (p.bank_holder_name && document.getElementById('supBankHolder')) {
+    document.getElementById('supBankHolder').value = p.bank_holder_name;
+  }
+  if (p.accounting_scheme && document.getElementById('supAccountingScheme')) {
+    document.getElementById('supAccountingScheme').value = p.accounting_scheme;
+  }
+  if (p.opening_balance != null && document.getElementById('supOpeningBalance')) {
+    document.getElementById('supOpeningBalance').value = p.opening_balance;
+  }
+
+  if (p.invoice_prefix && document.getElementById('supInvoicePrefix')) {
+    document.getElementById('supInvoicePrefix').value = p.invoice_prefix;
+  }
+  if (p.invoice_starting_number != null && document.getElementById('supInvoiceStartNum')) {
+    document.getElementById('supInvoiceStartNum').value = p.invoice_starting_number;
+  }
+  if (p.default_hsn && document.getElementById('supDefaultHsn')) {
+    document.getElementById('supDefaultHsn').value = p.default_hsn;
+  }
+  if (p.default_gst_rate != null && document.getElementById('supDefaultGstRate')) {
+    document.getElementById('supDefaultGstRate').value = p.default_gst_rate;
+  }
+
+  const chk = p.checklist || {};
+  if (document.getElementById('chkDocId')) document.getElementById('chkDocId').checked = !!chk.doc_identity;
+  if (document.getElementById('chkDocAddress')) document.getElementById('chkDocAddress').checked = !!chk.doc_address;
+  if (document.getElementById('chkDocPhoto')) document.getElementById('chkDocPhoto').checked = !!chk.doc_photo;
+  if (document.getElementById('chkDocRent')) document.getElementById('chkDocRent').checked = !!chk.doc_rent_noc;
+
+  updateInvoicePreview();
+}
+
+function applyProfileToDashboard(p) {
+  if (!p) return;
+
+  const pct = p.overall_progress || 0;
+  const pctText = `${pct}% Completed`;
+
+  const prgPill = document.getElementById('startupProgressPct');
+  if (prgPill) prgPill.textContent = pctText;
+
+  const gauge = document.getElementById('startupProgressGauge');
+  if (gauge) gauge.textContent = `${pct}%`;
+
+  const dashBar = document.getElementById('dashProgressBar');
+  if (dashBar) dashBar.style.width = `${pct}%`;
+
+  const dashPct = document.getElementById('dashProgressPct');
+  if (dashPct) dashPct.textContent = `${pct}%`;
+
+  const dashName = document.getElementById('dashBusinessName');
+  if (dashName) {
+    dashName.textContent = p.proposed_business_name || 'Proposed Business';
+  }
+
+  const dashStruct = document.getElementById('dashBusinessStructure');
+  if (dashStruct) {
+    dashStruct.textContent = p.business_structure || 'Proprietorship';
+  }
+
+  const regBadge = document.getElementById('dashRegBadge');
+  if (regBadge) {
+    regBadge.textContent = p.registration_status || 'NOT_STARTED';
+  }
+
+  const gstBadge = document.getElementById('dashGstBadge');
+  if (gstBadge) {
+    gstBadge.textContent = p.gst_status || 'NOT_APPLIED';
+  }
+
+  const nextText = document.getElementById('dashNextActionText');
+  if (nextText) {
+    const nextActions = {
+      1: "Select your legal structure and enter your proposed business trade name.",
+      2: "Prepare founder identity documents and verify PAN records.",
+      3: "Apply on official portal (Udyam / MCA) and record application reference.",
+      4: "Verify GST turnover eligibility and record your GST ARN or GSTIN.",
+      5: "Set up your dedicated business bank account and accounting preferences.",
+      6: "Configure Rule 46 sequential invoice numbering and default GST tax rates.",
+      7: "Activate your live GST compliance workspace and start recording outward invoices."
+    };
+    nextText.textContent = nextActions[p.current_stage] || "Onboarding complete! Your GST compliance workspace is active.";
+  }
+
+  const chk = p.checklist || {};
+  const readyCount = Object.values(chk).filter(Boolean).length;
+  const counter = document.getElementById('dashChecklistCounter');
+  if (counter) {
+    counter.textContent = `${readyCount} / 4 ready`;
+  }
+
+  const itemsContainer = document.getElementById('dashChecklistItems');
+  if (itemsContainer) {
+    itemsContainer.innerHTML = `
+      <div class="flex items-center justify-between">
+        <span>Founder Identity (PAN / Aadhaar)</span>
+        <span class="${chk.doc_identity ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_identity ? '✓ Ready' : 'Pending'}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span>Premises Address Proof</span>
+        <span class="${chk.doc_address ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_address ? '✓ Ready' : 'Pending'}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span>Passport Photograph</span>
+        <span class="${chk.doc_photo ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_photo ? '✓ Ready' : 'Pending'}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span>Rent Agreement / NOC</span>
+        <span class="${chk.doc_rent_noc ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_rent_noc ? '✓ Ready' : 'Pending'}</span>
+      </div>
+    `;
+  }
+
+  const resumeBtn = document.getElementById('txtResumeStartupHero');
+  if (resumeBtn) {
+    resumeBtn.textContent = pct > 0 ? `Resume Setup (${pct}%)` : `Resume Setup`;
+  }
+}
+
+function launchStartupWorkspace() {
+  if (typeof showToast === "function") showToast("Launching SimpleGST Compliance Workspace...", "success");
+  switchSuite('home');
+}
+
+window.loadStartupExpress = loadStartupExpress;
+window.showStartupView = showStartupView;
+window.selectStructureFromLanding = selectStructureFromLanding;
+window.selectStructure = selectStructure;
+window.startStartupExpressJourney = startStartupExpressJourney;
+window.resumeStartupExpress = resumeStartupExpress;
+window.goToStage = goToStage;
+window.saveStage1 = saveStage1;
+window.saveStage2 = saveStage2;
+window.saveStage3 = saveStage3;
+window.saveStage4 = saveStage4;
+window.saveStage5 = saveStage5;
+window.saveStage6 = saveStage6;
+window.saveStage7 = saveStage7;
+window.toggleChecklistItem = toggleChecklistItem;
+window.resetStartupOnboarding = resetStartupOnboarding;
+window.updateInvoicePreview = updateInvoicePreview;
+window.launchStartupWorkspace = launchStartupWorkspace;
