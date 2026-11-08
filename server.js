@@ -1431,9 +1431,7 @@ export async function handleRequest(req, res) {
     // 9. Static File Serving (from public/ or root)
     // ---------------------------------------------------------
     let relativePath;
-    if (pathname === "/" || pathname === "/landing" || pathname === "/landing.html") {
-      relativePath = "landing.html";
-    } else if (pathname === "/app" || pathname === "/dashboard") {
+    if (pathname === "/" || pathname === "/landing" || pathname === "/landing.html" || pathname === "/app" || pathname === "/dashboard") {
       relativePath = "index.html";
     } else {
       relativePath = pathname.replace(/^\//, "");

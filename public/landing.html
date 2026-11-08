@@ -659,7 +659,7 @@
           Old vs New Regime: Which Saves You More?
         </h2>
         <p class="text-sm sm:text-base text-slate-600 mt-2">
-          Adjust the sliders below with your annual income and eligible deductions. Our deterministic tax engine calculates your exact tax liability under Budget 2024 revisions instantly.
+          Adjust the sliders below with your annual income and eligible deductions. Our deterministic tax engine calculates your exact tax liability under Budget 2026 revisions instantly.
         </p>
       </div>
 
@@ -765,7 +765,7 @@
           <!-- Engine Note -->
           <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-500 flex items-center gap-2">
             <span class="material-symbols-outlined text-[16px] text-blue-600">verified</span>
-            <span>Deterministic computation via SimpleGST rules engine (Finance Act 2024).</span>
+            <span>Deterministic computation via SimpleGST rules engine (Finance Act 2026).</span>
           </div>
 
         </div>
@@ -794,7 +794,7 @@
             <div class="bg-white rounded-2xl p-5 border-2 border-emerald-500 shadow-md relative">
               <div class="flex items-center justify-between mb-3">
                 <span class="font-display font-bold text-slate-900 text-base">New Tax Regime</span>
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Budget 2024 Slabs</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Budget 2026 Slabs</span>
               </div>
               <div class="text-xs text-slate-500">Total Tax Payable</div>
               <div id="tax-new" class="font-display font-black text-3xl text-emerald-600 mt-1 mb-3">
@@ -1166,11 +1166,11 @@
         <!-- FAQ 1 -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm cursor-pointer" onclick="toggleFaq(1)">
           <div class="flex items-center justify-between">
-            <h3 class="font-display font-bold text-slate-900 text-sm sm:text-base">Which regime should I pick for FY 2024-25 (AY 2025-26)?</h3>
+            <h3 class="font-display font-bold text-slate-900 text-sm sm:text-base">Which regime should I pick for FY 2026-27 (AY 2027-28)?</h3>
             <span id="faq-icon-1" class="material-symbols-outlined text-slate-500 transition-transform">expand_more</span>
           </div>
           <div id="faq-ans-1" class="hidden mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
-            Under the revised Budget 2024 rules, the New Tax Regime offers a standard deduction of ₹75,000 and zero tax for taxable income up to ₹7.75 Lakhs (with 87A rebate). For most taxpayers with total deductions under ₹3.75 Lakhs, the New Regime results in lower tax liability. Our live simulator above tests your exact numbers.
+            Under the revised Budget 2026 rules, the New Tax Regime offers a standard deduction of ₹75,000 and zero tax for taxable income up to ₹7.75 Lakhs (with 87A rebate). For most taxpayers with total deductions under ₹3.75 Lakhs, the New Regime results in lower tax liability. Our live simulator above tests your exact numbers.
           </div>
         </div>
 
@@ -1340,7 +1340,7 @@
       document.getElementById("display-80d").textContent = formatINR(sec80d);
       document.getElementById("display-hra").textContent = formatINR(hra);
 
-      // --- NEW REGIME CALCULATION (Budget 2024 revised slabs) ---
+      // --- NEW REGIME CALCULATION (Budget 2026 revised slabs) ---
       // Standard deduction: 75,000
       const standardDeductionNew = 75000;
       const taxableIncomeNew = Math.max(0, income - standardDeductionNew);

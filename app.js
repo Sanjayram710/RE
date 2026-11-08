@@ -373,14 +373,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   switchSuite('home');
 
   if (isAuthenticated && appState.activeGstin) {
+    if (typeof showDashboardView === "function") showDashboardView();
     selectFilingEntity(appState.activeGstin.gstin, appState.activeGstin.trade_name || appState.organization?.name || "Taxpayer", appState.activeGstin.state_name || "");
     if (typeof syncPeriodAcrossUi === "function") syncPeriodAcrossUi();
     if (typeof loadDashboardData === "function") loadDashboardData();
     if (typeof renderCopilotWorkspace === "function") renderCopilotWorkspace();
   } else {
-    // Unauthenticated initial state: render logged out state without intrusive blocking modal
+    // Unauthenticated initial state: render landing page first
+    if (typeof showLandingView === "function") showLandingView();
     renderAuthState();
-    // Open Sign In modal automatically if arrived from landing page with ?auth=signin
+    // Open Sign In modal automatically if arrived with ?auth=signin
     const urlParams = new URLSearchParams(window.location.search);
     const authAction = urlParams.get("auth") || (window.location.hash ? window.location.hash.replace("#", "") : "");
     if (authAction === "signin" || authAction === "login") {
@@ -1839,6 +1841,94 @@ function closeAuthModal() {
 }
 window.closeAuthModal = closeAuthModal;
 
+function showLandingView() {
+  const viewLanding = document.getElementById("viewLandingPage");
+  const appSidebar = document.getElementById("appSidebar");
+  const stitchMainWrapper = document.getElementById("stitchMainWrapper");
+  const bottomNav = document.getElementById("appBottomNav");
+
+  if (viewLanding) {
+    viewLanding.classList.remove("hidden");
+    viewLanding.style.display = "flex";
+  }
+  if (appSidebar) {
+    appSidebar.classList.add("hidden");
+    appSidebar.style.display = "none";
+  }
+  if (stitchMainWrapper) {
+    stitchMainWrapper.classList.add("hidden");
+    stitchMainWrapper.style.display = "none";
+  }
+  if (bottomNav) {
+    bottomNav.classList.add("hidden");
+    bottomNav.style.display = "none";
+  }
+  updateLandingNavAuthBtn();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+window.showLandingView = showLandingView;
+
+function showDashboardView() {
+  const viewLanding = document.getElementById("viewLandingPage");
+  const appSidebar = document.getElementById("appSidebar");
+  const stitchMainWrapper = document.getElementById("stitchMainWrapper");
+  const bottomNav = document.getElementById("appBottomNav");
+
+  if (viewLanding) {
+    viewLanding.classList.add("hidden");
+    viewLanding.style.display = "none";
+  }
+  if (appSidebar) {
+    appSidebar.classList.remove("hidden");
+    appSidebar.style.display = "";
+  }
+  if (stitchMainWrapper) {
+    stitchMainWrapper.classList.remove("hidden");
+    stitchMainWrapper.style.display = "";
+  }
+  if (bottomNav) {
+    bottomNav.classList.remove("hidden");
+    bottomNav.style.display = "";
+  }
+  if (typeof switchSuite === "function") {
+    switchSuite("home");
+  }
+  updateLandingNavAuthBtn();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+window.showDashboardView = showDashboardView;
+
+function updateLandingNavAuthBtn() {
+  const btn = document.getElementById("top-nav-file-now-btn");
+  const subBtn = document.getElementById("top-nav-signin-btn");
+  if (!btn) return;
+  if (appState.auth && appState.auth.isLoggedIn) {
+    btn.innerHTML = `<span>Dashboard</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span>`;
+    btn.onclick = () => showDashboardView();
+    if (subBtn) {
+      subBtn.textContent = "Go to App";
+      subBtn.onclick = () => showDashboardView();
+    }
+  } else {
+    btn.innerHTML = `<span>File Now</span><span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>`;
+    btn.onclick = () => openAuthModal("signin");
+    if (subBtn) {
+      subBtn.textContent = "Sign In";
+      subBtn.onclick = () => openAuthModal("signin");
+    }
+  }
+}
+window.updateLandingNavAuthBtn = updateLandingNavAuthBtn;
+
+async function quickDemoSignIn() {
+  const idInput = document.getElementById("loginIdentifier");
+  const passInput = document.getElementById("loginPassword");
+  if (idInput) idInput.value = "rajesh.sharma@apexretail.com";
+  if (passInput) passInput.value = "ApexAdmin@2026";
+  await handleSignInSubmit();
+}
+window.quickDemoSignIn = quickDemoSignIn;
+
 function switchAuthTab(tab) {
   if (tab === "register") {
     closeAuthModal();
@@ -1959,6 +2049,7 @@ async function handleSignInSubmit(e) {
     closeAuthModal();
     if (passInput) passInput.value = "";
     showToast(`Welcome back, ${data.user?.name || "Taxpayer"}!`, "success");
+    if (typeof showDashboardView === "function") showDashboardView();
 
     if (typeof loadDashboardData === "function") loadDashboardData();
     if (typeof syncPeriodAcrossUi === "function") syncPeriodAcrossUi();
@@ -2024,6 +2115,7 @@ function handleRegisterSubmit(e) {
 
   renderAuthState();
   closeAuthModal();
+  if (typeof showDashboardView === "function") showDashboardView();
   goToItrStep(1);
   showToast(`Account created for ${name} (${pan})! Ready to file.`, "success");
 }
@@ -2086,8 +2178,8 @@ async function logoutAction() {
   document.getElementById("profileDropdownMenu")?.classList.remove("active");
   document.getElementById("profileDropdownMenu")?.classList.add("hidden");
 
-  // Show login screen
-  openAuthModal("signin");
+  // Show landing view
+  if (typeof showLandingView === "function") showLandingView();
   showToast("You have been signed out successfully.", "info");
 }
 window.logoutAction = logoutAction;
