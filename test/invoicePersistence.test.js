@@ -513,3 +513,73 @@ test("Guided 5-Step Filing Navigation: Sales transitions to Purchases and Purcha
     "deleteDocument in app.js must call /api/documents/:id with force=true"
   );
 });
+
+test("Invoice CRUD: DELETE /api/sales/:id and DELETE /api/purchases/:id endpoints delete records cleanly", async () => {
+  const req = getAuthReq();
+  const sess = db.prepare("SELECT * FROM sessions WHERE token = ?").get("tok-test-persistence-token");
+  const orgId = sess.active_org_id;
+  const gstinId = sess.active_gstin_id;
+
+  // 1. Create a test sales invoice
+  const rand = Math.floor(Math.random() * 900000 + 100000);
+  const testSale = salesRepo.create({
+    orgId: orgId,
+    gstinId: gstinId,
+    period: "102026",
+    invoiceNumber: `INV-DEL-${rand}`,
+    invoiceDate: "2026-10-15",
+    customerName: "Delete Test Customer",
+    customerGstin: "27ABCDE1234F1Z5",
+    pos: "27",
+    isInterstate: false,
+    supplyType: "B2B",
+    taxableAmount: 1000,
+    gstRate: 18,
+    cgst: 90,
+    sgst: 90,
+    igst: 0,
+    totalTax: 180,
+    totalAmount: 1180,
+    status: "VALIDATED"
+  });
+
+  assert.ok(salesRepo.findById(testSale.id));
+
+  const resSale = createMockRes();
+  await handleFunctionalApi(req, resSale, `/api/sales/${testSale.id}`, "DELETE", {}, {});
+  assert.equal(resSale.statusCode, 200);
+  assert.ok(!salesRepo.findById(testSale.id));
+
+  // 2. Create a test purchase invoice
+  const testPur = purchaseRepo.create({
+    orgId: orgId,
+    gstinId: gstinId,
+    period: "102026",
+    invoiceNumber: `PUR-DEL-${rand}`,
+    invoiceDate: "2026-10-15",
+    supplierName: "Delete Test Supplier",
+    supplierGstin: "29ABCDE1234F1Z5",
+    pos: "29",
+    isInterstate: true,
+    isRcm: false,
+    taxableAmount: 2000,
+    gstRate: 18,
+    igst: 360,
+    cgst: 0,
+    sgst: 0,
+    cess: 0,
+    totalTax: 360,
+    totalAmount: 2360,
+    itcEligibility: "ELIGIBLE",
+    paymentStatus: "UNPAID",
+    daysAging: 0
+  });
+
+  assert.ok(purchaseRepo.findById(testPur.id));
+
+  const resPur = createMockRes();
+  await handleFunctionalApi(req, resPur, `/api/purchases/${testPur.id}`, "DELETE", {}, {});
+  assert.equal(resPur.statusCode, 200);
+  assert.ok(!purchaseRepo.findById(testPur.id));
+});
+
