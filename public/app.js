@@ -5667,8 +5667,10 @@ window.startGuidedFiling = startGuidedFiling;
 
 function goToGuidedPurchases() {
   appState.inGuidedFlow = true;
-  switchSuite('file-gst');
-  startGuidedFiling(2);
+  switchSuite('purchase');
+  if (typeof renderPurchaseSuite === 'function') {
+    renderPurchaseSuite();
+  }
 }
 window.goToGuidedPurchases = goToGuidedPurchases;
 

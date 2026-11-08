@@ -457,20 +457,20 @@ test("UI Suite Navigation: submitNewPurchase, submitNewInvoice, and saveExtracte
   );
 });
 
-test("Guided 5-Step Filing Navigation & Clean Register Views: Disconnected bottom buttons removed, modal registers and Bills & Docs delete enabled", () => {
+test("Guided 5-Step Filing Navigation: Sales transitions to Purchases and Purchases transitions to ITC", () => {
   const indexHtml = fs.readFileSync(path.resolve("index.html"), "utf8");
   const appJs = fs.readFileSync(path.resolve("app.js"), "utf8");
 
-  // Validate disconnected bottom buttons are removed from register tables
-  assert.doesNotMatch(
+  // Validate action bar buttons exist in Sales and Purchase screens
+  assert.match(
     indexHtml,
-    /id=["']btnSalesToPurchaseRegister["']/,
-    "Sales screen must not contain disconnected btnSalesToPurchaseRegister at bottom of table"
+    /id=["']btnSalesToPurchaseRegister["'][\s\S]*?goToGuidedPurchases\(\)/,
+    "Sales screen must include a button with id btnSalesToPurchaseRegister invoking goToGuidedPurchases()"
   );
-  assert.doesNotMatch(
+  assert.match(
     indexHtml,
-    /id=["']btnPurchaseToItcRegister["']/,
-    "Purchase screen must not contain disconnected btnPurchaseToItcRegister at bottom of table"
+    /id=["']btnPurchaseToItcRegister["'][\s\S]*?goToGuidedItc\(\)/,
+    "Purchase screen must include a button with id btnPurchaseToItcRegister invoking goToGuidedItc()"
   );
 
   // Validate modalNewPurchase has Save to Purchase Register
@@ -480,11 +480,11 @@ test("Guided 5-Step Filing Navigation & Clean Register Views: Disconnected botto
     "modalNewPurchase must have Save to Purchase Register button"
   );
 
-  // Validate goToGuidedPurchases switches to file-gst and starts step 2 (Purchases)
+  // Validate goToGuidedPurchases switches to purchase suite
   assert.match(
     appJs,
-    /function goToGuidedPurchases\(\)[\s\S]*?switchSuite\(['"]file-gst['"]\)[\s\S]*?startGuidedFiling\(2\)/,
-    "goToGuidedPurchases must transition to file-gst and start step 2"
+    /function goToGuidedPurchases\(\)[\s\S]*?switchSuite\(['"]purchase['"]\)/,
+    "goToGuidedPurchases must transition to purchase suite"
   );
 
   // Validate goToGuidedItc switches to file-gst and starts step 3 (ITC)
