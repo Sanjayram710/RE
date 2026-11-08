@@ -1427,7 +1427,7 @@ export async function handleRequest(req, res) {
     // ---------------------------------------------------------
     // 9. Static File Serving (from public/ or root)
     // ---------------------------------------------------------
-    let relativePath = pathname === "/" ? "index.html" : pathname.replace(/^\//, "");
+    let relativePath = (pathname === "/" || pathname === "/startup-express") ? "index.html" : pathname.replace(/^\//, "");
 
     // Check multiple candidate locations across local Node and Vercel serverless bundles
     const candidatePaths = [
