@@ -8655,7 +8655,6 @@ function renderBillsDashboard() {
       confBadge = `bg-amber-100 text-amber-800 border-amber-300`;
     }
 
-    const canDelete = doc.status !== 'APPROVED';
 
     return `
       <tr class="hover:bg-surface-container-low/50 transition-colors">
@@ -8730,10 +8729,9 @@ function renderBillsDashboard() {
             <a href="/api/documents/${doc.id}/download" target="_blank" download class="p-1 rounded-md hover:bg-surface-container text-secondary hover:text-on-surface transition-colors cursor-pointer" title="Download Document">
               <span class="material-symbols-outlined text-[16px]">download</span>
             </a>
-            ${canDelete ? `
             <button onclick="deleteDocument('${doc.id}')" class="p-1 rounded-md hover:bg-rose-50 text-secondary hover:text-rose-600 transition-colors cursor-pointer" title="Delete Document">
               <span class="material-symbols-outlined text-[16px]">delete</span>
-            </button>` : ''}
+            </button>
           </div>
         </td>
       </tr>
@@ -9113,7 +9111,7 @@ async function deleteDocument(docId) {
   if (!confirm("Are you sure you want to delete this document? This action cannot be undone.")) return;
 
   try {
-    const res = await apiFetch(`/api/documents/${docId}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/documents/${docId}?force=true`, { method: "DELETE" });
     const data = await res.json();
     if (res.ok && data.success) {
       if (typeof showToast === "function") showToast("Document deleted successfully.", "success");

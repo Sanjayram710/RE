@@ -457,22 +457,27 @@ test("UI Suite Navigation: submitNewPurchase, submitNewInvoice, and saveExtracte
   );
 });
 
-test("Guided 5-Step Filing Navigation: Sales transitions to Step 2 (Purchases) and Purchase transitions to Step 3 (ITC)", () => {
+test("Guided 5-Step Filing Navigation & Clean Register Views: Disconnected bottom buttons removed, modal registers and Bills & Docs delete enabled", () => {
   const indexHtml = fs.readFileSync(path.resolve("index.html"), "utf8");
   const appJs = fs.readFileSync(path.resolve("app.js"), "utf8");
 
-  // Validate goToGuidedPurchases button on Sales screen
-  assert.match(
+  // Validate disconnected bottom buttons are removed from register tables
+  assert.doesNotMatch(
     indexHtml,
-    /id=["']btnSalesToPurchaseRegister["'][\s\S]*?goToGuidedPurchases\(\)/,
-    "Sales screen must include a button with id btnSalesToPurchaseRegister invoking goToGuidedPurchases()"
+    /id=["']btnSalesToPurchaseRegister["']/,
+    "Sales screen must not contain disconnected btnSalesToPurchaseRegister at bottom of table"
+  );
+  assert.doesNotMatch(
+    indexHtml,
+    /id=["']btnPurchaseToItcRegister["']/,
+    "Purchase screen must not contain disconnected btnPurchaseToItcRegister at bottom of table"
   );
 
-  // Validate goToGuidedItc button on Purchase screen
+  // Validate modalNewPurchase has Save to Purchase Register
   assert.match(
     indexHtml,
-    /id=["']btnPurchaseToItcRegister["'][\s\S]*?goToGuidedItc\(\)/,
-    "Purchase screen must include a button with id btnPurchaseToItcRegister invoking goToGuidedItc()"
+    /id=["']btnSubmitPurchase["'][\s\S]*?Save to Purchase Register/,
+    "modalNewPurchase must have Save to Purchase Register button"
   );
 
   // Validate goToGuidedPurchases switches to file-gst and starts step 2 (Purchases)
@@ -494,5 +499,17 @@ test("Guided 5-Step Filing Navigation: Sales transitions to Step 2 (Purchases) a
     appJs,
     /Save to Purchase Register/,
     "app.js must dynamically set Save to Purchase Register on OCR review button"
+  );
+
+  // Validate Bills & Docs renders delete button for all files and passes force=true
+  assert.match(
+    appJs,
+    /<button onclick="deleteDocument\('\${doc\.id}'\)"[^>]*title="Delete Document"/,
+    "Bills & Docs must render delete button for all files unconditionally"
+  );
+  assert.match(
+    appJs,
+    /\/api\/documents\/\${docId}\?force=true/,
+    "deleteDocument in app.js must call /api/documents/:id with force=true"
   );
 });
