@@ -588,3 +588,79 @@ test("Bills & Docs 12: Multipart form-data upload with boundary and binary buffe
   const diskBytes = fs.readFileSync(upData.document.storage_path);
   assert.strictEqual(diskBytes.length, pdfBuf.length);
 });
+
+test("Bills & Docs 13: Deleting a file from Bills & Docs removes the linked invoice alone from Sales/Purchase register", async () => {
+  // Create two distinct purchase bills via documents
+  const invToKeep = `PUR-KEEP-${Date.now().toString().slice(-5)}`;
+  const invToDelete = `PUR-DEL-${Date.now().toString().slice(-5)}`;
+
+  // 1. Upload and approve document 1 (to keep)
+  const upRes1 = createMockRes();
+  await handleFunctionalApi(getOrgAReq(), upRes1, "/api/documents/upload", "POST", {}, {
+    filename: "Bill_To_Keep.pdf",
+    category: "purchase_bill",
+    content: `data:application/pdf;base64,${createPdfBuffer(["TAX INVOICE", `Invoice: ${invToKeep}`, "Supplier: Keep Vendor"]).toString("base64")}`
+  });
+  const doc1 = JSON.parse(upRes1.body).document;
+
+  const appRes1 = createMockRes();
+  await handleFunctionalApi(getOrgAReq(), appRes1, "/api/ocr/approve", "POST", {}, {
+    documentId: doc1.id,
+    invoiceType: "purchase_bill",
+    fields: {
+      invoiceNumber: invToKeep,
+      invoiceDate: "2026-10-18",
+      supplierName: "Keep Vendor",
+      supplierGstin: "27AABCD1111F1Z1",
+      taxableAmount: 10000,
+      gstRate: 18,
+      igst: 1800,
+      totalAmount: 11800
+    }
+  });
+  assert.strictEqual(appRes1.statusCode, 200);
+
+  // 2. Upload and approve document 2 (to delete)
+  const upRes2 = createMockRes();
+  await handleFunctionalApi(getOrgAReq(), upRes2, "/api/documents/upload", "POST", {}, {
+    filename: "Bill_To_Delete.pdf",
+    category: "purchase_bill",
+    content: `data:application/pdf;base64,${createPdfBuffer(["TAX INVOICE", `Invoice: ${invToDelete}`, "Supplier: Delete Vendor"]).toString("base64")}`
+  });
+  const doc2 = JSON.parse(upRes2.body).document;
+
+  const appRes2 = createMockRes();
+  await handleFunctionalApi(getOrgAReq(), appRes2, "/api/ocr/approve", "POST", {}, {
+    documentId: doc2.id,
+    invoiceType: "purchase_bill",
+    fields: {
+      invoiceNumber: invToDelete,
+      invoiceDate: "2026-10-19",
+      supplierName: "Delete Vendor",
+      supplierGstin: "27AABCD2222F1Z2",
+      taxableAmount: 20000,
+      gstRate: 18,
+      igst: 3600,
+      totalAmount: 23600
+    }
+  });
+  assert.strictEqual(appRes2.statusCode, 200);
+
+  // Verify both invoices exist in purchase_invoices
+  assert.ok(db.prepare("SELECT id FROM purchase_invoices WHERE invoice_number = ?").get(invToKeep));
+  assert.ok(db.prepare("SELECT id FROM purchase_invoices WHERE invoice_number = ?").get(invToDelete));
+
+  // 3. Delete document 2 from Bills & Docs with force=true
+  const delRes = createMockRes();
+  await handleFunctionalApi(getOrgAReq(), delRes, `/api/documents/${doc2.id}`, "DELETE", { force: "true" }, {});
+  assert.strictEqual(delRes.statusCode, 200);
+
+  // 4. Verify document 2 is deleted from documents
+  assert.strictEqual(documentRepo.findById(doc2.id), null);
+
+  // 5. Verify the linked invoice invToDelete was deleted from purchase_invoices alone
+  assert.strictEqual(db.prepare("SELECT id FROM purchase_invoices WHERE invoice_number = ?").get(invToDelete), undefined);
+
+  // 6. Verify invToKeep is still safe and intact in purchase_invoices
+  assert.ok(db.prepare("SELECT id FROM purchase_invoices WHERE invoice_number = ?").get(invToKeep));
+});

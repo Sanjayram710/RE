@@ -5693,8 +5693,10 @@ window.startGuidedFiling = startGuidedFiling;
 
 function goToGuidedPurchases() {
   appState.inGuidedFlow = true;
-  switchSuite('file-gst');
-  startGuidedFiling(2);
+  switchSuite('purchase');
+  if (typeof renderPurchaseSuite === 'function') {
+    renderPurchaseSuite();
+  }
 }
 window.goToGuidedPurchases = goToGuidedPurchases;
 
@@ -9142,6 +9144,12 @@ async function deleteDocument(docId) {
     if (res.ok && data.success) {
       if (typeof showToast === "function") showToast("Document deleted successfully.", "success");
       await loadBillsDashboard();
+      if (typeof refreshInvoices === "function") {
+        await refreshInvoices();
+      }
+      if (typeof loadDashboardData === "function") {
+        loadDashboardData();
+      }
     } else {
       if (typeof showToast === "function") showToast(data.error || "Failed to delete document.", "error");
     }
