@@ -184,12 +184,6 @@ async function initSessionFromBackend() {
     const data = res.ok ? await res.json() : null;
 
     if (data && data.authenticated && data.user) {
-      if (data.onboardingRequired) {
-        if (typeof openOnboardingWizard === "function") {
-          openOnboardingWizard(data.onboardingStep || 2);
-        }
-        return false;
-      }
       appState.csrfToken = data.csrfToken;
       appState.organization = data.organization || null;
       appState.activeGstin = data.activeGstin || null;
@@ -1810,6 +1804,7 @@ function renderAuthState() {
 window.renderAuthState = renderAuthState;
 
 function openAuthModal(tab = "signin") {
+  if (typeof closeOnboardingWizard === "function") closeOnboardingWizard();
   const idInput = document.getElementById("loginIdentifier");
   const passInput = document.getElementById("loginPassword");
   if (idInput) idInput.value = "";
@@ -2033,15 +2028,6 @@ async function handleSignInSubmit(e) {
     }
     if (data.csrfToken) {
       appState.csrfToken = data.csrfToken;
-    }
-
-    if (data.onboardingRequired) {
-      closeAuthModal();
-      if (typeof openOnboardingWizard === "function") {
-        openOnboardingWizard(data.onboardingStep || 2);
-      }
-      showToast("Please complete your business registration to continue.", "info");
-      return;
     }
 
     await initSessionFromBackend();
