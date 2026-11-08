@@ -431,3 +431,28 @@ test("Purchase Workflow: ITC Eligibility flows into dashboard and reconciliation
   assert.ok(dashData.metrics.totalEligibleItc > 0, "Dashboard must calculate eligible ITC");
   assert.ok(dashData.metrics.blockedItc >= 9000, "Blocked ITC must include the ineligible purchase bill tax (₹9,000)");
 });
+
+test("UI Suite Navigation: submitNewPurchase, submitNewInvoice, and saveExtractedInvoice transition to purchase and sales registers", () => {
+  const appJs = fs.readFileSync(path.resolve("app.js"), "utf8");
+
+  // Validate submitNewPurchase triggers switchSuite('purchase')
+  assert.match(
+    appJs,
+    /function submitNewPurchase[\s\S]*?switchSuite\(['"]purchase['"]\)/,
+    "submitNewPurchase must invoke switchSuite('purchase') upon saving"
+  );
+
+  // Validate submitNewInvoice triggers switchSuite('sales')
+  assert.match(
+    appJs,
+    /function submitNewInvoice[\s\S]*?switchSuite\(['"]sales['"]\)/,
+    "submitNewInvoice must invoke switchSuite('sales') upon saving"
+  );
+
+  // Validate saveExtractedInvoice triggers switchSuite('sales') and switchSuite('purchase')
+  assert.match(
+    appJs,
+    /function saveExtractedInvoice[\s\S]*?switchSuite\(['"]sales['"]\)[\s\S]*?switchSuite\(['"]purchase['"]\)/,
+    "saveExtractedInvoice must invoke switchSuite for both sales and purchase types"
+  );
+});
