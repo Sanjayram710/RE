@@ -68,6 +68,9 @@ const MIME_TYPES = {
   ".json": "application/json; charset=utf-8",
   ".svg": "image/svg+xml",
   ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
   ".ico": "image/x-icon",
   ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   ".xls": "application/vnd.ms-excel",
@@ -1415,7 +1418,14 @@ export async function handleRequest(req, res) {
     // ---------------------------------------------------------
     // 9. Static File Serving (from public/ or root)
     // ---------------------------------------------------------
-    let relativePath = (pathname === "/" || pathname === "/startup-express") ? "index.html" : pathname.replace(/^\//, "");
+    let relativePath;
+    if (pathname === "/" || pathname === "/landing" || pathname === "/landing.html") {
+      relativePath = "landing.html";
+    } else if (pathname === "/app" || pathname === "/dashboard" || pathname === "/startup-express") {
+      relativePath = "index.html";
+    } else {
+      relativePath = pathname.replace(/^\//, "");
+    }
 
     // Check candidate locations across public/ and root directory
     const candidatePaths = [

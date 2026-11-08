@@ -124,8 +124,13 @@ async function apiFetch(url, options = {}) {
   const method = (options.method || "GET").toUpperCase();
   const isStateChanging = ["POST", "PUT", "DELETE", "PATCH"].includes(method);
 
+  const isAuthRoute = typeof url === "string" && (
+    url.startsWith("/api/auth/") ||
+    url.startsWith("/api/onboarding/step1")
+  );
+
   // If state-changing request and user is currently in unauthenticated guest state, auto-ensure session
-  if (isStateChanging && (!appState.auth || !appState.auth.isLoggedIn)) {
+  if (isStateChanging && !isAuthRoute && (!appState.auth || !appState.auth.isLoggedIn)) {
     await ensureActiveSession();
   }
 
@@ -430,7 +435,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   } else {
     // Unauthenticated initial state: render logged out state without intrusive blocking modal
     renderAuthState();
-    // Login and Signup UI modal is deferred from popping up automatically on page load
+    // Open Sign In modal automatically if arrived from landing page with ?auth=signin
+    const urlParams = new URLSearchParams(window.location.search);
+    const authAction = urlParams.get("auth") || (window.location.hash ? window.location.hash.replace("#", "") : "");
+    if (authAction === "signin" || authAction === "login") {
+      openAuthModal("signin");
+    } else if (authAction === "signup" || authAction === "register") {
+      openAuthModal("signup");
+    }
   }
 
   // Close dropdowns on outside click
@@ -1878,8 +1890,27 @@ function renderAuthState() {
 window.renderAuthState = renderAuthState;
 
 function openAuthModal(tab = "signin") {
+  const idInput = document.getElementById("loginIdentifier");
+  const passInput = document.getElementById("loginPassword");
+  if (idInput) idInput.value = "";
+  if (passInput) passInput.value = "";
+  const errEl = document.getElementById("loginErrorMessage");
+  if (errEl) errEl.classList.add("hidden");
+
   openModal("modalAuth");
   switchAuthTab(tab);
+
+  // Prevent browser password managers from auto-injecting saved localhost credentials
+  const clearInputs = () => {
+    const id = document.getElementById("loginIdentifier");
+    const pass = document.getElementById("loginPassword");
+    if (id && document.activeElement !== id) id.value = "";
+    if (pass && document.activeElement !== pass) pass.value = "";
+  };
+  requestAnimationFrame(clearInputs);
+  setTimeout(clearInputs, 50);
+  setTimeout(clearInputs, 150);
+  setTimeout(clearInputs, 350);
 }
 window.openAuthModal = openAuthModal;
 
@@ -9653,10 +9684,9 @@ async function submitOnboardingStep1(e) {
   }
 
   try {
-    const res = await fetch("/api/onboarding/step1", {
+    const res = await apiFetch("/api/onboarding/step1", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "same-origin",
       body: JSON.stringify({ fullName, mobile: cleanMobile, email, password, confirmPassword })
     });
     const data = await res.json().catch(() => ({}));
@@ -9670,6 +9700,13 @@ async function submitOnboardingStep1(e) {
       localStorage.setItem("simplegst_session_token", data.sessionToken);
     }
     if (data.csrfToken) appState.csrfToken = data.csrfToken;
+    if (data.user) {
+      appState.auth = {
+        isLoggedIn: true,
+        user: data.user
+      };
+      if (typeof renderAuthState === "function") renderAuthState();
+    }
 
     showToast("Account created successfully! Please continue to Taxpayer Identification.", "success");
     goToOnboardingStep(2);
