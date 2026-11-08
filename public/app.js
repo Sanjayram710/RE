@@ -9118,6 +9118,12 @@ async function deleteDocument(docId) {
     if (res.ok && data.success) {
       if (typeof showToast === "function") showToast("Document deleted successfully.", "success");
       await loadBillsDashboard();
+      if (typeof refreshInvoices === "function") {
+        await refreshInvoices();
+      }
+      if (typeof loadDashboardData === "function") {
+        loadDashboardData();
+      }
     } else {
       if (typeof showToast === "function") showToast(data.error || "Failed to delete document.", "error");
     }
