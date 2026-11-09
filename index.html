@@ -695,6 +695,7 @@
         </section>
 
         <!-- VIEW B: SEVEN-STAGE GUIDED WIZARD + DASHBOARD -->
+        <!-- VIEW B: SEVEN-STAGE GUIDED WIZARD + DASHBOARD -->
         <section id="startupWizardView" class="space-y-6 hidden">
           <!-- Stepper Navigation Header -->
           <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm space-y-4">
@@ -702,9 +703,10 @@
               <div>
                 <div class="flex items-center gap-2">
                   <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary uppercase tracking-wider">Guided Onboarding</span>
-                  <span class="text-xs font-semibold text-secondary" id="txtStartupCurrentStructure">Proprietorship</span>
+                  <span class="text-xs font-semibold text-secondary" id="txtStartupCurrentStructure">Sole Proprietorship</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-surface-container text-secondary" id="txtStartupSubtypeBadge" style="display:none;"></span>
                 </div>
-                <h2 class="text-xl font-bold text-on-surface mt-1" id="txtStartupStageHeading">Stage 1: Business Structure &amp; Identity</h2>
+                <h2 class="text-xl font-bold text-on-surface mt-1" id="txtStartupStageHeading">Stage 1: Business Structure &amp; Trade Details</h2>
               </div>
               <div class="flex items-center gap-3">
                 <div class="text-right">
@@ -729,11 +731,11 @@
             <!-- Main Stage Form Area (8 cols) -->
             <div class="lg:col-span-8 space-y-6">
 
-              <!-- STAGE 1: BUSINESS STRUCTURE -->
+              <!-- STAGE 1: BUSINESS STRUCTURE & TRADE DETAILS -->
               <div id="startupStage1Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
                 <div class="space-y-1">
-                  <h3 class="font-bold text-lg text-on-surface">1. Select Business Structure &amp; Trade Details</h3>
-                  <p class="text-xs text-secondary">Choose the organizational framework that matches your founders, liability goals, and operations.</p>
+                  <h3 class="font-bold text-lg text-on-surface">1. Business Structure &amp; Trade Details</h3>
+                  <p class="text-xs text-secondary">Select your legal structure and define commercial trade names, activities, and operational address.</p>
                 </div>
 
                 <!-- 5 Structure Radios -->
@@ -746,7 +748,7 @@
                       </div>
                       <p class="text-xs text-secondary mt-1">Single founder, lowest compliance cost.</p>
                     </div>
-                    <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded mt-3 self-start">MSME Udyam + GST</span>
+                    <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded mt-3 self-start">Individual PAN &bull; MSME Udyam</span>
                   </label>
 
                   <label class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/50 cursor-pointer flex flex-col justify-between structure-card" data-structure="PARTNERSHIP">
@@ -757,7 +759,7 @@
                       </div>
                       <p class="text-xs text-secondary mt-1">2+ partners with shared deed.</p>
                     </div>
-                    <span class="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded mt-3 self-start">Deed + RoF</span>
+                    <span class="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded mt-3 self-start">Partnership Deed &bull; RoF</span>
                   </label>
 
                   <label class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/50 cursor-pointer flex flex-col justify-between structure-card" data-structure="LLP">
@@ -768,7 +770,7 @@
                       </div>
                       <p class="text-xs text-secondary mt-1">Limited liability for professionals.</p>
                     </div>
-                    <span class="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded mt-3 self-start">MCA FiLLiP</span>
+                    <span class="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded mt-3 self-start">MCA FiLLiP &bull; DPIN</span>
                   </label>
 
                   <label class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/50 cursor-pointer flex flex-col justify-between structure-card" data-structure="PRIVATE_LIMITED">
@@ -779,19 +781,30 @@
                       </div>
                       <p class="text-xs text-secondary mt-1">High scale, external equity shares.</p>
                     </div>
-                    <span class="text-[10px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded mt-3 self-start">MCA SPICe+</span>
+                    <span class="text-[10px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded mt-3 self-start">MCA SPICe+ &bull; CIN</span>
                   </label>
 
                   <label class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/50 cursor-pointer flex flex-col justify-between structure-card sm:col-span-2 lg:col-span-2" data-structure="OTHER">
                     <div>
                       <div class="flex items-center justify-between">
-                        <span class="font-bold text-sm text-on-surface">Other (OPC / Section 8 / Trust)</span>
+                        <span class="font-bold text-sm text-on-surface">Other Structures</span>
                         <input type="radio" name="startupStructure" value="OTHER" class="text-primary focus:ring-primary">
                       </div>
-                      <p class="text-xs text-secondary mt-1">One Person Company, non-profit society, or trust charters.</p>
+                      <p class="text-xs text-secondary mt-1">One Person Company (OPC), Section 8 Company, Trust, Society.</p>
                     </div>
-                    <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded mt-3 self-start">Custom Charter</span>
+                    <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded mt-3 self-start">Custom Statutory Charter</span>
                   </label>
+                </div>
+
+                <!-- Structure Subtype Selector (for OTHER) -->
+                <div id="boxOtherSubtypeContainer" class="p-4 rounded-xl bg-amber-50/60 border border-amber-200 space-y-2 hidden">
+                  <label class="block text-xs font-semibold text-amber-950">Specify Applicable Entity Subtype <span class="text-error">*</span></label>
+                  <select id="supOtherSubtype" class="w-full px-3.5 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface text-xs focus:ring-primary">
+                    <option value="OPC">One Person Company (OPC &bull; Single Shareholder)</option>
+                    <option value="SECTION_8">Section 8 Non-Profit Company</option>
+                    <option value="TRUST">Public / Private Charitable Trust</option>
+                    <option value="SOCIETY">Registered Society / Association</option>
+                  </select>
                 </div>
 
                 <!-- Form Fields -->
@@ -801,6 +814,13 @@
                       <label class="block text-xs font-semibold text-on-surface mb-1">Proposed Trade / Business Name <span class="text-error">*</span></label>
                       <input type="text" id="supProposedName" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. Apex Retail Enterprises" required>
                     </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Legal Entity Name <span class="text-secondary">(If different from trade name)</span></label>
+                      <input type="text" id="supLegalName" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. Apex Global Supplies Pvt Ltd">
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label class="block text-xs font-semibold text-on-surface mb-1">Primary Business Activity <span class="text-error">*</span></label>
                       <select id="supActivity" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
@@ -812,32 +832,67 @@
                         <option value="Other Commercial Supply">Other Commercial Supply</option>
                       </select>
                     </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Business Category <span class="text-error">*</span></label>
+                      <select id="supCategory" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="SERVICES" selected>Services / Professional Consulting</option>
+                        <option value="GOODS">Goods / Tangible Products</option>
+                        <option value="BOTH">Both Goods and Services</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div>
                     <label class="block text-xs font-semibold text-on-surface mb-1">Description of Goods or Services</label>
-                    <textarea id="supDescription" rows="2" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Briefly describe what your business sells or supplies..."></textarea>
+                    <textarea id="supDescription" rows="2" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Briefly describe what your business sells, manufactures, or supplies..."></textarea>
                   </div>
 
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-2">
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Principal Place of Business (Address) <span class="text-error">*</span></label>
+                      <input type="text" id="supAddress" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Shop / Unit #, Building name, Street">
+                    </div>
                     <div>
-                      <label class="block text-xs font-semibold text-on-surface mb-1">State of Operations <span class="text-error">*</span></label>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">State <span class="text-error">*</span></label>
                       <select id="supState" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                         <!-- Populated with all 36 Indian states/UTs -->
                       </select>
                     </div>
                     <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">District</label>
+                      <input type="text" id="supDistrict" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="District / City">
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
                       <label class="block text-xs font-semibold text-on-surface mb-1">PIN Code <span class="text-error">*</span></label>
                       <input type="text" id="supPincode" maxlength="6" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="400001">
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-on-surface mb-1">Principal Place Address</label>
-                      <input type="text" id="supAddress" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Shop / Unit #, Street name">
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Nature of Operations</label>
+                      <select id="supNatureOps" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="OFFICE" selected>Commercial Office / Studio</option>
+                        <option value="RETAIL">Retail Shop / Storefront</option>
+                        <option value="WAREHOUSE">Warehouse / Logistics Hub</option>
+                        <option value="FACTORY">Manufacturing Unit / Plant</option>
+                        <option value="REMOTE">Home-based / Remote Office</option>
+                      </select>
                     </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Business Commencement Date</label>
+                      <input type="date" id="supCommencementDate" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                  </div>
+
+                  <!-- Dynamic Structure Specific Fields Container -->
+                  <div id="boxStructureSpecificFields" class="p-4 rounded-xl bg-surface-container-low border border-outline-variant space-y-3">
+                    <!-- Populated dynamically based on structure (Proprietor vs Partnership vs LLP vs Pvt Ltd) -->
                   </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant">
+                <div class="flex items-center justify-between pt-4 border-t border-outline-variant">
+                  <span class="text-xs text-secondary italic">Changes are saved securely to your workspace database.</span>
                   <button type="button" onclick="saveStage1()" class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
                     <span>Save &amp; Continue to Stage 2</span>
                     <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -849,28 +904,76 @@
               <div id="startupStage2Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm hidden">
                 <div class="space-y-1">
                   <h3 class="font-bold text-lg text-on-surface">2. PAN &amp; Identity Preparation</h3>
-                  <p class="text-xs text-secondary">Verify founder and entity identity records for statutory registration.</p>
+                  <p class="text-xs text-secondary">Verify founder and entity identity credentials required for statutory registrations.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Founder / Primary Signatory Name <span class="text-error">*</span></label>
-                    <input type="text" id="supFounderName" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Full name matching Aadhaar">
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Founder / Primary Signatory Full Name <span class="text-error">*</span></label>
+                    <input type="text" id="supFounderName" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Full name matching official PAN / Aadhaar">
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Founder / Proprietor PAN <span class="text-error">*</span></label>
-                    <input type="text" id="supFounderPan" maxlength="10" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="ABCDE1234F">
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Founder / Proprietor Individual PAN <span class="text-error">*</span></label>
+                    <input type="text" id="supFounderPan" maxlength="10" oninput="validatePanField('supFounderPan')" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="ABCDE1234F">
+                    <span class="text-[10px] text-secondary" id="hintFounderPan">For Sole Proprietorship: 4th letter must be 'P'</span>
                   </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Entity PAN <span class="text-secondary">(Required for Partnership, LLP, Company)</span></label>
-                    <input type="text" id="supEntityPan" maxlength="10" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Optional for sole proprietors">
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Entity PAN <span class="text-secondary" id="lblEntityPanNote">(Required for Partnership, LLP, Company)</span></label>
+                    <input type="text" id="supEntityPan" maxlength="10" oninput="validatePanField('supEntityPan')" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="AAACL1234F (Optional for sole proprietors)">
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Aadhaar / DIN Number <span class="text-secondary">(Encrypted storage)</span></label>
-                    <input type="password" id="supAadhaarMasked" maxlength="14" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="•••• •••• 1234">
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Signatory Contact Email &amp; Mobile</label>
+                    <div class="grid grid-cols-2 gap-2">
+                      <input type="email" id="supContactEmail" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs focus:ring-primary" placeholder="signatory@business.com">
+                      <input type="tel" id="supContactMobile" maxlength="10" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs font-mono focus:ring-primary" placeholder="9876543210">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Document Upload Widget -->
+                <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant space-y-4">
+                  <div class="flex items-center justify-between">
+                    <h4 class="font-bold text-xs text-on-surface flex items-center gap-2">
+                      <span class="material-symbols-outlined text-[16px] text-primary">upload_file</span>
+                      <span>Identity &amp; Address Document Upload Vault</span>
+                    </h4>
+                    <span class="text-[10px] text-secondary font-mono">PDF, PNG, JPG &bull; Max 5MB per document</span>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                    <div class="sm:col-span-4">
+                      <label class="block text-[11px] font-semibold text-on-surface mb-1">Document Category</label>
+                      <select id="supDocCategory" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs focus:ring-primary">
+                        <option value="FOUNDER_PAN">Founder PAN Card</option>
+                        <option value="ENTITY_PAN">Entity PAN Card</option>
+                        <option value="AADHAAR_IDENTITY">Signatory Aadhaar / Passport</option>
+                        <option value="ADDRESS_PROOF">Electricity Bill / Property Tax (&lt;60 days)</option>
+                        <option value="RENT_AGREEMENT">Rent Agreement &amp; Owner NOC</option>
+                        <option value="BANK_CHEQUE">Cancelled Cheque / Bank Statement</option>
+                        <option value="CONSTITUTION_DEED">Partnership Deed / Incorporation Cert</option>
+                      </select>
+                    </div>
+                    <div class="sm:col-span-5">
+                      <label class="block text-[11px] font-semibold text-on-surface mb-1">Select File</label>
+                      <input type="file" id="supDocFileInput" accept=".pdf,.png,.jpg,.jpeg" class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-on-primary hover:file:bg-primary-container cursor-pointer">
+                    </div>
+                    <div class="sm:col-span-3">
+                      <button type="button" onclick="uploadStartupDocument()" id="btnUploadSupDoc" class="w-full py-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-primary font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+                        <span class="material-symbols-outlined text-[16px]">cloud_upload</span>
+                        <span>Upload</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Uploaded Documents List Container -->
+                  <div class="space-y-2 pt-2 border-t border-outline-variant">
+                    <span class="text-[11px] font-semibold text-on-surface block">Uploaded Documents:</span>
+                    <div id="supUploadedDocsList" class="space-y-2 text-xs">
+                      <p class="text-secondary italic text-[11px]">No documents uploaded yet. Upload your PAN and address proof to secure verification.</p>
+                    </div>
                   </div>
                 </div>
 
@@ -878,7 +981,7 @@
                 <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant space-y-3">
                   <h4 class="font-bold text-xs text-on-surface flex items-center gap-2">
                     <span class="material-symbols-outlined text-[16px] text-primary">checklist</span>
-                    <span>Stage 2 Document Preparation Checklist</span>
+                    <span>Document Readiness Checklist</span>
                   </h4>
                   <div class="space-y-2 text-xs">
                     <label class="flex items-center gap-2 cursor-pointer">
@@ -911,11 +1014,11 @@
                 </div>
               </div>
 
-              <!-- STAGE 3: BUSINESS REGISTRATION -->
+              <!-- STAGE 3: BUSINESS REGISTRATION & CONSTITUTION -->
               <div id="startupStage3Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm hidden">
                 <div class="space-y-1">
-                  <h3 class="font-bold text-lg text-on-surface">3. Business Registration &amp; Constitution</h3>
-                  <p class="text-xs text-secondary" id="txtStage3Sub">Execute government registration on the designated central/state portal.</p>
+                  <h3 class="font-bold text-lg text-on-surface">3. Business Registration &amp; Licences</h3>
+                  <p class="text-xs text-secondary" id="txtStage3Sub">Execute government registration on the designated central/state portal and track statutory references.</p>
                 </div>
 
                 <!-- Guidance Box -->
@@ -929,22 +1032,45 @@
                     <span class="material-symbols-outlined text-[18px]">open_in_new</span>
                     <span id="txtStage3PortalLabel">Open Official Registration Portal</span>
                   </a>
-                  <span class="text-xs text-secondary">Free government registration (Zero third-party fee required)</span>
+                  <span class="text-xs text-secondary">Free statutory government registration</span>
                 </div>
 
-                <!-- Registration Tracker Inputs -->
+                <!-- Dynamic Registration Checklist Items Table -->
+                <div class="space-y-3 pt-2 border-t border-outline-variant">
+                  <h4 class="font-bold text-xs text-on-surface">Applicable Statutory Licences &amp; Registration Items</h4>
+                  <div class="overflow-x-auto rounded-lg border border-outline-variant">
+                    <table class="w-full text-left text-xs border-collapse">
+                      <thead class="bg-surface-container-low text-secondary font-semibold">
+                        <tr>
+                          <th class="p-3">Licence / Registration</th>
+                          <th class="p-3">Status</th>
+                          <th class="p-3">Reference / Reg No</th>
+                          <th class="p-3">Submission Date</th>
+                          <th class="p-3">Notes / Justification</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tblDynamicRegistrations" class="divide-y divide-outline-variant bg-surface-container-lowest">
+                        <!-- Populated dynamically per structure -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- General Registration Tracker Inputs -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-outline-variant">
                   <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Application Reference / Acknowledgement Number</label>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Primary Application Reference / Acknowledgement Number</label>
                     <input type="text" id="supRegRef" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. UDYAM-MH-01-0012345 or SRN">
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Registration Status <span class="text-error">*</span></label>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Overall Registration Status <span class="text-error">*</span></label>
                     <select id="supRegStatus" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                       <option value="NOT_STARTED">Not Started</option>
-                      <option value="DRAFTED">Application Prepared</option>
+                      <option value="IN_PROGRESS">In Progress &bull; Application Drafted</option>
                       <option value="SUBMITTED">Submitted on Government Portal</option>
                       <option value="APPROVED" selected>Approved &bull; Certificate Issued</option>
+                      <option value="REJECTED">Rejected / Requires Resubmission</option>
+                      <option value="NOT_APPLICABLE">Not Applicable (Exempt)</option>
                     </select>
                   </div>
                 </div>
@@ -960,55 +1086,105 @@
                 </div>
               </div>
 
-              <!-- STAGE 4: GST REGISTRATION -->
+              <!-- STAGE 4: GST REGISTRATION OR EXEMPTION -->
               <div id="startupStage4Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm hidden">
                 <div class="space-y-1">
-                  <h3 class="font-bold text-lg text-on-surface">4. GST Registration (Form GST REG-01)</h3>
-                  <p class="text-xs text-secondary">Obtain your statutory Goods and Services Tax Identification Number (GSTIN).</p>
+                  <h3 class="font-bold text-lg text-on-surface">4. GST Registration Eligibility &amp; Status</h3>
+                  <p class="text-xs text-secondary">Establish whether your business requires GST registration under the CGST Act or qualifies for turnover exemption.</p>
                 </div>
 
                 <!-- Eligibility Card -->
                 <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant space-y-2">
-                  <h4 class="font-bold text-xs text-on-surface">Statutory GST Registration Thresholds:</h4>
+                  <h4 class="font-bold text-xs text-on-surface">Statutory GST Registration Thresholds (Section 22 &amp; 24 CGST Act):</h4>
                   <ul class="text-xs text-secondary list-disc pl-5 space-y-1">
                     <li><strong>Suppliers of Goods:</strong> Mandatory if aggregate annual turnover exceeds &rupee;40 Lakhs (&rupee;20L in special category states).</li>
                     <li><strong>Suppliers of Services:</strong> Mandatory if aggregate annual turnover exceeds &rupee;20 Lakhs (&rupee;10L in special category states).</li>
-                    <li><strong>Inter-State Supplies:</strong> Mandatory irrespective of turnover under Section 24 of CGST Act.</li>
+                    <li><strong>Inter-State Outward Supplies:</strong> Mandatory irrespective of turnover under Section 24.</li>
                     <li><strong>Voluntary:</strong> Recommended to claim Input Tax Credit and bill registered B2B clients.</li>
                   </ul>
                 </div>
 
-                <!-- GST Portal Action Link -->
-                <div class="flex items-center gap-3">
-                  <a href="https://reg.gst.gov.in/registration/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 font-semibold text-xs transition-colors">
-                    <span class="material-symbols-outlined text-[18px]">open_in_new</span>
-                    <span>Apply on Official GST Common Portal (REG-01)</span>
-                  </a>
-                  <span class="text-xs text-secondary">Government filing is free &bull; Takes 3-7 business days</span>
-                </div>
-
-                <!-- ARN & GSTIN Inputs -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-outline-variant">
-                  <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Application Reference Number (ARN)</label>
-                    <input type="text" id="supGstArn" maxlength="15" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. AA271126001234Z">
-                  </div>
-                  <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">GST Registration Status</label>
-                    <select id="supGstStatus" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                      <option value="NOT_APPLIED">Not Applied</option>
-                      <option value="ARN_GENERATED">ARN Generated &bull; Awaiting Officer</option>
-                      <option value="UNDER_PROCESSING">Under Verification</option>
-                      <option value="CLARIFICATION_REQUIRED">Clarification Notice (REG-03)</option>
-                      <option value="APPROVED_ACTIVE" selected>Approved &bull; Form REG-06 Issued</option>
-                    </select>
+                <!-- Path Selector: Register vs Exempt -->
+                <div class="space-y-3">
+                  <label class="block text-xs font-semibold text-on-surface">Select your business compliance path:</label>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label class="p-4 rounded-xl border-2 border-primary bg-primary/5 cursor-pointer flex items-start gap-3" id="lblPathGstRegister">
+                      <input type="radio" name="gstCompliancePath" value="REGISTER" checked onchange="toggleGstPath('REGISTER')" class="mt-0.5 text-primary focus:ring-primary">
+                      <div>
+                        <span class="font-bold text-xs text-on-surface block">Register for GST (Form GST REG-01)</span>
+                        <p class="text-[11px] text-secondary mt-0.5">Applying for new GSTIN or tracking existing approved registration.</p>
+                      </div>
+                    </label>
+                    <label class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer flex items-start gap-3" id="lblPathGstExempt">
+                      <input type="radio" name="gstCompliancePath" value="EXEMPT" onchange="toggleGstPath('EXEMPT')" class="mt-0.5 text-primary focus:ring-primary">
+                      <div>
+                        <span class="font-bold text-xs text-on-surface block">Not Required to Register (Statutory Exemption)</span>
+                        <p class="text-[11px] text-secondary mt-0.5">Turnover is below statutory threshold or supplies are 100% exempt.</p>
+                      </div>
+                    </label>
                   </div>
                 </div>
 
-                <div>
-                  <label class="block text-xs font-semibold text-on-surface mb-1">Issued GSTIN <span class="text-secondary">(Once certificate is issued)</span></label>
-                  <input type="text" id="supGstin" maxlength="15" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. 27ABCDE1234F1Z5">
-                  <p class="text-[11px] text-secondary mt-1">Entering your approved GSTIN will immediately connect to SimpleGST filing and live GSTR-2B syncing.</p>
+                <!-- PATH A CONTAINER: REGISTER FOR GST -->
+                <div id="boxPathGstRegister" class="space-y-4 pt-2 border-t border-outline-variant">
+                  <div class="flex items-center gap-3">
+                    <a href="https://reg.gst.gov.in/registration/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 font-semibold text-xs transition-colors">
+                      <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                      <span>Apply on Official GST Common Portal (REG-01)</span>
+                    </a>
+                    <span class="text-xs text-secondary">Free statutory filing &bull; 3-7 business days</span>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Application Reference Number (ARN)</label>
+                      <input type="text" id="supGstArn" maxlength="15" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. AA271126001234Z">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">GST Registration Status <span class="text-error">*</span></label>
+                      <select id="supGstStatus" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="NOT_APPLIED">Not Applied</option>
+                        <option value="DRAFT">Application Drafted</option>
+                        <option value="SUBMITTED">Submitted on GST Portal</option>
+                        <option value="PENDING">ARN Generated &bull; Under Officer Verification</option>
+                        <option value="CLARIFICATION_REQUIRED">Clarification Notice Issued (Form REG-03)</option>
+                        <option value="APPROVED_ACTIVE" selected>Approved &bull; GSTIN Issued (Form REG-06)</option>
+                        <option value="REJECTED">Application Rejected</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Issued GSTIN <span class="text-secondary">(Required if registration is approved)</span></label>
+                    <input type="text" id="supGstin" maxlength="15" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. 27ABCDE1234F1Z5">
+                    <p class="text-[11px] text-secondary mt-1">Entering your approved GSTIN will immediately connect to SimpleGST filing and live GSTR-2B syncing.</p>
+                  </div>
+                </div>
+
+                <!-- PATH B CONTAINER: STATUTORY EXEMPTION -->
+                <div id="boxPathGstExempt" class="p-4 rounded-xl bg-surface-container-low border border-outline-variant space-y-3 hidden">
+                  <h4 class="font-bold text-xs text-on-surface">Record Statutory Exemption Justification</h4>
+                  <div class="space-y-2 text-xs">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="exemptReasonType" value="THRESHOLD" checked class="text-primary focus:ring-primary">
+                      <span>Annual aggregate turnover is strictly below &rupee;40 Lakhs (goods) / &rupee;20 Lakhs (services)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="exemptReasonType" value="EXEMPT_SUPPLIES" class="text-primary focus:ring-primary">
+                      <span>Supplying 100% exempt, nil-rated, or non-taxable supplies (Section 11 CGST Act)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="exemptReasonType" value="INTRA_STATE" class="text-primary focus:ring-primary">
+                      <span>Operating solely within intra-state territorial boundaries without mandatory inter-state mandates</span>
+                    </label>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-on-surface mb-1">Statutory Exemption Note / Self-Declaration</label>
+                    <input type="text" id="supGstExemptionReason" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs focus:ring-primary" placeholder="e.g. Turnover is below ₹20L services threshold for FY 2026-27">
+                  </div>
+                  <p class="text-[11px] text-emerald-800 bg-emerald-50 p-2.5 rounded border border-emerald-200">
+                    Your business will be activated as <strong>Active — Not GST Registered</strong>. You will be able to issue Bills of Supply and track accounting. If your turnover approaches statutory thresholds, you can initiate GST registration anytime.
+                  </p>
                 </div>
 
                 <div class="flex items-center justify-between pt-4 border-t border-outline-variant">
@@ -1029,39 +1205,69 @@
                   <p class="text-xs text-secondary">Set up commercial banking details and statutory accounting methods.</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Bank Name <span class="text-error">*</span></label>
-                    <input type="text" id="supBankName" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. HDFC Bank / ICICI Bank">
-                  </div>
-                  <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Account Holder Name <span class="text-error">*</span></label>
-                    <input type="text" id="supBankHolder" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Business or Proprietor Name">
-                  </div>
+                <!-- Account Status -->
+                <div>
+                  <label class="block text-xs font-semibold text-on-surface mb-1">Commercial Bank Account Status <span class="text-error">*</span></label>
+                  <select id="supAccountStatus" onchange="toggleBankAccountStatus(this.value)" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    <option value="DETAILS_ADDED" selected>Account Opened &bull; Commercial Details Ready</option>
+                    <option value="OPENED">Account In Progress &bull; Bank Verification Pending</option>
+                    <option value="NOT_OPENED">Not Yet Opened &bull; Proceed With Setup (Open Later)</option>
+                  </select>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Bank IFSC Code <span class="text-error">*</span></label>
-                    <input type="text" id="supBankIfsc" maxlength="11" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="HDFC0001234">
+                <!-- Bank Not Opened Guidance -->
+                <div id="boxBankNotOpenedGuidance" class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 text-xs text-blue-900 space-y-1 hidden">
+                  <p class="font-bold">You can proceed without entering bank details now.</p>
+                  <p class="text-[11px] text-blue-800">You may configure your invoice numbering and workspace first. Once your commercial current account is operational, enter the bank details in Business Profile.</p>
+                </div>
+
+                <div id="boxBankDetailsFields" class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Bank Name <span class="text-error">*</span></label>
+                      <input type="text" id="supBankName" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. HDFC Bank / ICICI Bank / SBI">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Account Holder Name <span class="text-error">*</span></label>
+                      <input type="text" id="supBankHolder" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Business Trade Name or Proprietor Name">
+                    </div>
                   </div>
-                  <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Account Number <span class="text-secondary">(Stored safely as last 4 digits)</span></label>
-                    <input type="password" id="supBankAccount" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="••••••••5678">
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Bank IFSC Code <span class="text-error">*</span></label>
+                      <input type="text" id="supBankIfsc" maxlength="11" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="HDFC0001234">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Account Number <span class="text-error">*</span></label>
+                      <input type="password" id="supBankAccount" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Commercial account number">
+                      <span class="text-[10px] text-secondary">Masked securely to last 4 digits after saving</span>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-on-surface mb-1">Confirm Account Number <span class="text-error">*</span></label>
+                      <input type="password" id="supBankConfirmAccount" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Re-enter to confirm">
+                    </div>
                   </div>
                 </div>
 
                 <!-- Accounting Scheme & Opening Balance -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-outline-variant">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-outline-variant">
                   <div>
                     <label class="block text-xs font-semibold text-on-surface mb-1">GST Tax Scheme</label>
                     <select id="supTaxScheme" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                       <option value="REGULAR" selected>Regular Scheme (Full ITC eligibility)</option>
-                      <option value="COMPOSITION">Composition Scheme (Section 10 &bull; 1% to 6% flat tax)</option>
+                      <option value="COMPOSITION">Composition Scheme (Section 10 &bull; 1% to 6%)</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-on-surface mb-1">Opening Cash/Bank Balance <span class="text-secondary">(Optional &bull; Defaults to &rupee;0.00)</span></label>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Accounting Method</label>
+                    <select id="supAccountingMethod" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                      <option value="ACCRUAL" selected>Accrual Basis (Mercantile &bull; Standard)</option>
+                      <option value="CASH">Cash Basis</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-on-surface mb-1">Opening Cash/Bank Balance <span class="text-secondary">(Optional)</span></label>
                     <input type="number" id="supOpeningBalance" step="0.01" min="0" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00">
                   </div>
                 </div>
@@ -1077,18 +1283,18 @@
                 </div>
               </div>
 
-              <!-- STAGE 6: INVOICING SETUP -->
+              <!-- STAGE 6: INVOICING SETUP (RULE 46 COMPLIANCE) -->
               <div id="startupStage6Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm hidden">
                 <div class="space-y-1">
-                  <h3 class="font-bold text-lg text-on-surface">6. GST Invoicing Setup (Rule 46)</h3>
-                  <p class="text-xs text-secondary">Configure statutory invoice prefix, starting numbers, and default HSN/tax rates.</p>
+                  <h3 class="font-bold text-lg text-on-surface">6. GST Invoicing Setup (Rule 46 Compliance)</h3>
+                  <p class="text-xs text-secondary">Configure statutory invoice prefix, sequential numbering, and default HSN/tax rates for outward sales.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label class="block text-xs font-semibold text-on-surface mb-1">Invoice Numbering Prefix <span class="text-error">*</span></label>
                     <input type="text" id="supInvPrefix" oninput="updateInvoicePreview()" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary" placeholder="INV/2026-27/" value="INV/2026-27/">
-                    <span class="text-[10px] text-secondary">Statutory rule: Sequential within fiscal year</span>
+                    <span class="text-[10px] text-secondary">Statutory rule: Sequential within fiscal year &bull; max 16 chars</span>
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-on-surface mb-1">Starting Serial Number</label>
@@ -1104,52 +1310,56 @@
                   <div>
                     <label class="block text-xs font-semibold text-on-surface mb-1">Default GST Rate</label>
                     <select id="supGstRate" onchange="updateInvoicePreview()" class="w-full px-3.5 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                      <option value="0">0% (Nil Rated / Exempt)</option>
+                      <option value="0">0% (Nil Rated / Exempt Supplies)</option>
                       <option value="5">5% (Essential supplies / Logistics)</option>
                       <option value="12">12% (Standard goods &amp; foods)</option>
-                      <option value="18" selected>18% (Standard commercial &amp; services)</option>
+                      <option value="18" selected>18% (Standard commercial &amp; IT services)</option>
                       <option value="28">28% (Luxury / De-merit goods)</option>
                     </select>
                   </div>
                 </div>
 
-                <!-- Live Invoice Preview Card -->
+                <!-- Live Rule 46 Invoice Preview Card -->
                 <div class="p-4 rounded-xl bg-surface border border-outline-variant space-y-3">
                   <div class="flex items-center justify-between border-b border-outline-variant pb-2">
                     <span class="text-xs font-bold text-on-surface flex items-center gap-1.5">
                       <span class="material-symbols-outlined text-[16px] text-primary">receipt</span>
-                      <span>Live GST Tax Invoice Preview (Rule 46)</span>
+                      <span>Live Statutory Invoice Preview (Rule 46 &bull; Sales Register Ready)</span>
                     </span>
-                    <span class="text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">ORIGINAL FOR RECIPIENT</span>
+                    <span class="text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded" id="prevInvBadge">TAX INVOICE</span>
                   </div>
                   <div class="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant text-xs space-y-3">
                     <div class="flex justify-between items-start">
                       <div>
-                        <div class="font-bold text-sm text-on-surface" id="prevInvBusinessName">Your Business Name</div>
+                        <div class="font-bold text-sm text-on-surface" id="prevInvBusinessName">Apex Retail Enterprises</div>
                         <div class="text-[11px] text-secondary font-mono" id="prevInvGstin">GSTIN: 27ABCDE1234F1Z5</div>
+                        <div class="text-[10px] text-secondary" id="prevInvAddress">Principal Place of Business, Maharashtra</div>
                       </div>
                       <div class="text-right">
-                        <div class="font-mono font-bold text-primary" id="prevInvNumber">INV/2026-27/001</div>
-                        <div class="text-[11px] text-secondary font-mono">Date: 2026-11-08</div>
+                        <div class="font-mono font-bold text-primary text-sm" id="prevInvNumber">INV/2026-27/001</div>
+                        <div class="text-[11px] text-secondary font-mono">Date: 2026-11-09</div>
+                        <div class="text-[10px] text-secondary font-mono">Place of Supply: 27-Maharashtra</div>
                       </div>
                     </div>
                     <table class="w-full text-left border-collapse border border-outline-variant text-[11px]">
                       <thead class="bg-surface-container-low">
                         <tr>
-                          <th class="p-1.5 border border-outline-variant">Description</th>
-                          <th class="p-1.5 border border-outline-variant">HSN</th>
-                          <th class="p-1.5 border border-outline-variant text-right">Taxable</th>
-                          <th class="p-1.5 border border-outline-variant text-right">Rate</th>
-                          <th class="p-1.5 border border-outline-variant text-right">Total</th>
+                          <th class="p-1.5 border border-outline-variant">Description of Supply</th>
+                          <th class="p-1.5 border border-outline-variant">HSN/SAC</th>
+                          <th class="p-1.5 border border-outline-variant text-right">Taxable Val</th>
+                          <th class="p-1.5 border border-outline-variant text-right">CGST</th>
+                          <th class="p-1.5 border border-outline-variant text-right">SGST</th>
+                          <th class="p-1.5 border border-outline-variant text-right font-bold">Total</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr>
-                          <td class="p-1.5 border border-outline-variant">Consulting / Supply of Goods</td>
+                          <td class="p-1.5 border border-outline-variant">Commercial Goods / Professional Services</td>
                           <td class="p-1.5 border border-outline-variant font-mono" id="prevTableHsn">9983</td>
                           <td class="p-1.5 border border-outline-variant text-right font-mono">&rupee;10,000.00</td>
-                          <td class="p-1.5 border border-outline-variant text-right font-mono" id="prevTableRate">18%</td>
-                          <td class="p-1.5 border border-outline-variant text-right font-mono font-bold" id="prevTableTotal">&rupee;11,800.00</td>
+                          <td class="p-1.5 border border-outline-variant text-right font-mono" id="prevTableCgst">&rupee;900.00 (9%)</td>
+                          <td class="p-1.5 border border-outline-variant text-right font-mono" id="prevTableSgst">&rupee;900.00 (9%)</td>
+                          <td class="p-1.5 border border-outline-variant text-right font-mono font-bold text-primary" id="prevTableTotal">&rupee;11,800.00</td>
                         </tr>
                       </tbody>
                     </table>
@@ -1170,15 +1380,23 @@
               <!-- STAGE 7: GST COMPLIANCE ACTIVATION -->
               <div id="startupStage7Form" class="startup-stage-form space-y-6 p-6 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm hidden">
                 <div class="space-y-1">
-                  <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300" id="badgeActivationReadiness">
                     <span class="material-symbols-outlined text-[14px]">check_circle</span>
-                    <span>Ready for Launch</span>
+                    <span>Ready for Workspace Activation</span>
                   </div>
-                  <h3 class="font-bold text-xl text-on-surface">7. GST Compliance Activation</h3>
-                  <p class="text-xs text-secondary">Your business profile is prepared. Connect to live SimpleGST statutory filing and ledger management.</p>
+                  <h3 class="font-bold text-xl text-on-surface">7. GST Compliance Workspace Activation</h3>
+                  <p class="text-xs text-secondary">Review your pre-activation readiness matrix and launch your operational compliance workspace.</p>
                 </div>
 
-                <!-- Activation Matrix -->
+                <!-- 8-Point Pre-Activation Verification Matrix -->
+                <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-low space-y-3">
+                  <h4 class="font-bold text-xs text-on-surface">Pre-Activation Verification Matrix (8 Statutory Criteria)</h4>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" id="boxPreActivationMatrix">
+                    <!-- Dynamic 8 checklist criteria -->
+                  </div>
+                </div>
+
+                <!-- Operational Modules Wire-up -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-low space-y-2">
                     <span class="material-symbols-outlined text-primary text-xl">point_of_sale</span>
@@ -1203,15 +1421,41 @@
                 </div>
 
                 <!-- Launch Banner -->
-                <div class="p-6 rounded-2xl bg-gradient-to-r from-primary to-primary-container text-on-primary shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="p-6 rounded-2xl bg-gradient-to-r from-primary to-primary-container text-on-primary shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4" id="bannerLaunchWorkspace">
                   <div class="space-y-1 text-center sm:text-left">
                     <h4 class="text-lg font-bold">Launch your live business workspace</h4>
                     <p class="text-xs text-on-primary/90">Commence outward billing, supplier expense recording, and automated GST compliance.</p>
                   </div>
-                  <button type="button" onclick="launchStartupWorkspace()" class="px-6 py-3 rounded-xl bg-white text-slate-900 font-extrabold text-xs shadow hover:bg-slate-50 transition-all cursor-pointer shrink-0 flex items-center gap-2">
+                  <button type="button" onclick="launchStartupWorkspace()" id="btnLaunchWorkspaceMain" class="px-6 py-3 rounded-xl bg-white text-slate-900 font-extrabold text-xs shadow hover:bg-slate-50 transition-all cursor-pointer shrink-0 flex items-center gap-2">
                     <span>LAUNCH WORKSPACE</span>
                     <span class="material-symbols-outlined text-[16px] text-primary">rocket_launch</span>
                   </button>
+                </div>
+
+                <!-- Post-Activation Success Banner (Hidden initially) -->
+                <div id="bannerActivationSuccess" class="p-6 rounded-2xl bg-emerald-950 text-white border border-emerald-700 shadow-xl space-y-4 hidden">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                      <span class="material-symbols-outlined text-2xl">verified</span>
+                    </div>
+                    <div>
+                      <h4 class="text-base font-bold text-emerald-100">Startup Express Compliance Workspace Active!</h4>
+                      <p class="text-xs text-emerald-300/80" id="txtActivationSuccessSub">Your business profile and outward invoice numbering are operational in SimpleGST.</p>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-3 pt-2">
+                    <button type="button" onclick="switchSuite('sales')" class="px-4 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[16px]">receipt</span>
+                      <span>Go to Sales Invoices (Outward Register) &rarr;</span>
+                    </button>
+                    <button type="button" onclick="switchSuite('fileGst')" class="px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-colors cursor-pointer flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[16px]">assignment_turned_in</span>
+                      <span>File GST (GSTR-1 &amp; GSTR-3B) &rarr;</span>
+                    </button>
+                    <button type="button" onclick="switchSuite('home')" class="px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-colors cursor-pointer">
+                      <span>Home Workspace &rarr;</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div class="flex items-center justify-between pt-4 border-t border-outline-variant">
@@ -1238,7 +1482,7 @@
 
                 <div class="space-y-2">
                   <div class="flex justify-between text-xs">
-                    <span class="text-secondary" id="dashBusinessName">Business Setup</span>
+                    <span class="text-secondary font-medium" id="dashBusinessName">Proposed Business</span>
                     <span class="font-bold font-mono text-primary" id="dashProgressPct">0%</span>
                   </div>
                   <div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
@@ -1250,17 +1494,17 @@
                 <div class="p-3.5 rounded-lg bg-emerald-50/70 border border-emerald-200 text-xs space-y-2">
                   <div class="font-bold text-emerald-950 flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-emerald-700 text-[16px]">play_circle</span>
-                    <span>Next Recommended Action</span>
+                    <span id="dashNextActionTitle">Next Recommended Action</span>
                   </div>
                   <p class="text-emerald-900 leading-relaxed" id="dashNextActionText">
                     Select your legal structure and enter your proposed business trade name.
                   </p>
-                  <button type="button" onclick="resumeStartupExpress()" class="w-full py-2 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-semibold transition-colors cursor-pointer">
-                    Continue Setup &rarr;
+                  <button type="button" onclick="resumeStartupExpress()" id="btnDashContinueAction" class="w-full py-2 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-semibold transition-colors cursor-pointer flex items-center justify-center gap-1">
+                    <span id="txtDashContinueAction">Continue Setup &rarr;</span>
                   </button>
                 </div>
 
-                <!-- Document Checklist -->
+                <!-- Document Checklist Readiness -->
                 <div class="space-y-2 pt-2 border-t border-outline-variant">
                   <h4 class="font-bold text-xs text-on-surface flex items-center justify-between">
                     <span>Document Checklist</span>
@@ -1282,6 +1526,10 @@
                     <div class="flex justify-between items-center">
                       <span class="text-secondary">GST Registration:</span>
                       <span class="font-mono text-[11px] px-2 py-0.5 rounded bg-surface-container font-semibold" id="dashGstBadge">NOT_APPLIED</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-secondary">Bank Account:</span>
+                      <span class="font-mono text-[11px] px-2 py-0.5 rounded bg-surface-container font-semibold" id="dashBankBadge">NOT_OPENED</span>
                     </div>
                   </div>
                 </div>
@@ -1326,7 +1574,7 @@
                 </div>
 
                 <p class="text-[10px] text-secondary/80 border-t border-outline-variant pt-2 leading-relaxed">
-                  Notice: Guidance provided for preparation purposes only. Requirements depend on business jurisdiction and activity.
+                  Notice: Guidance provided for statutory preparation only. Requirements depend on business jurisdiction and activity.
                 </p>
               </div>
 
@@ -7390,6 +7638,25 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
             <span id="loginErrorText">Invalid email or password</span>
           </div>
 
+          <!-- Quick Default Credentials Banner -->
+          <div class="p-3 bg-blue-50/90 border border-blue-200 rounded-xl text-xs flex items-center justify-between text-blue-900 mb-1">
+            <div>
+              <div class="font-bold flex items-center gap-1.5 text-blue-900">
+                <span class="material-symbols-outlined text-[16px] text-blue-600">vpn_key</span>
+                <span>Default Account Credentials</span>
+              </div>
+              <div class="text-[11px] text-blue-800 mt-0.5">
+                Email: <code class="font-mono font-bold bg-white px-1.5 py-0.5 rounded border border-blue-200 text-blue-950">admin@simplegst.in</code>
+                <span class="mx-1 text-blue-400">|</span>
+                Pass: <code class="font-mono font-bold bg-white px-1.5 py-0.5 rounded border border-blue-200 text-blue-950">Admin@123</code>
+              </div>
+            </div>
+            <button type="button" onclick="fillAdminCredentials()" class="px-3 py-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition-colors cursor-pointer shrink-0 shadow-xs flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">bolt</span>
+              <span>Auto Fill</span>
+            </button>
+          </div>
+
           <!-- Form 1: Sign In -->
           <form id="formSignIn" onsubmit="handleSignInSubmit(event)" class="space-y-4" autocomplete="off">
             <!-- Hidden dummy inputs to prevent browser autofill of saved credentials -->
@@ -7397,10 +7664,10 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
             <input type="password" style="display:none" aria-hidden="true" autocomplete="false" tabindex="-1">
 
             <div>
-              <label class="block text-xs font-semibold text-on-surface mb-1.5" for="loginIdentifier">Email Address</label>
+              <label class="block text-xs font-semibold text-on-surface mb-1.5" for="loginIdentifier">Email / Username</label>
               <div class="relative">
                 <span class="material-symbols-outlined text-[18px] text-secondary absolute left-3 top-2.5">mail</span>
-                <input type="email" id="loginIdentifier" name="user_auth_email" class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" placeholder="name@company.com" required autocomplete="off" value="">
+                <input type="text" inputmode="email" id="loginIdentifier" name="user_auth_email" class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" placeholder="admin@simplegst.in or admin" required autocomplete="off" value="">
               </div>
             </div>
 
