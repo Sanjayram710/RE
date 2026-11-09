@@ -98,12 +98,12 @@
       <!-- Brand Logo & Mobile Close -->
       <div class="flex items-center justify-between pb-3 border-b border-outline-variant">
         <div class="flex items-center gap-2.5 cursor-pointer" onclick="window.location.href='/'" title="Return to Landing Page">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+          <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-sm border border-slate-800">
             <span class="material-symbols-outlined text-2xl">account_balance</span>
           </div>
           <div class="flex flex-col">
-            <span class="font-display font-extrabold text-xl tracking-tight text-slate-900">Simple<span class="text-blue-600">GST</span></span>
-            <span class="font-label-sm text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Compliance OS</span>
+            <span class="font-display font-bold text-xl tracking-tight text-slate-900">Simple<span class="text-blue-600">GST</span></span>
+            <span class="font-label-sm text-[10px] text-slate-500 font-medium tracking-wide">Compliance OS</span>
           </div>
         </div>
         <!-- Mobile Drawer Close Button -->
@@ -342,7 +342,7 @@
       </button>
 
       <!-- Sign In Button for Unauthenticated State -->
-      <button id="btnNavSignIn" onclick="openAuthModal('signin')" class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 text-white font-display font-bold text-xs shadow-md shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer" title="Sign In to SimpleGST">
+      <button id="btnNavSignIn" onclick="openAuthModal('signin')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white font-semibold text-xs shadow-sm transition-colors cursor-pointer" title="Sign In to SimpleGST">
         <span class="material-symbols-outlined text-[16px]">login</span>
         <span>Sign In</span>
       </button>
@@ -466,7 +466,7 @@
         <!-- VIEW A: LANDING PAGE -->
         <section id="startupLandingView" class="space-y-10">
           <!-- Hero Banner -->
-          <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white p-8 md:p-12 shadow-xl border border-emerald-500/20">
+          <div class="relative overflow-hidden rounded-2xl bg-slate-900 text-white p-8 md:p-12 shadow-sm border border-slate-800">
             <div class="relative z-10 max-w-3xl space-y-4">
               <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                 <span class="material-symbols-outlined text-[16px]">rocket_launch</span>
@@ -1796,7 +1796,7 @@
             <input type="file" id="salesDocFileInput" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="handleSalesDocSelected(event)">
             <button onclick="openNewInvoiceModal()" class="h-10 px-4 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer">
               <span class="material-symbols-outlined text-[18px]">add</span>
-              <span>+ Add Sales Invoice</span>
+              <span>Add Sales Invoice</span>
             </button>
             <button onclick="window.open('/api/reports/sales/csv')" class="h-10 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md flex items-center gap-2 border border-outline-variant transition-colors cursor-pointer shadow-sm">
               <span class="material-symbols-outlined text-[18px]">download</span>
@@ -1877,7 +1877,7 @@
               <span class="material-symbols-outlined text-[24px]">receipt_long</span>
             </div>
             <p class="font-body-md text-on-surface font-medium">No sales invoices found for this filing period.</p>
-            <p class="text-xs text-secondary">Click <strong>+ Add Sales Invoice</strong> or upload an invoice PDF to record sales.</p>
+            <p class="text-xs text-secondary">Click <strong>Add Sales Invoice</strong> or upload an invoice PDF to record sales.</p>
           </div>
         </div>
 
@@ -1932,7 +1932,7 @@
             <input type="file" id="purchaseDocFileInput" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="handlePurchaseDocSelected(event)">
             <button onclick="openNewPurchaseModal()" class="h-10 px-4 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer">
               <span class="material-symbols-outlined text-[18px]">add</span>
-              <span>+ Add Purchase Bill</span>
+              <span>Add Purchase Bill</span>
             </button>
             <button onclick="window.open('/api/reports/purchases/csv')" class="h-10 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md flex items-center gap-2 border border-outline-variant transition-colors cursor-pointer shadow-sm">
               <span class="material-symbols-outlined text-[18px]">download</span>
@@ -2012,7 +2012,7 @@
               <span class="material-symbols-outlined text-[24px]">shopping_bag</span>
             </div>
             <p class="font-body-md text-on-surface font-medium">No purchase bills found for this filing period.</p>
-            <p class="text-xs text-secondary">Click <strong>+ Add Purchase Bill</strong> or upload a bill PDF to record inward purchases.</p>
+            <p class="text-xs text-secondary">Click <strong>Add Purchase Bill</strong> or upload a bill PDF to record inward purchases.</p>
           </div>
         </div>
 
@@ -2356,7 +2356,7 @@
 </div>
 <div class="flex flex-col min-w-0">
 <span class="font-label-md text-label-md font-bold text-on-primary-container">3. ITC Reconciliation</span>
-<span class="text-[11px] text-on-primary-fixed font-semibold tracking-wide">Active ⚡ 88% Matched</span>
+<span class="text-[11px] text-on-primary-fixed font-semibold tracking-wide">Active • 88% Matched</span>
 </div>
 </div>
 <!-- Step 4: Tax Calculation -->
@@ -2800,6 +2800,10 @@
 </div>
 <!-- Secondary Auxiliary Tools -->
 <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+<button onclick="switchSuite('file-gst')" class="min-h-[40px] px-3.5 py-2 rounded-lg bg-primary text-on-primary text-label-md font-label-md flex items-center gap-2 hover:bg-primary-container transition-colors shadow-sm whitespace-nowrap shrink-0 cursor-pointer">
+<span class="material-symbols-outlined text-body-md" data-icon="arrow_back">arrow_back</span>
+<span class="">Return to Guided Filing</span>
+</button>
 <button class="min-h-[40px] px-3.5 py-2 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface text-label-md font-label-md flex items-center gap-2 hover:bg-surface-container-low transition-colors shadow-sm whitespace-nowrap shrink-0">
 <span class="material-symbols-outlined text-body-md text-primary" data-icon="file_download">file_download</span>
 <span class="">Export Tax Computation Excel</span>
@@ -2855,7 +2859,7 @@
 <span class="material-symbols-outlined text-body-md" data-icon="bolt">bolt</span>
 </div>
 <div class="flex flex-col min-w-0">
-<div class="flex items-center gap-1"><span class="text-label-sm font-label-sm text-primary font-bold">Step 4 of 5 (Active) ⚡</span></div>
+<div class="flex items-center gap-1"><span class="text-label-sm font-label-sm text-primary font-bold">Step 4 of 5 (Active)</span></div>
 <span class="text-label-md font-label-md text-primary font-bold truncate">4. Tax Calculation</span>
 <span class="text-[11px] text-on-surface font-medium truncate">Inter-head Set-off</span>
 </div>
@@ -2889,10 +2893,10 @@
 </div>
 </div>
 <div class="mt-4">
-<div class="text-numeric-lg font-numeric-lg text-on-surface font-bold tracking-tight">₹1,51,650.00</div>
+<div class="text-numeric-lg font-numeric-lg text-on-surface font-bold tracking-tight" id="taxCalcMetricOutputTax">₹1,51,650.00</div>
 <div class="flex items-center gap-1.5 mt-1.5 text-label-sm font-label-sm text-on-surface-variant">
 <span class="">Taxable Value:</span>
-<span class="font-semibold text-on-surface">₹8,42,500.00</span>
+<span class="font-semibold text-on-surface" id="taxCalcMetricTaxableValue">₹8,42,500.00</span>
 </div>
 </div>
 </div>
@@ -2908,8 +2912,8 @@
 </div>
 </div>
 <div class="mt-4">
-<div class="text-numeric-lg font-numeric-lg text-primary font-bold tracking-tight">₹74,214.00</div>
-<div class="flex items-center gap-1.5 mt-1.5 text-label-sm font-label-sm text-primary">
+<div class="text-numeric-lg font-numeric-lg text-primary font-bold tracking-tight" id="taxCalcMetricItc">₹74,214.00</div>
+<div class="flex items-center gap-1.5 mt-1.5 text-label-sm font-label-sm text-primary" id="taxCalcMetricItcSub">
 <span class="material-symbols-outlined text-[14px]" data-icon="verified">verified</span>
 <span class="">100% Reconciled vs GSTR-2B</span>
 </div>
@@ -2926,17 +2930,17 @@
 </div>
 </div>
 <div class="mt-4">
-<div class="text-numeric-lg font-numeric-lg text-on-surface font-bold tracking-tight">₹15,000.00</div>
-<div class="flex items-center gap-1.5 mt-1.5 text-label-sm font-label-sm text-on-surface-variant">
+<div class="text-numeric-lg font-numeric-lg text-on-surface font-bold tracking-tight" id="taxCalcMetricCashLedger">₹15,000.00</div>
+<div class="flex items-center gap-1.5 mt-1.5 text-label-sm font-label-sm text-on-surface-variant" id="taxCalcMetricCashLedgerSub">
 <span class="">Available:</span>
 <span class="font-medium text-on-surface">CGST ₹7,500 | SGST ₹7,500</span>
 </div>
 </div></div>
 <!-- Metric Card 4: Net Cash Tax Payable -->
-<div class="p-5 rounded-xl bg-error-container/20 border border-error/30 shadow-sm flex flex-col justify-between relative overflow-hidden"><div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-error/10 pointer-events-none"></div>
+<div class="p-5 rounded-xl bg-error-container/20 border border-error/30 shadow-sm flex flex-col justify-between relative overflow-hidden" id="taxCalcMetricShortfallCard"><div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-error/10 pointer-events-none"></div>
 <div class="flex items-start justify-between">
 <div class="flex flex-col">
-<span class="text-label-md font-label-md text-error font-bold">Net Cash Tax Shortfall</span>
+<span class="text-label-md font-label-md text-error font-bold" id="taxCalcMetricShortfallTitle">Net Cash Tax Shortfall</span>
 <span class="text-label-sm font-label-sm text-on-surface-variant">Deficit to Pay via Challan PMT-06</span>
 </div>
 <div class="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error">
@@ -2944,8 +2948,8 @@
 </div>
 </div>
 <div class="mt-4">
-<div class="text-numeric-lg font-numeric-lg text-error font-bold tracking-tight">₹62,436.00</div>
-<div class="flex items-center justify-between gap-1 mt-1.5 text-label-sm font-label-sm text-error font-medium">
+<div class="text-numeric-lg font-numeric-lg text-error font-bold tracking-tight" id="taxCalcMetricNetShortfall">₹62,436.00</div>
+<div class="flex items-center justify-between gap-1 mt-1.5 text-label-sm font-label-sm text-error font-medium" id="taxCalcMetricShortfallSub">
 <span class="">CGST ₹31,218 + SGST ₹31,218</span>
 <span class="material-symbols-outlined text-[14px]" data-icon="warning">warning</span>
 </div>
@@ -2992,7 +2996,7 @@
 <th class="py-3 px-4 uppercase tracking-wider font-semibold text-right text-error font-bold">Challan Required</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-outline-variant/60 font-body-sm text-body-sm">
+<tbody class="divide-y divide-outline-variant/60 font-body-sm text-body-sm" id="taxCalcTable61Body">
 <!-- Row 1: Integrated Tax (IGST) -->
 <tr class="hover:bg-surface-container-low/50 transition-colors">
 <td class="py-3.5 px-4 font-semibold text-on-surface">
@@ -3064,7 +3068,7 @@
 <span class="material-symbols-outlined text-primary text-body-lg flex-shrink-0 mt-0.5" data-icon="info">info</span>
 <div class="text-body-sm font-body-sm text-on-surface-variant space-y-1">
 <p class="font-semibold text-on-surface">Understanding the Inter-Head Utilization Rule (Section 49 of CGST Act):</p>
-<p class="">
+<p class="" id="taxCalcRuleCalloutText">
               Integrated Tax (IGST) credit must always be exhausted completely before utilizing CGST or SGST credits. 
               <strong>Crucial:</strong> CGST credit can never be used to pay SGST liability, and SGST credit can never be used to pay CGST liability. 
               Your remaining CGST/SGST liability of ₹77,436 is partially offset by your ₹15,000 electronic cash balance, leaving a final deficit of <strong>₹62,436.00</strong> to be paid through a GST PMT-06 challan.
@@ -5308,7 +5312,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 </button>
 <button class="min-h-[36px] px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0">
 <span class="material-symbols-outlined text-[18px]">add_business</span>
-<span>+ Add New State GSTIN</span>
+<span>Add New State GSTIN</span>
 </button>
 </div>
 </div>
@@ -5907,7 +5911,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
                 <!-- Category Filter Tabs -->
         <div class="plans-filter-bar">
           <button class="filter-tab-pill hidden" onclick="filterExpertPlans('all', this)">All Offerings</button>
-          <button class="filter-tab-pill" style="border-color: #0F67FE; color: #0F67FE; background: #EFF6FF;" onclick="filterExpertPlans('free_trial', this)">🎁 Free for 1 Month</button>
+          <button class="filter-tab-pill" style="border-color: #0F67FE; color: #0F67FE; background: #EFF6FF;" onclick="filterExpertPlans('free_trial', this)"><span class="material-symbols-outlined text-[14px] align-middle mr-1 text-primary">card_membership</span>Free for 1 Month</button>
           <button class="filter-tab-pill" onclick="filterExpertPlans('filing', this)">Salaried & Job Switches</button>
           <button class="filter-tab-pill" onclick="filterExpertPlans('wealth', this)">Capital Gains & Traders</button>
           <button class="filter-tab-pill" onclick="filterExpertPlans('foreign', this)">Foreign Assets / FAST-DS</button>
@@ -5969,19 +5973,19 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
               <!-- Trial Features Grid -->
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 20px;">
                 <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
-                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">👨‍💼 Dedicated Senior CA</div>
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;"><span class="material-symbols-outlined text-[16px] text-emerald-700 align-middle mr-1">person</span>Dedicated Senior CA</div>
                   <div style="font-size: 12px; color: #475569;">1-on-1 filing assistance with CA Anwin Ramachandran (ICAI verified #512891).</div>
                 </div>
                 <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
-                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">⚖️ Regime Optimization</div>
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;"><span class="material-symbols-outlined text-[16px] text-emerald-700 align-middle mr-1">balance</span>Regime Optimization</div>
                   <div style="font-size: 12px; color: #475569;">Algorithmic and CA review comparing Old vs Section 115BAC New Regime.</div>
                 </div>
                 <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
-                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">🔍 Form 26AS & AIS Audit</div>
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;"><span class="material-symbols-outlined text-[16px] text-emerald-700 align-middle mr-1">search</span>Form 26AS & AIS Audit</div>
                   <div style="font-size: 12px; color: #475569;">Reconciliation of high-value transactions, TDS certificates, and tax credits.</div>
                 </div>
                 <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
-                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">🛡️ Notice Defense Protection</div>
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;"><span class="material-symbols-outlined text-[16px] text-emerald-700 align-middle mr-1">shield</span>Notice Defense Protection</div>
                   <div style="font-size: 12px; color: #475569;">Complete defense coverage in case of Section 143(1) intimation notices.</div>
                 </div>
               </div>
@@ -6032,7 +6036,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
               <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
                   <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 18px;">📄</span>
+                    <span class="material-symbols-outlined text-[18px] text-slate-500">description</span>
                     <div>
                       <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Form 16 (Part A & B) - Employer Salary Certificate</div>
                       <div style="font-size: 11px; color: #64748B;">Gross Salary: ₹15,00,000 • TDS Deducted: ₹1,65,000 • OCR Parsed</div>
@@ -6043,7 +6047,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
                   <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 18px;">📑</span>
+                    <span class="material-symbols-outlined text-[18px] text-slate-500">receipt_long</span>
                     <div>
                       <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Form 26AS & Annual Information Statement (AIS)</div>
                       <div style="font-size: 11px; color: #64748B;">Auto-matched with ITD Portal • ₹1,65,000 tax credit fully confirmed</div>
@@ -6054,7 +6058,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
                   <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 18px;">📈</span>
+                    <span class="material-symbols-outlined text-[18px] text-slate-500">trending_up</span>
                     <div>
                       <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Capital Gains Statement (Zerodha / Groww)</div>
                       <div style="font-size: 11px; color: #64748B;">₹1,00,000 STCG / LTCG mapped into Schedule CG with 112A grandfathering</div>
@@ -6065,7 +6069,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
                   <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 18px;">🏥</span>
+                    <span class="material-symbols-outlined text-[18px] text-slate-500">health_and_safety</span>
                     <div>
                       <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Chapter VI-A Deductions & House Rent Proofs</div>
                       <div style="font-size: 11px; color: #64748B;">Sec 80C (₹1.5L) + Sec 80D (₹25k) + Sec 10(13A) HRA (₹1.2L) scrutinized</div>
@@ -6093,7 +6097,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
                   <h4 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-top: 6px;">Your Dedicated Chartered Accountant</h4>
                   <p style="font-size: 13px; color: #64748B; margin-top: 2px;">Assigned Senior Chartered Accountant managing your return end-to-end.</p>
                 </div>
-                <button class="btn btn-outline btn-sm" onclick="openCaChatFocus()">💬 Open CA Chat</button>
+                <button class="btn btn-outline btn-sm" onclick="openCaChatFocus()"><span class="material-symbols-outlined text-[16px] mr-1 align-middle text-slate-500">chat</span>Open CA Chat</button>
               </div>
 
               <!-- CA Details & Slot Card -->
@@ -6122,7 +6126,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
               <!-- CA Preliminary Finding -->
               <div style="background: #FAF5FF; border: 1px solid #E9D5FF; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                  <span style="font-size: 16px;">📝</span>
+                  <span class="material-symbols-outlined text-[16px] text-purple-700 align-middle">edit_note</span>
                   <strong style="font-size: 13px; color: #581C87;">CA Anwin's Audit Note:</strong>
                 </div>
                 <p style="font-size: 13px; color: #3B0764; line-height: 1.5; margin: 0;">
@@ -6218,7 +6222,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
               <!-- Expected Refund Alert Box -->
               <div style="display: flex; align-items: center; justify-content: space-between; background: #DCFCE7; border: 1px solid #86EFAC; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                  <span style="font-size: 26px;">💰</span>
+                  <span class="material-symbols-outlined text-[24px] text-emerald-700">payments</span>
                   <div>
                     <div style="font-size: 14px; font-weight: 800; color: #14532D;">Expected Direct Tax Refund: ₹ 24,600</div>
                     <div style="font-size: 12px; color: #166534;">Refund will be credited directly to validated HDFC Bank A/c ending ****4431 within 7-10 working days.</div>
