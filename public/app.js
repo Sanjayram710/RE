@@ -2068,6 +2068,23 @@ async function handleSignInSubmit(e) {
 }
 window.handleSignInSubmit = handleSignInSubmit;
 
+function fillAdminCredentials() {
+  const idInput = document.getElementById("loginIdentifier");
+  const passInput = document.getElementById("loginPassword");
+  if (idInput) {
+    idInput.value = "admin@simplegst.in";
+    idInput.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  if (passInput) {
+    passInput.value = "Admin@123";
+    passInput.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  if (typeof showToast === "function") {
+    showToast("Admin credentials loaded! Click Sign In to enter.", "info");
+  }
+}
+window.fillAdminCredentials = fillAdminCredentials;
+
 function handleRegisterSubmit(e) {
   if (e && e.preventDefault) e.preventDefault();
   const name = document.getElementById("regFullName")?.value.trim() || "New Taxpayer";
