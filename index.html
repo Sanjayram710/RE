@@ -342,7 +342,7 @@
       </button>
 
       <!-- Sign In Button for Unauthenticated State -->
-      <button id="btnNavSignIn" onclick="openAuthModal('signin')" class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 text-white font-display font-bold text-xs shadow-md shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer" title="Sign In to SimpleGST">
+      <button id="btnNavSignIn" onclick="openAuthModal('signin')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white font-semibold text-xs shadow-sm transition-colors cursor-pointer" title="Sign In to SimpleGST">
         <span class="material-symbols-outlined text-[16px]">login</span>
         <span>Sign In</span>
       </button>
@@ -466,7 +466,7 @@
         <!-- VIEW A: LANDING PAGE -->
         <section id="startupLandingView" class="space-y-10">
           <!-- Hero Banner -->
-          <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white p-8 md:p-12 shadow-xl border border-emerald-500/20">
+          <div class="relative overflow-hidden rounded-2xl bg-slate-900 text-white p-8 md:p-12 shadow-sm border border-slate-800">
             <div class="relative z-10 max-w-3xl space-y-4">
               <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                 <span class="material-symbols-outlined text-[16px]">rocket_launch</span>
@@ -2356,7 +2356,7 @@
 </div>
 <div class="flex flex-col min-w-0">
 <span class="font-label-md text-label-md font-bold text-on-primary-container">3. ITC Reconciliation</span>
-<span class="text-[11px] text-on-primary-fixed font-semibold tracking-wide">Active ⚡ 88% Matched</span>
+<span class="text-[11px] text-on-primary-fixed font-semibold tracking-wide">Active • 88% Matched</span>
 </div>
 </div>
 <!-- Step 4: Tax Calculation -->
@@ -2855,7 +2855,7 @@
 <span class="material-symbols-outlined text-body-md" data-icon="bolt">bolt</span>
 </div>
 <div class="flex flex-col min-w-0">
-<div class="flex items-center gap-1"><span class="text-label-sm font-label-sm text-primary font-bold">Step 4 of 5 (Active) ⚡</span></div>
+<div class="flex items-center gap-1"><span class="text-label-sm font-label-sm text-primary font-bold">Step 4 of 5 (Active)</span></div>
 <span class="text-label-md font-label-md text-primary font-bold truncate">4. Tax Calculation</span>
 <span class="text-[11px] text-on-surface font-medium truncate">Inter-head Set-off</span>
 </div>
@@ -5907,7 +5907,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
                 <!-- Category Filter Tabs -->
         <div class="plans-filter-bar">
           <button class="filter-tab-pill hidden" onclick="filterExpertPlans('all', this)">All Offerings</button>
-          <button class="filter-tab-pill" style="border-color: #0F67FE; color: #0F67FE; background: #EFF6FF;" onclick="filterExpertPlans('free_trial', this)">🎁 Free for 1 Month</button>
+          <button class="filter-tab-pill" style="border-color: #0F67FE; color: #0F67FE; background: #EFF6FF;" onclick="filterExpertPlans('free_trial', this)"><span class="material-symbols-outlined text-[14px] align-middle mr-1 text-primary">card_membership</span>Free for 1 Month</button>
           <button class="filter-tab-pill" onclick="filterExpertPlans('filing', this)">Salaried & Job Switches</button>
           <button class="filter-tab-pill" onclick="filterExpertPlans('wealth', this)">Capital Gains & Traders</button>
           <button class="filter-tab-pill" onclick="filterExpertPlans('foreign', this)">Foreign Assets / FAST-DS</button>
@@ -5969,19 +5969,19 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
               <!-- Trial Features Grid -->
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 20px;">
                 <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
-                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">👨‍💼 Dedicated Senior CA</div>
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;"><span class="material-symbols-outlined text-[16px] text-emerald-700 align-middle mr-1">person</span>Dedicated Senior CA</div>
                   <div style="font-size: 12px; color: #475569;">1-on-1 filing assistance with CA Anwin Ramachandran (ICAI verified #512891).</div>
                 </div>
                 <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
-                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">⚖️ Regime Optimization</div>
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;"><span class="material-symbols-outlined text-[16px] text-emerald-700 align-middle mr-1">balance</span>Regime Optimization</div>
                   <div style="font-size: 12px; color: #475569;">Algorithmic and CA review comparing Old vs Section 115BAC New Regime.</div>
                 </div>
                 <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
-                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">🔍 Form 26AS & AIS Audit</div>
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;"><span class="material-symbols-outlined text-[16px] text-emerald-700 align-middle mr-1">search</span>Form 26AS & AIS Audit</div>
                   <div style="font-size: 12px; color: #475569;">Reconciliation of high-value transactions, TDS certificates, and tax credits.</div>
                 </div>
                 <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 14px;">
-                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;">🛡️ Notice Defense Protection</div>
+                  <div style="font-weight: 700; font-size: 13px; color: #065F46; margin-bottom: 4px;"><span class="material-symbols-outlined text-[16px] text-emerald-700 align-middle mr-1">shield</span>Notice Defense Protection</div>
                   <div style="font-size: 12px; color: #475569;">Complete defense coverage in case of Section 143(1) intimation notices.</div>
                 </div>
               </div>
@@ -6032,7 +6032,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
               <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
                   <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 18px;">📄</span>
+                    <span class="material-symbols-outlined text-[18px] text-slate-500">description</span>
                     <div>
                       <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Form 16 (Part A & B) - Employer Salary Certificate</div>
                       <div style="font-size: 11px; color: #64748B;">Gross Salary: ₹15,00,000 • TDS Deducted: ₹1,65,000 • OCR Parsed</div>
@@ -6043,7 +6043,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
                   <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 18px;">📑</span>
+                    <span class="material-symbols-outlined text-[18px] text-slate-500">receipt_long</span>
                     <div>
                       <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Form 26AS & Annual Information Statement (AIS)</div>
                       <div style="font-size: 11px; color: #64748B;">Auto-matched with ITD Portal • ₹1,65,000 tax credit fully confirmed</div>
@@ -6054,7 +6054,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
                   <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 18px;">📈</span>
+                    <span class="material-symbols-outlined text-[18px] text-slate-500">trending_up</span>
                     <div>
                       <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Capital Gains Statement (Zerodha / Groww)</div>
                       <div style="font-size: 11px; color: #64748B;">₹1,00,000 STCG / LTCG mapped into Schedule CG with 112A grandfathering</div>
@@ -6065,7 +6065,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
                   <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 18px;">🏥</span>
+                    <span class="material-symbols-outlined text-[18px] text-slate-500">health_and_safety</span>
                     <div>
                       <div style="font-size: 13px; font-weight: 600; color: #0F172A;">Chapter VI-A Deductions & House Rent Proofs</div>
                       <div style="font-size: 11px; color: #64748B;">Sec 80C (₹1.5L) + Sec 80D (₹25k) + Sec 10(13A) HRA (₹1.2L) scrutinized</div>
@@ -6093,7 +6093,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
                   <h4 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-top: 6px;">Your Dedicated Chartered Accountant</h4>
                   <p style="font-size: 13px; color: #64748B; margin-top: 2px;">Assigned Senior Chartered Accountant managing your return end-to-end.</p>
                 </div>
-                <button class="btn btn-outline btn-sm" onclick="openCaChatFocus()">💬 Open CA Chat</button>
+                <button class="btn btn-outline btn-sm" onclick="openCaChatFocus()"><span class="material-symbols-outlined text-[16px] mr-1 align-middle text-slate-500">chat</span>Open CA Chat</button>
               </div>
 
               <!-- CA Details & Slot Card -->
@@ -6122,7 +6122,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
               <!-- CA Preliminary Finding -->
               <div style="background: #FAF5FF; border: 1px solid #E9D5FF; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                  <span style="font-size: 16px;">📝</span>
+                  <span class="material-symbols-outlined text-[16px] text-purple-700 align-middle">edit_note</span>
                   <strong style="font-size: 13px; color: #581C87;">CA Anwin's Audit Note:</strong>
                 </div>
                 <p style="font-size: 13px; color: #3B0764; line-height: 1.5; margin: 0;">
@@ -6218,7 +6218,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
               <!-- Expected Refund Alert Box -->
               <div style="display: flex; align-items: center; justify-content: space-between; background: #DCFCE7; border: 1px solid #86EFAC; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                  <span style="font-size: 26px;">💰</span>
+                  <span class="material-symbols-outlined text-[24px] text-emerald-700">payments</span>
                   <div>
                     <div style="font-size: 14px; font-weight: 800; color: #14532D;">Expected Direct Tax Refund: ₹ 24,600</div>
                     <div style="font-size: 12px; color: #166534;">Refund will be credited directly to validated HDFC Bank A/c ending ****4431 within 7-10 working days.</div>
