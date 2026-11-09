@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
 import crypto from "node:crypto";
+import { EventEmitter } from "node:events";
 import {
   initDatabase,
   startupRepo,
@@ -24,23 +25,26 @@ function createMockReqRes({ method = "GET", headers = {}, body = {}, query = {} 
   let responseHeaders = {};
   let responseData = null;
 
-  const res = {
-    writeHead(code, headersObj) {
-      statusCode = code;
-      if (headersObj) Object.assign(responseHeaders, headersObj);
-    },
-    setHeader(name, value) {
-      responseHeaders[name.toLowerCase()] = value;
-    },
-    end(data) {
-      if (data) {
-        try {
-          responseData = JSON.parse(data);
-        } catch {
-          responseData = data;
-        }
+  const res = new EventEmitter();
+  res.writeHead = function(code, headersObj) {
+    statusCode = code;
+    if (headersObj) Object.assign(responseHeaders, headersObj);
+  };
+  res.setHeader = function(name, value) {
+    responseHeaders[name.toLowerCase()] = value;
+  };
+  res.write = function(chunk) {
+    return true;
+  };
+  res.end = function(data) {
+    if (data) {
+      try {
+        responseData = JSON.parse(data);
+      } catch {
+        responseData = data;
       }
     }
+    this.emit("finish");
   };
 
   return { req, res, getStatus: () => statusCode, getData: () => responseData, getHeaders: () => responseHeaders };
@@ -423,4 +427,309 @@ test("Startup Express: Navigation & UI Template Integrity", async () => {
   // 6. Server.js route check
   const serverCode = fs.readFileSync("server.js", "utf8");
   assert.ok(serverCode.includes('pathname === "/startup-express"'), "Server must map /startup-express to index.html");
+});
+
+test("Startup Express: Structure Selection, Document Lifecycle & Workspace Activation", async () => {
+  const testEmail = `founder.e2e.${Date.now()}@example.com`;
+  const user = userRepo.create({
+    email: testEmail,
+    passwordHash: "hash_test_123",
+    fullName: "E2E Startup Founder",
+    role: "OWNER"
+  });
+  const org = orgRepo.create({
+    name: "Initial Startup Hub",
+    pan: "ABCDE1234F"
+  });
+  orgRepo.addMember(org.id, user.id, "OWNER");
+
+  const sessionToken = crypto.randomBytes(32).toString("hex");
+  const csrfToken = crypto.randomBytes(24).toString("hex");
+  sessionRepo.create({
+    userId: user.id,
+    token: sessionToken,
+    csrfToken: csrfToken,
+    activeOrgId: org.id
+  });
+
+  const authHeaders = {
+    authorization: `Bearer ${sessionToken}`
+  };
+
+  // 1. Structure Selection: Proprietorship
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders,
+      body: { structure: "PROPRIETORSHIP" }
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/select-structure", "POST", {}, req.body);
+    assert.strictEqual(getStatus(), 200);
+    assert.ok(getData().success);
+    assert.strictEqual(getData().profile.business_structure, "PROPRIETORSHIP");
+  }
+
+  // 2. Stage 1: Save full business trade details
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders,
+      body: {
+        stage: 1,
+        proposed_business_name: "Apex Retail Solutions",
+        legal_name: "Apex Retail Solutions",
+        business_activity: "Trade (Retail / Wholesale)",
+        business_category: "GOODS",
+        business_description: "Wholesale distribution of commercial electronics",
+        business_state: "Maharashtra",
+        district: "Mumbai",
+        business_pincode: "400001",
+        business_address: "Shop 12, Nariman Point",
+        nature_of_operations: "RETAIL",
+        commencement_date: "2026-11-01"
+      }
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/save-stage", "POST", {}, req.body);
+    assert.strictEqual(getStatus(), 200);
+    assert.strictEqual(getData().profile.proposed_business_name, "Apex Retail Solutions");
+    assert.strictEqual(getData().profile.district, "Mumbai");
+    assert.strictEqual(getData().profile.business_category, "GOODS");
+    assert.ok(getData().profile.completed_stages.includes(1));
+  }
+
+  // 3. Stage 2: Structure-specific PAN check (Proprietorship requires 4th letter 'P')
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders,
+      body: {
+        stage: 2,
+        founder_name: "Rajesh Sharma",
+        founder_pan: "ABCDC1234F" // 4th letter C -> should fail for Proprietorship (requires 'P')
+      }
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/save-stage", "POST", {}, req.body);
+    assert.strictEqual(getStatus(), 400);
+    assert.ok(getData().error.includes("4th letter 'P'"));
+  }
+
+  // 4. Stage 2: Valid Proprietor PAN
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders,
+      body: {
+        stage: 2,
+        founder_name: "Rajesh Sharma",
+        founder_pan: "ABCDE1234F" // 4th letter D? wait: ABCDE1234F has 4th char D.
+      }
+    });
+    // In "ABCDE", char at index 3 is 'D'. For Proprietorship 4th char is index 3 = 'P'. Let's use "ABCPD1234F"
+    req.body.founder_pan = "ABCPD1234F";
+    await handleFunctionalApi(req, res, "/api/startup-express/save-stage", "POST", {}, req.body);
+    assert.strictEqual(getStatus(), 200);
+    assert.strictEqual(getData().profile.founder_pan, "ABCPD1234F");
+  }
+
+  // 5. Document Upload: Real base64 upload
+  let uploadedDocId = null;
+  {
+    const samplePdfBase64 = Buffer.from("%PDF-1.4 sample identity test document").toString("base64");
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders,
+      body: {
+        filename: "founder_pan_card.pdf",
+        category: "FOUNDER_PAN",
+        stage: 2,
+        fileData: `data:application/pdf;base64,${samplePdfBase64}`
+      }
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/documents/upload", "POST", {}, req.body);
+    assert.strictEqual(getStatus(), 201);
+    assert.ok(getData().success);
+    assert.strictEqual(getData().document.original_filename, "founder_pan_card.pdf");
+    uploadedDocId = getData().document.id;
+  }
+
+  // 6. Document Retrieval via streaming endpoint
+  {
+    const { req, res, getStatus } = createMockReqRes({
+      method: "GET",
+      headers: authHeaders
+    });
+    const streamDone = new Promise((resolve) => {
+      res.on("finish", resolve);
+      res.on("close", resolve);
+      res.on("error", resolve);
+    });
+    await handleFunctionalApi(req, res, `/api/startup-express/documents/${uploadedDocId}`, "GET", {}, {});
+    await streamDone;
+    assert.strictEqual(getStatus(), 200);
+  }
+
+  // 7. Structure Switching Warning when later stages already contain data
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders,
+      body: { structure: "PRIVATE_LIMITED" }
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/select-structure", "POST", {}, req.body);
+    assert.strictEqual(getStatus(), 200);
+    assert.strictEqual(getData().warning, true);
+    assert.strictEqual(getData().requiresConfirmation, true);
+  }
+
+  // 8. Stage 3: Dynamic registrations checklist
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders,
+      body: {
+        stage: 3,
+        registration_reference_number: "UDYAM-MH-01-0099887",
+        registration_status: "APPROVED",
+        checklist_items: [
+          { itemKey: "udyam", status: "APPROVED", refNumber: "UDYAM-MH-01-0099887" },
+          { itemKey: "fssai", status: "NOT_APPLICABLE", notApplicableReason: "No food handling involved" }
+        ]
+      }
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/save-stage", "POST", {}, req.body);
+    assert.strictEqual(getStatus(), 200);
+    assert.strictEqual(getData().profile.registration_reference_number, "UDYAM-MH-01-0099887");
+    assert.strictEqual(getData().profile.registration_status, "APPROVED");
+  }
+
+  // 9. Stage 4: Non-GST Statutory Exemption Path
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders,
+      body: {
+        stage: 4,
+        gst_eligibility_type: "EXEMPT_BELOW_THRESHOLD",
+        gst_status: "NOT_REQUIRED_EXEMPT",
+        gst_exemption_reason: "[THRESHOLD] Annual turnover under ₹40L statutory limit"
+      }
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/save-stage", "POST", {}, req.body);
+    assert.strictEqual(getStatus(), 200);
+    assert.strictEqual(getData().profile.gst_status, "NOT_REQUIRED_EXEMPT");
+    assert.strictEqual(getData().profile.gst_eligibility_type, "EXEMPT_BELOW_THRESHOLD");
+  }
+
+  // 10. Stage 5: Bank account confirmation mismatch validation
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders,
+      body: {
+        stage: 5,
+        account_status: "DETAILS_ADDED",
+        bank_name: "State Bank of India",
+        bank_ifsc: "SBIN0001234",
+        bank_account_number: "123456789012",
+        confirm_account_number: "123456789099" // mismatch
+      }
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/save-stage", "POST", {}, req.body);
+    assert.strictEqual(getStatus(), 400);
+    assert.ok(getData().error.includes("do not match"));
+  }
+
+  // 11. Stage 5: Graceful NOT_OPENED bank account handling
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders,
+      body: {
+        stage: 5,
+        account_status: "NOT_OPENED",
+        accounting_scheme: "REGULAR",
+        opening_balance: 0
+      }
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/save-stage", "POST", {}, req.body);
+    assert.strictEqual(getStatus(), 200);
+    assert.ok(getData().profile.completed_stages.includes(5));
+  }
+
+  // 12. Stage 6: Sequential Invoicing Rule 46 Configuration
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders,
+      body: {
+        stage: 6,
+        invoice_prefix: "SE-MUM/",
+        invoice_starting_number: 101,
+        default_hsn: "998311",
+        default_gst_rate: 18
+      }
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/save-stage", "POST", {}, req.body);
+    assert.strictEqual(getStatus(), 200);
+    assert.strictEqual(getData().profile.invoice_prefix, "SE-MUM/");
+    assert.strictEqual(getData().profile.invoice_starting_number, 101);
+  }
+
+  // 13. Pre-Activation & Activation via /api/startup-express/activate
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "POST",
+      headers: authHeaders
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/activate", "POST", {}, {});
+    assert.strictEqual(getStatus(), 200);
+    assert.ok(getData().success);
+    assert.strictEqual(getData().activationStatus, "ACTIVATED_NON_GST");
+    assert.strictEqual(getData().profile.overall_progress, 100);
+    assert.ok(getData().profile.completed_stages.includes(7));
+
+    // Verify Organization table was updated
+    const orgCheck = orgRepo.findById(org.id);
+    assert.strictEqual(orgCheck.name, "Apex Retail Solutions");
+    assert.strictEqual(orgCheck.pan, "ABCPD1234F");
+  }
+
+  // 14. Document Deletion
+  {
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "DELETE",
+      headers: authHeaders
+    });
+    await handleFunctionalApi(req, res, `/api/startup-express/documents/${uploadedDocId}`, "DELETE", {}, {});
+    assert.strictEqual(getStatus(), 200);
+    assert.ok(getData().success);
+  }
+
+  // 15. Tenant Isolation: Org 2 cannot access Org 1 profile or documents
+  {
+    const u2 = userRepo.create({
+      email: `other.${Date.now()}@example.com`,
+      passwordHash: "secret_other",
+      fullName: "Other Founder"
+    });
+    const o2 = orgRepo.create({ name: "Other Org", pan: "ZZZZZ9999Z" });
+    orgRepo.addMember(o2.id, u2.id, "OWNER");
+    const token2 = crypto.randomBytes(32).toString("hex");
+    sessionRepo.create({
+      userId: u2.id,
+      token: token2,
+      csrfToken: "csrf2",
+      activeOrgId: o2.id
+    });
+
+    const { req, res, getStatus, getData } = createMockReqRes({
+      method: "GET",
+      headers: { authorization: `Bearer ${token2}` }
+    });
+    await handleFunctionalApi(req, res, "/api/startup-express/profile", "GET", {}, {});
+    assert.strictEqual(getStatus(), 200);
+    // Org 2 gets its own clean profile, not Org 1's profile
+    assert.strictEqual(getData().profile.org_id, o2.id);
+    assert.strictEqual(getData().profile.proposed_business_name, "");
+  }
 });
