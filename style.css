@@ -238,6 +238,100 @@ header.sticky.top-0 {
 }
 
 /* ==========================================================================
+   Unslop UI/UX Craft Pass (heydamir/unslop)
+   1. Spacing: 4px grid rhythm, balanced cards & dense navigation
+   2. Color: Calm slate neutral ramp, hairline borders, no neon glows
+   3. Icons: Consistent sizing (16-18px), stroke and semantic roles
+   4. Copy: Crisp labels, no duplicate symbols, sentence case
+   5. Type: Tabular figures for amounts & dates, weights 400-600
+   6. Layout: Proportional desktop shell, max-w-7xl content
+   7. Details: Nested radii (buttons 8-10px, cards 12-16px)
+   8. Visuals: Authentic financial data, zero decorative filler
+   9. Motion: Purposeful transitions (140-180ms ease-out), no infinite pulse/ping
+   ========================================================================== */
+
+/* Motion Pass: Calm down perpetual distracting animation loops */
+.animate-pulse,
+.animate-ping {
+  animation: none !important;
+}
+
+/* Typography Pass: Tabular figures on all financial numbers, tables, metrics, and dates */
+table,
+.font-mono,
+.font-numeric-lg,
+[id*="Turnover"],
+[id*="Gst"],
+[id*="Tax"],
+[id*="Amount"],
+[id*="Total"],
+[id*="Count"],
+[id*="Balance"],
+.tabular-nums {
+  font-variant-numeric: tabular-nums lining-nums;
+  -moz-font-feature-settings: "tnum" 1;
+  -webkit-font-feature-settings: "tnum" 1;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Surfaces & Hairline Borders Pass: Quiet hairlines, neutral depth, no colored glows */
+.border-outline-variant {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.shadow-sm,
+.shadow-md {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Remove colored glows and neon drop-shadows */
+[class*="shadow-blue-"],
+[class*="shadow-primary-"],
+[class*="shadow-emerald-"] {
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Button & Nested Radius Polish */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Standardized interactive transition curve from tokens (cubic-bezier(0.22, 1, 0.36, 1)) */
+button,
+a,
+.sidebar-nav-link {
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+  transition-duration: 150ms !important;
+}
+
+/* Neutral subtle hover states instead of bouncy scale transforms */
+button:active,
+.active\:scale-98:active {
+  transform: scale(0.985) !important;
+}
+
+/* Clean table rows: quiet hairlines and balanced row padding */
+table tbody tr {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  transition: background-color 120ms ease;
+}
+
+table tbody tr:hover {
+  background-color: rgba(248, 250, 252, 0.75);
+}
+
+table th {
+  font-weight: 600;
+  color: #64748b;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+/* ==========================================================================
    Top Navigation Header (Matching Screenshot 1 & 9)
    ========================================================================== */
 .navbar-header {

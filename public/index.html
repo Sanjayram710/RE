@@ -98,12 +98,12 @@
       <!-- Brand Logo & Mobile Close -->
       <div class="flex items-center justify-between pb-3 border-b border-outline-variant">
         <div class="flex items-center gap-2.5 cursor-pointer" onclick="window.location.href='/'" title="Return to Landing Page">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+          <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-sm border border-slate-800">
             <span class="material-symbols-outlined text-2xl">account_balance</span>
           </div>
           <div class="flex flex-col">
-            <span class="font-display font-extrabold text-xl tracking-tight text-slate-900">Simple<span class="text-blue-600">GST</span></span>
-            <span class="font-label-sm text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Compliance OS</span>
+            <span class="font-display font-bold text-xl tracking-tight text-slate-900">Simple<span class="text-blue-600">GST</span></span>
+            <span class="font-label-sm text-[10px] text-slate-500 font-medium tracking-wide">Compliance OS</span>
           </div>
         </div>
         <!-- Mobile Drawer Close Button -->
@@ -1796,7 +1796,7 @@
             <input type="file" id="salesDocFileInput" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="handleSalesDocSelected(event)">
             <button onclick="openNewInvoiceModal()" class="h-10 px-4 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer">
               <span class="material-symbols-outlined text-[18px]">add</span>
-              <span>+ Add Sales Invoice</span>
+              <span>Add Sales Invoice</span>
             </button>
             <button onclick="window.open('/api/reports/sales/csv')" class="h-10 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md flex items-center gap-2 border border-outline-variant transition-colors cursor-pointer shadow-sm">
               <span class="material-symbols-outlined text-[18px]">download</span>
@@ -1877,7 +1877,7 @@
               <span class="material-symbols-outlined text-[24px]">receipt_long</span>
             </div>
             <p class="font-body-md text-on-surface font-medium">No sales invoices found for this filing period.</p>
-            <p class="text-xs text-secondary">Click <strong>+ Add Sales Invoice</strong> or upload an invoice PDF to record sales.</p>
+            <p class="text-xs text-secondary">Click <strong>Add Sales Invoice</strong> or upload an invoice PDF to record sales.</p>
           </div>
         </div>
 
@@ -1932,7 +1932,7 @@
             <input type="file" id="purchaseDocFileInput" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="handlePurchaseDocSelected(event)">
             <button onclick="openNewPurchaseModal()" class="h-10 px-4 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer">
               <span class="material-symbols-outlined text-[18px]">add</span>
-              <span>+ Add Purchase Bill</span>
+              <span>Add Purchase Bill</span>
             </button>
             <button onclick="window.open('/api/reports/purchases/csv')" class="h-10 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md flex items-center gap-2 border border-outline-variant transition-colors cursor-pointer shadow-sm">
               <span class="material-symbols-outlined text-[18px]">download</span>
@@ -2012,7 +2012,7 @@
               <span class="material-symbols-outlined text-[24px]">shopping_bag</span>
             </div>
             <p class="font-body-md text-on-surface font-medium">No purchase bills found for this filing period.</p>
-            <p class="text-xs text-secondary">Click <strong>+ Add Purchase Bill</strong> or upload a bill PDF to record inward purchases.</p>
+            <p class="text-xs text-secondary">Click <strong>Add Purchase Bill</strong> or upload a bill PDF to record inward purchases.</p>
           </div>
         </div>
 
@@ -5308,7 +5308,7 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 </button>
 <button class="min-h-[36px] px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0">
 <span class="material-symbols-outlined text-[18px]">add_business</span>
-<span>+ Add New State GSTIN</span>
+<span>Add New State GSTIN</span>
 </button>
 </div>
 </div>
