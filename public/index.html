@@ -2800,6 +2800,10 @@
 </div>
 <!-- Secondary Auxiliary Tools -->
 <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+<button onclick="switchSuite('file-gst')" class="min-h-[40px] px-3.5 py-2 rounded-lg bg-primary text-on-primary text-label-md font-label-md flex items-center gap-2 hover:bg-primary-container transition-colors shadow-sm whitespace-nowrap shrink-0 cursor-pointer">
+<span class="material-symbols-outlined text-body-md" data-icon="arrow_back">arrow_back</span>
+<span class="">Return to Guided Filing</span>
+</button>
 <button class="min-h-[40px] px-3.5 py-2 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface text-label-md font-label-md flex items-center gap-2 hover:bg-surface-container-low transition-colors shadow-sm whitespace-nowrap shrink-0">
 <span class="material-symbols-outlined text-body-md text-primary" data-icon="file_download">file_download</span>
 <span class="">Export Tax Computation Excel</span>
@@ -2889,10 +2893,10 @@
 </div>
 </div>
 <div class="mt-4">
-<div class="text-numeric-lg font-numeric-lg text-on-surface font-bold tracking-tight">₹1,51,650.00</div>
+<div class="text-numeric-lg font-numeric-lg text-on-surface font-bold tracking-tight" id="taxCalcMetricOutputTax">₹1,51,650.00</div>
 <div class="flex items-center gap-1.5 mt-1.5 text-label-sm font-label-sm text-on-surface-variant">
 <span class="">Taxable Value:</span>
-<span class="font-semibold text-on-surface">₹8,42,500.00</span>
+<span class="font-semibold text-on-surface" id="taxCalcMetricTaxableValue">₹8,42,500.00</span>
 </div>
 </div>
 </div>
@@ -2908,8 +2912,8 @@
 </div>
 </div>
 <div class="mt-4">
-<div class="text-numeric-lg font-numeric-lg text-primary font-bold tracking-tight">₹74,214.00</div>
-<div class="flex items-center gap-1.5 mt-1.5 text-label-sm font-label-sm text-primary">
+<div class="text-numeric-lg font-numeric-lg text-primary font-bold tracking-tight" id="taxCalcMetricItc">₹74,214.00</div>
+<div class="flex items-center gap-1.5 mt-1.5 text-label-sm font-label-sm text-primary" id="taxCalcMetricItcSub">
 <span class="material-symbols-outlined text-[14px]" data-icon="verified">verified</span>
 <span class="">100% Reconciled vs GSTR-2B</span>
 </div>
@@ -2926,17 +2930,17 @@
 </div>
 </div>
 <div class="mt-4">
-<div class="text-numeric-lg font-numeric-lg text-on-surface font-bold tracking-tight">₹15,000.00</div>
-<div class="flex items-center gap-1.5 mt-1.5 text-label-sm font-label-sm text-on-surface-variant">
+<div class="text-numeric-lg font-numeric-lg text-on-surface font-bold tracking-tight" id="taxCalcMetricCashLedger">₹15,000.00</div>
+<div class="flex items-center gap-1.5 mt-1.5 text-label-sm font-label-sm text-on-surface-variant" id="taxCalcMetricCashLedgerSub">
 <span class="">Available:</span>
 <span class="font-medium text-on-surface">CGST ₹7,500 | SGST ₹7,500</span>
 </div>
 </div></div>
 <!-- Metric Card 4: Net Cash Tax Payable -->
-<div class="p-5 rounded-xl bg-error-container/20 border border-error/30 shadow-sm flex flex-col justify-between relative overflow-hidden"><div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-error/10 pointer-events-none"></div>
+<div class="p-5 rounded-xl bg-error-container/20 border border-error/30 shadow-sm flex flex-col justify-between relative overflow-hidden" id="taxCalcMetricShortfallCard"><div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-error/10 pointer-events-none"></div>
 <div class="flex items-start justify-between">
 <div class="flex flex-col">
-<span class="text-label-md font-label-md text-error font-bold">Net Cash Tax Shortfall</span>
+<span class="text-label-md font-label-md text-error font-bold" id="taxCalcMetricShortfallTitle">Net Cash Tax Shortfall</span>
 <span class="text-label-sm font-label-sm text-on-surface-variant">Deficit to Pay via Challan PMT-06</span>
 </div>
 <div class="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center text-error">
@@ -2944,8 +2948,8 @@
 </div>
 </div>
 <div class="mt-4">
-<div class="text-numeric-lg font-numeric-lg text-error font-bold tracking-tight">₹62,436.00</div>
-<div class="flex items-center justify-between gap-1 mt-1.5 text-label-sm font-label-sm text-error font-medium">
+<div class="text-numeric-lg font-numeric-lg text-error font-bold tracking-tight" id="taxCalcMetricNetShortfall">₹62,436.00</div>
+<div class="flex items-center justify-between gap-1 mt-1.5 text-label-sm font-label-sm text-error font-medium" id="taxCalcMetricShortfallSub">
 <span class="">CGST ₹31,218 + SGST ₹31,218</span>
 <span class="material-symbols-outlined text-[14px]" data-icon="warning">warning</span>
 </div>
@@ -2992,7 +2996,7 @@
 <th class="py-3 px-4 uppercase tracking-wider font-semibold text-right text-error font-bold">Challan Required</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-outline-variant/60 font-body-sm text-body-sm">
+<tbody class="divide-y divide-outline-variant/60 font-body-sm text-body-sm" id="taxCalcTable61Body">
 <!-- Row 1: Integrated Tax (IGST) -->
 <tr class="hover:bg-surface-container-low/50 transition-colors">
 <td class="py-3.5 px-4 font-semibold text-on-surface">
@@ -3064,7 +3068,7 @@
 <span class="material-symbols-outlined text-primary text-body-lg flex-shrink-0 mt-0.5" data-icon="info">info</span>
 <div class="text-body-sm font-body-sm text-on-surface-variant space-y-1">
 <p class="font-semibold text-on-surface">Understanding the Inter-Head Utilization Rule (Section 49 of CGST Act):</p>
-<p class="">
+<p class="" id="taxCalcRuleCalloutText">
               Integrated Tax (IGST) credit must always be exhausted completely before utilizing CGST or SGST credits. 
               <strong>Crucial:</strong> CGST credit can never be used to pay SGST liability, and SGST credit can never be used to pay CGST liability. 
               Your remaining CGST/SGST liability of ₹77,436 is partially offset by your ₹15,000 electronic cash balance, leaving a final deficit of <strong>₹62,436.00</strong> to be paid through a GST PMT-06 challan.

@@ -668,6 +668,9 @@ function executeSwitchSuite(suite) {
       viewTaxCalc.style.display = "block";
     }
     highlightSidebarNav('nav-link-taxcalc');
+    if (typeof renderTaxCalcSuite === "function") {
+      renderTaxCalcSuite();
+    }
   } else if (suite === "gst" || suite === "reports") {
     if (viewGst) {
       viewGst.classList.add("active");
@@ -2698,6 +2701,173 @@ function renderGstr3bScreen() {
   document.getElementById("gstr3bEligibleItc").textContent = `₹ ${Number(calc.eligibleItc.total).toLocaleString("en-IN")}`;
   document.getElementById("gstr3bNetPayable").textContent = `₹ ${Number(calc.netPayable.total).toLocaleString("en-IN")}`;
 }
+
+async function renderTaxCalcSuite(period) {
+  const p = period || appState.activePeriod || appState.gst?.business?.filingPeriod || "102026";
+  try {
+    const res = await apiFetch(`/api/returns/tax-calc?period=${p}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    appState.activeTaxCalc = data;
+
+    const liability = data.liability || { igst: 0, cgst: 0, sgst: 0, cess: 0 };
+    const inputCredit = data.inputCredit || { igst: 0, cgst: 0, sgst: 0, cess: 0 };
+    const matrix = data.setoffMatrix || {};
+    const remainingLiability = data.remainingLiability || { igst: 0, cgst: 0, sgst: 0, total: 0 };
+    const remainingCredit = data.remainingCredit || { igst: 0, cgst: 0, sgst: 0, total: 0 };
+    const netCashPayable = Number(data.netCashPayable || 0);
+    const itcCarryForward = Number(data.excessCreditCarryForward || 0);
+
+    const lIgst = Number(liability.igst || 0);
+    const lCgst = Number(liability.cgst || 0);
+    const lSgst = Number(liability.sgst || 0);
+    const lTotal = lIgst + lCgst + lSgst;
+
+    const cIgst = Number(inputCredit.igst || 0);
+    const cCgst = Number(inputCredit.cgst || 0);
+    const cSgst = Number(inputCredit.sgst || 0);
+    const cTotal = cIgst + cCgst + cSgst;
+
+    const uIgst = matrix.igstCreditUtilized || { towardsIgst: 0, towardsCgst: 0, towardsSgst: 0, total: 0 };
+    const uCgst = matrix.cgstCreditUtilized || { towardsCgst: 0, towardsIgst: 0, total: 0 };
+    const uSgst = matrix.sgstCreditUtilized || { towardsSgst: 0, towardsIgst: 0, total: 0 };
+
+    const totalItcUtilized = (uIgst.total || 0) + (uCgst.total || 0) + (uSgst.total || 0);
+
+    const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Update Top Metric Cards
+    const elOut = document.getElementById("taxCalcMetricOutputTax");
+    if (elOut) elOut.textContent = fmt(lTotal);
+
+    const elItc = document.getElementById("taxCalcMetricItc");
+    if (elItc) elItc.textContent = fmt(cTotal);
+
+    const elItcSub = document.getElementById("taxCalcMetricItcSub");
+    if (elItcSub) {
+      elItcSub.innerHTML = itcCarryForward > 0
+        ? `<span class="material-symbols-outlined text-[14px]">account_balance_wallet</span><span>${fmt(itcCarryForward)} carried forward</span>`
+        : `<span class="material-symbols-outlined text-[14px]">verified</span><span>100% Reconciled vs GSTR-2B</span>`;
+    }
+
+    const elShortfall = document.getElementById("taxCalcMetricNetShortfall");
+    if (elShortfall) elShortfall.textContent = fmt(netCashPayable);
+
+    const elShortfallTitle = document.getElementById("taxCalcMetricShortfallTitle");
+    if (elShortfallTitle) {
+      elShortfallTitle.textContent = netCashPayable > 0 ? "Net Cash Tax Shortfall" : "Net Tax Payable (Fully Offset)";
+    }
+
+    const elShortfallSub = document.getElementById("taxCalcMetricShortfallSub");
+    if (elShortfallSub) {
+      if (netCashPayable > 0) {
+        elShortfallSub.innerHTML = `<span>CGST ${fmt(remainingLiability.cgst || 0)} + SGST ${fmt(remainingLiability.sgst || 0)}</span><span class="material-symbols-outlined text-[14px]">warning</span>`;
+      } else {
+        elShortfallSub.innerHTML = `<span class="text-emerald-700 font-medium">₹0.00 cash payment required</span><span class="material-symbols-outlined text-[14px] text-emerald-700">check_circle</span>`;
+      }
+    }
+
+    // Populate Table 6.1 Body
+    const tbody = document.getElementById("taxCalcTable61Body");
+    if (tbody) {
+      const igstTotUtil = (uIgst.towardsIgst || 0) + (uCgst.towardsIgst || 0) + (uSgst.towardsIgst || 0);
+      const cgstTotUtil = (uIgst.towardsCgst || 0) + (uCgst.towardsCgst || 0);
+      const sgstTotUtil = (uIgst.towardsSgst || 0) + (uSgst.towardsSgst || 0);
+
+      const rIgst = remainingLiability.igst || 0;
+      const rCgst = remainingLiability.cgst || 0;
+      const rSgst = remainingLiability.sgst || 0;
+
+      tbody.innerHTML = `
+        <tr class="hover:bg-surface-container-low/50 transition-colors">
+          <td class="py-3.5 px-4 font-semibold text-on-surface">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+              <span>Integrated Tax (IGST)</span>
+            </div>
+          </td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface">${fmt(lIgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-medium">${fmt(uIgst.towardsIgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">${fmt(uCgst.towardsIgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">${fmt(uSgst.towardsIgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-semibold">${fmt(igstTotUtil)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">${fmt(rIgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">₹0.00</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md ${rIgst > 0 ? 'text-error font-bold' : 'text-primary font-semibold'}">${rIgst > 0 ? fmt(rIgst) : '₹0.00 (Nil)'}</td>
+        </tr>
+        <tr class="hover:bg-surface-container-low/50 transition-colors bg-surface-container-low/20">
+          <td class="py-3.5 px-4 font-semibold text-on-surface">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span>
+              <span>Central Tax (CGST)</span>
+            </div>
+          </td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface">${fmt(lCgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-medium">${fmt(uIgst.towardsCgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-medium">${fmt(uCgst.towardsCgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-outline-variant font-mono text-[11px]">— Restricted —</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-semibold">${fmt(cgstTotUtil)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface font-semibold">${fmt(rCgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">₹0.00</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md ${rCgst > 0 ? 'text-error font-bold' : 'text-primary font-semibold'}">${rCgst > 0 ? fmt(rCgst) : '₹0.00 (Nil)'}</td>
+        </tr>
+        <tr class="hover:bg-surface-container-low/50 transition-colors">
+          <td class="py-3.5 px-4 font-semibold text-on-surface">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+              <span>State / UT Tax (SGST)</span>
+            </div>
+          </td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface">${fmt(lSgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-medium">${fmt(uIgst.towardsSgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-outline-variant font-mono text-[11px]">— Restricted —</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-medium">${fmt(uSgst.towardsSgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-semibold">${fmt(sgstTotUtil)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface font-semibold">${fmt(rSgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">₹0.00</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md ${rSgst > 0 ? 'text-error font-bold' : 'text-primary font-semibold'}">${rSgst > 0 ? fmt(rSgst) : '₹0.00 (Nil)'}</td>
+        </tr>
+        <tr class="bg-surface-container font-semibold border-t-2 border-outline-variant">
+          <td class="py-4 px-4 text-on-surface font-bold">Total Statutory Aggregate</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-on-surface font-bold">${fmt(lTotal)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-primary">${fmt(uIgst.total || 0)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-primary">${fmt(uCgst.total || 0)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-primary">${fmt(uSgst.total || 0)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-primary font-bold">${fmt(totalItcUtilized)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-on-surface font-bold">${fmt(netCashPayable)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-secondary font-bold">₹0.00</td>
+          <td class="py-4 px-4 text-right font-numeric-md ${netCashPayable > 0 ? 'text-error font-bold text-headline-sm' : 'text-primary font-bold'}">${netCashPayable > 0 ? fmt(netCashPayable) : '₹0.00 (Nil)'}</td>
+        </tr>
+      `;
+    }
+
+    // Update Callout Text
+    const elCallout = document.getElementById("taxCalcRuleCalloutText");
+    if (elCallout) {
+      if (netCashPayable === 0 && totalItcUtilized > 0) {
+        elCallout.innerHTML = `
+          Integrated Tax (IGST) and available input tax credits fully offset your gross liability of <strong>${fmt(lTotal)}</strong> u/r 88A. 
+          ${itcCarryForward > 0 ? `Your excess credit of <strong>${fmt(itcCarryForward)}</strong> is safely preserved in your Electronic Credit Ledger for subsequent months.` : ''}
+          Zero cash payment or challan generation is required for this filing.
+        `;
+      } else if (netCashPayable === 0 && lTotal === 0) {
+        elCallout.innerHTML = `
+          Zero outward liability assessed for this tax period. 
+          ${itcCarryForward > 0 ? `Available eligible credit of <strong>${fmt(itcCarryForward)}</strong> remains accumulated in your Electronic Credit Ledger.` : ''}
+        `;
+      } else {
+        elCallout.innerHTML = `
+          Integrated Tax (IGST) credit was exhausted first before utilizing CGST and SGST balances (Section 49A). 
+          <strong>Statutory Firewall:</strong> CGST credit cannot offset SGST liability and vice versa. 
+          Remaining net cash deficit of <strong>${fmt(netCashPayable)}</strong> must be paid via Form GST PMT-06 challan.
+        `;
+      }
+    }
+  } catch (err) {
+    console.warn("renderTaxCalcSuite error:", err);
+  }
+}
+window.renderTaxCalcSuite = renderTaxCalcSuite;
 
 function openGstSandboxFilingModal() {
   document.getElementById("filingTargetText").textContent = `Filing GSTR-3B for GSTIN: ${appState.gst.business.gstin}`;
@@ -5828,7 +5998,35 @@ async function setGuidedStep(step = 1) {
   const taxablePurchases = Number(m.taxablePurchases ?? 0);
   const totalEligibleItc = Number(m.totalEligibleItc ?? 0);
   const blockedItc = Number(m.blockedItc ?? 0);
-  const netCashPayable = Number(m.netCashPayable ?? 0);
+
+  // Exact Rule 88A set-off calculation:
+  let totalItcUtilized = Number(m.totalItcUtilized ?? 0);
+  let itcCarryForward = Number(m.itcCarryForward ?? 0);
+  let netCashPayable = Number(m.netCashPayable ?? 0);
+
+  if (appState.activeTaxCalc?.setoffMatrix) {
+    const u = appState.activeTaxCalc.setoffMatrix;
+    totalItcUtilized = Number(
+      (u.igstCreditUtilized?.total || 0) +
+      (u.cgstCreditUtilized?.total || 0) +
+      (u.sgstCreditUtilized?.total || 0) +
+      (u.cessCreditUtilized?.total || 0)
+    );
+    if (appState.activeTaxCalc.remainingLiability) {
+      netCashPayable = Number(appState.activeTaxCalc.remainingLiability.total ?? netCashPayable);
+    }
+    if (appState.activeTaxCalc.remainingCredit) {
+      itcCarryForward = Number(appState.activeTaxCalc.remainingCredit.total ?? itcCarryForward);
+    }
+  } else if (!totalItcUtilized && totalOutputLiability > 0 && totalEligibleItc > 0) {
+    totalItcUtilized = Math.min(totalOutputLiability, totalEligibleItc);
+    netCashPayable = Math.max(0, totalOutputLiability - totalItcUtilized);
+    itcCarryForward = Math.max(0, totalEligibleItc - totalItcUtilized);
+  } else if (!totalItcUtilized && totalOutputLiability === 0 && totalEligibleItc > 0) {
+    totalItcUtilized = 0;
+    netCashPayable = 0;
+    itcCarryForward = totalEligibleItc;
+  }
 
   appState.activeFilingSummary = {
     salesCount,
@@ -5837,11 +6035,13 @@ async function setGuidedStep(step = 1) {
     purchasesCount,
     taxablePurchases,
     totalEligibleItc,
+    totalItcUtilized,
+    itcCarryForward,
     blockedItc,
     netCashPayable,
-    liability: appState.activeTaxCalc?.liability || { igst: 0, cgst: 0, sgst: 0 },
-    inputCredit: appState.activeTaxCalc?.inputCredit || { igst: 0, cgst: 0, sgst: 0 },
-    setoffMatrix: appState.activeTaxCalc?.setoffMatrix || {}
+    liability: appState.activeTaxCalc?.liability || m.liabilityBreakdown || { igst: 0, cgst: 0, sgst: 0 },
+    inputCredit: appState.activeTaxCalc?.inputCredit || m.creditBreakdown || { igst: 0, cgst: 0, sgst: 0 },
+    setoffMatrix: appState.activeTaxCalc?.setoffMatrix || m.setoffMatrix || {}
   };
 
   const fmtCurrency = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -6021,16 +6221,25 @@ async function setGuidedStep(step = 1) {
               <p class="text-xs text-secondary mt-0.5">Gross liability assessed</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
-              <span class="text-xs uppercase font-semibold text-emerald-800">Less: Available Credit</span>
-              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">-${fmtCurrency(totalEligibleItc)}</div>
-              <p class="text-xs text-secondary mt-0.5">Auto-offset applied u/r 88A</p>
+              <span class="text-xs uppercase font-semibold text-emerald-800">Less: ITC Offset Applied</span>
+              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">-${fmtCurrency(totalItcUtilized)}</div>
+              <p class="text-xs text-secondary mt-0.5">${itcCarryForward > 0 ? `Carried forward: ${fmtCurrency(itcCarryForward)}` : 'Auto-offset applied u/r 88A'}</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-error">Amount to Pay</span>
-              <div class="font-numeric-lg text-xl font-bold text-error mt-1">${fmtCurrency(netCashPayable)}</div>
-              <p class="text-xs text-secondary mt-0.5">Cash payment required</p>
+              <div class="font-numeric-lg text-xl font-bold ${netCashPayable > 0 ? 'text-error' : 'text-on-surface'} mt-1">${fmtCurrency(netCashPayable)}</div>
+              <p class="text-xs text-secondary mt-0.5">${netCashPayable > 0 ? 'Cash payment required' : 'Fully discharged via ITC'}</p>
             </div>
           </div>
+
+          ${itcCarryForward > 0 ? `
+          <div class="p-3.5 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-xs text-emerald-900 flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-emerald-700 text-[18px] shrink-0 mt-0.5">account_balance_wallet</span>
+            <div>
+              <strong>Electronic Credit Ledger Balance:</strong> ${fmtCurrency(totalItcUtilized)} utilized to fully offset outward tax liability. The remaining excess eligible ITC of <strong>${fmtCurrency(itcCarryForward)}</strong> is retained in your Electronic Credit Ledger and carried forward to future tax periods.
+            </div>
+          </div>
+          ` : ''}
 
           <details class="text-xs text-secondary pt-2">
             <summary class="font-medium text-primary hover:underline cursor-pointer select-none">Learn more about Rule 88A tax set-off</summary>
@@ -6087,13 +6296,28 @@ async function setGuidedStep(step = 1) {
             </div>
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
               <span class="text-secondary">Input Tax Credit Offset</span>
-              <span class="font-mono font-medium text-emerald-700" id="reviewItcOffset">-${fmtCurrency(totalEligibleItc)}</span>
+              <span class="font-mono font-medium text-emerald-700" id="reviewItcOffset">-${fmtCurrency(totalItcUtilized)}</span>
             </div>
+            ${itcCarryForward > 0 ? `
+            <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
+              <span class="text-secondary">ITC Balance Carried Forward</span>
+              <span class="font-mono font-medium text-emerald-800" id="reviewItcCarryForward">${fmtCurrency(itcCarryForward)}</span>
+            </div>
+            ` : ''}
             <div class="flex items-center justify-between py-2 text-base font-bold">
               <span class="text-on-surface">Net Amount to Pay</span>
-              <span class="font-mono text-error" id="reviewNetAmountToPay">${fmtCurrency(netCashPayable)}</span>
+              <span class="font-mono ${netCashPayable > 0 ? 'text-error' : 'text-on-surface'}" id="reviewNetAmountToPay">${fmtCurrency(netCashPayable)}</span>
             </div>
           </div>
+
+          ${itcCarryForward > 0 ? `
+          <div class="p-3.5 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-xs text-emerald-900 flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-emerald-700 text-[18px] shrink-0 mt-0.5">account_balance_wallet</span>
+            <div>
+              <strong>Rule 88A Optimization:</strong> Outward tax liability of ${fmtCurrency(totalOutputLiability)} is 100% discharged via ITC. The remaining unutilized credit of <strong>${fmtCurrency(itcCarryForward)}</strong> is carried forward to your next return.
+            </div>
+          </div>
+          ` : ''}
 
           <div class="p-3.5 rounded-lg bg-surface-container text-xs text-secondary flex items-start gap-2.5">
             <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">verified_user</span>
@@ -6133,7 +6357,7 @@ function startGstr3bFilingFlow() {
   if (grossTaxEl) grossTaxEl.textContent = `₹${Number(filing.totalOutputLiability || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const itcOffsetEl = document.getElementById("evcOtpItcOffset");
-  if (itcOffsetEl) itcOffsetEl.textContent = `-₹${Number(filing.totalEligibleItc || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (itcOffsetEl) itcOffsetEl.textContent = `-₹${Number(filing.totalItcUtilized || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const netPayableEl = document.getElementById("evcOtpNetPayable");
   if (netPayableEl) netPayableEl.textContent = `₹${Number(filing.netCashPayable || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -6199,7 +6423,7 @@ async function submitEvcOtpVerification() {
     showToast(`EVC OTP verified! Net liability of ₹${netCash.toLocaleString("en-IN")} requires cash payment. Directing to Payment section...`, "info");
     openPmt06ModalWithValues({
       grossTax: filing.totalOutputLiability || 0,
-      itcOffset: filing.totalEligibleItc || 0,
+      itcOffset: filing.totalItcUtilized || 0,
       netCash: netCash,
       liability: filing.liability || {},
       period: appState.activePeriod || "102026",
