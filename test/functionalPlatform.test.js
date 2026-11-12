@@ -217,6 +217,12 @@ test("File Upload & Secure Storage", async () => {
   assert.ok(data.document.id);
   assert.equal(fs.existsSync(data.document.storage_path), true);
   assert.ok(data.ocr.id);
+
+  // Clean up test upload
+  documentRepo.delete(data.document.id);
+  if (data.document.storage_path && fs.existsSync(data.document.storage_path)) {
+    try { fs.unlinkSync(data.document.storage_path); } catch {}
+  }
 });
 
 test("OCR Approval: Posts verified fields to purchase register", async () => {
@@ -245,12 +251,69 @@ test("OCR Approval: Posts verified fields to purchase register", async () => {
 });
 
 test("GSTR-2B Reconciliation Summary: Matches books against 2B", async () => {
+  const auth = getAuthReq();
+  const session = db.prepare("SELECT * FROM sessions WHERE token = ?").get(defaultTestSessionToken);
+  const gstinId = session.active_gstin_id;
+  const orgId = session.active_org_id;
+
+  const pur1 = purchaseRepo.create({
+    orgId,
+    gstinId,
+    period: "102026",
+    invoiceNumber: "SUPP-MH-8812",
+    invoiceDate: "2026-10-08",
+    supplierName: "Mahindra Logistics Ltd",
+    supplierGstin: "27AAACM1234B1Z2",
+    pos: "27",
+    isInterstate: false,
+    taxableAmount: 220000,
+    gstRate: 18,
+    cgst: 19800,
+    sgst: 19800,
+    igst: 0,
+    totalTax: 39600,
+    totalAmount: 259600,
+    itcEligibility: "ELIGIBLE"
+  });
+  const pur2 = purchaseRepo.create({
+    orgId,
+    gstinId,
+    period: "102026",
+    invoiceNumber: "SUPP-DL-4019",
+    invoiceDate: "2026-10-18",
+    supplierName: "Delhi Paper & Packaging Solutions",
+    supplierGstin: "07AAACD5544E1Z0",
+    pos: "27",
+    isInterstate: true,
+    taxableAmount: 192300,
+    gstRate: 18,
+    cgst: 0,
+    sgst: 0,
+    igst: 34614,
+    totalTax: 34614,
+    totalAmount: 226914,
+    itcEligibility: "ELIGIBLE"
+  });
+
+  const insert2B = db.prepare(`
+    INSERT OR REPLACE INTO gstr2b_entries 
+    (id, gstin_id, period, supplier_gstin, supplier_name, invoice_number, invoice_date, taxable_value, igst, cgst, sgst, cess, filing_date)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+  `);
+  insert2B.run("g2b-test-recon-1", gstinId, "102026", "27AAACM1234B1Z2", "Mahindra Logistics Ltd", "SUPP-MH-8812", "2026-10-08", 220000, 0, 19800, 19800, "2026-11-11");
+  insert2B.run("g2b-test-recon-2", gstinId, "102026", "07AAACD5544E1Z0", "Delhi Paper & Packaging Solutions", "SUPP-DL-4019", "2026-10-18", 192300, 34614, 0, 0, "2026-11-12");
+
   const res = createMockRes();
-  await handleFunctionalApi(getAuthReq(), res, "/api/reconciliation/summary", "GET", { period: "102026" }, {});
+  await handleFunctionalApi(auth, res, "/api/reconciliation/summary", "GET", { period: "102026" }, {});
   assert.equal(res.statusCode, 200);
   const data = JSON.parse(res.body);
   assert.ok(data.summary.matched.count >= 2);
   assert.equal(data.summary.totalBooksPurchases >= 2, true);
+
+  // Clean up
+  purchaseRepo.delete(pur1.id);
+  purchaseRepo.delete(pur2.id);
+  db.prepare("DELETE FROM gstr2b_entries WHERE id IN ('g2b-test-recon-1', 'g2b-test-recon-2')").run();
 });
 
 test("Tax Calculation & Rule 88A Matrix Execution", async () => {
@@ -265,8 +328,34 @@ test("Tax Calculation & Rule 88A Matrix Execution", async () => {
 });
 
 test("GST Copilot: Context grounded on real database records", async () => {
+  const auth = getAuthReq();
+  const session = db.prepare("SELECT * FROM sessions WHERE token = ?").get(defaultTestSessionToken);
+  const gstinId = session.active_gstin_id;
+  const orgId = session.active_org_id;
+
+  const testSale = salesRepo.create({
+    orgId,
+    gstinId,
+    period: "102026",
+    invoiceNumber: "INV-COPILOT-01",
+    invoiceDate: "2026-10-05",
+    customerName: "Reliance Retail Ltd",
+    customerGstin: "27AAACR7055K1ZX",
+    pos: "27",
+    isInterstate: false,
+    supplyType: "B2B",
+    taxableAmount: 450000,
+    gstRate: 18,
+    cgst: 40500,
+    sgst: 40500,
+    igst: 0,
+    totalTax: 81000,
+    totalAmount: 531000,
+    status: "VALIDATED"
+  });
+
   const res = createMockRes();
-  await handleFunctionalApi(getAuthReq(), res, "/api/copilot/ask", "POST", {}, {
+  await handleFunctionalApi(auth, res, "/api/copilot/ask", "POST", {}, {
     question: "How much GST do I need to pay for October 2026?"
   });
   assert.equal(res.statusCode, 200);
@@ -274,6 +363,9 @@ test("GST Copilot: Context grounded on real database records", async () => {
   assert.ok(data.answer.includes("Apex Retailers"));
   assert.ok(data.answer.includes("net tax payable in cash"));
   assert.ok(data.citations.includes("Section 49 & Rule 88A CGST Rules"));
+
+  // Clean up
+  salesRepo.delete(testSale.id);
 });
 
 test("PMT-06 Challan: Enforces Rule 87(4) Over-The-Counter ₹10,000 limit", async () => {
@@ -544,10 +636,31 @@ test("UX Simplification: File GST 2-Card Decision, Nil Pre-Check & Dynamic Perio
     };
   }
 
-  // MH branch has 6 sales and 2 purchases in development seed -> MUST BE BLOCKED
+  // MH branch creates a temporary sales invoice to test blocking when transactions exist
   const mhBranch = gstinRepo.findByGstin("27AAACA1234A1Z5");
   assert.ok(mhBranch, "MH branch exists");
   await mockApiCall("POST", `/api/gstins/${mhBranch.id}/activate`).run();
+
+  const tempSale = salesRepo.create({
+    orgId: mhBranch.org_id,
+    gstinId: mhBranch.id,
+    period: "102026",
+    invoiceNumber: "INV-NIL-BLOCK-TEST",
+    invoiceDate: "2026-10-10",
+    customerName: "Nil Test Customer",
+    customerGstin: "27AAACR7055K1ZX",
+    pos: "27",
+    isInterstate: false,
+    supplyType: "B2B",
+    taxableAmount: 10000,
+    gstRate: 18,
+    cgst: 900,
+    sgst: 900,
+    igst: 0,
+    totalTax: 1800,
+    totalAmount: 11800,
+    status: "VALIDATED"
+  });
 
   const verifyMh = await mockApiCall("GET", "/api/gst/nil-verify", { period: "102026" }).run();
   assert.equal(verifyMh.body.eligible, false, "Must block Nil filing when transactions exist");
@@ -557,6 +670,9 @@ test("UX Simplification: File GST 2-Card Decision, Nil Pre-Check & Dynamic Perio
   const fileMh = await mockApiCall("POST", "/api/gst/nil-file", {}, { period: "102026", declarationConfirmed: true }).run();
   assert.equal(fileMh.statusCode, 400, "POST /api/gst/nil-file must reject with HTTP 400 when transactions exist");
   assert.equal(fileMh.body.success, false);
+
+  // Clean up temporary transaction
+  salesRepo.delete(tempSale.id);
 
   // Switch to KA branch with 0 transactions -> MUST BE ELIGIBLE
   const { db } = await import("../lib/db.js");
@@ -1155,18 +1271,20 @@ test("Security Audit: Multi-Tenant Authorization, Cross-Tenant Gating & Credenti
   }
 
   // 1. Two separate organizations with distinct users
-  const randA = Math.floor(1000 + Math.random() * 9000);
-  const randB = Math.floor(1000 + Math.random() * 9000);
+  const randNumA = Math.floor(1000 + Math.random() * 9000);
+  const randNumB = Math.floor(1000 + Math.random() * 9000);
+  const uidA = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const uidB = `${Date.now() + 1}_${Math.random().toString(36).slice(2, 7)}`;
 
-  const orgA = orgRepo.create({ name: `Tenant A Corp ${randA}`, pan: `AAAAP${randA}A` });
-  const userA = userRepo.create({ email: `ceo@tenant-a-${randA}.com`, passwordHash: userRepo.hashPassword("password"), fullName: "Alice CEO", role: "OWNER" });
+  const orgA = orgRepo.create({ name: `Tenant A Corp ${uidA}`, pan: `AAAAP${randNumA}A` });
+  const userA = userRepo.create({ email: `ceo@tenant-a-${uidA}.com`, passwordHash: userRepo.hashPassword("password"), fullName: "Alice CEO", role: "OWNER" });
   orgRepo.addMember(orgA.id, userA.id, "OWNER");
-  const gstinA = gstinRepo.create({ orgId: orgA.id, gstin: `27AAAAP${randA}A1Z1`, tradeName: "Branch A", stateCode: "27", stateName: "Maharashtra", isPrimary: 1 });
+  const gstinA = gstinRepo.create({ orgId: orgA.id, gstin: `27AAAAP${randNumA}A1Z1`, tradeName: "Branch A", stateCode: "27", stateName: "Maharashtra", isPrimary: 1 });
 
-  const orgB = orgRepo.create({ name: `Tenant B Corp ${randB}`, pan: `BBBBB${randB}B` });
-  const userB = userRepo.create({ email: `cfo@tenant-b-${randB}.com`, passwordHash: userRepo.hashPassword("password"), fullName: "Bob CFO", role: "OWNER" });
+  const orgB = orgRepo.create({ name: `Tenant B Corp ${uidB}`, pan: `BBBBB${randNumB}B` });
+  const userB = userRepo.create({ email: `cfo@tenant-b-${uidB}.com`, passwordHash: userRepo.hashPassword("password"), fullName: "Bob CFO", role: "OWNER" });
   orgRepo.addMember(orgB.id, userB.id, "OWNER");
-  const gstinB = gstinRepo.create({ orgId: orgB.id, gstin: `29BBBBB${randB}B1Z2`, tradeName: "Branch B", stateCode: "29", stateName: "Karnataka", isPrimary: 1 });
+  const gstinB = gstinRepo.create({ orgId: orgB.id, gstin: `29BBBBB${randNumB}B1Z2`, tradeName: "Branch B", stateCode: "29", stateName: "Karnataka", isPrimary: 1 });
 
   // 2. Legitimate Login for User A
   const loginA = await mockApiCall({}, "POST", "/api/auth/login", {}, { email: userA.email, password: "password" }).run();
@@ -1229,6 +1347,13 @@ test("Security Audit: Multi-Tenant Authorization, Cross-Tenant Gating & Credenti
   // Invalid login credentials rejected (HTTP 401)
   const badLogin = await mockApiCall({}, "POST", "/api/auth/login", {}, { email: userA.email, password: "wrong-password" }).run();
   assert.equal(badLogin.statusCode, 401, "Bad password must return 401");
+
+  // Teardown tenant test records
+  db.prepare("DELETE FROM sessions WHERE user_id IN (?, ?)").run(userA.id, userB.id);
+  db.prepare("DELETE FROM gst_registrations WHERE id IN (?, ?)").run(gstinA.id, gstinB.id);
+  db.prepare("DELETE FROM org_members WHERE org_id IN (?, ?)").run(orgA.id, orgB.id);
+  db.prepare("DELETE FROM organizations WHERE id IN (?, ?)").run(orgA.id, orgB.id);
+  db.prepare("DELETE FROM users WHERE id IN (?, ?)").run(userA.id, userB.id);
 });
 
 test("Security Audit: Authentication Security Final Hardening Suite", async () => {
@@ -1264,8 +1389,9 @@ test("Security Audit: Authentication Security Final Hardening Suite", async () =
 
   // 2. Reject legacy credentials with migration notification
   const randSec = Math.floor(1000 + Math.random() * 9000);
+  const randSecUid = `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
   const legacyUser = userRepo.create({
-    email: `legacy-${randSec}@apexretail.com`,
+    email: `legacy-${randSecUid}@apexretail.com`,
     passwordHash: "plaintext_legacy_pass",
     fullName: "Legacy User",
     role: "OWNER"
@@ -1409,7 +1535,7 @@ test("Security Audit: Authentication Security Final Hardening Suite", async () =
 
   // 8. RBAC: AUDITOR role is strictly read-only on tenant records
   const auditorUser = userRepo.create({
-    email: `auditor-${randSec}@apexretail.com`,
+    email: `auditor-${randSecUid}@apexretail.com`,
     passwordHash: userRepo.hashPassword("AuditorPass@2026"),
     fullName: "Audit Lead",
     role: "AUDITOR"
@@ -1444,7 +1570,7 @@ test("Security Audit: Authentication Security Final Hardening Suite", async () =
 
   // 9. RBAC: ACCOUNTANT role restrictions
   const accountantUser = userRepo.create({
-    email: `acct-${randSec}@apexretail.com`,
+    email: `acct-${randSecUid}@apexretail.com`,
     passwordHash: userRepo.hashPassword("AcctPass@2026"),
     fullName: "Accountant User",
     role: "ACCOUNTANT"
@@ -1494,4 +1620,9 @@ test("Security Audit: Authentication Security Final Hardening Suite", async () =
     amount: 5000
   }).run();
   assert.equal(acctPay.statusCode, 403, "Accountant cannot execute challan payments");
+
+  // Clean up security test invoices & records
+  db.prepare("DELETE FROM sales_invoices WHERE invoice_number LIKE 'INV-CSRF-%' OR invoice_number LIKE 'INV-ACCT-%'").run();
+  db.prepare("DELETE FROM users WHERE email LIKE 'legacy-%@apexretail.com' OR email LIKE 'auditor-%@apexretail.com' OR email LIKE 'acct-%@apexretail.com'").run();
+  db.prepare("DELETE FROM organizations WHERE name LIKE 'Security Org %'").run();
 });
