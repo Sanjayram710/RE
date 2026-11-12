@@ -5535,393 +5535,171 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
 <!-- SECTION 1: EXECUTIVE HEADER & MULTI-GSTIN SUMMARY                     -->
 <!-- ===================================================================== -->
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
-<div class="flex flex-col gap-1 max-w-3xl">
-<div class="flex items-center gap-2.5 flex-wrap">
-<h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
-              Business Onboarding &amp; Multi-GSTIN Management Hub
-            </h1>
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-              PAN Verified
-            </span>
+  <div class="flex flex-col gap-1 max-w-3xl">
+    <div class="flex items-center gap-2.5 flex-wrap">
+      <h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
+        Business Onboarding &amp; Multi-GSTIN Management Hub
+      </h1>
+      <span id="multiCorporatePanBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+        PAN Verified
+      </span>
+    </div>
+    <p class="font-body-md text-body-md text-secondary">
+      Manage all state branch GSTINs registered under your Corporate PAN across India. Switch active filing branch anytime to scope Sales, Purchases, and GST Returns.
+    </p>
+  </div>
+  <!-- Quick Action Buttons -->
+  <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+    <button onclick="loadMultiGstinHub()" class="min-h-[36px] px-3.5 py-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0">
+      <span class="material-symbols-outlined text-[18px] text-primary">sync</span>
+      <span>Refresh Branches</span>
+    </button>
+    <button onclick="openAddGstinModal()" class="min-h-[36px] px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0">
+      <span class="material-symbols-outlined text-[18px]">add_business</span>
+      <span>Add New State GSTIN</span>
+    </button>
+  </div>
 </div>
-<p class="font-body-md text-body-md text-secondary">
-            Manage PAN-linked entity registrations, GST portal API authentication, and state-wise compliance filing cadences across all operative jurisdictions.
-          </p>
-</div>
-<!-- Quick Action Buttons -->
-<div class="flex items-center gap-2.5 flex-wrap shrink-0">
-<button class="min-h-[36px] px-3.5 py-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md font-semibold flex items-center gap-1.5 shadow-sm transition-all whitespace-nowrap shrink-0">
-<span class="material-symbols-outlined text-[18px] text-primary">auto_fix_high</span>
-<span>Auto-Fetch GSTINs via PAN</span>
-</button>
-<button class="min-h-[36px] px-3.5 py-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md font-semibold flex items-center gap-1.5 shadow-sm transition-all whitespace-nowrap shrink-0">
-<span class="material-symbols-outlined text-[18px] text-secondary">sync</span>
-<span>Bulk Sync GSTN Status</span>
-</button>
-<button class="min-h-[36px] px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0">
-<span class="material-symbols-outlined text-[18px]">add_business</span>
-<span>Add New State GSTIN</span>
-</button>
-</div>
-</div>
-<!-- KEY METRIC CARDS (4 Cards Bento Grid) -->
+
+<!-- KEY METRIC CARDS (4 Cards Dynamic Bento Grid) -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-<!-- Metric 1: Registered GSTINs -->
-<div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col justify-between hover:border-primary transition-all">
-<div class="flex items-center justify-between">
-<span class="font-label-md text-label-md text-secondary uppercase font-semibold">Registered GSTINs</span>
-<div class="h-8 w-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-[20px]">domain</span>
+  <!-- Metric 1: Registered GSTINs -->
+  <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col justify-between hover:border-primary transition-all">
+    <div class="flex items-center justify-between">
+      <span class="font-label-md text-label-md text-secondary uppercase font-semibold">Registered GSTINs</span>
+      <div class="h-8 w-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
+        <span class="material-symbols-outlined text-[20px]">domain</span>
+      </div>
+    </div>
+    <div class="my-2">
+      <div class="flex items-baseline gap-2">
+        <span id="multiTotalGstinsCount" class="font-numeric-lg text-numeric-lg font-bold text-on-surface">— Branches</span>
+      </div>
+    </div>
+    <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+      <span id="multiStatesListDisplay" class="font-label-sm text-label-sm text-secondary font-medium">Pan-India Branch Network</span>
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">Shared PAN</span>
+    </div>
+  </div>
+
+  <!-- Metric 2: Active Filing Branch -->
+  <div class="p-4 rounded-xl border border-emerald-300 bg-emerald-50/20 shadow-sm flex flex-col justify-between hover:border-emerald-500 transition-all">
+    <div class="flex items-center justify-between">
+      <span class="font-label-md text-label-md text-emerald-800 uppercase font-semibold flex items-center gap-1">
+        <span class="h-2 w-2 rounded-full bg-emerald-600 animate-pulse"></span>
+        Active For Filing
+      </span>
+      <div class="h-8 w-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+        <span class="material-symbols-outlined text-[20px]">check_circle</span>
+      </div>
+    </div>
+    <div class="my-2">
+      <span id="multiActiveBranchName" class="font-numeric-lg text-sm font-bold text-on-surface truncate block">—</span>
+      <span id="multiActiveGstinCode" class="font-mono text-xs text-primary font-bold block mt-0.5">—</span>
+    </div>
+    <div class="pt-2 border-t border-emerald-100 flex items-center justify-between text-xs text-secondary">
+      <span>Scoped to Sales, Bills &amp; Returns</span>
+      <span class="text-primary font-bold text-[11px]">Primary</span>
+    </div>
+  </div>
+
+  <!-- Metric 3: Aggregate Corporate Turnover -->
+  <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col justify-between hover:border-primary transition-all">
+    <div class="flex items-center justify-between">
+      <span class="font-label-md text-label-md text-secondary uppercase font-semibold">Aggregate PAN Turnover</span>
+      <div class="h-8 w-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
+        <span class="material-symbols-outlined text-[20px]">currency_rupee</span>
+      </div>
+    </div>
+    <div class="my-2">
+      <div class="flex items-baseline gap-1.5">
+        <span id="multiAggTurnover" class="font-numeric-lg text-numeric-lg font-bold text-on-surface">₹0.00</span>
+      </div>
+    </div>
+    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+      <span id="multiPeriodLabelDisplay" class="text-secondary font-mono">Period: 102026</span>
+      <span id="multiTotalTaxDisplay" class="text-primary font-semibold font-mono">Output Tax: ₹0.00</span>
+    </div>
+  </div>
+
+  <!-- Metric 4: Filing Regimes -->
+  <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col justify-between hover:border-primary transition-all">
+    <div class="flex items-center justify-between">
+      <span class="font-label-md text-label-md text-secondary uppercase font-semibold">Filing Regimes</span>
+      <div class="h-8 w-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
+        <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+      </div>
+    </div>
+    <div class="my-2">
+      <span id="multiFilingRegimes" class="font-numeric-lg text-numeric-lg font-bold text-on-surface">— Monthly</span>
+    </div>
+    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-secondary">
+      <span>Sec 25 Multi-State Compliance</span>
+      <span class="text-emerald-700 font-bold">100% ACID DB</span>
+    </div>
+  </div>
 </div>
+
+<!-- SECTION 2: MULTI-GSTIN ARCHITECTURE CALLOUT -->
+<div class="p-4 rounded-xl border border-blue-200 bg-blue-50/60 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all">
+  <div class="flex items-start gap-3.5">
+    <div class="h-9 w-9 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center shrink-0 mt-0.5">
+      <span class="material-symbols-outlined text-[22px]">hub</span>
+    </div>
+    <div class="flex flex-col">
+      <div class="flex items-center gap-2">
+        <h2 class="font-headline-sm text-headline-sm font-semibold text-blue-950">
+          Multi-State Pan-India GSTIN Switcher
+        </h2>
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-200 text-blue-900">Section 25 CGST</span>
+      </div>
+      <p class="font-body-md text-body-md text-blue-900 mt-0.5">
+        All state branches registered under your Corporate PAN share the same 10-digit PAN (digits 3–12 of each GSTIN). Click <strong>"Switch for GST Filing"</strong> on any branch card to instantly direct all Sales Invoices, Purchase Bills, GSTR-1, and GSTR-3B return filing workflows to that operative state branch.
+      </p>
+    </div>
+  </div>
+  <div class="flex items-center gap-2 shrink-0 self-end md:self-center">
+    <button onclick="openAddGstinModal()" class="h-9 px-4 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[16px]">add</span>
+      <span>Add Branch</span>
+    </button>
+  </div>
 </div>
-<div class="my-2">
-<div class="flex items-baseline gap-2">
-<span class="font-numeric-lg text-numeric-lg font-bold text-on-surface">4 Active</span>
-<span class="font-label-sm text-label-sm text-secondary font-medium">(MH, DL, KA, TN)</span>
-</div>
-</div>
-<div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-<span class="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-1.5"></span>
-              All GSTINs Validated
-            </span>
-<span class="font-label-sm text-label-sm text-secondary">1 Pending</span>
-</div>
-</div>
-<!-- Metric 2: Filing Regimes -->
-<div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col justify-between hover:border-primary transition-all">
-<div class="flex items-center justify-between">
-<span class="font-label-md text-label-md text-secondary uppercase font-semibold">Filing Regimes</span>
-<div class="h-8 w-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-[20px]">calendar_month</span>
-</div>
-</div>
-<div class="my-2">
-<div class="flex items-baseline gap-2">
-<span class="font-numeric-lg text-numeric-lg font-bold text-on-surface">3 Monthly</span>
-<span class="font-label-sm text-label-sm text-secondary">/ 1 QRMP</span>
-</div>
-</div>
-<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-secondary">
-<span>Tamil Nadu on QRMP</span>
-<span class="text-primary font-medium hover:underline cursor-pointer">Configure</span>
-</div>
-</div>
-<!-- Metric 3: GSTN API Sync Status -->
-<div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col justify-between hover:border-primary transition-all">
-<div class="flex items-center justify-between">
-<span class="font-label-md text-label-md text-secondary uppercase font-semibold">GSTN API Sync Status</span>
-<div class="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-<span class="material-symbols-outlined text-[20px]">cloud_done</span>
-</div>
-</div>
-<div class="my-2">
-<div class="flex items-baseline gap-2">
-<span class="font-numeric-lg text-numeric-lg font-bold text-emerald-700">4/4 Connected</span>
-</div>
-</div>
-<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-<span class="text-secondary font-mono">Token valid: 5h 42m</span>
-<span class="text-primary font-medium hover:underline cursor-pointer">Extend Token</span>
-</div>
-</div>
-<!-- Metric 4: Aggregate PAN Turnover -->
-<div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col justify-between hover:border-primary transition-all">
-<div class="flex items-center justify-between">
-<span class="font-label-md text-label-md text-secondary uppercase font-semibold">Aggregate PAN Turnover</span>
-<div class="h-8 w-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-[20px]">currency_rupee</span>
-</div>
-</div>
-<div class="my-2">
-<div class="flex items-baseline gap-1.5">
-<span class="font-numeric-lg text-numeric-lg font-bold text-on-surface">₹14.85 Cr</span>
-<span class="font-label-sm text-label-sm text-secondary">FY 24-25</span>
-</div>
-</div>
-<div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">
-              e-Invoicing Mandatory (&gt;₹5Cr)
-            </span>
-</div>
-</div>
-</div>
-<!-- ===================================================================== -->
-<!-- SECTION 2: PAN-TO-GSTIN AUTO-DISCOVERY CALLOUT BANNER                  -->
-<!-- ===================================================================== -->
-<div class="p-4 rounded-xl border border-amber-200 bg-amber-50/70 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all">
-<div class="flex items-start gap-3.5">
-<div class="h-9 w-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
-<span class="material-symbols-outlined text-[22px]">notification_important</span>
-</div>
-<div class="flex flex-col">
-<div class="flex items-center gap-2">
-<h2 class="font-headline-sm text-headline-sm font-semibold text-amber-950">PAN Auto-Discovery Connected (AAACA1234A)</h2>
-<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-200 text-amber-900">New Registration</span>
-</div>
-<p class="font-body-md text-body-md text-amber-900 mt-0.5">
-              1 New GSTIN Detected in West Bengal (<span class="font-mono font-semibold">19AAACA1234A1Z7</span>) from GST Portal registry. Click "Import &amp; Configure" to onboard with filing cadences and GSP credentials.
-            </p>
-</div>
-</div>
-<div class="flex items-center gap-2 shrink-0 self-end md:self-center">
-<button class="h-9 px-4 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold shadow-sm transition-all cursor-pointer">
-            Import WB GSTIN
-          </button>
-<button class="h-9 px-3 rounded-lg border border-amber-300 hover:bg-amber-100 text-amber-900 font-label-md text-label-md font-medium transition-all">
-            Dismiss
-          </button>
-</div>
-</div>
-<!-- ===================================================================== -->
+
 <!-- TWO COLUMN WORKSPACE: 3. REGISTRY TABLE & 4/5. COMPLIANCE SIDE PANEL  -->
-<!-- ===================================================================== -->
 <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-<!-- LEFT 8 COLUMNS: MULTI-STATE GSTIN MASTER REGISTRY                     -->
-<div class="xl:col-span-8 flex flex-col gap-4">
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-<div class="flex items-center gap-2">
-<h2 class="font-headline-md text-headline-md font-bold text-on-surface">Multi-State GSTIN Master Registry</h2>
-<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-surface-container text-secondary">4 Entries</span>
-</div>
-<!-- Table Controls -->
-<div class="flex items-center gap-2">
-<div class="relative">
-<span class="material-symbols-outlined absolute left-2.5 top-2 text-[18px] text-secondary">search</span>
-<input class="h-8 pl-8 pr-3 text-xs rounded-lg border border-outline-variant bg-surface-container-lowest focus:ring-1 focus:ring-primary focus:border-primary w-64" placeholder="Search GSTIN, State or Trade Name..." type="text"/>
-</div>
-<button class="h-8 px-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest text-xs font-medium flex items-center gap-1 hover:bg-surface-container-low text-secondary">
-<span class="material-symbols-outlined text-[16px]">filter_list</span>
-<span>Filter</span>
-</button>
-</div>
-</div>
-<!-- Master GSTIN Cards / High-Density Grid Container -->
-<div class="flex flex-col gap-3.5">
-<!-- CARD 1: MAHARASHTRA (Head Office) -->
-<div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/60 transition-all shadow-sm">
-<div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
-<div class="flex items-start gap-3">
-<div class="h-10 w-10 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex flex-col items-center justify-center font-bold shrink-0">
-<span class="text-xs">27</span>
-<span class="text-[10px] -mt-1 font-semibold">MH</span>
-</div>
-<div class="flex flex-col">
-<div class="flex items-center gap-2 flex-wrap">
-<span class="font-mono text-base font-bold text-on-surface tracking-wide">27AAACA1234A1Z5</span>
-<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary border border-primary/20">Head Office • Principal Place</span>
-<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-<span class="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-1"></span>
-                        API Connected
-                      </span>
-</div>
-<span class="font-headline-sm text-headline-sm font-semibold text-on-surface mt-0.5">Apex Retailers (BKC HQ)</span>
-<p class="font-body-sm text-body-sm text-secondary mt-0.5">Unit 401, Corporate Hub, Bandra Kurla Complex, Mumbai, Maharashtra 400051</p>
-</div>
-</div>
-<!-- Registration & Status Tags -->
-<div class="flex md:flex-col items-end gap-1.5 shrink-0">
-<span class="px-2.5 py-1 rounded text-xs font-semibold bg-surface-container text-on-surface border border-outline-variant">
-                    Regular Monthly (GSTR-1 &amp; 3B)
-                  </span>
-<span class="text-[11px] font-medium text-emerald-700 flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">bolt</span>
-                    e-Invoice Active (IRN Portal)
-                  </span>
-</div>
-</div>
-<!-- Metadata & Signatory Info Strip -->
-<div class="mt-3.5 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-<div class="flex flex-wrap items-center gap-4 text-secondary">
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-primary">schedule</span>
-<span>Auto-pull GSTR-2B daily at 06:00 AM IST</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-secondary">verified_user</span>
-<span>Signatory: <strong class="text-on-surface font-medium" id="evcSignatoryDisplay">Authorized Signatory (DSC &amp; EVC Mapped)</strong></span>
-</div>
-</div>
-<!-- Row Actions -->
-<div class="flex items-center gap-2">
-<button class="px-2.5 py-1 rounded border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary hover:text-on-surface transition-colors">
-                    Configure API
-                  </button>
-<button class="px-2.5 py-1 rounded border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary hover:text-on-surface transition-colors">
-                    Manage Users
-                  </button>
-<button class="px-2.5 py-1 rounded border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary hover:text-on-surface transition-colors">
-                    View Ledgers
-                  </button>
-<button class="p-1 rounded text-secondary hover:text-primary transition-colors" title="Edit Settings">
-<span class="material-symbols-outlined text-[18px]">edit</span>
-</button>
-</div>
-</div>
-</div>
-<!-- CARD 2: KARNATAKA (Regional Fulfillment Hub) -->
-<div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/60 transition-all shadow-sm">
-<div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
-<div class="flex items-start gap-3">
-<div class="h-10 w-10 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 flex flex-col items-center justify-center font-bold shrink-0">
-<span class="text-xs">29</span>
-<span class="text-[10px] -mt-1 font-semibold">KA</span>
-</div>
-<div class="flex flex-col">
-<div class="flex items-center gap-2 flex-wrap">
-<span class="font-mono text-base font-bold text-on-surface tracking-wide">29AAACA1234A1ZX</span>
-<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-surface-container text-secondary border border-outline-variant">Regional Fulfillment Hub</span>
-<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-<span class="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-1"></span>
-                        API Connected
-                      </span>
-</div>
-<span class="font-headline-sm text-headline-sm font-semibold text-on-surface mt-0.5">Apex Logistics South</span>
-<p class="font-body-sm text-body-sm text-secondary mt-0.5">12/B Electronic City Phase 1, Bengaluru, Karnataka 560100</p>
-</div>
-</div>
-<div class="flex md:flex-col items-end gap-1.5 shrink-0">
-<span class="px-2.5 py-1 rounded text-xs font-semibold bg-surface-container text-on-surface border border-outline-variant">
-                    Regular Monthly Taxpayer
-                  </span>
-<span class="text-[11px] font-medium text-emerald-700 flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">bolt</span>
-                    e-Invoice Active
-                  </span>
-</div>
-</div>
-<div class="mt-3.5 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-<div class="flex flex-wrap items-center gap-4 text-secondary">
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-amber-600">warning</span>
-<span class="text-amber-700 font-medium">Pending: Additional Place of Business (APOB) Authorization</span>
-</div>
-</div>
-<div class="flex items-center gap-2">
-<button class="px-2.5 py-1 rounded border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary hover:text-on-surface transition-colors">
-                    Configure API
-                  </button>
-<button class="px-2.5 py-1 rounded border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary hover:text-on-surface transition-colors">
-                    Manage Users
-                  </button>
-<button class="p-1 rounded text-secondary hover:text-primary transition-colors" title="Edit Settings">
-<span class="material-symbols-outlined text-[18px]">edit</span>
-</button>
-</div>
-</div>
-</div>
-<!-- CARD 3: DELHI NCR (Northern Regional Office) -->
-<div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/60 transition-all shadow-sm">
-<div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
-<div class="flex items-start gap-3">
-<div class="h-10 w-10 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 flex flex-col items-center justify-center font-bold shrink-0">
-<span class="text-xs">07</span>
-<span class="text-[10px] -mt-1 font-semibold">DL</span>
-</div>
-<div class="flex flex-col">
-<div class="flex items-center gap-2 flex-wrap">
-<span class="font-mono text-base font-bold text-on-surface tracking-wide">07AAACA1234A1Z2</span>
-<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-surface-container text-secondary border border-outline-variant">Northern Regional Office</span>
-<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-<span class="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-1"></span>
-                        API Connected
-                      </span>
-</div>
-<span class="font-headline-sm text-headline-sm font-semibold text-on-surface mt-0.5">Apex Retailers Delhi</span>
-<p class="font-body-sm text-body-sm text-secondary mt-0.5">Connaught Place, Inner Circle, New Delhi 110001</p>
-</div>
-</div>
-<div class="flex md:flex-col items-end gap-1.5 shrink-0">
-<span class="px-2.5 py-1 rounded text-xs font-semibold bg-surface-container text-on-surface border border-outline-variant">
-                    Regular Monthly Taxpayer
-                  </span>
-<span class="text-[11px] font-medium text-emerald-700 flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">bolt</span>
-                    e-Invoice Active
-                  </span>
-</div>
-</div>
-<div class="mt-3.5 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-<div class="flex flex-wrap items-center gap-4 text-secondary">
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-secondary">vpn_key</span>
-<span>Session Status: Active (OTP Refresh in 2 days)</span>
-</div>
-</div>
-<div class="flex items-center gap-2">
-<button class="px-2.5 py-1 rounded border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary hover:text-on-surface transition-colors">
-                    Configure API
-                  </button>
-<button class="px-2.5 py-1 rounded border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary hover:text-on-surface transition-colors">
-                    Manage Users
-                  </button>
-<button class="p-1 rounded text-secondary hover:text-primary transition-colors" title="Edit Settings">
-<span class="material-symbols-outlined text-[18px]">edit</span>
-</button>
-</div>
-</div>
-</div>
-<!-- CARD 4: TAMIL NADU (Branch & Retail Outlet - QRMP) -->
-<div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/60 transition-all shadow-sm">
-<div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
-<div class="flex items-start gap-3">
-<div class="h-10 w-10 rounded-lg bg-orange-50 border border-orange-200 text-orange-800 flex flex-col items-center justify-center font-bold shrink-0">
-<span class="text-xs">33</span>
-<span class="text-[10px] -mt-1 font-semibold">TN</span>
-</div>
-<div class="flex flex-col">
-<div class="flex items-center gap-2 flex-wrap">
-<span class="font-mono text-base font-bold text-on-surface tracking-wide">33AAACA1234A1Z1</span>
-<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-surface-container text-secondary border border-outline-variant">Branch &amp; Retail Outlet</span>
-<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-<span class="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-1"></span>
-                        API Connected
-                      </span>
-</div>
-<span class="font-headline-sm text-headline-sm font-semibold text-on-surface mt-0.5">Apex Retailers Chennai</span>
-<p class="font-body-sm text-body-sm text-secondary mt-0.5">Anna Salai, T. Nagar, Chennai, Tamil Nadu 600017</p>
-</div>
-</div>
-<div class="flex md:flex-col items-end gap-1.5 shrink-0">
-<span class="px-2.5 py-1 rounded text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-300">
-                    QRMP Scheme (Quarterly 3B / Monthly IFF)
-                  </span>
-<span class="text-[11px] text-secondary">
-                    Next IFF Due: Nov 13
-                  </span>
-</div>
-</div>
-<div class="mt-3.5 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-<div class="flex flex-wrap items-center gap-4 text-secondary">
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-secondary">info</span>
-<span>Turnover eligible for QRMP Opt-out window in Q4</span>
-</div>
-</div>
-<div class="flex items-center gap-2">
-<button class="px-2.5 py-1 rounded border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary hover:text-on-surface transition-colors">
-                    Configure API
-                  </button>
-<button class="px-2.5 py-1 rounded border border-outline-variant hover:bg-surface-container text-xs font-semibold text-primary hover:bg-surface-container-low transition-colors">
-                    Switch to Regular
-                  </button>
-<button class="p-1 rounded text-secondary hover:text-primary transition-colors" title="Edit Settings">
-<span class="material-symbols-outlined text-[18px]">edit</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-<!-- Table Bottom Helper Note -->
-<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-outline-variant text-xs text-secondary">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-[16px] text-primary">security</span>
-<span>All 4 GSTINs are secured with 256-bit encryption. GSP direct token rotation occurs automatically every 6 hours.</span>
-</div>
-<a class="text-primary font-semibold hover:underline" href="#">View Audit Log</a>
-</div>
-</div>
-<!-- RIGHT 4 COLUMNS: 4. GST PORTAL API AUTH DRAWER & 5. STATUTORY READINESS -->
+  <!-- LEFT 8 COLUMNS: MULTI-STATE GSTIN MASTER REGISTRY                     -->
+  <div class="xl:col-span-8 flex flex-col gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <h2 class="font-headline-md text-headline-md font-bold text-on-surface">Multi-State GSTIN Master Registry</h2>
+        <span id="multiRegistryEntriesCount" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-surface-container text-secondary">— Branches</span>
+      </div>
+      <!-- Table Controls -->
+      <div class="flex items-center gap-2">
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-2.5 top-2 text-[18px] text-secondary">search</span>
+          <input id="multiGstinSearchInput" oninput="filterMultiGstinCards(this.value)" class="h-8 pl-8 pr-3 text-xs rounded-lg border border-outline-variant bg-surface-container-lowest focus:ring-1 focus:ring-primary focus:border-primary w-64" placeholder="Search GSTIN, State or Trade Name..." type="text"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- DYNAMIC REAL GSTIN REGISTRY CARDS CONTAINER (Zero Fake Sample Data) -->
+    <div id="multiGstinRegistryList" class="flex flex-col gap-3.5">
+      <!-- Populated dynamically by loadMultiGstinHub() -->
+    </div>
+
+    <!-- Table Bottom Helper Note -->
+    <div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-outline-variant text-xs text-secondary">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-[16px] text-primary">security</span>
+        <span>Switching GSTIN immediately scopes all Sales, Purchases, Ledgers, and Form GSTR-1/3B filing modules.</span>
+      </div>
+      <a class="text-primary font-semibold hover:underline" href="#" onclick="switchSuite('sales'); return false;">Open Sales Register</a>
+    </div>
+  </div>
+
+  <!-- RIGHT 4 COLUMNS: 4. GST PORTAL API AUTH DRAWER & 5. STATUTORY READINESS -->
 <div class="xl:col-span-4 flex flex-col gap-6">
 <!-- 4. GST PORTAL API & AUTHENTICATION HEALTH MANAGEMENT PANEL -->
 <div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col gap-4">
@@ -9259,5 +9037,100 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
         </div>
       </div>
     </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD NEW STATE BRANCH GSTIN (Multi-GSTIN Corporate Entity)          -->
+  <!-- ========================================================================= -->
+  <div id="modalAddGstin" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg rounded-2xl bg-surface-container-lowest border border-outline-variant shadow-2xl overflow-hidden flex flex-col">
+      <header class="p-5 border-b border-outline-variant flex items-center justify-between bg-surface-container-low/50">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shrink-0">
+            <span class="material-symbols-outlined text-[24px]">add_business</span>
+          </div>
+          <div>
+            <h2 class="text-sm font-bold text-on-surface tracking-tight">Register New State Branch GSTIN</h2>
+            <p class="text-xs text-secondary mt-0.5">Add an operative branch sharing Corporate PAN <span id="modalAddGstinPanDisplay" class="font-mono font-bold text-primary">—</span></p>
+          </div>
+        </div>
+        <button onclick="closeAddGstinModal()" class="p-1.5 text-secondary hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors cursor-pointer" type="button">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </header>
+
+      <form id="formAddStateGstin" onsubmit="submitAddGstin(event)" class="p-5 space-y-4">
+        <div id="addGstinError" class="hidden p-3 rounded-lg bg-error/10 border border-error/20 text-xs text-error flex items-center gap-2">
+          <span class="material-symbols-outlined text-[16px] shrink-0">error</span>
+          <span id="addGstinErrorText">Error message</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface mb-1">State Jurisdiction <span class="text-error">*</span></label>
+            <select id="addGstinStateSelect" onchange="onAddGstinStateChange(this.value)" class="w-full px-3 py-2 text-xs rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" required>
+              <option value="">Select State</option>
+              <option value="27" data-name="Maharashtra">27 - Maharashtra</option>
+              <option value="29" data-name="Karnataka">29 - Karnataka</option>
+              <option value="07" data-name="Delhi">07 - Delhi</option>
+              <option value="33" data-name="Tamil Nadu">33 - Tamil Nadu</option>
+              <option value="32" data-name="Kerala">32 - Kerala</option>
+              <option value="19" data-name="West Bengal">19 - West Bengal</option>
+              <option value="24" data-name="Gujarat">24 - Gujarat</option>
+              <option value="06" data-name="Haryana">06 - Haryana</option>
+              <option value="08" data-name="Rajasthan">08 - Rajasthan</option>
+              <option value="09" data-name="Uttar Pradesh">09 - Uttar Pradesh</option>
+              <option value="23" data-name="Madhya Pradesh">23 - Madhya Pradesh</option>
+              <option value="36" data-name="Telangana">36 - Telangana</option>
+              <option value="37" data-name="Andhra Pradesh">37 - Andhra Pradesh</option>
+              <option value="21" data-name="Odisha">21 - Odisha</option>
+              <option value="10" data-name="Bihar">10 - Bihar</option>
+              <option value="03" data-name="Punjab">03 - Punjab</option>
+              <option value="02" data-name="Himachal Pradesh">02 - Himachal Pradesh</option>
+              <option value="05" data-name="Uttarakhand">05 - Uttarakhand</option>
+              <option value="18" data-name="Assam">18 - Assam</option>
+              <option value="30" data-name="Goa">30 - Goa</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-on-surface mb-1">Filing Cadence <span class="text-error">*</span></label>
+            <select id="addGstinFrequency" class="w-full px-3 py-2 text-xs rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary">
+              <option value="MONTHLY" selected>Regular Monthly (GSTR-1 &amp; 3B)</option>
+              <option value="QRMP">QRMP Scheme (Quarterly)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-on-surface mb-1">15-Character State GSTIN <span class="text-error">*</span></label>
+          <div class="relative">
+            <input type="text" id="addGstinInput" maxlength="15" class="w-full px-3 py-2 text-xs rounded-lg border border-outline-variant bg-surface text-on-surface font-mono font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. 27AAACA1234A1Z5" required>
+          </div>
+          <p class="text-[11px] text-secondary mt-1">Must share the exact 10-digit Corporate PAN (<span id="modalAddGstinPanHint" class="font-mono font-bold text-primary">—</span>) in characters 3 to 12.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-on-surface mb-1">Branch Trade Name <span class="text-error">*</span></label>
+          <input type="text" id="addGstinTradeName" class="w-full px-3 py-2 text-xs rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. Apex Retailers - Bangalore Depot" required>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-on-surface mb-1">Branch Operational Address</label>
+          <input type="text" id="addGstinAddress" class="w-full px-3 py-2 text-xs rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Building, Industrial Estate, City, PIN">
+        </div>
+
+        <div class="pt-3 border-t border-outline-variant flex items-center justify-end gap-2">
+          <button type="button" onclick="closeAddGstinModal()" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary transition-colors cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit" id="btnAddGstinSubmit" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">save</span>
+            <span>Register State Branch</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
 </body>
 </html>

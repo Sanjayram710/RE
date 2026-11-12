@@ -581,5 +581,10 @@ test("Invoice CRUD: DELETE /api/sales/:id and DELETE /api/purchases/:id endpoint
   await handleFunctionalApi(req, resPur, `/api/purchases/${testPur.id}`, "DELETE", {}, {});
   assert.equal(resPur.statusCode, 200);
   assert.ok(!purchaseRepo.findById(testPur.id));
+
+  // Clean up any test records created by this suite
+  db.prepare("DELETE FROM sales_invoices WHERE invoice_number LIKE 'INV-PERSIST-%' OR invoice_number LIKE 'INV-DUP-%' OR invoice_number LIKE 'INV-REFRESH-%' OR invoice_number LIKE 'INV-POS-%'").run();
+  db.prepare("DELETE FROM purchase_invoices WHERE invoice_number LIKE 'BILL-PERSIST-%' OR invoice_number LIKE 'BILL-INELIGIBLE-%' OR invoice_number LIKE 'BILL-OCR-%' OR invoice_number LIKE 'BILL-EL-%' OR invoice_number LIKE 'BILL-INEL-%'").run();
+  db.prepare("DELETE FROM documents WHERE original_filename LIKE 'BILL-OCR-%'").run();
 });
 

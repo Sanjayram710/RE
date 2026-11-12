@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/index.test.js test/api182.test.js test/panGstin2tier.test.js test/expertClearTax.test.js test/cdaPdfModules.test.js test/laymanExperience.test.js test/statutoryGstValidation.test.js test/statutoryHardening.test.js test/functionalPlatform.test.js test/invoicePersistence.test.js test/pdfExtractionWorkflow.test.js test/billsDocsWorkflow.test.js test/gstr3bFilingAndPersistence.test.js test/startupExpress.test.js",
+    "test": "node --test --test-concurrency=1 test/index.test.js test/api182.test.js test/panGstin2tier.test.js test/expertClearTax.test.js test/cdaPdfModules.test.js test/laymanExperience.test.js test/statutoryGstValidation.test.js test/statutoryHardening.test.js test/functionalPlatform.test.js test/invoicePersistence.test.js test/pdfExtractionWorkflow.test.js test/billsDocsWorkflow.test.js test/gstr3bFilingAndPersistence.test.js test/startupExpress.test.js",
     "db:seed": "node -e 'import(\"./lib/db.js\").then(m => m.seedDevelopmentData())'"
   },
   "dependencies": {

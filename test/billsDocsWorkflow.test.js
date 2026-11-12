@@ -663,4 +663,17 @@ test("Bills & Docs 13: Deleting a file from Bills & Docs removes the linked invo
 
   // 6. Verify invToKeep is still safe and intact in purchase_invoices
   assert.ok(db.prepare("SELECT id FROM purchase_invoices WHERE invoice_number = ?").get(invToKeep));
+
+  // 7. Clean up test documents & records from this test suite
+  const testDocs = db.prepare("SELECT storage_path FROM documents WHERE org_id IN (?, ?)").all(primaryOrg.id, tenantBOrg.id);
+  for (const d of testDocs) {
+    if (d.storage_path && fs.existsSync(d.storage_path)) {
+      try { fs.unlinkSync(d.storage_path); } catch {}
+    }
+  }
+  db.prepare("DELETE FROM purchase_invoices WHERE invoice_number = ?").run(invToKeep);
+  db.prepare("DELETE FROM purchase_invoices WHERE document_id IN (SELECT id FROM documents WHERE org_id IN (?, ?))").run(primaryOrg.id, tenantBOrg.id);
+  db.prepare("DELETE FROM sales_invoices WHERE document_id IN (SELECT id FROM documents WHERE org_id IN (?, ?))").run(primaryOrg.id, tenantBOrg.id);
+  db.prepare("DELETE FROM ocr_extractions").run();
+  db.prepare("DELETE FROM documents WHERE org_id IN (?, ?)").run(primaryOrg.id, tenantBOrg.id);
 });
