@@ -3138,7 +3138,7 @@ function renderExpertPlans(category = "all") {
         "Old vs New Tax Regime Arbitrage & Deduction Audit",
         "Automated Form 16, AIS/TIS & 26AS Reconciliation",
         "Section 80C, 80D, 80CCD & HRA Tax Optimization",
-        "ClearTax Client Workspace with Real-Time CA Chat",
+        "SimpleGST Client Workspace with Real-Time CA Chat",
         "100% Free for 30 Days • Zero Advance Payment"
       ]
     },
@@ -3316,7 +3316,7 @@ function openBookExpertModal(planId, planTitle, price) {
 function applyBookingCoupon() {
   const input = document.getElementById("bookCouponInput")?.value.trim().toUpperCase();
   const feedback = document.getElementById("bookCouponFeedback");
-  if (input === "FREE30DAYS" || input === "CLEARTAXFREE" || input === "1MONTHFREE") {
+  if (input === "FREE30DAYS" || input === "SIMPLEGSTFREE" || input === "1MONTHFREE" || input === "CLEARTAXFREE") {
     bookingState.couponApplied = true;
     bookingState.discountPercent = 100;
     if (feedback) {
@@ -4510,7 +4510,7 @@ async function runBatchApiHealthCheck() {
 
 
 // =========================================================================
-// ClearTax Expert Assisted Filing & 1-Month Free Trial Workflows
+// SimpleGST Expert Assisted Filing & 1-Month Free Trial Workflows
 // =========================================================================
 
 async function claimOneMonthFreeTrial() {
