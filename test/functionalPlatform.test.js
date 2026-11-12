@@ -115,6 +115,9 @@ test("Multi-GSTIN: Format validation and branch creation", async () => {
     tradeName: "Bad Branch"
   });
   assert.equal(badRes.statusCode, 400);
+
+  // Clean up the created test branch so Apex Retailers maintains its exact 10 canonical branches
+  db.prepare("DELETE FROM gst_registrations WHERE gstin = ?").run(validGstin);
 });
 
 test("Multi-GSTIN: Switching active GSTIN scopes all queries", async () => {
