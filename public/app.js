@@ -715,6 +715,9 @@ function executeSwitchSuite(suite) {
       viewStartup.style.display = "block";
     }
     highlightSidebarNav('nav-link-settings');
+    if (typeof loadMultiGstinHub === "function") {
+      loadMultiGstinHub();
+    }
   } else if (suite === "notice") {
     if (viewNotice) {
       viewNotice.classList.add("active");
@@ -4133,43 +4136,365 @@ function shareNoticeWhatsapp() {
 }
 
 // ============================================================================
-// Multi-GSTIN Corporate Hub Client Operations
+// Multi-GSTIN Pan-India Corporate Hub Client Operations (Real DB Backed)
 // ============================================================================
-async function loadMultiGstinSummary() {
-  const pan = document.getElementById("multiGstinPanInput")?.value.trim() || "AAACB1234F";
+let multiGstinCachedBranches = [];
+
+async function loadMultiGstinHub() {
+  const container = document.getElementById("multiGstinRegistryList");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="p-8 text-center text-secondary flex flex-col items-center justify-center">
+      <span class="inline-block animate-spin text-2xl text-primary mb-2">⟳</span>
+      <p class="text-xs">Loading pan-India branch registrations...</p>
+    </div>
+  `;
+
   try {
-    const res = await fetch(`/api/multi-gstin/summary?pan=${pan}`);
+    const period = appState.activePeriod || "102026";
+    const res = await apiFetch(`/api/gstins?period=${period}`);
     const data = await res.json();
-    if (!data.success) {
-      alert("Multi-GSTIN error: " + data.error);
+    if (!res.ok || !data.gstins) {
+      container.innerHTML = `<div class="p-4 text-xs text-error bg-error/10 rounded-lg">Failed to load branches: ${escapeHtml(data.error || "Network error")}</div>`;
       return;
     }
 
-    document.getElementById("multiTotalGstins").textContent = `${data.consolidatedMetrics.totalGstinsRegistered} States`;
-    document.getElementById("multiPanTurnover").textContent = `₹ ${(data.consolidatedMetrics.panIndiaTurnover / 10000000).toFixed(2)} Cr`;
-    document.getElementById("multiTotalTax").textContent = `₹ ${(data.consolidatedMetrics.totalOutputTaxLiability / 100000).toFixed(2)} L`;
-    document.getElementById("multiComplianceRate").textContent = `${data.consolidatedMetrics.overallComplianceRate}%`;
+    const gstins = data.gstins || [];
+    multiGstinCachedBranches = gstins;
+    appState.allGstins = gstins;
 
-    const tbody = document.getElementById("multiGstinTableBody");
-    if (tbody) {
-      tbody.innerHTML = data.branches.map(b => `
-        <tr>
-          <td><strong>${b.stateName} (${b.stateCode})</strong></td>
-          <td class="font-mono text-xs">${b.gstin}</td>
-          <td><span class="status-chip ${b.gstr1Status === 'FILED' ? 'success-chip' : 'orange-chip'}">${b.gstr1Status}</span></td>
-          <td><span class="status-chip ${b.gstr3bStatus === 'FILED' ? 'success-chip' : 'danger-chip'}">${b.gstr3bStatus}</span></td>
-          <td><span class="status-chip ${b.gstr9Status === 'FILED' || b.gstr9Status === 'READY' ? 'success-chip' : 'orange-chip'}">${b.gstr9Status}</span></td>
-          <td>₹${Number(b.turnover).toLocaleString("en-IN")}</td>
-          <td>₹${Number(b.outputTax).toLocaleString("en-IN")}</td>
-          <td>₹${Number(b.eligibleItc).toLocaleString("en-IN")}</td>
-          <td class="font-bold text-primary">₹${Number(b.netCashPayable).toLocaleString("en-IN")}</td>
-        </tr>
-      `).join("");
+    // Update Header and Summary Bento Cards with REAL database numbers (Zero Sample Data)
+    const totalGstins = gstins.length;
+    const activeBranch = gstins.find(g => g.isActiveForFiling) || gstins[0];
+    const corpPan = data.corporatePan || (activeBranch ? activeBranch.gstin.substring(2, 12) : (appState.organization?.pan || "—"));
+    const metrics = data.consolidatedMetrics || {};
+
+    const elTotal = document.getElementById("multiTotalGstinsCount");
+    if (elTotal) elTotal.textContent = `${totalGstins} ${totalGstins === 1 ? "Branch" : "Branches"}`;
+
+    const elStates = document.getElementById("multiStatesListDisplay");
+    if (elStates) {
+      const statesArr = gstins.map(g => g.state_code || g.gstin.substring(0, 2));
+      const uniqueStates = Array.from(new Set(statesArr));
+      elStates.textContent = uniqueStates.length > 0 ? `States: ${uniqueStates.join(", ")}` : "Pan-India Network";
     }
+
+    const elActive = document.getElementById("multiActiveBranchName");
+    if (elActive) {
+      elActive.textContent = activeBranch ? `${activeBranch.trade_name} (${activeBranch.state_name || activeBranch.state_code})` : "None Selected";
+    }
+
+    const elActiveGstin = document.getElementById("multiActiveGstinCode");
+    if (elActiveGstin) {
+      elActiveGstin.textContent = activeBranch ? activeBranch.gstin : "—";
+    }
+
+    const elTurnover = document.getElementById("multiAggTurnover");
+    if (elTurnover) elTurnover.textContent = `₹${Number(metrics.panIndiaTurnover || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+
+    const elTotalTax = document.getElementById("multiTotalTaxDisplay");
+    if (elTotalTax) elTotalTax.textContent = `Output Tax: ₹${Number(metrics.totalOutputTaxLiability || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+
+    const elPeriod = document.getElementById("multiPeriodLabelDisplay");
+    if (elPeriod) elPeriod.textContent = `Period: ${period}`;
+
+    const elRegimes = document.getElementById("multiFilingRegimes");
+    if (elRegimes) elRegimes.textContent = `${metrics.monthlyRegimesCount || 0} Monthly / ${metrics.qrmpRegimesCount || 0} QRMP`;
+
+    const elPanBadge = document.getElementById("multiCorporatePanBadge");
+    if (elPanBadge) elPanBadge.textContent = `Corporate PAN: ${corpPan}`;
+
+    const elEntriesCount = document.getElementById("multiRegistryEntriesCount");
+    if (elEntriesCount) elEntriesCount.textContent = `${totalGstins} ${totalGstins === 1 ? "Branch" : "Branches"}`;
+
+    renderMultiGstinCards(gstins);
   } catch (err) {
-    console.error("Multi-GSTIN load failed:", err);
+    console.error("Failed to load Multi-GSTIN hub:", err);
+    container.innerHTML = `<div class="p-4 text-xs text-error bg-error/10 rounded-lg">Error loading branches: ${escapeHtml(err.message)}</div>`;
   }
 }
+window.loadMultiGstinHub = loadMultiGstinHub;
+
+function renderMultiGstinCards(branches) {
+  const container = document.getElementById("multiGstinRegistryList");
+  if (!container) return;
+
+  if (!branches || branches.length === 0) {
+    const corpPan = appState.organization?.pan || "—";
+    container.innerHTML = `
+      <div class="p-8 rounded-xl border border-dashed border-outline-variant bg-surface-container-lowest text-center flex flex-col items-center justify-center">
+        <span class="material-symbols-outlined text-4xl text-secondary mb-2">add_business</span>
+        <h3 class="font-bold text-sm text-on-surface">No State Branches Registered Yet</h3>
+        <p class="text-xs text-secondary mt-1 max-w-md">Register your state GSTIN branches across India sharing PAN <strong class="font-mono text-primary">${escapeHtml(corpPan)}</strong>.</p>
+        <button onclick="openAddGstinModal()" class="mt-4 px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">add_business</span>
+          <span>Add First State GSTIN</span>
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const period = appState.activePeriod || "102026";
+
+  container.innerHTML = branches.map(b => {
+    const isAct = Boolean(b.isActiveForFiling);
+    const stateCode = escapeHtml(b.state_code || b.gstin.substring(0, 2));
+    const stateName = escapeHtml(b.state_name || "State " + stateCode);
+    const gstinStr = escapeHtml(b.gstin);
+    const tradeName = escapeHtml(b.trade_name || "Branch");
+    const address = escapeHtml(b.address || "Principal / Additional Place of Business");
+    const freq = escapeHtml(b.filing_frequency || "MONTHLY");
+    const isMonthly = freq.toUpperCase() === "MONTHLY";
+    const turnoverStr = Number(b.turnover || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
+    const taxStr = Number(b.outputTax || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
+    const salesCount = Number(b.salesCount || 0);
+
+    const badgeBg = isAct ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-slate-100 border-slate-200 text-slate-800';
+
+    return `
+      <div class="p-4 rounded-xl border ${isAct ? 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/10' : 'border-outline-variant bg-surface-container-lowest'} hover:border-primary/60 transition-all shadow-xs">
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <div class="h-10 w-10 rounded-lg ${badgeBg} border flex flex-col items-center justify-center font-bold shrink-0">
+              <span class="text-xs">${stateCode}</span>
+              <span class="text-[9px] -mt-1 font-semibold uppercase">${stateName.substring(0, 2)}</span>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-mono text-sm sm:text-base font-bold text-on-surface tracking-wide">${gstinStr}</span>
+                ${b.is_primary ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">Principal Place</span>` : `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-surface-container text-secondary border border-outline-variant">Branch</span>`}
+                ${isAct 
+                  ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      <span class="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                      Active for GST Filing
+                     </span>`
+                  : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-secondary border border-slate-200">
+                      Alternate Branch
+                     </span>`
+                }
+              </div>
+              <span class="font-headline-sm text-sm font-semibold text-on-surface mt-0.5">${tradeName}</span>
+              <p class="font-body-sm text-xs text-secondary mt-0.5">${address}</p>
+            </div>
+          </div>
+
+          <!-- Filing Frequency & Activity -->
+          <div class="flex md:flex-col items-end gap-1.5 shrink-0">
+            <span class="px-2.5 py-1 rounded text-xs font-semibold ${isMonthly ? 'bg-surface-container text-on-surface border border-outline-variant' : 'bg-amber-50 text-amber-900 border border-amber-300'}">
+              ${isMonthly ? 'Regular Monthly (GSTR-1 & 3B)' : 'QRMP Scheme (Quarterly)'}
+            </span>
+            <span class="text-[11px] text-secondary font-mono">
+              ${salesCount} outward supplies in ${period}
+            </span>
+          </div>
+        </div>
+
+        <!-- Real Period Metrics Strip (Zero Fake Numbers) -->
+        <div class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex flex-wrap items-center gap-4 text-secondary">
+            <div>Taxable Turnover: <strong class="text-on-surface font-semibold font-mono">₹${turnoverStr}</strong></div>
+            <div>Output Tax: <strong class="text-on-surface font-semibold font-mono">₹${taxStr}</strong></div>
+            <div>GSTR-3B: <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${b.gstr3bStatus === 'FILED' || b.gstr3bStatus === 'FILED_SIMULATED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${b.gstr3bStatus}</span></div>
+          </div>
+
+          <!-- Action Buttons for Switching GSTIN -->
+          <div class="flex items-center gap-2">
+            ${isAct 
+              ? `<button disabled class="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold text-xs shadow-xs flex items-center gap-1.5 cursor-default">
+                  <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                  <span>Active Filing Branch</span>
+                 </button>`
+              : `<button onclick="switchActiveGstinForFiling('${b.id}', '${gstinStr}', '${tradeName.replace(/'/g, "\\'")}')" class="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-semibold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
+                  <span>Switch for GST Filing</span>
+                 </button>`
+            }
+            <button onclick="quickFileForBranch('${b.id}', '${gstinStr}', '${tradeName.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary hover:text-on-surface transition-colors flex items-center gap-1 cursor-pointer" title="Switch & Open Invoices">
+              <span class="material-symbols-outlined text-[16px] text-primary">receipt_long</span>
+              <span>File Invoices</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function switchActiveGstinForFiling(gstinId, gstinStr, tradeName) {
+  try {
+    const res = await apiFetch(`/api/gstins/${gstinId}/activate`, { method: "POST" });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      showToast(data.error || "Failed to switch active GSTIN branch", "error");
+      return;
+    }
+
+    if (data.activeGstin) {
+      appState.activeGstin = data.activeGstin;
+    }
+
+    // Update global header & sidebar displays immediately
+    const entityName = tradeName || data.activeGstin?.trade_name || "Branch";
+    const panEl = document.getElementById("currentFilingPan");
+    if (panEl) panEl.textContent = gstinStr;
+    const nameEl = document.getElementById("currentFilingEntityName");
+    if (nameEl) nameEl.textContent = entityName;
+    const sidePan = document.getElementById("sidebarGstinDisplay");
+    if (sidePan) sidePan.textContent = gstinStr;
+    const sideEntity = document.getElementById("sidebarEntityDisplay");
+    if (sideEntity) sideEntity.textContent = entityName;
+    const fileBadge = document.getElementById("fileGstActiveEntityBadge");
+    if (fileBadge) fileBadge.textContent = `${entityName} (${gstinStr})`;
+    const copilotBadge = document.getElementById("copilotActiveGstinDisplay");
+    if (copilotBadge) copilotBadge.textContent = `${entityName} (${gstinStr})`;
+
+    // Re-render multi-GSTIN list so active badges and buttons update
+    loadMultiGstinHub();
+
+    // Re-sync across UI
+    if (typeof syncPeriodAcrossUi === "function") syncPeriodAcrossUi();
+    if (typeof loadDashboardData === "function") loadDashboardData();
+    if (typeof renderCopilotWorkspace === "function") renderCopilotWorkspace();
+    if (typeof renderFilingDropdownItems === "function") renderFilingDropdownItems();
+
+    showToast(`✓ Active workspace switched to ${entityName} (${gstinStr}) for GST filing`, "success");
+  } catch (err) {
+    console.error("Error switching GSTIN:", err);
+    showToast("Network error while switching GSTIN branch", "error");
+  }
+}
+window.switchActiveGstinForFiling = switchActiveGstinForFiling;
+
+async function quickFileForBranch(gstinId, gstinStr, tradeName) {
+  await switchActiveGstinForFiling(gstinId, gstinStr, tradeName);
+  switchSuite("sales");
+}
+window.quickFileForBranch = quickFileForBranch;
+
+function filterMultiGstinCards(query) {
+  const q = (query || "").trim().toLowerCase();
+  if (!q) {
+    renderMultiGstinCards(multiGstinCachedBranches);
+    return;
+  }
+  const filtered = multiGstinCachedBranches.filter(b => 
+    (b.gstin && b.gstin.toLowerCase().includes(q)) ||
+    (b.trade_name && b.trade_name.toLowerCase().includes(q)) ||
+    (b.state_name && b.state_name.toLowerCase().includes(q)) ||
+    (b.state_code && b.state_code.toLowerCase().includes(q))
+  );
+  renderMultiGstinCards(filtered);
+}
+window.filterMultiGstinCards = filterMultiGstinCards;
+
+// Modal functions for adding a new state GSTIN branch
+function openAddGstinModal() {
+  const modal = document.getElementById("modalAddGstin");
+  if (!modal) return;
+
+  const corpPan = appState.organization?.pan || (appState.activeGstin ? appState.activeGstin.gstin.substring(2, 12) : "AAACA1234A");
+  const elPanDisplay = document.getElementById("modalAddGstinPanDisplay");
+  if (elPanDisplay) elPanDisplay.textContent = corpPan;
+  const elPanHint = document.getElementById("modalAddGstinPanHint");
+  if (elPanHint) elPanHint.textContent = corpPan;
+
+  const errEl = document.getElementById("addGstinError");
+  if (errEl) errEl.classList.add("hidden");
+
+  // Reset form
+  const form = document.getElementById("formAddStateGstin");
+  if (form) form.reset();
+
+  modal.classList.remove("hidden");
+}
+window.openAddGstinModal = openAddGstinModal;
+
+function closeAddGstinModal() {
+  const modal = document.getElementById("modalAddGstin");
+  if (modal) modal.classList.add("hidden");
+}
+window.closeAddGstinModal = closeAddGstinModal;
+
+function onAddGstinStateChange(stateCode) {
+  const gstinInput = document.getElementById("addGstinInput");
+  if (!gstinInput || !stateCode) return;
+
+  const corpPan = appState.organization?.pan || (appState.activeGstin ? appState.activeGstin.gstin.substring(2, 12) : "AAACA1234A");
+  // Suggest a GSTIN for this state code sharing the exact Corporate PAN: <stateCode><PAN>1Z<checksum>
+  gstinInput.value = `${stateCode}${corpPan}1Z5`;
+}
+window.onAddGstinStateChange = onAddGstinStateChange;
+
+async function submitAddGstin(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const selectState = document.getElementById("addGstinStateSelect");
+  const stateCode = selectState ? selectState.value : "";
+  const selectedOption = selectState?.options[selectState.selectedIndex];
+  const stateName = selectedOption?.dataset?.name || selectedOption?.text?.split("-")?.[1]?.trim() || "State " + stateCode;
+  const gstin = (document.getElementById("addGstinInput")?.value || "").trim().toUpperCase();
+  const tradeName = (document.getElementById("addGstinTradeName")?.value || "").trim();
+  const address = (document.getElementById("addGstinAddress")?.value || "").trim();
+  const filingFrequency = document.getElementById("addGstinFrequency")?.value || "MONTHLY";
+
+  const errEl = document.getElementById("addGstinError");
+  const errText = document.getElementById("addGstinErrorText");
+  const btn = document.getElementById("btnAddGstinSubmit");
+
+  if (!stateCode || !gstin || !tradeName) {
+    if (errEl && errText) {
+      errText.textContent = "Please fill in all mandatory fields (State, GSTIN, Trade Name).";
+      errEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Registering...`;
+  }
+
+  try {
+    const res = await apiFetch("/api/gstins", {
+      method: "POST",
+      body: JSON.stringify({
+        gstin,
+        tradeName,
+        stateCode,
+        stateName,
+        address,
+        filingFrequency
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      if (errEl && errText) {
+        errText.textContent = data.error || "Failed to register new GSTIN.";
+        errEl.classList.remove("hidden");
+      }
+      return;
+    }
+
+    closeAddGstinModal();
+    showToast(`✓ Branch registered: ${tradeName} (${gstin})`, "success");
+    loadMultiGstinHub();
+    if (typeof renderFilingDropdownItems === "function") renderFilingDropdownItems();
+  } catch (err) {
+    console.error("Add GSTIN error:", err);
+    if (errEl && errText) {
+      errText.textContent = "Network error: " + err.message;
+      errEl.classList.remove("hidden");
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span><span>Register State Branch</span>`;
+    }
+  }
+}
+window.submitAddGstin = submitAddGstin;
 
 // ============================================================================
 // GSTR-9 Annual Return Client Operations
