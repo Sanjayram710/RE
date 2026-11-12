@@ -412,8 +412,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   initKioskEventListeners();
   await fetchAppMode();
   
-  // Default to GST Return Assistant on load
-  switchSuite('home');
+  // Default to GST Return Assistant on load or route directly to requested URL
+  if (window.location.pathname === "/startup-express" || window.location.hash === "#startup-express") {
+    switchSuite('startup-express');
+  } else {
+    switchSuite('home');
+  }
+
+  window.addEventListener("popstate", () => {
+    if (window.location.pathname === "/startup-express") {
+      switchSuite('startup-express');
+    } else if (appState.currentSuite === "startup-express") {
+      switchSuite('home');
+    }
+  });
 
   if (isAuthenticated && appState.activeGstin) {
     selectFilingEntity(appState.activeGstin.gstin, appState.activeGstin.trade_name || appState.organization?.name || "Taxpayer", appState.activeGstin.state_name || "");
@@ -523,6 +535,7 @@ function executeSwitchSuite(suite) {
   const viewFileGst = document.getElementById("viewFileGstSuite");
   const viewSales = document.getElementById("viewSalesSuite");
   const viewPurchase = document.getElementById("viewPurchaseSuite");
+  const viewStartupExpress = document.getElementById("viewStartupExpressSuite");
 
   // Always close dropdowns & mobile drawer when switching
   document.getElementById("filingDropdownMenu")?.classList.add("hidden");
@@ -534,7 +547,8 @@ function executeSwitchSuite(suite) {
   const allSuites = [
     viewItr, viewExpert, viewNotice, viewVault, viewGst, viewCopilot, 
     viewStartup, viewCompliance, viewHome, viewBills, viewRecon, 
-    viewTaxCalc, viewPractice, viewVendor, viewFileGst, viewSales, viewPurchase
+    viewTaxCalc, viewPractice, viewVendor, viewFileGst, viewSales, viewPurchase,
+    viewStartupExpress
   ];
   allSuites.forEach(v => {
     if (v) {
@@ -554,7 +568,28 @@ function executeSwitchSuite(suite) {
     b.classList.add('text-secondary');
   });
 
-  if (suite === "home") {
+  if (suite === "startup-express" || suite === "startup_express" || suite === "startupExpress") {
+    if (viewStartupExpress) {
+      viewStartupExpress.classList.add("active");
+      viewStartupExpress.classList.remove("hidden");
+      viewStartupExpress.style.display = "block";
+    }
+    highlightSidebarNav('nav-link-startup-express');
+    highlightBottomNav('bottom-nav-startup');
+    if (window.location.pathname !== "/startup-express") {
+      try {
+        window.history.pushState({ suite: 'startup-express' }, '', '/startup-express');
+      } catch (e) {}
+    }
+    if (typeof loadStartupExpress === "function") {
+      loadStartupExpress();
+    }
+  } else if (suite === "home") {
+    if (window.location.pathname === "/startup-express") {
+      try {
+        window.history.pushState({}, '', '/');
+      } catch (e) {}
+    }
     if (viewHome) {
       viewHome.classList.add("active");
       viewHome.classList.remove("hidden");
@@ -633,6 +668,9 @@ function executeSwitchSuite(suite) {
       viewTaxCalc.style.display = "block";
     }
     highlightSidebarNav('nav-link-taxcalc');
+    if (typeof renderTaxCalcSuite === "function") {
+      renderTaxCalcSuite();
+    }
   } else if (suite === "gst" || suite === "reports") {
     if (viewGst) {
       viewGst.classList.add("active");
@@ -2030,6 +2068,23 @@ async function handleSignInSubmit(e) {
 }
 window.handleSignInSubmit = handleSignInSubmit;
 
+function fillAdminCredentials() {
+  const idInput = document.getElementById("loginIdentifier");
+  const passInput = document.getElementById("loginPassword");
+  if (idInput) {
+    idInput.value = "admin@simplegst.in";
+    idInput.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  if (passInput) {
+    passInput.value = "Admin@123";
+    passInput.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  if (typeof showToast === "function") {
+    showToast("Admin credentials loaded! Click Sign In to enter.", "info");
+  }
+}
+window.fillAdminCredentials = fillAdminCredentials;
+
 function handleRegisterSubmit(e) {
   if (e && e.preventDefault) e.preventDefault();
   const name = document.getElementById("regFullName")?.value.trim() || "New Taxpayer";
@@ -2663,6 +2718,173 @@ function renderGstr3bScreen() {
   document.getElementById("gstr3bEligibleItc").textContent = `₹ ${Number(calc.eligibleItc.total).toLocaleString("en-IN")}`;
   document.getElementById("gstr3bNetPayable").textContent = `₹ ${Number(calc.netPayable.total).toLocaleString("en-IN")}`;
 }
+
+async function renderTaxCalcSuite(period) {
+  const p = period || appState.activePeriod || appState.gst?.business?.filingPeriod || "102026";
+  try {
+    const res = await apiFetch(`/api/returns/tax-calc?period=${p}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    appState.activeTaxCalc = data;
+
+    const liability = data.liability || { igst: 0, cgst: 0, sgst: 0, cess: 0 };
+    const inputCredit = data.inputCredit || { igst: 0, cgst: 0, sgst: 0, cess: 0 };
+    const matrix = data.setoffMatrix || {};
+    const remainingLiability = data.remainingLiability || { igst: 0, cgst: 0, sgst: 0, total: 0 };
+    const remainingCredit = data.remainingCredit || { igst: 0, cgst: 0, sgst: 0, total: 0 };
+    const netCashPayable = Number(data.netCashPayable || 0);
+    const itcCarryForward = Number(data.excessCreditCarryForward || 0);
+
+    const lIgst = Number(liability.igst || 0);
+    const lCgst = Number(liability.cgst || 0);
+    const lSgst = Number(liability.sgst || 0);
+    const lTotal = lIgst + lCgst + lSgst;
+
+    const cIgst = Number(inputCredit.igst || 0);
+    const cCgst = Number(inputCredit.cgst || 0);
+    const cSgst = Number(inputCredit.sgst || 0);
+    const cTotal = cIgst + cCgst + cSgst;
+
+    const uIgst = matrix.igstCreditUtilized || { towardsIgst: 0, towardsCgst: 0, towardsSgst: 0, total: 0 };
+    const uCgst = matrix.cgstCreditUtilized || { towardsCgst: 0, towardsIgst: 0, total: 0 };
+    const uSgst = matrix.sgstCreditUtilized || { towardsSgst: 0, towardsIgst: 0, total: 0 };
+
+    const totalItcUtilized = (uIgst.total || 0) + (uCgst.total || 0) + (uSgst.total || 0);
+
+    const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Update Top Metric Cards
+    const elOut = document.getElementById("taxCalcMetricOutputTax");
+    if (elOut) elOut.textContent = fmt(lTotal);
+
+    const elItc = document.getElementById("taxCalcMetricItc");
+    if (elItc) elItc.textContent = fmt(cTotal);
+
+    const elItcSub = document.getElementById("taxCalcMetricItcSub");
+    if (elItcSub) {
+      elItcSub.innerHTML = itcCarryForward > 0
+        ? `<span class="material-symbols-outlined text-[14px]">account_balance_wallet</span><span>${fmt(itcCarryForward)} carried forward</span>`
+        : `<span class="material-symbols-outlined text-[14px]">verified</span><span>100% Reconciled vs GSTR-2B</span>`;
+    }
+
+    const elShortfall = document.getElementById("taxCalcMetricNetShortfall");
+    if (elShortfall) elShortfall.textContent = fmt(netCashPayable);
+
+    const elShortfallTitle = document.getElementById("taxCalcMetricShortfallTitle");
+    if (elShortfallTitle) {
+      elShortfallTitle.textContent = netCashPayable > 0 ? "Net Cash Tax Shortfall" : "Net Tax Payable (Fully Offset)";
+    }
+
+    const elShortfallSub = document.getElementById("taxCalcMetricShortfallSub");
+    if (elShortfallSub) {
+      if (netCashPayable > 0) {
+        elShortfallSub.innerHTML = `<span>CGST ${fmt(remainingLiability.cgst || 0)} + SGST ${fmt(remainingLiability.sgst || 0)}</span><span class="material-symbols-outlined text-[14px]">warning</span>`;
+      } else {
+        elShortfallSub.innerHTML = `<span class="text-emerald-700 font-medium">₹0.00 cash payment required</span><span class="material-symbols-outlined text-[14px] text-emerald-700">check_circle</span>`;
+      }
+    }
+
+    // Populate Table 6.1 Body
+    const tbody = document.getElementById("taxCalcTable61Body");
+    if (tbody) {
+      const igstTotUtil = (uIgst.towardsIgst || 0) + (uCgst.towardsIgst || 0) + (uSgst.towardsIgst || 0);
+      const cgstTotUtil = (uIgst.towardsCgst || 0) + (uCgst.towardsCgst || 0);
+      const sgstTotUtil = (uIgst.towardsSgst || 0) + (uSgst.towardsSgst || 0);
+
+      const rIgst = remainingLiability.igst || 0;
+      const rCgst = remainingLiability.cgst || 0;
+      const rSgst = remainingLiability.sgst || 0;
+
+      tbody.innerHTML = `
+        <tr class="hover:bg-surface-container-low/50 transition-colors">
+          <td class="py-3.5 px-4 font-semibold text-on-surface">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+              <span>Integrated Tax (IGST)</span>
+            </div>
+          </td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface">${fmt(lIgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-medium">${fmt(uIgst.towardsIgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">${fmt(uCgst.towardsIgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">${fmt(uSgst.towardsIgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-semibold">${fmt(igstTotUtil)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">${fmt(rIgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">₹0.00</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md ${rIgst > 0 ? 'text-error font-bold' : 'text-primary font-semibold'}">${rIgst > 0 ? fmt(rIgst) : '₹0.00 (Nil)'}</td>
+        </tr>
+        <tr class="hover:bg-surface-container-low/50 transition-colors bg-surface-container-low/20">
+          <td class="py-3.5 px-4 font-semibold text-on-surface">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span>
+              <span>Central Tax (CGST)</span>
+            </div>
+          </td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface">${fmt(lCgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-medium">${fmt(uIgst.towardsCgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-medium">${fmt(uCgst.towardsCgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-outline-variant font-mono text-[11px]">— Restricted —</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-semibold">${fmt(cgstTotUtil)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface font-semibold">${fmt(rCgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">₹0.00</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md ${rCgst > 0 ? 'text-error font-bold' : 'text-primary font-semibold'}">${rCgst > 0 ? fmt(rCgst) : '₹0.00 (Nil)'}</td>
+        </tr>
+        <tr class="hover:bg-surface-container-low/50 transition-colors">
+          <td class="py-3.5 px-4 font-semibold text-on-surface">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+              <span>State / UT Tax (SGST)</span>
+            </div>
+          </td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface">${fmt(lSgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-medium">${fmt(uIgst.towardsSgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-outline-variant font-mono text-[11px]">— Restricted —</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-medium">${fmt(uSgst.towardsSgst || 0)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-primary font-semibold">${fmt(sgstTotUtil)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface font-semibold">${fmt(rSgst)}</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md text-on-surface-variant">₹0.00</td>
+          <td class="py-3.5 px-4 text-right font-numeric-md ${rSgst > 0 ? 'text-error font-bold' : 'text-primary font-semibold'}">${rSgst > 0 ? fmt(rSgst) : '₹0.00 (Nil)'}</td>
+        </tr>
+        <tr class="bg-surface-container font-semibold border-t-2 border-outline-variant">
+          <td class="py-4 px-4 text-on-surface font-bold">Total Statutory Aggregate</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-on-surface font-bold">${fmt(lTotal)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-primary">${fmt(uIgst.total || 0)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-primary">${fmt(uCgst.total || 0)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-primary">${fmt(uSgst.total || 0)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-primary font-bold">${fmt(totalItcUtilized)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-on-surface font-bold">${fmt(netCashPayable)}</td>
+          <td class="py-4 px-4 text-right font-numeric-md text-secondary font-bold">₹0.00</td>
+          <td class="py-4 px-4 text-right font-numeric-md ${netCashPayable > 0 ? 'text-error font-bold text-headline-sm' : 'text-primary font-bold'}">${netCashPayable > 0 ? fmt(netCashPayable) : '₹0.00 (Nil)'}</td>
+        </tr>
+      `;
+    }
+
+    // Update Callout Text
+    const elCallout = document.getElementById("taxCalcRuleCalloutText");
+    if (elCallout) {
+      if (netCashPayable === 0 && totalItcUtilized > 0) {
+        elCallout.innerHTML = `
+          Integrated Tax (IGST) and available input tax credits fully offset your gross liability of <strong>${fmt(lTotal)}</strong> u/r 88A. 
+          ${itcCarryForward > 0 ? `Your excess credit of <strong>${fmt(itcCarryForward)}</strong> is safely preserved in your Electronic Credit Ledger for subsequent months.` : ''}
+          Zero cash payment or challan generation is required for this filing.
+        `;
+      } else if (netCashPayable === 0 && lTotal === 0) {
+        elCallout.innerHTML = `
+          Zero outward liability assessed for this tax period. 
+          ${itcCarryForward > 0 ? `Available eligible credit of <strong>${fmt(itcCarryForward)}</strong> remains accumulated in your Electronic Credit Ledger.` : ''}
+        `;
+      } else {
+        elCallout.innerHTML = `
+          Integrated Tax (IGST) credit was exhausted first before utilizing CGST and SGST balances (Section 49A). 
+          <strong>Statutory Firewall:</strong> CGST credit cannot offset SGST liability and vice versa. 
+          Remaining net cash deficit of <strong>${fmt(netCashPayable)}</strong> must be paid via Form GST PMT-06 challan.
+        `;
+      }
+    }
+  } catch (err) {
+    console.warn("renderTaxCalcSuite error:", err);
+  }
+}
+window.renderTaxCalcSuite = renderTaxCalcSuite;
 
 function openGstSandboxFilingModal() {
   document.getElementById("filingTargetText").textContent = `Filing GSTR-3B for GSTIN: ${appState.gst.business.gstin}`;
@@ -5793,7 +6015,35 @@ async function setGuidedStep(step = 1) {
   const taxablePurchases = Number(m.taxablePurchases ?? 0);
   const totalEligibleItc = Number(m.totalEligibleItc ?? 0);
   const blockedItc = Number(m.blockedItc ?? 0);
-  const netCashPayable = Number(m.netCashPayable ?? 0);
+
+  // Exact Rule 88A set-off calculation:
+  let totalItcUtilized = Number(m.totalItcUtilized ?? 0);
+  let itcCarryForward = Number(m.itcCarryForward ?? 0);
+  let netCashPayable = Number(m.netCashPayable ?? 0);
+
+  if (appState.activeTaxCalc?.setoffMatrix) {
+    const u = appState.activeTaxCalc.setoffMatrix;
+    totalItcUtilized = Number(
+      (u.igstCreditUtilized?.total || 0) +
+      (u.cgstCreditUtilized?.total || 0) +
+      (u.sgstCreditUtilized?.total || 0) +
+      (u.cessCreditUtilized?.total || 0)
+    );
+    if (appState.activeTaxCalc.remainingLiability) {
+      netCashPayable = Number(appState.activeTaxCalc.remainingLiability.total ?? netCashPayable);
+    }
+    if (appState.activeTaxCalc.remainingCredit) {
+      itcCarryForward = Number(appState.activeTaxCalc.remainingCredit.total ?? itcCarryForward);
+    }
+  } else if (!totalItcUtilized && totalOutputLiability > 0 && totalEligibleItc > 0) {
+    totalItcUtilized = Math.min(totalOutputLiability, totalEligibleItc);
+    netCashPayable = Math.max(0, totalOutputLiability - totalItcUtilized);
+    itcCarryForward = Math.max(0, totalEligibleItc - totalItcUtilized);
+  } else if (!totalItcUtilized && totalOutputLiability === 0 && totalEligibleItc > 0) {
+    totalItcUtilized = 0;
+    netCashPayable = 0;
+    itcCarryForward = totalEligibleItc;
+  }
 
   appState.activeFilingSummary = {
     salesCount,
@@ -5802,11 +6052,13 @@ async function setGuidedStep(step = 1) {
     purchasesCount,
     taxablePurchases,
     totalEligibleItc,
+    totalItcUtilized,
+    itcCarryForward,
     blockedItc,
     netCashPayable,
-    liability: appState.activeTaxCalc?.liability || { igst: 0, cgst: 0, sgst: 0 },
-    inputCredit: appState.activeTaxCalc?.inputCredit || { igst: 0, cgst: 0, sgst: 0 },
-    setoffMatrix: appState.activeTaxCalc?.setoffMatrix || {}
+    liability: appState.activeTaxCalc?.liability || m.liabilityBreakdown || { igst: 0, cgst: 0, sgst: 0 },
+    inputCredit: appState.activeTaxCalc?.inputCredit || m.creditBreakdown || { igst: 0, cgst: 0, sgst: 0 },
+    setoffMatrix: appState.activeTaxCalc?.setoffMatrix || m.setoffMatrix || {}
   };
 
   const fmtCurrency = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -5986,16 +6238,25 @@ async function setGuidedStep(step = 1) {
               <p class="text-xs text-secondary mt-0.5">Gross liability assessed</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
-              <span class="text-xs uppercase font-semibold text-emerald-800">Less: Available Credit</span>
-              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">-${fmtCurrency(totalEligibleItc)}</div>
-              <p class="text-xs text-secondary mt-0.5">Auto-offset applied u/r 88A</p>
+              <span class="text-xs uppercase font-semibold text-emerald-800">Less: ITC Offset Applied</span>
+              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">-${fmtCurrency(totalItcUtilized)}</div>
+              <p class="text-xs text-secondary mt-0.5">${itcCarryForward > 0 ? `Carried forward: ${fmtCurrency(itcCarryForward)}` : 'Auto-offset applied u/r 88A'}</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
               <span class="text-xs uppercase font-semibold text-error">Amount to Pay</span>
-              <div class="font-numeric-lg text-xl font-bold text-error mt-1">${fmtCurrency(netCashPayable)}</div>
-              <p class="text-xs text-secondary mt-0.5">Cash payment required</p>
+              <div class="font-numeric-lg text-xl font-bold ${netCashPayable > 0 ? 'text-error' : 'text-on-surface'} mt-1">${fmtCurrency(netCashPayable)}</div>
+              <p class="text-xs text-secondary mt-0.5">${netCashPayable > 0 ? 'Cash payment required' : 'Fully discharged via ITC'}</p>
             </div>
           </div>
+
+          ${itcCarryForward > 0 ? `
+          <div class="p-3.5 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-xs text-emerald-900 flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-emerald-700 text-[18px] shrink-0 mt-0.5">account_balance_wallet</span>
+            <div>
+              <strong>Electronic Credit Ledger Balance:</strong> ${fmtCurrency(totalItcUtilized)} utilized to fully offset outward tax liability. The remaining excess eligible ITC of <strong>${fmtCurrency(itcCarryForward)}</strong> is retained in your Electronic Credit Ledger and carried forward to future tax periods.
+            </div>
+          </div>
+          ` : ''}
 
           <details class="text-xs text-secondary pt-2">
             <summary class="font-medium text-primary hover:underline cursor-pointer select-none">Learn more about Rule 88A tax set-off</summary>
@@ -6052,13 +6313,28 @@ async function setGuidedStep(step = 1) {
             </div>
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
               <span class="text-secondary">Input Tax Credit Offset</span>
-              <span class="font-mono font-medium text-emerald-700" id="reviewItcOffset">-${fmtCurrency(totalEligibleItc)}</span>
+              <span class="font-mono font-medium text-emerald-700" id="reviewItcOffset">-${fmtCurrency(totalItcUtilized)}</span>
             </div>
+            ${itcCarryForward > 0 ? `
+            <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
+              <span class="text-secondary">ITC Balance Carried Forward</span>
+              <span class="font-mono font-medium text-emerald-800" id="reviewItcCarryForward">${fmtCurrency(itcCarryForward)}</span>
+            </div>
+            ` : ''}
             <div class="flex items-center justify-between py-2 text-base font-bold">
               <span class="text-on-surface">Net Amount to Pay</span>
-              <span class="font-mono text-error" id="reviewNetAmountToPay">${fmtCurrency(netCashPayable)}</span>
+              <span class="font-mono ${netCashPayable > 0 ? 'text-error' : 'text-on-surface'}" id="reviewNetAmountToPay">${fmtCurrency(netCashPayable)}</span>
             </div>
           </div>
+
+          ${itcCarryForward > 0 ? `
+          <div class="p-3.5 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-xs text-emerald-900 flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-emerald-700 text-[18px] shrink-0 mt-0.5">account_balance_wallet</span>
+            <div>
+              <strong>Rule 88A Optimization:</strong> Outward tax liability of ${fmtCurrency(totalOutputLiability)} is 100% discharged via ITC. The remaining unutilized credit of <strong>${fmtCurrency(itcCarryForward)}</strong> is carried forward to your next return.
+            </div>
+          </div>
+          ` : ''}
 
           <div class="p-3.5 rounded-lg bg-surface-container text-xs text-secondary flex items-start gap-2.5">
             <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">verified_user</span>
@@ -6098,7 +6374,7 @@ function startGstr3bFilingFlow() {
   if (grossTaxEl) grossTaxEl.textContent = `₹${Number(filing.totalOutputLiability || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const itcOffsetEl = document.getElementById("evcOtpItcOffset");
-  if (itcOffsetEl) itcOffsetEl.textContent = `-₹${Number(filing.totalEligibleItc || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (itcOffsetEl) itcOffsetEl.textContent = `-₹${Number(filing.totalItcUtilized || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const netPayableEl = document.getElementById("evcOtpNetPayable");
   if (netPayableEl) netPayableEl.textContent = `₹${Number(filing.netCashPayable || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -6164,7 +6440,7 @@ async function submitEvcOtpVerification() {
     showToast(`EVC OTP verified! Net liability of ₹${netCash.toLocaleString("en-IN")} requires cash payment. Directing to Payment section...`, "info");
     openPmt06ModalWithValues({
       grossTax: filing.totalOutputLiability || 0,
-      itcOffset: filing.totalEligibleItc || 0,
+      itcOffset: filing.totalItcUtilized || 0,
       netCash: netCash,
       liability: filing.liability || {},
       period: appState.activePeriod || "102026",
@@ -6251,11 +6527,12 @@ function openPmt06ModalWithValues({ grossTax, itcOffset, netCash, liability, per
 }
 window.openPmt06ModalWithValues = openPmt06ModalWithValues;
 
-async function submitChallanPayment() {
+// submitChallanPayment is declared at line 799; reassigned here to ensure latest closure
+submitChallanPayment = async function submitChallanPayment() {
   const otp = window._pendingGstr3bFilingOtp || "123456";
   closePmt06Modal();
   await completeReturnFiling({ otp, paymentDone: true });
-}
+};
 window.submitChallanPayment = submitChallanPayment;
 
 async function completeReturnFiling({ otp = "123456", paymentDone = false } = {}) {
@@ -9909,3 +10186,1497 @@ async function submitOnboardingStep4(e) {
   }
 }
 window.submitOnboardingStep4 = submitOnboardingStep4;
+
+// ============================================================================
+// STARTUP EXPRESS MODULE (From Business Formation to GST Compliance)
+// ============================================================================
+
+const STARTUP_INDIAN_STATES = [
+  "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam",
+  "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir",
+  "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh",
+  "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha",
+  "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
+  "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
+];
+
+let startupExpressState = {
+  profile: null,
+  activeStage: 1,
+  activeView: 'landing', // 'landing', 'wizard', 'dashboard'
+  loading: false
+};
+
+async function loadStartupExpress() {
+  populateStartupStates();
+  renderStartupStepper();
+  setupStructureRadioListeners();
+  updateInvoicePreview();
+
+  try {
+    const res = await fetch('/api/startup-express/profile', { credentials: 'same-origin' });
+    const data = await res.json();
+    if (data && data.success && data.profile) {
+      startupExpressState.profile = data.profile;
+      applyProfileToStartupForm(data.profile);
+      applyProfileToDashboard(data.profile);
+    } else {
+      updateAssistantCard(1);
+    }
+  } catch (err) {
+    console.warn("Could not load startup express profile:", err);
+    updateAssistantCard(1);
+  }
+}
+
+function populateStartupStates() {
+  const select = document.getElementById('supState');
+  if (!select || select.children.length > 5) return;
+  select.innerHTML = STARTUP_INDIAN_STATES.map(s => 
+    `<option value="${s}" ${s === "Maharashtra" ? "selected" : ""}>${s}</option>`
+  ).join('');
+}
+
+function setupStructureRadioListeners() {
+  const radios = document.querySelectorAll('input[name="startupStructure"]');
+  radios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      selectStructure(e.target.value);
+    });
+  });
+}
+
+function selectStructure(structure, subtype = null) {
+  const radios = document.querySelectorAll('input[name="startupStructure"]');
+  radios.forEach(r => {
+    r.checked = (r.value === structure);
+  });
+
+  document.querySelectorAll('.structure-card').forEach(card => {
+    if (card.dataset.structure === structure) {
+      card.classList.remove('border-outline-variant', 'bg-surface-container-lowest');
+      card.classList.add('border-2', 'border-primary', 'bg-primary/5');
+    } else {
+      card.classList.remove('border-2', 'border-primary', 'bg-primary/5');
+      card.classList.add('border-outline-variant', 'bg-surface-container-lowest');
+    }
+  });
+
+  const txtStruct = document.getElementById('txtStartupCurrentStructure');
+  if (txtStruct) {
+    const names = {
+      'PROPRIETORSHIP': 'Sole Proprietorship',
+      'PARTNERSHIP': 'Partnership Firm',
+      'LLP': 'Limited Liability Partnership (LLP)',
+      'PRIVATE_LIMITED': 'Private Limited Company',
+      'OTHER': 'Other Legal Entity'
+    };
+    txtStruct.textContent = names[structure] || structure;
+  }
+
+  // Handle other subtype container
+  const boxOther = document.getElementById('boxOtherSubtypeContainer');
+  if (boxOther) {
+    if (structure === 'OTHER') {
+      boxOther.classList.remove('hidden');
+      if (subtype && document.getElementById('supOtherSubtype')) {
+        document.getElementById('supOtherSubtype').value = subtype;
+      }
+    } else {
+      boxOther.classList.add('hidden');
+    }
+  }
+
+  // PAN Hints & labels
+  const hintPan = document.getElementById('hintFounderPan');
+  const lblEntityPan = document.getElementById('lblEntityPanNote');
+  if (hintPan) {
+    if (structure === 'PROPRIETORSHIP') {
+      hintPan.textContent = "For Sole Proprietorship: 4th character must be 'P' (Individual PAN)";
+    } else if (structure === 'PARTNERSHIP') {
+      hintPan.textContent = "Enter Managing Partner PAN; provide Firm PAN (4th letter 'F') below";
+    } else if (structure === 'LLP') {
+      hintPan.textContent = "Enter Designated Partner PAN; provide LLP PAN (4th letter 'F') below";
+    } else if (structure === 'PRIVATE_LIMITED') {
+      hintPan.textContent = "Enter Director PAN; provide Corporate PAN (4th letter 'C') below";
+    } else {
+      hintPan.textContent = "Enter Signatory / Founder Individual PAN";
+    }
+  }
+
+  if (lblEntityPan) {
+    lblEntityPan.textContent = structure === 'PROPRIETORSHIP' ? '(Optional for Sole Proprietorship)' : '(Required for statutory filing)';
+  }
+
+  updateStructureSpecificFields(structure);
+  renderDynamicRegistrationsTable(structure);
+  updateStage3Guidance(structure);
+  updateAssistantCard(startupExpressState.activeStage || 1, structure);
+}
+
+function updateStructureSpecificFields(structure) {
+  const container = document.getElementById('boxStructureSpecificFields');
+  if (!container) return;
+
+  if (structure === 'PROPRIETORSHIP') {
+    container.innerHTML = `
+      <div class="space-y-2">
+        <h4 class="font-bold text-xs text-on-surface flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-emerald-600">person</span>
+          <span>Sole Proprietorship Constitution</span>
+        </h4>
+        <p class="text-[11px] text-secondary leading-relaxed">
+          In India, a sole proprietorship does not possess a distinct statutory legal persona from its proprietor. Your individual PAN is used for income tax and GST registration. No separate MCA entity incorporation is required.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+          <div>
+            <label class="block text-[11px] font-semibold text-on-surface mb-1">Proprietor Full Name <span class="text-error">*</span></label>
+            <input type="text" id="supProprietorName" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs focus:ring-primary" placeholder="Proprietor name as on PAN">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-on-surface mb-1">Ownership Share</label>
+            <input type="text" readonly value="100% Sole Ownership" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface-container-low text-xs text-secondary font-semibold">
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (structure === 'PARTNERSHIP') {
+    container.innerHTML = `
+      <div class="space-y-2">
+        <h4 class="font-bold text-xs text-on-surface flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-blue-600">handshake</span>
+          <span>Partnership Firm Constitution Details</span>
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+          <div>
+            <label class="block text-[11px] font-semibold text-on-surface mb-1">Number of Partners <span class="text-error">*</span></label>
+            <input type="number" id="supPartnerCount" min="2" max="50" value="2" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs font-mono focus:ring-primary">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-on-surface mb-1">Partnership Deed Date</label>
+            <input type="date" id="supDeedDate" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs focus:ring-primary">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-on-surface mb-1">Managing / Primary Partner</label>
+            <input type="text" id="supManagingPartner" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs focus:ring-primary" placeholder="Primary partner name">
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (structure === 'LLP') {
+    container.innerHTML = `
+      <div class="space-y-2">
+        <h4 class="font-bold text-xs text-on-surface flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-indigo-600">shield</span>
+          <span>Limited Liability Partnership (LLP) Details</span>
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+          <div>
+            <label class="block text-[11px] font-semibold text-on-surface mb-1">Proposed LLP Name <span class="text-error">*</span></label>
+            <input type="text" id="supLlpName" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs focus:ring-primary" placeholder="e.g. Apex Global Supplies LLP">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-on-surface mb-1">Designated Partner DPIN</label>
+            <input type="text" id="supDpin" maxlength="8" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs font-mono focus:ring-primary" placeholder="8-digit DPIN (if allotted)">
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (structure === 'PRIVATE_LIMITED') {
+    container.innerHTML = `
+      <div class="space-y-2">
+        <h4 class="font-bold text-xs text-on-surface flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-purple-600">corporate_fare</span>
+          <span>Private Limited Corporate Information</span>
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+          <div>
+            <label class="block text-[11px] font-semibold text-on-surface mb-1">Corporate Identification Number (CIN) <span class="text-secondary">(If incorporated)</span></label>
+            <input type="text" id="supCin" maxlength="21" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs font-mono uppercase focus:ring-primary" placeholder="U72900MH2026PTC123456">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-on-surface mb-1">Director Identification Number (DIN)</label>
+            <input type="text" id="supDin" maxlength="8" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs font-mono focus:ring-primary" placeholder="8-digit DIN (e.g. 01234567)">
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    container.innerHTML = `
+      <div class="space-y-2">
+        <h4 class="font-bold text-xs text-on-surface flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-amber-600">domain_add</span>
+          <span>Specialized Entity Charter Details</span>
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+          <div>
+            <label class="block text-[11px] font-semibold text-on-surface mb-1">Nominee / Trustee / Authorized Representative</label>
+            <input type="text" id="supNomineeName" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs focus:ring-primary" placeholder="Full name of representative">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-on-surface mb-1">Registration Authority</label>
+            <input type="text" id="supRegAuthority" class="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-xs focus:ring-primary" placeholder="e.g. Charity Commissioner / Registrar of Societies">
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+function renderDynamicRegistrationsTable(structure, savedItems = []) {
+  const tbody = document.getElementById('tblDynamicRegistrations');
+  if (!tbody) return;
+
+  const itemsMap = {
+    'PROPRIETORSHIP': [
+      { key: 'udyam', name: 'MSME Udyam Registration', authority: 'Ministry of MSME', defaultStatus: 'APPROVED', portal: 'https://udyamregistration.gov.in/' },
+      { key: 'shop_est', name: 'Shop & Establishment Act Intimation', authority: 'State Labour Dept', defaultStatus: 'IN_PROGRESS', portal: 'https://lms.mahaonline.gov.in/' },
+      { key: 'trade_licence', name: 'Municipal Trade Licence', authority: 'Local Municipal Corp', defaultStatus: 'NOT_STARTED', portal: '#' },
+      { key: 'fssai', name: 'FSSAI Food Safety Licence (if food supplies)', authority: 'FSSAI', defaultStatus: 'NOT_APPLICABLE', portal: 'https://foscos.fssai.gov.in/' }
+    ],
+    'PARTNERSHIP': [
+      { key: 'deed_execution', name: 'Partnership Deed Execution', authority: 'Stamp & Registration Dept', defaultStatus: 'APPROVED', portal: '#' },
+      { key: 'rof_reg', name: 'Registrar of Firms (RoF Form 1)', authority: 'State RoF', defaultStatus: 'IN_PROGRESS', portal: '#' },
+      { key: 'shop_est', name: 'Shop & Establishment Act Intimation', authority: 'State Labour Dept', defaultStatus: 'IN_PROGRESS', portal: 'https://lms.mahaonline.gov.in/' },
+      { key: 'msme', name: 'MSME Udyam Registration', authority: 'Ministry of MSME', defaultStatus: 'NOT_STARTED', portal: 'https://udyamregistration.gov.in/' }
+    ],
+    'LLP': [
+      { key: 'dsc_dpin', name: 'Digital Signature (DSC) & DPIN', authority: 'Certifying Authorities / MCA', defaultStatus: 'APPROVED', portal: 'https://www.mca.gov.in/' },
+      { key: 'run_llp', name: 'RUN-LLP Name Reservation', authority: 'Ministry of Corporate Affairs', defaultStatus: 'APPROVED', portal: 'https://www.mca.gov.in/' },
+      { key: 'fillip', name: 'FiLLiP Incorporation Application', authority: 'Central Registration Centre (CRC)', defaultStatus: 'SUBMITTED', portal: 'https://www.mca.gov.in/' },
+      { key: 'form_3', name: 'Form 3 LLP Agreement Filing', authority: 'MCA (Within 30 days)', defaultStatus: 'IN_PROGRESS', portal: 'https://www.mca.gov.in/' }
+    ],
+    'PRIVATE_LIMITED': [
+      { key: 'dsc', name: 'Director Digital Signature (DSC)', authority: 'Certifying Authority', defaultStatus: 'APPROVED', portal: 'https://www.mca.gov.in/' },
+      { key: 'spice_a', name: 'SPICe+ Part A (Name Approval)', authority: 'Ministry of Corporate Affairs', defaultStatus: 'APPROVED', portal: 'https://www.mca.gov.in/' },
+      { key: 'spice_b', name: 'SPICe+ Part B (Incorporation, PAN, TAN)', authority: 'MCA CRC', defaultStatus: 'SUBMITTED', portal: 'https://www.mca.gov.in/' },
+      { key: 'commence_biz', name: 'INC-20A Commencement of Business', authority: 'MCA RoC (Within 180 days)', defaultStatus: 'NOT_STARTED', portal: 'https://www.mca.gov.in/' }
+    ],
+    'OTHER': [
+      { key: 'statutory_charter', name: 'Statutory Trust Deed / Society Charter', authority: 'Charity Commissioner / MCA', defaultStatus: 'APPROVED', portal: '#' },
+      { key: 'entity_pan', name: 'Entity Statutory PAN Allotment', authority: 'Income Tax Dept', defaultStatus: 'SUBMITTED', portal: 'https://www.incometax.gov.in/' },
+      { key: 'msme', name: 'MSME Registration (if commercial activity)', authority: 'Ministry of MSME', defaultStatus: 'NOT_STARTED', portal: 'https://udyamregistration.gov.in/' }
+    ]
+  };
+
+  const currentItems = itemsMap[structure] || itemsMap['PROPRIETORSHIP'];
+
+  tbody.innerHTML = currentItems.map(item => {
+    return `
+      <tr class="hover:bg-surface-container-low transition-colors" data-item-key="${item.key}">
+        <td class="p-3">
+          <div class="font-bold text-on-surface">${item.name}</div>
+          <span class="text-[10px] text-secondary">${item.authority}</span>
+        </td>
+        <td class="p-3">
+          <select class="reg-item-status px-2.5 py-1 rounded border border-outline-variant bg-surface text-xs font-semibold focus:ring-primary" onchange="handleRegStatusChange(this, '${item.key}')">
+            <option value="NOT_STARTED" ${item.defaultStatus === 'NOT_STARTED' ? 'selected' : ''}>Not Started</option>
+            <option value="IN_PROGRESS" ${item.defaultStatus === 'IN_PROGRESS' ? 'selected' : ''}>In Progress</option>
+            <option value="SUBMITTED" ${item.defaultStatus === 'SUBMITTED' ? 'selected' : ''}>Submitted</option>
+            <option value="APPROVED" ${item.defaultStatus === 'APPROVED' ? 'selected' : ''}>Approved</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="NOT_APPLICABLE" ${item.defaultStatus === 'NOT_APPLICABLE' ? 'selected' : ''}>Not Applicable</option>
+          </select>
+        </td>
+        <td class="p-3">
+          <input type="text" class="reg-item-ref w-full px-2 py-1 rounded border border-outline-variant bg-surface text-xs font-mono uppercase" placeholder="Ref / Reg No">
+        </td>
+        <td class="p-3">
+          <input type="date" class="reg-item-date px-2 py-1 rounded border border-outline-variant bg-surface text-xs">
+        </td>
+        <td class="p-3">
+          <input type="text" class="reg-item-notes w-full px-2 py-1 rounded border border-outline-variant bg-surface text-xs" placeholder="Notes / Exemption reason">
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function handleRegStatusChange(selectElem, key) {
+  const row = selectElem.closest('tr');
+  const notesInput = row ? row.querySelector('.reg-item-notes') : null;
+  if (selectElem.value === 'NOT_APPLICABLE' && notesInput) {
+    notesInput.placeholder = "Reason required for Not Applicable";
+    notesInput.classList.add('border-amber-400', 'bg-amber-50/50');
+  } else if (notesInput) {
+    notesInput.placeholder = "Notes / Status update";
+    notesInput.classList.remove('border-amber-400', 'bg-amber-50/50');
+  }
+}
+
+async function selectStructureFromLanding(structure) {
+  const currentProfile = startupExpressState.profile;
+  const laterStages = (currentProfile?.completed_stages || []).filter(s => s > 1);
+
+  let force = false;
+  if (laterStages.length > 0 && currentProfile?.business_structure && currentProfile.business_structure !== structure) {
+    const confirmSwitch = confirm(`You have already completed stages in ${currentProfile.business_structure}. Switching to ${structure} will adapt statutory checklists and requirements. Do you want to proceed?`);
+    if (!confirmSwitch) return;
+    force = true;
+  }
+
+  try {
+    const res = await fetch('/api/startup-express/select-structure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ structure, force })
+    });
+    const data = await res.json();
+    if (data && data.success && data.profile) {
+      startupExpressState.profile = data.profile;
+      applyProfileToStartupForm(data.profile);
+      applyProfileToDashboard(data.profile);
+      selectStructure(structure);
+      showStartupView('wizard');
+      goToStage(1);
+    } else if (data && data.warning) {
+      if (confirm(data.message)) {
+        await selectStructureFromLandingForce(structure);
+      }
+    }
+  } catch (err) {
+    console.error("Error saving business structure:", err);
+    selectStructure(structure);
+    showStartupView('wizard');
+    goToStage(1);
+  }
+}
+
+async function selectStructureFromLandingForce(structure) {
+  const res = await fetch('/api/startup-express/select-structure', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ structure, force: true })
+  });
+  const data = await res.json();
+  if (data && data.success && data.profile) {
+    startupExpressState.profile = data.profile;
+    applyProfileToStartupForm(data.profile);
+    applyProfileToDashboard(data.profile);
+    selectStructure(structure);
+    showStartupView('wizard');
+    goToStage(1);
+  }
+}
+
+function startStartupExpressJourney() {
+  showStartupView('wizard');
+  const stage = (startupExpressState.profile && startupExpressState.profile.current_stage) || 1;
+  goToStage(stage);
+}
+
+function resumeStartupExpress() {
+  showStartupView('wizard');
+  const stage = (startupExpressState.profile && startupExpressState.profile.current_stage) || 1;
+  goToStage(stage);
+}
+
+function showStartupView(viewName) {
+  startupExpressState.activeView = viewName;
+  const landing = document.getElementById('startupLandingView');
+  const wizard = document.getElementById('startupWizardView');
+  const tabLanding = document.getElementById('tabStartupLanding');
+  const tabWizard = document.getElementById('tabStartupWizard');
+  const tabDash = document.getElementById('tabStartupDashboard');
+
+  if (viewName === 'landing') {
+    if (landing) landing.classList.remove('hidden');
+    if (wizard) wizard.classList.add('hidden');
+    setActiveTab(tabLanding, [tabWizard, tabDash]);
+  } else if (viewName === 'wizard') {
+    if (landing) landing.classList.add('hidden');
+    if (wizard) wizard.classList.remove('hidden');
+    setActiveTab(tabWizard, [tabLanding, tabDash]);
+  } else if (viewName === 'dashboard') {
+    if (landing) landing.classList.add('hidden');
+    if (wizard) wizard.classList.remove('hidden');
+    setActiveTab(tabDash, [tabLanding, tabWizard]);
+    const dashElem = document.getElementById('startupDashboardCard');
+    if (dashElem) dashElem.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function setActiveTab(active, others) {
+  if (active) {
+    active.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-surface-container-high text-primary border border-primary/30 transition-all cursor-pointer";
+  }
+  others.forEach(o => {
+    if (o) {
+      o.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-surface-container-low hover:bg-surface-container text-on-surface transition-all cursor-pointer";
+    }
+  });
+}
+
+const STAGE_TITLES = [
+  "1. Business Structure & Trade Details",
+  "2. PAN & Identity Preparation",
+  "3. Business Registration & Licences",
+  "4. GST Registration Eligibility & Status",
+  "5. Bank & Accounting Configuration",
+  "6. Invoicing Setup (Rule 46 Compliance)",
+  "7. GST Compliance Workspace Activation"
+];
+
+function renderStartupStepper() {
+  const container = document.getElementById('startupStepperPills');
+  if (!container) return;
+
+  const cur = startupExpressState.activeStage || 1;
+  const completed = (startupExpressState.profile && startupExpressState.profile.completed_stages) || [];
+
+  container.innerHTML = [1, 2, 3, 4, 5, 6, 7].map(s => {
+    const isCompleted = completed.includes(s);
+    const isCurrent = s === cur;
+    let badgeClass = "bg-surface-container text-secondary";
+    let pillClass = "border-outline-variant bg-surface-container-lowest text-secondary";
+
+    if (isCompleted) {
+      badgeClass = "bg-emerald-100 text-emerald-800";
+      pillClass = "border-emerald-200 bg-emerald-50/50 text-emerald-900";
+    }
+    if (isCurrent) {
+      badgeClass = "bg-primary text-on-primary";
+      pillClass = "border-primary bg-primary/10 text-primary font-bold ring-2 ring-primary/20";
+    }
+
+    const shortTitles = ["Structure", "PAN / KYC", "Registration", "GST", "Banking", "Invoicing", "Activation"];
+
+    return `
+      <div onclick="goToStage(${s})" class="p-2.5 rounded-lg border ${pillClass} transition-all cursor-pointer flex items-center gap-2 select-none">
+        <span class="w-5 h-5 rounded-full ${badgeClass} text-[11px] font-bold flex items-center justify-center shrink-0">
+          ${isCompleted && !isCurrent ? '<span class="material-symbols-outlined text-[13px]">check</span>' : s}
+        </span>
+        <div class="truncate">
+          <p class="text-[11px] font-semibold truncate leading-tight">${shortTitles[s - 1]}</p>
+          <span class="text-[9px] ${isCurrent ? 'text-primary' : 'text-secondary'} block truncate">
+            ${isCurrent ? 'Current' : isCompleted ? 'Done' : 'Step ' + s}
+          </span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function goToStage(stageNum) {
+  if (stageNum < 1) stageNum = 1;
+  if (stageNum > 7) stageNum = 7;
+  startupExpressState.activeStage = stageNum;
+
+  for (let s = 1; s <= 7; s++) {
+    const form = document.getElementById(`startupStage${s}Form`);
+    if (form) {
+      if (s === stageNum) {
+        form.classList.remove('hidden');
+      } else {
+        form.classList.add('hidden');
+      }
+    }
+  }
+
+  const heading = document.getElementById('txtStartupStageHeading');
+  if (heading) {
+    heading.textContent = `Stage ${stageNum}: ${STAGE_TITLES[stageNum - 1]}`;
+  }
+
+  renderStartupStepper();
+  const structure = document.querySelector('input[name="startupStructure"]:checked')?.value || 'PROPRIETORSHIP';
+  updateAssistantCard(stageNum, structure);
+
+  if (stageNum === 7 && startupExpressState.profile) {
+    renderPreActivationMatrix(startupExpressState.profile);
+  }
+}
+
+function updateStage3Guidance(structure) {
+  const box = document.getElementById('boxStage3Guidance');
+  const btn = document.getElementById('btnStage3Portal');
+  const txt = document.getElementById('txtStage3PortalLabel');
+  if (!box) return;
+
+  if (structure === 'PROPRIETORSHIP') {
+    box.innerHTML = `
+      <div class="flex items-start gap-2.5">
+        <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">verified</span>
+        <div class="space-y-1 text-xs">
+          <p class="font-bold text-on-surface">Recommended: MSME Udyam Registration &bull; Instant Statutory Proof</p>
+          <p class="text-secondary">A Sole Proprietorship does not have a central MCA incorporation. Instead, register directly on the Ministry of MSME Udyam portal to obtain legal proof of enterprise and MSME priority lending benefits.</p>
+        </div>
+      </div>
+    `;
+    if (btn) btn.href = "https://udyamregistration.gov.in/";
+    if (txt) txt.textContent = "Open Udyam MSME Portal";
+  } else if (structure === 'PARTNERSHIP') {
+    box.innerHTML = `
+      <div class="flex items-start gap-2.5">
+        <span class="material-symbols-outlined text-blue-600 text-[20px] shrink-0 mt-0.5">handshake</span>
+        <div class="space-y-1 text-xs">
+          <p class="font-bold text-on-surface">Partnership Deed &amp; Registrar of Firms (RoF)</p>
+          <p class="text-secondary">Draft a formal Partnership Deed executed on non-judicial stamp paper with partner profit-sharing ratios. Optionally file Form 1 with your state Registrar of Firms (RoF) for statutory enforceability.</p>
+        </div>
+      </div>
+    `;
+    if (btn) btn.href = "https://www.incometax.gov.in/";
+    if (txt) txt.textContent = "Apply for Firm PAN (IT Portal)";
+  } else if (structure === 'LLP') {
+    box.innerHTML = `
+      <div class="flex items-start gap-2.5">
+        <span class="material-symbols-outlined text-indigo-600 text-[20px] shrink-0 mt-0.5">shield</span>
+        <div class="space-y-1 text-xs">
+          <p class="font-bold text-on-surface">MCA LLP Incorporation (RUN-LLP &amp; FiLLiP)</p>
+          <p class="text-secondary">Obtain Digital Signature Certificates (DSC) for designated partners, reserve name via RUN-LLP, and file FiLLiP (Form for Incorporation of LLP) on the Ministry of Corporate Affairs portal.</p>
+        </div>
+      </div>
+    `;
+    if (btn) btn.href = "https://www.mca.gov.in/content/mca/global/en/home.html";
+    if (txt) txt.textContent = "Open MCA Services Portal";
+  } else if (structure === 'PRIVATE_LIMITED') {
+    box.innerHTML = `
+      <div class="flex items-start gap-2.5">
+        <span class="material-symbols-outlined text-purple-600 text-[20px] shrink-0 mt-0.5">corporate_fare</span>
+        <div class="space-y-1 text-xs">
+          <p class="font-bold text-on-surface">MCA SPICe+ (INC-32) Integrated Incorporation</p>
+          <p class="text-secondary">File SPICe+ Part A for name reservation and Part B for simultaneous incorporation, PAN, TAN, EPFO, ESIC, and corporate bank account generation through the MCA V3 portal.</p>
+        </div>
+      </div>
+    `;
+    if (btn) btn.href = "https://www.mca.gov.in/content/mca/global/en/home.html";
+    if (txt) txt.textContent = "Open MCA SPICe+ Portal";
+  } else {
+    box.innerHTML = `
+      <div class="flex items-start gap-2.5">
+        <span class="material-symbols-outlined text-amber-600 text-[20px] shrink-0 mt-0.5">domain_add</span>
+        <div class="space-y-1 text-xs">
+          <p class="font-bold text-on-surface">Statutory Charter Execution</p>
+          <p class="text-secondary">Ensure trust deeds, society bye-laws, or section 8 license applications are filed with the relevant state charity commissioner or central MCA registrar.</p>
+        </div>
+      </div>
+    `;
+    if (btn) btn.href = "https://www.mca.gov.in/";
+    if (txt) txt.textContent = "Open Central Filing Portal";
+  }
+}
+
+async function updateAssistantCard(stageNum, structure) {
+  if (!structure) {
+    structure = document.querySelector('input[name="startupStructure"]:checked')?.value || 'PROPRIETORSHIP';
+  }
+
+  try {
+    const res = await fetch(`/api/startup-express/assistant?stage=${stageNum}&structure=${structure}`, { credentials: 'same-origin' });
+    const data = await res.json();
+    if (data && data.success && data.guidance) {
+      const g = data.guidance;
+      const what = document.getElementById('asstWhat');
+      const why = document.getElementById('asstWhy');
+      const docs = document.getElementById('asstDocs');
+      const pName = document.getElementById('asstPortalName');
+      const pLink = document.getElementById('asstPortalLink');
+
+      if (what) what.textContent = g.what;
+      if (why) why.textContent = g.why;
+      if (docs) {
+        docs.innerHTML = (g.documents || []).map(d => `<li>${d}</li>`).join('');
+      }
+      if (pName) pName.textContent = g.portal_name || 'Official Portal';
+      if (pLink) pLink.href = g.portal_url || '#';
+    }
+  } catch (err) {
+    console.warn("Assistant guidance fetch error:", err);
+  }
+}
+
+function toggleGstPath(path) {
+  const boxReg = document.getElementById('boxPathGstRegister');
+  const boxExempt = document.getElementById('boxPathGstExempt');
+  const lblReg = document.getElementById('lblPathGstRegister');
+  const lblExempt = document.getElementById('lblPathGstExempt');
+
+  if (path === 'REGISTER') {
+    if (boxReg) boxReg.classList.remove('hidden');
+    if (boxExempt) boxExempt.classList.add('hidden');
+    if (lblReg) {
+      lblReg.classList.add('border-2', 'border-primary', 'bg-primary/5');
+      lblReg.classList.remove('border-outline-variant', 'bg-surface-container-lowest');
+    }
+    if (lblExempt) {
+      lblExempt.classList.remove('border-2', 'border-primary', 'bg-primary/5');
+      lblExempt.classList.add('border-outline-variant', 'bg-surface-container-lowest');
+    }
+  } else {
+    if (boxReg) boxReg.classList.add('hidden');
+    if (boxExempt) boxExempt.classList.remove('hidden');
+    if (lblExempt) {
+      lblExempt.classList.add('border-2', 'border-primary', 'bg-primary/5');
+      lblExempt.classList.remove('border-outline-variant', 'bg-surface-container-lowest');
+    }
+    if (lblReg) {
+      lblReg.classList.remove('border-2', 'border-primary', 'bg-primary/5');
+      lblReg.classList.add('border-outline-variant', 'bg-surface-container-lowest');
+    }
+  }
+}
+
+function toggleBankAccountStatus(status) {
+  const boxGuidance = document.getElementById('boxBankNotOpenedGuidance');
+  const boxFields = document.getElementById('boxBankDetailsFields');
+
+  if (status === 'NOT_OPENED') {
+    if (boxGuidance) boxGuidance.classList.remove('hidden');
+    if (boxFields) boxFields.classList.add('hidden');
+  } else {
+    if (boxGuidance) boxGuidance.classList.add('hidden');
+    if (boxFields) boxFields.classList.remove('hidden');
+  }
+}
+
+function validatePanField(fieldId) {
+  const input = document.getElementById(fieldId);
+  if (!input) return;
+  const val = input.value.trim().toUpperCase();
+  if (val.length === 10) {
+    if (/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val)) {
+      input.classList.remove('border-red-500');
+      input.classList.add('border-emerald-500');
+    } else {
+      input.classList.remove('border-emerald-500');
+      input.classList.add('border-red-500');
+    }
+  } else {
+    input.classList.remove('border-emerald-500', 'border-red-500');
+  }
+}
+
+async function uploadStartupDocument() {
+  const fileInput = document.getElementById('supDocFileInput');
+  const categorySelect = document.getElementById('supDocCategory');
+
+  if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+    if (typeof showToast === "function") showToast("Please select a document file to upload (PDF, PNG, JPG).", "error");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  if (file.size > 5 * 1024 * 1024) {
+    if (typeof showToast === "function") showToast("File size exceeds 5MB limit.", "error");
+    return;
+  }
+
+  const category = categorySelect ? categorySelect.value : "IDENTITY_PROOF";
+  const btn = document.getElementById('btnUploadSupDoc');
+  if (btn) btn.disabled = true;
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const base64Data = reader.result;
+      const res = await fetch('/api/startup-express/documents/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          filename: file.name,
+          category: category,
+          stage: startupExpressState.activeStage || 2,
+          fileData: base64Data
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && data.document) {
+        if (typeof showToast === "function") showToast(`Document "${file.name}" uploaded successfully.`, "success");
+        if (!startupExpressState.profile.documents) startupExpressState.profile.documents = [];
+        startupExpressState.profile.documents.push(data.document);
+        renderUploadedDocsList();
+        fileInput.value = "";
+        applyProfileToDashboard(startupExpressState.profile);
+      } else {
+        if (typeof showToast === "function") showToast(data.error || "Failed to upload document.", "error");
+      }
+    } catch (err) {
+      if (typeof showToast === "function") showToast("Network error uploading document.", "error");
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function deleteStartupDocument(docId) {
+  if (!confirm("Are you sure you want to remove this document?")) return;
+  try {
+    const res = await fetch(`/api/startup-express/documents/${docId}`, {
+      method: 'DELETE',
+      credentials: 'same-origin'
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === "function") showToast("Document removed.", "success");
+      startupExpressState.profile.documents = (startupExpressState.profile.documents || []).filter(d => d.id !== docId);
+      renderUploadedDocsList();
+      applyProfileToDashboard(startupExpressState.profile);
+    } else {
+      if (typeof showToast === "function") showToast(data.error || "Failed to remove document.", "error");
+    }
+  } catch (err) {
+    if (typeof showToast === "function") showToast("Network error removing document.", "error");
+  }
+}
+
+function renderUploadedDocsList() {
+  const container = document.getElementById('supUploadedDocsList');
+  if (!container) return;
+
+  const docs = (startupExpressState.profile && startupExpressState.profile.documents) || [];
+  if (docs.length === 0) {
+    container.innerHTML = '<p class="text-secondary italic text-[11px]">No documents uploaded yet. Upload your PAN and address proof to secure verification.</p>';
+    return;
+  }
+
+  container.innerHTML = docs.map(d => {
+    const sizeKb = Math.round((d.file_size_bytes || 0) / 1024);
+    const dateFormatted = d.upload_date ? new Date(d.upload_date).toLocaleDateString() : 'Recent';
+    return `
+      <div class="flex items-center justify-between p-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest">
+        <div class="flex items-center gap-2 truncate">
+          <span class="material-symbols-outlined text-primary text-[18px] shrink-0">description</span>
+          <div class="truncate">
+            <span class="font-semibold text-on-surface truncate block text-[11px]">${d.original_filename}</span>
+            <span class="text-[9px] text-secondary font-mono">${d.category} &bull; ${sizeKb} KB &bull; ${dateFormatted}</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <a href="/api/startup-express/documents/${d.id}" target="_blank" rel="noopener noreferrer" class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high text-primary font-semibold text-[10px] flex items-center gap-1">
+            <span>View</span>
+            <span class="material-symbols-outlined text-[12px]">open_in_new</span>
+          </a>
+          <button type="button" onclick="deleteStartupDocument('${d.id}')" class="px-2 py-1 rounded hover:bg-error/10 text-error font-semibold text-[10px] cursor-pointer">
+            Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Stage Save Handlers
+async function saveStage1() {
+  const name = document.getElementById('supProposedName')?.value?.trim();
+  const legalName = document.getElementById('supLegalName')?.value?.trim();
+  const activity = document.getElementById('supActivity')?.value;
+  const category = document.getElementById('supCategory')?.value;
+  const description = document.getElementById('supDescription')?.value?.trim();
+  const state = document.getElementById('supState')?.value;
+  const district = document.getElementById('supDistrict')?.value?.trim();
+  const pincode = document.getElementById('supPincode')?.value?.trim();
+  const address = document.getElementById('supAddress')?.value?.trim();
+  const natureOps = document.getElementById('supNatureOps')?.value;
+  const commencementDate = document.getElementById('supCommencementDate')?.value;
+  const structure = document.querySelector('input[name="startupStructure"]:checked')?.value || 'PROPRIETORSHIP';
+  const otherSubtype = document.getElementById('supOtherSubtype')?.value;
+
+  if (!name) {
+    if (typeof showToast === "function") showToast("Please enter your proposed business or trade name.", "error");
+    document.getElementById('supProposedName')?.focus();
+    return;
+  }
+  if (!state) {
+    if (typeof showToast === "function") showToast("Please select the state of business operations.", "error");
+    return;
+  }
+  if (pincode && !/^\d{6}$/.test(pincode)) {
+    if (typeof showToast === "function") showToast("PIN code must be exactly 6 digits.", "error");
+    document.getElementById('supPincode')?.focus();
+    return;
+  }
+
+  const payload = {
+    stage: 1,
+    business_structure: structure,
+    business_subtype: structure === 'OTHER' ? otherSubtype : null,
+    proposed_business_name: name,
+    legal_name: legalName || name,
+    business_activity: activity,
+    business_category: category,
+    business_description: description,
+    business_state: state,
+    district: district,
+    business_pincode: pincode,
+    business_address: address,
+    nature_of_operations: natureOps,
+    commencement_date: commencementDate
+  };
+
+  // Structure specific values
+  if (structure === 'PROPRIETORSHIP') {
+    payload.founder_name = document.getElementById('supProprietorName')?.value?.trim();
+  } else if (structure === 'PARTNERSHIP') {
+    payload.partner_details = {
+      count: parseInt(document.getElementById('supPartnerCount')?.value, 10) || 2,
+      deedDate: document.getElementById('supDeedDate')?.value,
+      managingPartner: document.getElementById('supManagingPartner')?.value?.trim()
+    };
+  } else if (structure === 'LLP') {
+    payload.proposed_business_name = document.getElementById('supLlpName')?.value?.trim() || name;
+    payload.dpin = document.getElementById('supDpin')?.value?.trim();
+  } else if (structure === 'PRIVATE_LIMITED') {
+    payload.cin = document.getElementById('supCin')?.value?.trim().toUpperCase();
+    payload.din = document.getElementById('supDin')?.value?.trim();
+  } else {
+    payload.nominee_name = document.getElementById('supNomineeName')?.value?.trim();
+  }
+
+  await submitStartupStage(payload, 2);
+}
+
+async function saveStage2() {
+  const founderName = document.getElementById('supFounderName')?.value?.trim();
+  const founderPan = document.getElementById('supFounderPan')?.value?.trim().toUpperCase();
+  const entityPan = document.getElementById('supEntityPan')?.value?.trim().toUpperCase();
+  const contactEmail = document.getElementById('supContactEmail')?.value?.trim();
+  const contactMobile = document.getElementById('supContactMobile')?.value?.trim();
+  const structure = document.querySelector('input[name="startupStructure"]:checked')?.value || 'PROPRIETORSHIP';
+
+  if (!founderName) {
+    if (typeof showToast === "function") showToast("Please enter the founder / primary signatory name.", "error");
+    document.getElementById('supFounderName')?.focus();
+    return;
+  }
+  if (!founderPan) {
+    if (typeof showToast === "function") showToast("Please enter the founder / proprietor PAN.", "error");
+    document.getElementById('supFounderPan')?.focus();
+    return;
+  }
+  if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(founderPan)) {
+    if (typeof showToast === "function") showToast("Invalid PAN format. PAN must be 10 characters (e.g. ABCDE1234F).", "error");
+    return;
+  }
+
+  // Structure specific PAN 4th letter validation
+  if (structure === 'PROPRIETORSHIP' && founderPan.charAt(3) !== 'P') {
+    if (typeof showToast === "function") showToast("Sole Proprietorship requires an individual PAN (4th letter 'P').", "error");
+    return;
+  }
+
+  if (entityPan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(entityPan)) {
+    if (typeof showToast === "function") showToast("Invalid Entity PAN format (e.g. AAACL1234F).", "error");
+    return;
+  }
+
+  const payload = {
+    stage: 2,
+    founder_name: founderName,
+    founder_pan: founderPan,
+    entity_pan: entityPan || null,
+    contact_email: contactEmail,
+    contact_mobile: contactMobile,
+    identity_doc_status: 'SYNTAX_VALID'
+  };
+
+  await submitStartupStage(payload, 3);
+}
+
+async function saveStage3() {
+  const refNum = document.getElementById('supRegRef')?.value?.trim().toUpperCase();
+  const status = document.getElementById('supRegStatus')?.value || 'NOT_STARTED';
+
+  // Collect dynamic table items
+  const tableRows = document.querySelectorAll('#tblDynamicRegistrations tr');
+  const checklistItems = [];
+  let validationError = null;
+
+  tableRows.forEach(row => {
+    const key = row.dataset.itemKey;
+    const itemStatus = row.querySelector('.reg-item-status')?.value || 'NOT_STARTED';
+    const itemRef = row.querySelector('.reg-item-ref')?.value?.trim();
+    const itemDate = row.querySelector('.reg-item-date')?.value;
+    const itemNotes = row.querySelector('.reg-item-notes')?.value?.trim();
+
+    if (itemStatus === 'NOT_APPLICABLE' && !itemNotes) {
+      validationError = "Please provide justification reason for Not Applicable items.";
+    }
+
+    checklistItems.push({
+      itemKey: key,
+      status: itemStatus,
+      refNumber: itemRef,
+      submissionDate: itemDate,
+      notes: itemNotes
+    });
+  });
+
+  if (validationError) {
+    if (typeof showToast === "function") showToast(validationError, "error");
+    return;
+  }
+
+  const payload = {
+    stage: 3,
+    registration_reference_number: refNum || null,
+    registration_status: status,
+    checklist_items: checklistItems
+  };
+
+  await submitStartupStage(payload, 4);
+}
+
+async function saveStage4() {
+  const path = document.querySelector('input[name="gstCompliancePath"]:checked')?.value || 'REGISTER';
+
+  if (path === 'REGISTER') {
+    const arn = document.getElementById('supGstArn')?.value?.trim().toUpperCase();
+    const status = document.getElementById('supGstStatus')?.value || 'NOT_APPLIED';
+    const gstin = document.getElementById('supGstin')?.value?.trim().toUpperCase();
+
+    if (arn && !/^[A-Z0-9]{15}$/.test(arn)) {
+      if (typeof showToast === "function") showToast("ARN must be 15 alphanumeric characters.", "error");
+      return;
+    }
+    if (gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstin)) {
+      if (typeof showToast === "function") showToast("Invalid GSTIN format. Expected 15 characters (e.g. 27ABCDE1234F1Z5).", "error");
+      return;
+    }
+
+    const payload = {
+      stage: 4,
+      gst_eligibility_type: 'TURNOVER_THRESHOLD',
+      gst_arn: arn || null,
+      gst_status: status,
+      gstin: gstin || null
+    };
+    await submitStartupStage(payload, 5);
+  } else {
+    const reasonType = document.querySelector('input[name="exemptReasonType"]:checked')?.value || 'THRESHOLD';
+    const reasonNote = document.getElementById('supGstExemptionReason')?.value?.trim() || "Below turnover threshold";
+
+    const payload = {
+      stage: 4,
+      gst_eligibility_type: 'EXEMPT_BELOW_THRESHOLD',
+      gst_status: 'NOT_REQUIRED_EXEMPT',
+      gst_exemption_reason: `[${reasonType}] ${reasonNote}`
+    };
+    await submitStartupStage(payload, 5);
+  }
+}
+
+async function saveStage5() {
+  const acctStatus = document.getElementById('supAccountStatus')?.value || 'DETAILS_ADDED';
+  const scheme = document.getElementById('supTaxScheme')?.value || 'REGULAR';
+  const accountingMethod = document.getElementById('supAccountingMethod')?.value || 'ACCRUAL';
+  const openingBalance = parseFloat(document.getElementById('supOpeningBalance')?.value) || 0;
+
+  if (acctStatus === 'NOT_OPENED') {
+    const payload = {
+      stage: 5,
+      account_status: 'NOT_OPENED',
+      accounting_scheme: scheme,
+      accounting_method: accountingMethod,
+      opening_balance: openingBalance
+    };
+    await submitStartupStage(payload, 6);
+    return;
+  }
+
+  const bankName = document.getElementById('supBankName')?.value?.trim();
+  const ifsc = document.getElementById('supBankIfsc')?.value?.trim().toUpperCase();
+  const holder = document.getElementById('supBankHolder')?.value?.trim();
+  const account = document.getElementById('supBankAccount')?.value?.trim();
+  const confirmAcct = document.getElementById('supBankConfirmAccount')?.value?.trim();
+
+  if (!bankName) {
+    if (typeof showToast === "function") showToast("Please enter your bank name.", "error");
+    document.getElementById('supBankName')?.focus();
+    return;
+  }
+  if (!ifsc) {
+    if (typeof showToast === "function") showToast("Please enter bank IFSC code.", "error");
+    document.getElementById('supBankIfsc')?.focus();
+    return;
+  }
+  if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
+    if (typeof showToast === "function") showToast("Invalid IFSC format (e.g. HDFC0001234).", "error");
+    return;
+  }
+
+  if (account && confirmAcct && account !== confirmAcct) {
+    if (typeof showToast === "function") showToast("Account number and confirmation account number do not match.", "error");
+    document.getElementById('supBankConfirmAccount')?.focus();
+    return;
+  }
+
+  const payload = {
+    stage: 5,
+    account_status: acctStatus,
+    bank_name: bankName,
+    bank_ifsc: ifsc,
+    bank_holder_name: holder || null,
+    bank_account_number: account || null,
+    confirm_account_number: confirmAcct || null,
+    accounting_scheme: scheme,
+    accounting_method: accountingMethod,
+    opening_balance: openingBalance
+  };
+
+  await submitStartupStage(payload, 6);
+}
+
+async function saveStage6() {
+  const prefix = document.getElementById('supInvPrefix')?.value?.trim().toUpperCase() || 'INV';
+  const startNum = parseInt(document.getElementById('supInvStart')?.value, 10) || 1;
+  const hsn = document.getElementById('supHsn')?.value?.trim() || '9983';
+  const rate = parseFloat(document.getElementById('supGstRate')?.value) || 18;
+
+  if (!prefix) {
+    if (typeof showToast === "function") showToast("Invoice numbering prefix cannot be empty.", "error");
+    document.getElementById('supInvPrefix')?.focus();
+    return;
+  }
+
+  const payload = {
+    stage: 6,
+    invoice_prefix: prefix,
+    invoice_starting_number: startNum,
+    default_hsn: hsn,
+    default_gst_rate: rate
+  };
+
+  await submitStartupStage(payload, 7);
+}
+
+async function saveStage7() {
+  await launchStartupWorkspace();
+}
+
+async function submitStartupStage(payload, nextStageNum) {
+  try {
+    const res = await fetch('/api/startup-express/save-stage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      if (typeof showToast === "function") showToast(data.error || "Failed to save stage data.", "error");
+      return;
+    }
+
+    startupExpressState.profile = data.profile;
+    applyProfileToStartupForm(data.profile);
+    applyProfileToDashboard(data.profile);
+    if (typeof showToast === "function") showToast(`Stage ${payload.stage} saved successfully.`, "success");
+
+    if (nextStageNum && nextStageNum !== payload.stage) {
+      goToStage(nextStageNum);
+    } else {
+      renderStartupStepper();
+    }
+  } catch (err) {
+    if (typeof showToast === "function") showToast("Network error while saving progress.", "error");
+  }
+}
+
+async function toggleChecklistItem(itemKey, completed) {
+  try {
+    const res = await fetch('/api/startup-express/checklist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ item_key: itemKey, completed })
+    });
+    const data = await res.json();
+    if (data && data.success && data.profile) {
+      startupExpressState.profile = data.profile;
+      applyProfileToDashboard(data.profile);
+    }
+  } catch (err) {
+    console.warn("Could not update checklist item:", err);
+  }
+}
+
+async function resetStartupOnboarding() {
+  if (!confirm("Are you sure you want to reset your Startup Express onboarding progress? This will reset stages 1 through 7 for this organization while preserving all existing statutory invoice data.")) {
+    return;
+  }
+  try {
+    const res = await fetch('/api/startup-express/reset', {
+      method: 'POST',
+      credentials: 'same-origin'
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      startupExpressState.profile = data.profile;
+      applyProfileToStartupForm(data.profile);
+      applyProfileToDashboard(data.profile);
+      showStartupView('landing');
+      goToStage(1);
+      if (typeof showToast === "function") showToast("Onboarding progress has been reset.", "success");
+    } else {
+      if (typeof showToast === "function") showToast(data.error || "Could not reset onboarding.", "error");
+    }
+  } catch (err) {
+    if (typeof showToast === "function") showToast("Network error resetting onboarding.", "error");
+  }
+}
+
+function updateInvoicePreview() {
+  const prefix = document.getElementById('supInvPrefix')?.value?.trim().toUpperCase() || 'INV/';
+  const startNum = parseInt(document.getElementById('supInvStart')?.value, 10) || 1;
+  const hsn = document.getElementById('supHsn')?.value?.trim() || '9983';
+  const rate = parseFloat(document.getElementById('supGstRate')?.value) || 18;
+  const bName = document.getElementById('supProposedName')?.value?.trim() || startupExpressState.profile?.proposed_business_name || 'Apex Retail Enterprises';
+  const gstin = document.getElementById('supGstin')?.value?.trim().toUpperCase() || startupExpressState.profile?.gstin || '27ABCDE1234F1Z5';
+
+  const previewNum = document.getElementById('prevInvNumber');
+  const previewName = document.getElementById('prevInvBusinessName');
+  const previewGstin = document.getElementById('prevInvGstin');
+  const previewBadge = document.getElementById('prevInvBadge');
+  const tblHsn = document.getElementById('prevTableHsn');
+  const tblCgst = document.getElementById('prevTableCgst');
+  const tblSgst = document.getElementById('prevTableSgst');
+  const tblTotal = document.getElementById('prevTableTotal');
+
+  if (previewNum) previewNum.textContent = `${prefix}${String(startNum).padStart(3, '0')}`;
+  if (previewName) previewName.textContent = bName;
+
+  const isExempt = document.querySelector('input[name="gstCompliancePath"]:checked')?.value === 'EXEMPT';
+  if (isExempt) {
+    if (previewGstin) previewGstin.textContent = "Composition / Non-GST Supply";
+    if (previewBadge) {
+      previewBadge.textContent = "BILL OF SUPPLY";
+      previewBadge.className = "text-[10px] font-mono font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded";
+    }
+  } else {
+    if (previewGstin) previewGstin.textContent = `GSTIN: ${gstin}`;
+    if (previewBadge) {
+      previewBadge.textContent = "TAX INVOICE";
+      previewBadge.className = "text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded";
+    }
+  }
+
+  if (tblHsn) tblHsn.textContent = hsn;
+  const taxable = 10000;
+  const halfRate = rate / 2;
+  const cgst = isExempt ? 0 : (taxable * halfRate) / 100;
+  const sgst = isExempt ? 0 : (taxable * halfRate) / 100;
+  const total = taxable + (cgst * 2);
+
+  if (tblCgst) tblCgst.textContent = `₹${cgst.toFixed(2)} (${halfRate}%)`;
+  if (tblSgst) tblSgst.textContent = `₹${sgst.toFixed(2)} (${halfRate}%)`;
+  if (tblTotal) tblTotal.textContent = `₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+}
+
+function renderPreActivationMatrix(p) {
+  const container = document.getElementById('boxPreActivationMatrix');
+  if (!container) return;
+
+  const checks = [
+    { label: "1. Business Structure Selected", ready: Boolean(p.business_structure), detail: p.business_structure || "Missing" },
+    { label: "2. Trade / Business Name", ready: Boolean(p.proposed_business_name), detail: p.proposed_business_name || "Missing" },
+    { label: "3. Registered Place Address", ready: Boolean(p.business_state), detail: p.business_state ? `${p.business_state} (${p.business_pincode || ''})` : "Missing" },
+    { label: "4. Signatory PAN Validated", ready: Boolean(p.founder_pan || p.entity_pan), detail: p.founder_pan || p.entity_pan || "Missing" },
+    { label: "5. Business Licences Reviewed", ready: Boolean(p.completed_stages && p.completed_stages.includes(3)), detail: p.registration_status || "Not Started" },
+    { label: "6. GST Status Established", ready: Boolean(p.gstin || p.gst_status === 'NOT_REQUIRED_EXEMPT' || p.gst_eligibility_type === 'EXEMPT_BELOW_THRESHOLD'), detail: p.gstin ? `GSTIN: ${p.gstin}` : "Exempt" },
+    { label: "7. Rule 46 Invoice Sequence", ready: Boolean(p.invoice_prefix), detail: `Prefix: ${p.invoice_prefix || 'INV/'}` },
+    { label: "8. Banking Configuration", ready: true, detail: p.bank_name ? `${p.bank_name} (... ${p.bank_account_last4 || ''})` : "Open Later" }
+  ];
+
+  container.innerHTML = checks.map(c => `
+    <div class="flex items-center justify-between p-2 rounded bg-surface-container-lowest border border-outline-variant">
+      <div class="truncate">
+        <span class="font-semibold block truncate ${c.ready ? 'text-on-surface' : 'text-amber-800'}">${c.label}</span>
+        <span class="text-[10px] text-secondary truncate block">${c.detail}</span>
+      </div>
+      <span class="shrink-0 text-xs font-bold ${c.ready ? 'text-emerald-700' : 'text-amber-600'}">
+        ${c.ready ? '✓ Ready' : 'Pending'}
+      </span>
+    </div>
+  `).join('');
+
+  const badge = document.getElementById('badgeActivationReadiness');
+  if (badge) {
+    if (p.activation_status === 'ACTIVATED_GST_REGISTERED') {
+      badge.innerHTML = '<span class="material-symbols-outlined text-[14px]">verified</span><span>Active &bull; GST Registered</span>';
+      badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+    } else if (p.activation_status === 'ACTIVATED_NON_GST') {
+      badge.innerHTML = '<span class="material-symbols-outlined text-[14px]">check_circle</span><span>Active &bull; Non-GST Business</span>';
+      badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300";
+    } else {
+      badge.innerHTML = '<span class="material-symbols-outlined text-[14px]">pending</span><span>Ready for Workspace Activation</span>';
+    }
+  }
+
+  const successBanner = document.getElementById('bannerActivationSuccess');
+  const launchBanner = document.getElementById('bannerLaunchWorkspace');
+  if (p.activation_status && p.activation_status.startsWith('ACTIVATED')) {
+    if (successBanner) successBanner.classList.remove('hidden');
+    if (launchBanner) launchBanner.classList.add('hidden');
+  } else {
+    if (successBanner) successBanner.classList.add('hidden');
+    if (launchBanner) launchBanner.classList.remove('hidden');
+  }
+}
+
+async function launchStartupWorkspace() {
+  const btn = document.getElementById('btnLaunchWorkspaceMain');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/startup-express/activate', {
+      method: 'POST',
+      credentials: 'same-origin'
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      startupExpressState.profile = data.profile;
+      applyProfileToStartupForm(data.profile);
+      applyProfileToDashboard(data.profile);
+      renderPreActivationMatrix(data.profile);
+
+      const successBanner = document.getElementById('bannerActivationSuccess');
+      const launchBanner = document.getElementById('bannerLaunchWorkspace');
+      if (successBanner) successBanner.classList.remove('hidden');
+      if (launchBanner) launchBanner.classList.add('hidden');
+
+      if (typeof showToast === "function") showToast("Workspace successfully activated! All compliance modules unlocked.", "success");
+    } else {
+      const missing = (data.missingRequirements || []).join(", ");
+      if (typeof showToast === "function") showToast(`Cannot activate: ${data.error || ''} (${missing})`, "error");
+    }
+  } catch (err) {
+    if (typeof showToast === "function") showToast("Network error activating workspace.", "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function applyProfileToStartupForm(p) {
+  if (!p) return;
+
+  if (p.business_structure) {
+    selectStructure(p.business_structure, p.business_subtype);
+  }
+
+  if (p.proposed_business_name && document.getElementById('supProposedName')) {
+    document.getElementById('supProposedName').value = p.proposed_business_name;
+  }
+  if (p.legal_name && document.getElementById('supLegalName')) {
+    document.getElementById('supLegalName').value = p.legal_name;
+  }
+  if (p.business_activity && document.getElementById('supActivity')) {
+    document.getElementById('supActivity').value = p.business_activity;
+  }
+  if (p.business_category && document.getElementById('supCategory')) {
+    document.getElementById('supCategory').value = p.business_category;
+  }
+  if (p.business_description && document.getElementById('supDescription')) {
+    document.getElementById('supDescription').value = p.business_description;
+  }
+  if (p.business_state && document.getElementById('supState')) {
+    document.getElementById('supState').value = p.business_state;
+  }
+  if (p.district && document.getElementById('supDistrict')) {
+    document.getElementById('supDistrict').value = p.district;
+  }
+  if (p.business_pincode && document.getElementById('supPincode')) {
+    document.getElementById('supPincode').value = p.business_pincode;
+  }
+  if (p.business_address && document.getElementById('supAddress')) {
+    document.getElementById('supAddress').value = p.business_address;
+  }
+  if (p.nature_of_operations && document.getElementById('supNatureOps')) {
+    document.getElementById('supNatureOps').value = p.nature_of_operations;
+  }
+  if (p.commencement_date && document.getElementById('supCommencementDate')) {
+    document.getElementById('supCommencementDate').value = p.commencement_date;
+  }
+
+  if (p.founder_name && document.getElementById('supFounderName')) {
+    document.getElementById('supFounderName').value = p.founder_name;
+  }
+  if (p.founder_pan && document.getElementById('supFounderPan')) {
+    document.getElementById('supFounderPan').value = p.founder_pan;
+  }
+  if (p.entity_pan && document.getElementById('supEntityPan')) {
+    document.getElementById('supEntityPan').value = p.entity_pan;
+  }
+
+  if (p.registration_reference_number && document.getElementById('supRegRef')) {
+    document.getElementById('supRegRef').value = p.registration_reference_number;
+  }
+  if (p.registration_status && document.getElementById('supRegStatus')) {
+    document.getElementById('supRegStatus').value = p.registration_status;
+  }
+
+  if (p.gst_eligibility_type === 'EXEMPT_BELOW_THRESHOLD' || p.gst_status === 'NOT_REQUIRED_EXEMPT') {
+    const rdoExempt = document.querySelector('input[name="gstCompliancePath"][value="EXEMPT"]');
+    if (rdoExempt) {
+      rdoExempt.checked = true;
+      toggleGstPath('EXEMPT');
+    }
+    if (p.gst_exemption_reason && document.getElementById('supGstExemptionReason')) {
+      document.getElementById('supGstExemptionReason').value = p.gst_exemption_reason;
+    }
+  } else {
+    const rdoReg = document.querySelector('input[name="gstCompliancePath"][value="REGISTER"]');
+    if (rdoReg) {
+      rdoReg.checked = true;
+      toggleGstPath('REGISTER');
+    }
+    if (p.gst_arn && document.getElementById('supGstArn')) {
+      document.getElementById('supGstArn').value = p.gst_arn;
+    }
+    if (p.gst_status && document.getElementById('supGstStatus')) {
+      document.getElementById('supGstStatus').value = p.gst_status;
+    }
+    if (p.gstin && document.getElementById('supGstin')) {
+      document.getElementById('supGstin').value = p.gstin;
+    }
+  }
+
+  if (p.bank_name && document.getElementById('supBankName')) {
+    document.getElementById('supBankName').value = p.bank_name;
+  }
+  if (p.bank_ifsc && document.getElementById('supBankIfsc')) {
+    document.getElementById('supBankIfsc').value = p.bank_ifsc;
+  }
+  if (p.bank_holder_name && document.getElementById('supBankHolder')) {
+    document.getElementById('supBankHolder').value = p.bank_holder_name;
+  }
+  if (p.bank_account_last4 && document.getElementById('supBankAccount')) {
+    document.getElementById('supBankAccount').placeholder = `•••• ${p.bank_account_last4}`;
+  }
+  if (p.accounting_scheme && document.getElementById('supTaxScheme')) {
+    document.getElementById('supTaxScheme').value = p.accounting_scheme;
+  }
+  if (p.opening_balance != null && document.getElementById('supOpeningBalance')) {
+    document.getElementById('supOpeningBalance').value = p.opening_balance;
+  }
+
+  if (p.invoice_prefix && document.getElementById('supInvPrefix')) {
+    document.getElementById('supInvPrefix').value = p.invoice_prefix;
+  }
+  if (p.invoice_starting_number && document.getElementById('supInvStart')) {
+    document.getElementById('supInvStart').value = p.invoice_starting_number;
+  }
+  if (p.default_hsn && document.getElementById('supHsn')) {
+    document.getElementById('supHsn').value = p.default_hsn;
+  }
+  if (p.default_gst_rate != null && document.getElementById('supGstRate')) {
+    document.getElementById('supGstRate').value = p.default_gst_rate;
+  }
+
+  renderUploadedDocsList();
+  renderPreActivationMatrix(p);
+  updateInvoicePreview();
+}
+
+function applyProfileToDashboard(p) {
+  if (!p) return;
+
+  const pct = p.overall_progress || 0;
+  const pctText = `${pct}% Completed`;
+
+  const prgPill = document.getElementById('startupProgressPct');
+  if (prgPill) prgPill.textContent = pctText;
+
+  const gauge = document.getElementById('startupProgressGauge');
+  if (gauge) gauge.textContent = `${pct}%`;
+
+  const dashBar = document.getElementById('dashProgressBar');
+  if (dashBar) dashBar.style.width = `${pct}%`;
+
+  const dashPct = document.getElementById('dashProgressPct');
+  if (dashPct) dashPct.textContent = `${pct}%`;
+
+  const dashName = document.getElementById('dashBusinessName');
+  if (dashName) {
+    dashName.textContent = p.proposed_business_name || 'Proposed Business';
+  }
+
+  const regBadge = document.getElementById('dashRegBadge');
+  if (regBadge) {
+    regBadge.textContent = p.registration_status || 'NOT_STARTED';
+  }
+
+  const gstBadge = document.getElementById('dashGstBadge');
+  if (gstBadge) {
+    gstBadge.textContent = p.gst_status || 'NOT_APPLIED';
+  }
+
+  const bankBadge = document.getElementById('dashBankBadge');
+  if (bankBadge) {
+    bankBadge.textContent = p.bank_name ? 'CONFIGURED' : 'NOT_OPENED';
+  }
+
+  // Next action
+  const nextAction = p.next_recommended_action || (typeof startupRepo !== "undefined" ? startupRepo.getNextRecommendedAction(p) : null);
+  const nextTitle = document.getElementById('dashNextActionTitle');
+  const nextText = document.getElementById('dashNextActionText');
+  const nextBtn = document.getElementById('txtDashContinueAction');
+
+  if (nextAction) {
+    if (nextTitle) nextTitle.textContent = nextAction.title;
+    if (nextText) nextText.textContent = nextAction.description;
+    if (nextBtn) nextBtn.textContent = `${nextAction.ctaText} →`;
+  }
+
+  const docCount = (p.documents || []).length;
+  const chk = p.checklist || {};
+  const readyCount = Object.values(chk).filter(Boolean).length;
+  const counter = document.getElementById('dashChecklistCounter');
+  if (counter) {
+    counter.textContent = `${docCount} uploaded &bull; ${readyCount}/4 checks`;
+  }
+
+  const itemsContainer = document.getElementById('dashChecklistItems');
+  if (itemsContainer) {
+    itemsContainer.innerHTML = `
+      <div class="flex items-center justify-between">
+        <span>Founder Identity Proof</span>
+        <span class="${chk.doc_identity || docCount > 0 ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_identity || docCount > 0 ? '✓ Ready' : 'Pending'}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span>Premises Address Proof</span>
+        <span class="${chk.doc_address ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_address ? '✓ Ready' : 'Pending'}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span>Passport Photo</span>
+        <span class="${chk.doc_photo ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_photo ? '✓ Ready' : 'Pending'}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span>Rent Agreement &amp; Owner NOC</span>
+        <span class="${chk.doc_rent_noc ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_rent_noc ? '✓ Ready' : 'Pending'}</span>
+      </div>
+    `;
+  }
+}
+
+// Window global bindings
+window.loadStartupExpress = loadStartupExpress;
+window.showStartupView = showStartupView;
+window.selectStructureFromLanding = selectStructureFromLanding;
+window.selectStructure = selectStructure;
+window.startStartupExpressJourney = startStartupExpressJourney;
+window.resumeStartupExpress = resumeStartupExpress;
+window.goToStage = goToStage;
+window.saveStage1 = saveStage1;
+window.saveStage2 = saveStage2;
+window.saveStage3 = saveStage3;
+window.saveStage4 = saveStage4;
+window.saveStage5 = saveStage5;
+window.saveStage6 = saveStage6;
+window.saveStage7 = saveStage7;
+window.toggleChecklistItem = toggleChecklistItem;
+window.resetStartupOnboarding = resetStartupOnboarding;
+window.updateInvoicePreview = updateInvoicePreview;
+window.launchStartupWorkspace = launchStartupWorkspace;
+window.toggleGstPath = toggleGstPath;
+window.toggleBankAccountStatus = toggleBankAccountStatus;
+window.validatePanField = validatePanField;
+window.uploadStartupDocument = uploadStartupDocument;
+window.deleteStartupDocument = deleteStartupDocument;
+window.renderUploadedDocsList = renderUploadedDocsList;
+window.handleRegStatusChange = handleRegStatusChange;

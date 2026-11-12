@@ -223,7 +223,7 @@ test("Invoice Persistence: Tenant isolation prevents cross-tenant access", async
   const kaGstin = gstinRepo.findByGstin("29AAACB1234F1Z5");
 
   // Create an invoice under Maharashtra GSTIN
-  const mhInvNo = `INV-MH-${Date.now().toString().slice(-4)}`;
+  const mhInvNo = `INV-MH-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
   const res1 = createMockRes();
   await handleFunctionalApi(getAuthReq(), res1, "/api/sales", "POST", { period: "102026" }, {
     invoiceNumber: mhInvNo,
