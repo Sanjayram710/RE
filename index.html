@@ -2537,484 +2537,147 @@
     <!-- ========================================================================= -->
     <div id="viewReconSuite" class="app-suite-container hidden">
       <main class="flex-1 px-8 py-6 max-w-[1600px] w-full mx-auto pb-28">
-<!-- Breadcrumbs -->
-<nav class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant mb-4">
-<a class="hover:text-primary transition-colors" href="#">File GST</a>
-<span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
-<a class="hover:text-primary transition-colors" href="#">October 2026 Filing Pipeline</a>
-<span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
-<span class="text-on-surface font-semibold">Step 3: Input Tax Credit (ITC) &amp; GSTR-2B Reconciliation</span>
-</nav>
-<!-- Main Headline + Actions Bar -->
-<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-outline-variant">
-<div class="min-w-0 flex-1">
-<div class="flex items-center gap-3 flex-wrap">
-<h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
-              Input Tax Credit (ITC) Reconciliation
-            </h1>
-<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-label-sm text-label-sm whitespace-nowrap">
-<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-              GSTR-2B Auto-Synced • 14 mins ago
-            </span>
-</div>
-<p class="font-body-md text-body-md text-on-surface-variant mt-1">
-            Reconcile inward purchase invoices recorded in books with supplier filings auto-drafted on GSTN Portal to maximize safe tax credits.
-          </p>
-</div>
-<div class="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
-<!-- Re-sync Portal Button -->
-<button class="min-h-[42px] px-4 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container font-label-lg text-label-lg flex items-center gap-2 shadow-sm transition-all duration-150 active:scale-98 whitespace-nowrap shrink-0">
-<span class="material-symbols-outlined text-primary text-[18px]">sync</span>
-<span>Re-sync GSTR-2B with Portal</span>
-</button>
-<!-- Download Excel/PDF Button -->
-<button class="min-h-[42px] px-4 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container font-label-lg text-label-lg flex items-center gap-2 shadow-sm transition-all duration-150 active:scale-98 whitespace-nowrap shrink-0">
-<span class="material-symbols-outlined text-outline text-[18px]">download</span>
-<span>Download Reconciliation Excel / PDF</span>
-</button>
-</div>
-</div>
-<!-- ==================== SECTION 1: 5-STEP PIPELINE INDICATOR ==================== -->
-<div class="mt-6 p-4 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm">
-<div class="grid grid-cols-1 md:grid-cols-5 gap-3 relative">
-<!-- Step 1: Sales -->
-<div class="flex items-center gap-3 p-2.5 rounded-lg bg-surface-container-low border border-surface-container-high">
-<div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
-<span class="material-symbols-outlined text-[18px]">done</span>
-</div>
-<div class="flex flex-col min-w-0">
-<span class="font-label-md text-label-md font-semibold text-on-surface">1. Sales (GSTR-1)</span>
-<span class="text-[11px] text-emerald-700 font-medium">Completed ✓</span>
-</div>
-</div>
-<!-- Step 2: Purchases -->
-<div class="flex items-center gap-3 p-2.5 rounded-lg bg-surface-container-low border border-surface-container-high">
-<div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
-<span class="material-symbols-outlined text-[18px]">done</span>
-</div>
-<div class="flex flex-col min-w-0">
-<span class="font-label-md text-label-md font-semibold text-on-surface">2. Purchases</span>
-<span class="text-[11px] text-emerald-700 font-medium">Completed ✓ (14 Bills)</span>
-</div>
-</div>
-<!-- Step 3: ITC Reconciliation (ACTIVE) -->
-<div class="flex items-center gap-3 p-2.5 rounded-lg bg-primary-container text-on-primary-container shadow-sm border border-primary">
-<div class="w-8 h-8 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center font-bold text-xs shadow-inner">
-<span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
-</div>
-<div class="flex flex-col min-w-0">
-<span class="font-label-md text-label-md font-bold text-on-primary-container">3. ITC Reconciliation</span>
-<span class="text-[11px] text-on-primary-fixed font-semibold tracking-wide">Active • 88% Matched</span>
-</div>
-</div>
-<!-- Step 4: Tax Calculation -->
-<div class="flex items-center gap-3 p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant opacity-70">
-<div class="w-8 h-8 rounded-full bg-surface-container text-outline flex items-center justify-center font-bold text-xs">
-              4
+        <!-- Breadcrumbs -->
+        <nav class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant mb-4">
+          <a class="hover:text-primary transition-colors cursor-pointer" onclick="switchSuite('home')">SimpleGST</a>
+          <span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
+          <span class="text-on-surface font-semibold">GSTR-2B ITC Reconciliation</span>
+        </nav>
+
+        <!-- Main Headline + Actions Bar -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-outline-variant">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-3 flex-wrap">
+              <h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
+                Input Tax Credit (ITC) Reconciliation
+              </h1>
+              <span id="reconPeriodBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-label-sm text-label-sm whitespace-nowrap">
+                <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                <span id="reconSyncStatusText">GSTR-2B Grounded in Database</span>
+              </span>
             </div>
-<div class="flex flex-col min-w-0">
-<span class="font-label-md text-label-md font-semibold text-on-surface">4. Tax Calculation</span>
-<span class="text-[11px] text-on-surface-variant">Pending</span>
-</div>
-</div>
-<!-- Step 5: File GSTR-3B -->
-<div class="flex items-center gap-3 p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant opacity-70">
-<div class="w-8 h-8 rounded-full bg-surface-container text-outline flex items-center justify-center font-bold text-xs">
-              5
-            </div>
-<div class="flex flex-col min-w-0">
-<span class="font-label-md text-label-md font-semibold text-on-surface">5. File GSTR-3B</span>
-<span class="text-[11px] text-on-surface-variant">Pending</span>
-</div>
-</div>
-</div>
-</div>
-<!-- ==================== SECTION 2: EXECUTIVE ITC FINANCIAL SUMMARY BAR (4 CARDS) ==================== -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-<!-- Card 1: Books ITC -->
-<div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm hover:border-outline transition-colors flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-2">
-<span class="font-label-md text-label-md text-on-surface-variant">ITC Claimable in Books</span>
-<span class="material-symbols-outlined text-[18px] text-outline">menu_book</span>
-</div>
-<div class="font-numeric-lg text-numeric-lg font-bold text-on-surface tracking-tight">
-              ₹84,214.00
-            </div>
-</div>
-<div class="mt-4 pt-3 border-t border-outline-variant flex items-center justify-between text-[12px] text-on-surface-variant font-body-sm">
-<span>14 Inward purchase bills</span>
-<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-[11px]">ERP Synced</span>
-</div>
-</div>
-<!-- Card 2: 2B ITC -->
-<div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm hover:border-outline transition-colors flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-2">
-<span class="font-label-md text-label-md text-on-surface-variant">ITC Available in GSTR-2B</span>
-<span class="material-symbols-outlined text-[18px] text-primary">cloud_done</span>
-</div>
-<div class="font-numeric-lg text-numeric-lg font-bold text-primary tracking-tight">
-              ₹77,436.00
-            </div>
-</div>
-<div class="mt-4 pt-3 border-t border-outline-variant flex items-center justify-between text-[12px] text-on-surface-variant font-body-sm">
-<span>12 Supplier invoices reported</span>
-<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono text-[11px]">GSTN Auto-Pull</span>
-</div>
-</div>
-<!-- Card 3: Eligible Net ITC -->
-<div class="p-5 rounded-xl bg-emerald-50/50 border border-emerald-200 shadow-sm flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-2">
-<span class="font-label-md text-label-md text-emerald-900 font-semibold">Eligible Net ITC</span>
-<span class="material-symbols-outlined text-[18px] text-emerald-700" style="font-variation-settings: 'FILL' 1;">verified</span>
-</div>
-<div class="font-numeric-lg text-numeric-lg font-bold text-emerald-900 tracking-tight">
-              ₹74,214.00
-            </div>
-</div>
-<div class="mt-4 pt-3 border-t border-emerald-200/60 flex items-center justify-between text-[12px] text-emerald-800 font-body-sm">
-<span class="font-medium">Safe to claim in Table 4 of GSTR-3B</span>
-<span class="material-symbols-outlined text-[16px] text-emerald-700">shield</span>
-</div>
-</div>
-<!-- Card 4: Discrepancy & At-Risk -->
-<div class="p-5 rounded-xl bg-rose-50/40 border border-rose-200 shadow-sm flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-2">
-<span class="font-label-md text-label-md text-rose-900 font-semibold">Discrepancy &amp; At-Risk ITC</span>
-<span class="material-symbols-outlined text-[18px] text-rose-700">warning</span>
-</div>
-<div class="font-numeric-lg text-numeric-lg font-bold text-rose-900 tracking-tight">
-              ₹10,000.00
-            </div>
-</div>
-<div class="mt-4 pt-3 border-t border-rose-200/60 flex flex-col gap-0.5 text-[11px] text-rose-800">
-<div class="flex justify-between">
-<span>Blocked u/s 17(5):</span>
-<span class="font-semibold">₹6,778.00</span>
-</div>
-<div class="flex justify-between">
-<span>Supplier Unfiled (Risk):</span>
-<span class="font-semibold text-error">₹3,222.00</span>
-</div>
-</div>
-</div>
-</div>
-<!-- ==================== SECTION 4: CONTEXTUAL COPILOT ADVISORY BANNER ==================== -->
-<div class="mt-6 p-4 rounded-xl bg-amber-50/80 border border-amber-200/90 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-<div class="flex items-start gap-3.5">
-<div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
-<span class="material-symbols-outlined text-[20px]">smart_toy</span>
-</div>
-<div>
-<div class="flex items-center gap-2">
-<span class="font-label-lg text-label-lg font-bold text-amber-950">AI Copilot Statutory Audit Alert</span>
-<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-200 text-amber-900 rounded-full">Rule 36(4) Risk</span>
-</div>
-<p class="font-body-md text-body-md text-amber-900 mt-0.5 leading-relaxed">
-              2 supplier invoices worth <strong class="font-semibold">₹7,200 ITC</strong> were not uploaded by vendors in their GSTR-1 for October. If claimed now without supplier compliance, your business risks department recovery notices and 18% statutory interest.
+            <p class="font-body-md text-body-md text-on-surface-variant mt-1">
+              Reconcile inward purchase invoices recorded in books with supplier filings auto-drafted on GSTN Portal to maximize safe tax credits.
             </p>
-</div>
-</div>
-<div class="flex items-center gap-2.5 shrink-0 flex-wrap">
-<button class="min-h-[38px] px-3.5 py-1.5 rounded-lg bg-amber-800 text-white hover:bg-amber-900 font-label-md text-label-md flex items-center gap-1.5 transition-colors shadow-sm whitespace-nowrap shrink-0">
-<span class="material-symbols-outlined text-[16px]">send</span>
-<span>Draft WhatsApp / Email Reminders (2)</span>
-</button>
-<button class="min-h-[38px] px-3.5 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 font-label-md text-label-md flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0">
-<span class="material-symbols-outlined text-[16px]">rule</span>
-<span>Auto-Exclude from Oct GSTR-3B</span>
-</button>
-</div>
-</div>
-<!-- ==================== SECTION 3: RECONCILIATION FILTER TABS ==================== -->
-<div class="mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant pb-3">
-<div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
-<!-- Tab 1: All Invoices -->
-<button class="px-3.5 py-2 rounded-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2">
-<span>All Invoices</span>
-<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface text-xs font-semibold">15</span>
-</button>
-<!-- Tab 2: Fully Matched (Active) -->
-<button class="px-3.5 py-2 rounded-lg font-label-md text-label-md font-semibold text-primary bg-surface-container-high border border-primary/20 flex items-center gap-2">
-<span class="w-2 h-2 rounded-full bg-emerald-600"></span>
-<span>Fully Matched</span>
-<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">10 • ₹62,800</span>
-</button>
-<!-- Tab 3: Mismatched Values -->
-<button class="px-3.5 py-2 rounded-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2">
-<span class="w-2 h-2 rounded-full bg-amber-500"></span>
-<span>Mismatched Values</span>
-<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-xs font-semibold">2 • ₹8,450 Diff</span>
-</button>
-<!-- Tab 4: Books Only / Missing in 2B -->
-<button class="px-3.5 py-2 rounded-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2">
-<span class="w-2 h-2 rounded-full bg-rose-500"></span>
-<span>Books Only / Missing in 2B</span>
-<span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs font-semibold">2 • ₹7,200</span>
-</button>
-<!-- Tab 5: GSTR-2B Only -->
-<button class="px-3.5 py-2 rounded-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2">
-<span class="w-2 h-2 rounded-full bg-purple-500"></span>
-<span>GSTR-2B Only</span>
-<span class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-900 text-xs font-semibold">1 • ₹2,100</span>
-</button>
-<!-- Tab 6: Ineligible ITC u/s 17(5) -->
-<button class="px-3.5 py-2 rounded-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2">
-<span class="w-2 h-2 rounded-full bg-slate-400"></span>
-<span>Ineligible u/s 17(5)</span>
-<span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold">1 • ₹3,564</span>
-</button>
-</div>
-<!-- Filter Tools (Search & Multi-Actions) -->
-<div class="flex items-center gap-2 shrink-0">
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">search</span>
-<input class="h-9 pl-9 pr-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface font-body-sm text-body-sm w-56 focus:outline-none focus:border-primary" placeholder="Search supplier or invoice..." type="text"/>
-</div>
-<button class="h-9 px-3 rounded-lg border border-outline-variant bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant font-label-md text-label-md flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px]">filter_list</span>
-<span>Filters</span>
-</button>
-</div>
-</div>
-<!-- ==================== SECTION 5: COMPREHENSIVE RECONCILIATION DATA TABLE ==================== -->
-<div class="mt-4 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-sm overflow-hidden">
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="bg-surface-container-low border-b border-outline-variant text-[11px] font-semibold text-outline uppercase tracking-wider h-10">
-<th class="py-2 px-4 w-10">
-<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer" type="checkbox"/>
-</th>
-<th class="py-2 px-4">Supplier &amp; GSTIN</th>
-<th class="py-2 px-4">Invoice No. &amp; Date</th>
-<th class="py-2 px-4">Books Value (Taxable / Tax)</th>
-<th class="py-2 px-4">GSTR-2B Value (Taxable / Tax)</th>
-<th class="py-2 px-4">Variance / Mismatch Reason</th>
-<th class="py-2 px-4">ITC Status</th>
-<th class="py-2 px-4 text-right">Actions</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-outline-variant font-body-md text-body-md">
-<!-- ROW 1: MATCHED 100% -->
-<tr class="hover:bg-surface-container-low/60 transition-colors">
-<td class="py-3 px-4">
-<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="font-semibold text-on-surface">Cloudflare India Pvt Ltd</div>
-<div class="font-mono text-xs text-on-surface-variant">27AABCC1234F1Z1</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs font-semibold text-on-surface">INV-2026-089</div>
-<div class="text-xs text-on-surface-variant">12 Oct 2026</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs text-on-surface">₹78,888.00</div>
-<div class="font-mono text-xs font-semibold text-emerald-800">ITC: ₹14,200.00</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs text-on-surface">₹78,888.00</div>
-<div class="font-mono text-xs font-semibold text-emerald-800">ITC: ₹14,200.00</div>
-</td>
-<td class="py-3 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-[14px]">check</span>
-                    Matched (100%)
-                  </span>
-</td>
-<td class="py-3 px-4">
-<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold font-label-sm text-label-sm">
-                    Eligible (Table 4A)
-                  </span>
-</td>
-<td class="py-3 px-4 text-right">
-<button class="px-2.5 py-1 rounded border border-outline-variant hover:bg-surface-container font-label-sm text-label-sm text-on-surface transition-colors">
-                    View Details
-                  </button>
-</td>
-</tr>
-<!-- ROW 2: BLOCKED U/S 17(5) -->
-<tr class="hover:bg-surface-container-low/60 transition-colors bg-slate-50/40">
-<td class="py-3 px-4">
-<input class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="font-semibold text-on-surface">Reliance Retail Digital Ltd</div>
-<div class="font-mono text-xs text-on-surface-variant">27AAACR1234D1Z2</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs font-semibold text-on-surface">PUR-OCT-039</div>
-<div class="text-xs text-on-surface-variant">15 Oct 2026</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs text-on-surface">₹45,000.00</div>
-<div class="font-mono text-xs font-semibold text-outline">ITC: ₹8,100.00</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs text-on-surface">₹45,000.00</div>
-<div class="font-mono text-xs font-semibold text-outline">ITC: ₹8,100.00</div>
-</td>
-<td class="py-3 px-4">
-<div class="text-xs text-on-surface-variant font-medium">Corporate gift &amp; dining</div>
-<span class="inline-flex items-center gap-1 text-[11px] text-slate-700 font-semibold">
-<span class="material-symbols-outlined text-[14px]">block</span>
-                    Blocked u/s 17(5)
-                  </span>
-</td>
-<td class="py-3 px-4">
-<span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold font-label-sm text-label-sm">
-                    Ineligible (Table 4B)
-                  </span>
-</td>
-<td class="py-3 px-4 text-right">
-<span class="text-xs text-on-surface-variant italic font-medium px-2 py-1 bg-surface-container rounded">Auto-Reversed</span>
-</td>
-</tr>
-<!-- ROW 3: VALUE MISMATCH (NEEDS REVIEW) -->
-<tr class="hover:bg-surface-container-low/60 transition-colors bg-amber-50/20">
-<td class="py-3 px-4">
-<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="font-semibold text-on-surface">Zenith Logistics Hub</div>
-<div class="font-mono text-xs text-on-surface-variant">27AABCZ1122D1Z1</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs font-semibold text-on-surface">ZEN/24/991</div>
-<div class="text-xs text-on-surface-variant">18 Oct 2026</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs text-on-surface">₹1,24,000.00</div>
-<div class="font-mono text-xs font-semibold text-on-surface">ITC: ₹22,320.00</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs text-on-surface">₹1,20,000.00</div>
-<div class="font-mono text-xs font-semibold text-amber-800">ITC: ₹21,600.00</div>
-</td>
-<td class="py-3 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-[14px]">difference</span>
-                    Tax Diff: ₹720.00
-                  </span>
-</td>
-<td class="py-3 px-4">
-<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-semibold font-label-sm text-label-sm">
-                    Needs Review
-                  </span>
-</td>
-<td class="py-3 px-4 text-right">
-<div class="flex items-center justify-end gap-1.5">
-<button class="px-2.5 py-1 rounded bg-primary text-on-primary font-label-sm text-label-sm hover:bg-primary-container transition-colors">
-                      Accept 2B (₹21.6k)
-                    </button>
-<button class="px-2 py-1 rounded border border-outline-variant hover:bg-surface-container font-label-sm text-label-sm text-outline">
-<span class="material-symbols-outlined text-[16px]">edit</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- ROW 4: MISSING IN 2B (AT RISK) -->
-<tr class="hover:bg-surface-container-low/60 transition-colors bg-rose-50/20">
-<td class="py-3 px-4">
-<input class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="font-semibold text-on-surface">Apex Office Supplies &amp; Stationery</div>
-<div class="font-mono text-xs text-on-surface-variant">27AABCO5544K1Z8</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs font-semibold text-on-surface">AOS-4412</div>
-<div class="text-xs text-on-surface-variant">22 Oct 2026</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs text-on-surface">₹28,000.00</div>
-<div class="font-mono text-xs font-semibold text-on-surface">ITC: ₹5,040.00</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs text-error font-medium italic">Not Found in 2B</div>
-<div class="text-xs text-outline">Supplier unfiled GSTR-1</div>
-</td>
-<td class="py-3 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-900 border border-rose-200 font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-[14px]">schedule</span>
-                    Supplier Pending
-                  </span>
-</td>
-<td class="py-3 px-4">
-<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-900 font-semibold font-label-sm text-label-sm">
-                    At Risk (Hold)
-                  </span>
-</td>
-<td class="py-3 px-4 text-right">
-<button class="px-2.5 py-1 rounded border border-rose-300 bg-white text-rose-800 hover:bg-rose-50 font-label-sm text-label-sm flex items-center gap-1 ml-auto">
-<span class="material-symbols-outlined text-[14px]">notifications_active</span>
-<span>Remind Vendor</span>
-</button>
-</td>
-</tr>
-<!-- ROW 5: PRESENT IN 2B ONLY (IMPORT NEEDED) -->
-<tr class="hover:bg-surface-container-low/60 transition-colors bg-purple-50/20">
-<td class="py-3 px-4">
-<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="font-semibold text-on-surface">Amazon Seller Services Pvt Ltd</div>
-<div class="font-mono text-xs text-on-surface-variant">27AABCA4411C1ZX</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs font-semibold text-on-surface">AMZ-IN-8891</div>
-<div class="text-xs text-on-surface-variant">25 Oct 2026</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs text-purple-900 font-medium italic">Not in Books</div>
-<div class="text-xs text-outline">Missing ERP entry</div>
-</td>
-<td class="py-3 px-4">
-<div class="font-mono text-xs text-on-surface">₹11,666.00</div>
-<div class="font-mono text-xs font-semibold text-emerald-800">ITC: ₹2,100.00</div>
-</td>
-<td class="py-3 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-900 border border-purple-200 font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-[14px]">download</span>
-                    Present in 2B only
-                  </span>
-</td>
-<td class="py-3 px-4">
-<span class="px-2 py-0.5 rounded bg-purple-100 text-purple-900 font-semibold font-label-sm text-label-sm">
-                    Unclaimed ITC
-                  </span>
-</td>
-<td class="py-3 px-4 text-right">
-<button class="px-2.5 py-1 rounded bg-surface-container-high text-primary hover:bg-secondary-container font-label-sm text-label-sm transition-colors font-medium">
-                    Import to Books
-                  </button>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<!-- Table Footer Pagination & Ledger Status -->
-<div class="px-6 py-3 border-t border-outline-variant bg-surface-container-low flex items-center justify-between font-label-md text-label-md text-on-surface-variant">
-<div class="flex items-center gap-2">
-<span>Showing <strong class="text-on-surface">5 of 15</strong> reconciled invoice records</span>
-<span class="text-outline">•</span>
-<span class="text-xs text-emerald-800 font-medium">Match Accuracy: 94.2% with GSTN Schema</span>
-</div>
-<div class="flex items-center gap-2">
-<button class="px-3 py-1 rounded border border-outline-variant bg-surface-container-lowest hover:bg-surface-container text-outline transition-colors disabled:opacity-50" disabled="">
-              Previous
+          </div>
+          <div class="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
+            <!-- Run Reconciliation Button -->
+            <button id="btnRunReconciliation" onclick="runReconMatching()" class="min-h-[42px] px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-container font-label-md text-label-md font-semibold flex items-center gap-2 shadow-sm transition-all duration-150 active:scale-98 whitespace-nowrap cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+              <span>Run Reconciliation</span>
             </button>
-<button class="px-3 py-1 rounded border border-outline-variant bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-colors">
-              Next
+            <!-- Import GSTR-2B Button -->
+            <button onclick="openImport2bModal()" class="min-h-[42px] px-4 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface hover:bg-surface-container font-label-md text-label-md font-medium flex items-center gap-2 shadow-xs transition-all duration-150 active:scale-98 whitespace-nowrap cursor-pointer">
+              <span class="material-symbols-outlined text-primary text-[18px]">upload_file</span>
+              <span>Import GSTR-2B</span>
             </button>
-</div>
-</div>
-</div>
-</main>
+            <!-- Download CSV Export Button -->
+            <button onclick="exportReconCsv()" class="min-h-[42px] px-4 py-2 rounded-lg bg-surface border border-outline-variant text-on-surface hover:bg-surface-container font-label-md text-label-md font-medium flex items-center gap-2 shadow-xs transition-all duration-150 active:scale-98 whitespace-nowrap cursor-pointer">
+              <span class="material-symbols-outlined text-outline text-[18px]">download</span>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ==================== EXECUTIVE ITC FINANCIAL SUMMARY BAR (4 CARDS) ==================== -->
+        <div id="reconExecutiveSummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          <!-- Card 1: Books ITC -->
+          <div class="p-5 rounded-xl bg-surface border border-outline-variant shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-label-md text-label-md text-secondary">ITC Claimable in Books</span>
+                <span class="material-symbols-outlined text-[18px] text-outline">menu_book</span>
+              </div>
+              <div id="reconMetricBooksItc" class="font-numeric-lg text-2xl font-bold text-on-surface tracking-tight">
+                ₹0.00
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-outline-variant/60 flex items-center justify-between text-xs text-secondary font-body-sm">
+              <span id="reconMetricBooksCount">0 Inward purchase bills</span>
+              <span class="px-2 py-0.5 rounded bg-surface-container font-mono text-[11px]">Purchase Register</span>
+            </div>
+          </div>
+
+          <!-- Card 2: 2B ITC -->
+          <div class="p-5 rounded-xl bg-surface border border-outline-variant shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-label-md text-label-md text-secondary">ITC Available in GSTR-2B</span>
+                <span class="material-symbols-outlined text-[18px] text-primary">cloud_done</span>
+              </div>
+              <div id="reconMetric2bItc" class="font-numeric-lg text-2xl font-bold text-primary tracking-tight">
+                ₹0.00
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-outline-variant/60 flex items-center justify-between text-xs text-secondary font-body-sm">
+              <span id="reconMetric2bCount">0 Supplier invoices reported</span>
+              <span class="px-2 py-0.5 rounded bg-primary/10 text-primary font-mono text-[11px]">GSTR-2B</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Eligible Net ITC -->
+          <div class="p-5 rounded-xl bg-emerald-50/60 border border-emerald-200/80 shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-label-md text-label-md text-emerald-900 font-semibold">Eligible Net ITC</span>
+                <span class="material-symbols-outlined text-[18px] text-emerald-700">verified</span>
+              </div>
+              <div id="reconMetricEligibleItc" class="font-numeric-lg text-2xl font-bold text-emerald-900 tracking-tight">
+                ₹0.00
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-emerald-200/60 flex items-center justify-between text-xs text-emerald-800 font-body-sm">
+              <span class="font-medium">Safe to claim in Table 4 of GSTR-3B</span>
+              <span class="material-symbols-outlined text-[16px] text-emerald-700">shield</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Discrepancy & At-Risk -->
+          <div class="p-5 rounded-xl bg-rose-50/50 border border-rose-200/80 shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-label-md text-label-md text-rose-900 font-semibold">Discrepancy &amp; At-Risk ITC</span>
+                <span class="material-symbols-outlined text-[18px] text-rose-700">warning</span>
+              </div>
+              <div id="reconMetricAtRiskItc" class="font-numeric-lg text-2xl font-bold text-rose-900 tracking-tight">
+                ₹0.00
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-rose-200/60 flex flex-col gap-0.5 text-[11px] text-rose-800">
+              <div class="flex justify-between">
+                <span>Blocked u/s 17(5):</span>
+                <span id="reconMetricBlocked17_5" class="font-semibold">₹0.00</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Missing in 2B (Risk):</span>
+                <span id="reconMetricMissing2bTax" class="font-semibold text-error">₹0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== CONTEXTUAL COPILOT ADVISORY BANNER ==================== -->
+        <div id="reconAdvisoryContainer" class="mt-6"></div>
+
+        <!-- ==================== RECONCILIATION FILTER TABS & SEARCH ==================== -->
+        <div class="mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant pb-3">
+          <div id="reconFilterTabList" class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <!-- Dynamic tab buttons rendered by renderReconDashboard -->
+          </div>
+          <!-- Filter Tools (Search) -->
+          <div class="flex items-center gap-2 shrink-0">
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">search</span>
+              <input id="reconSearchInput" oninput="debounceReconSearch(this.value)" class="h-9 pl-9 pr-3 rounded-lg border border-outline-variant bg-surface text-on-surface text-xs w-60 focus:outline-none focus:border-primary" placeholder="Search supplier, GSTIN, invoice..." type="text"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== COMPREHENSIVE RECONCILIATION DATA TABLE ==================== -->
+        <div id="reconTableContainer" class="mt-4">
+          <!-- Rendered dynamically by renderReconTable() -->
+        </div>
+      </main>
     </div>
 
     <!-- ========================================================================= -->
@@ -9132,5 +8795,135 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
     </div>
   </div>
   
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: IMPORT GSTR-2B (JSON / EXCEL / CSV)                                -->
+  <!-- ========================================================================= -->
+  <div id="modalImport2B" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 hidden">
+    <div class="bg-surface rounded-2xl max-w-lg w-full border border-outline-variant shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-outline-variant pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-[20px]">upload_file</span>
+          </div>
+          <div>
+            <h3 class="font-headline-sm font-bold text-on-surface">Import GSTR-2B Statement</h3>
+            <p class="text-xs text-secondary">Upload GSTN official JSON, Excel (.xlsx/.xls) or CSV</p>
+          </div>
+        </div>
+        <button onclick="closeImport2bModal()" class="text-secondary hover:text-on-surface cursor-pointer p-1">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+
+      <div id="import2bError" class="p-3 bg-error/10 border border-error/20 text-error text-xs rounded-lg hidden"></div>
+
+      <form id="formImport2b" onsubmit="submit2bImport(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface mb-1">Select Return Period</label>
+          <select id="import2bPeriodSelect" class="w-full px-3 py-2 text-xs rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary">
+            <option value="102026">October 2026 (102026)</option>
+            <option value="112026">November 2026 (112026)</option>
+            <option value="122026">December 2026 (122026)</option>
+            <option value="092026">September 2026 (092026)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-on-surface mb-1">Choose GSTR-2B File</label>
+          <div class="border-2 border-dashed border-outline-variant rounded-xl p-6 text-center hover:border-primary/50 transition-colors bg-surface-container-low/30 cursor-pointer" onclick="document.getElementById('import2bFileInput').click()">
+            <input type="file" id="import2bFileInput" accept=".json,.xlsx,.xls,.csv" class="hidden" onchange="handle2bFileSelected(event)"/>
+            <span class="material-symbols-outlined text-primary text-[36px] mb-2">cloud_upload</span>
+            <p class="text-xs font-semibold text-on-surface" id="import2bFileLabel">Click to browse or drag & drop</p>
+            <p class="text-[11px] text-secondary mt-1">Supports official GSTN JSON (docdata.b2b), Excel and CSV</p>
+          </div>
+        </div>
+
+        <div id="import2bPreviewContainer" class="p-3 bg-surface-container rounded-lg text-xs space-y-1 hidden">
+          <div class="font-semibold text-on-surface flex items-center justify-between">
+            <span id="import2bPreviewFilename">—</span>
+            <span id="import2bPreviewSize" class="font-mono text-secondary">—</span>
+          </div>
+          <p id="import2bPreviewMeta" class="text-secondary text-[11px]">—</p>
+        </div>
+
+        <div class="pt-3 border-t border-outline-variant flex items-center justify-end gap-2">
+          <button type="button" onclick="closeImport2bModal()" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary transition-colors cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit" id="btnSubmitImport2b" class="px-5 py-2 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1.5" disabled>
+            <span class="material-symbols-outlined text-[16px]">file_download_done</span>
+            <span>Parse &amp; Import</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: RECONCILIATION INVESTIGATION & ACTION                              -->
+  <!-- ========================================================================= -->
+  <div id="modalReconInvestigation" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 hidden">
+    <div class="bg-surface rounded-2xl max-w-2xl w-full border border-outline-variant shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-outline-variant pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-[20px]">difference</span>
+          </div>
+          <div>
+            <h3 class="font-headline-sm font-bold text-on-surface">Invoice Reconciliation Audit</h3>
+            <p id="modalReconSupplierTitle" class="text-xs text-secondary">—</p>
+          </div>
+        </div>
+        <button onclick="closeReconInvestigationModal()" class="text-secondary hover:text-on-surface cursor-pointer p-1">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+
+      <div id="modalReconDiffBody" class="space-y-4">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="space-y-3 pt-3 border-t border-outline-variant">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface mb-1">Select Reconciliation Action</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <label class="flex items-center gap-2 p-2 rounded-lg border border-outline-variant bg-surface hover:bg-surface-container cursor-pointer text-xs">
+              <input type="radio" name="reconActionChoice" value="ACCEPT_2B" class="text-primary"/>
+              <span>Accept 2B Value</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-lg border border-outline-variant bg-surface hover:bg-surface-container cursor-pointer text-xs">
+              <input type="radio" name="reconActionChoice" value="KEEP_BOOKS" class="text-primary"/>
+              <span>Keep Books</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-lg border border-outline-variant bg-surface hover:bg-surface-container cursor-pointer text-xs">
+              <input type="radio" name="reconActionChoice" value="HOLD" class="text-primary"/>
+              <span>Hold ITC (Risk)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-lg border border-outline-variant bg-surface hover:bg-surface-container cursor-pointer text-xs">
+              <input type="radio" name="reconActionChoice" value="CORRECT" class="text-primary"/>
+              <span>Flag to Correct</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-on-surface mb-1">Investigation Notes &amp; Statutory Justification</label>
+          <textarea id="modalReconNotesInput" rows="2" class="w-full px-3 py-2 text-xs rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Enter reason, vendor communication status or auditor note..."></textarea>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-outline-variant flex items-center justify-end gap-2">
+        <button type="button" onclick="closeReconInvestigationModal()" class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary transition-colors cursor-pointer">
+          Cancel
+        </button>
+        <button type="button" onclick="submitReconAction()" id="btnSaveReconAction" class="px-5 py-2 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">check_circle</span>
+          <span>Save Action &amp; Audit Trail</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

@@ -39,9 +39,7 @@ function getAuthReq(extraHeaders = {}) {
     seedDevelopmentData();
     const existing = db.prepare("SELECT * FROM sessions WHERE token = ?").get("tok-test-persistence-token");
     if (existing) {
-      if (existing.is_revoked) {
-        db.prepare("UPDATE sessions SET is_revoked = 0, revoked_at = NULL WHERE id = ?").run(existing.id);
-      }
+      db.prepare("UPDATE sessions SET is_revoked = 0, revoked_at = NULL, expires_at = datetime('now', '+30 days') WHERE id = ?").run(existing.id);
       testSessionToken = existing.token;
     } else {
       const user = userRepo.findByEmail("rajesh.sharma@apexretail.com") || db.prepare("SELECT * FROM users LIMIT 1").get();

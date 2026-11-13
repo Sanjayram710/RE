@@ -54,9 +54,8 @@ function getAuthReq(extraHeaders = {}) {
     seedDevelopmentData();
     const existing = db.prepare("SELECT * FROM sessions WHERE token = ?").get("tok-test-apex-valid-token");
     if (existing) {
-      if (existing.is_revoked) {
-        db.prepare("UPDATE sessions SET is_revoked = 0, revoked_at = NULL WHERE id = ?").run(existing.id);
-      }
+      const farFuture = new Date(Date.now() + 30 * 86400000).toISOString();
+      db.prepare("UPDATE sessions SET is_revoked = 0, revoked_at = NULL, expires_at = ? WHERE id = ?").run(farFuture, existing.id);
       defaultTestSessionToken = existing.token;
     } else {
       const user = userRepo.findByEmail("rajesh.sharma@apexretail.com") || db.prepare("SELECT * FROM users LIMIT 1").get();
@@ -258,6 +257,9 @@ test("GSTR-2B Reconciliation Summary: Matches books against 2B", async () => {
   const session = db.prepare("SELECT * FROM sessions WHERE token = ?").get(defaultTestSessionToken);
   const gstinId = session.active_gstin_id;
   const orgId = session.active_org_id;
+
+  db.prepare("DELETE FROM purchase_invoices WHERE invoice_number IN ('SUPP-MH-8812', 'SUPP-DL-4019')").run();
+  db.prepare("DELETE FROM gstr2b_entries WHERE id IN ('g2b-test-recon-1', 'g2b-test-recon-2')").run();
 
   const pur1 = purchaseRepo.create({
     orgId,
@@ -643,6 +645,7 @@ test("UX Simplification: File GST 2-Card Decision, Nil Pre-Check & Dynamic Perio
   const mhBranch = gstinRepo.findByGstin("27AAACA1234A1Z5");
   assert.ok(mhBranch, "MH branch exists");
   await mockApiCall("POST", `/api/gstins/${mhBranch.id}/activate`).run();
+  db.prepare("DELETE FROM sales_invoices WHERE invoice_number = 'INV-NIL-BLOCK-TEST'").run();
 
   const tempSale = salesRepo.create({
     orgId: mhBranch.org_id,
@@ -678,9 +681,10 @@ test("UX Simplification: File GST 2-Card Decision, Nil Pre-Check & Dynamic Perio
   salesRepo.delete(tempSale.id);
 
   // Switch to KA branch with 0 transactions -> MUST BE ELIGIBLE
-  const { db } = await import("../lib/db.js");
   const kaBranch = gstinRepo.findByGstin("29AAACB1234F1Z5");
   assert.ok(kaBranch, "KA branch exists");
+  db.prepare("DELETE FROM sales_invoices WHERE gstin_id = ? AND period = ?").run(kaBranch.id, "102026");
+  db.prepare("DELETE FROM purchase_invoices WHERE gstin_id = ? AND period = ?").run(kaBranch.id, "102026");
   db.prepare("DELETE FROM tax_returns WHERE gstin_id = ? AND period = ?").run(kaBranch.id, "102026");
   await mockApiCall("POST", `/api/gstins/${kaBranch.id}/activate`).run();
 

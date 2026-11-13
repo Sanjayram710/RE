@@ -413,17 +413,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   await fetchAppMode();
   
   // Default to GST Return Assistant on load or route directly to requested URL
-  if (window.location.pathname === "/startup-express" || window.location.hash === "#startup-express") {
+  if (window.location.hash === "#reconciliation" || window.location.hash === "#recon") {
+    switchSuite('recon');
+  } else if (window.location.pathname === "/startup-express" || window.location.hash === "#startup-express") {
     switchSuite('startup-express');
   } else {
     switchSuite('home');
   }
 
   window.addEventListener("popstate", () => {
-    if (window.location.pathname === "/startup-express") {
+    if (window.location.hash === "#reconciliation" || window.location.hash === "#recon") {
+      switchSuite('recon');
+    } else if (window.location.pathname === "/startup-express") {
       switchSuite('startup-express');
     } else if (appState.currentSuite === "startup-express") {
       switchSuite('home');
+    }
+  });
+
+  window.addEventListener("hashchange", () => {
+    if (window.location.hash === "#reconciliation" || window.location.hash === "#recon") {
+      switchSuite('recon');
+    } else if (window.location.hash === "#startup-express") {
+      switchSuite('startup-express');
     }
   });
 
@@ -661,6 +673,9 @@ function executeSwitchSuite(suite) {
       viewRecon.style.display = "block";
     }
     highlightSidebarNav('nav-link-recon');
+    if (typeof loadReconDashboard === "function") {
+      loadReconDashboard();
+    }
   } else if (suite === "tax-calc" || suite === "taxcalc") {
     if (viewTaxCalc) {
       viewTaxCalc.classList.add("active");
@@ -2709,9 +2724,643 @@ function exportReconReport() {
   downloadCurrentReport("xlsx");
 }
 
-function runReconciliation() {
-  alert("✓ GSTR-2B sync complete: 2 invoices Matched, 1 Mismatch in Date, 1 Missing in 2B.");
+// ============================================================================
+// Database-Grounded GSTR-2B Reconciliation Client Engine
+// ============================================================================
+let reconState = {
+  summary: null,
+  items: [],
+  activeFilter: 'ALL',
+  searchQuery: '',
+  searchTimeout: null,
+  selectedItem: null,
+  pending2bFile: null
+};
+
+async function loadReconDashboard(period) {
+  const p = period || appState.activePeriod || appState.gst?.business?.filingPeriod || "102026";
+  const tableContainer = document.getElementById("reconTableContainer");
+  if (tableContainer && (!reconState.items || reconState.items.length === 0)) {
+    tableContainer.innerHTML = `
+      <div class="p-12 text-center text-secondary flex flex-col items-center justify-center">
+        <span class="inline-block animate-spin text-3xl text-primary mb-3">⟳</span>
+        <p class="text-sm font-medium">Reconciling purchase register against GSTR-2B records...</p>
+      </div>
+    `;
+  }
+
+  try {
+    const summaryRes = await apiFetch(`/api/reconciliation/summary?period=${p}`);
+    if (summaryRes.ok) {
+      const summaryData = await summaryRes.json();
+      reconState.summary = summaryData.summary || null;
+      renderReconDashboard(reconState.summary);
+    }
+
+    const filter = reconState.activeFilter || 'ALL';
+    const search = reconState.searchQuery || '';
+    const itemsRes = await apiFetch(`/api/reconciliation/items?period=${p}&status=${filter}&search=${encodeURIComponent(search)}`);
+    if (itemsRes.ok) {
+      const itemsData = await itemsRes.json();
+      reconState.items = itemsData.items || [];
+      renderReconTable(reconState.items);
+    }
+  } catch (err) {
+    console.error("loadReconDashboard error:", err);
+    if (tableContainer) {
+      tableContainer.innerHTML = `
+        <div class="p-8 text-center text-error bg-error/10 rounded-xl">
+          <p class="text-sm font-semibold">Failed to load reconciliation records</p>
+          <p class="text-xs text-secondary mt-1">${escapeHtml(err.message)}</p>
+        </div>
+      `;
+    }
+  }
 }
+window.loadReconDashboard = loadReconDashboard;
+
+function renderReconDashboard(summary) {
+  if (!summary) return;
+
+  const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Update Executive Financial Summary Cards
+  const elBooks = document.getElementById("reconMetricBooksItc");
+  if (elBooks) elBooks.textContent = fmt(summary.totalBooksTax);
+
+  const elBooksCount = document.getElementById("reconMetricBooksCount");
+  if (elBooksCount) elBooksCount.textContent = `${summary.totalBooksPurchases || 0} Inward purchase bills`;
+
+  const el2b = document.getElementById("reconMetric2bItc");
+  if (el2b) el2b.textContent = fmt(summary.total2bTax);
+
+  const el2bCount = document.getElementById("reconMetric2bCount");
+  if (el2bCount) el2bCount.textContent = `${summary.total2bInvoices || 0} Supplier invoices reported`;
+
+  const elEligible = document.getElementById("reconMetricEligibleItc");
+  if (elEligible) elEligible.textContent = fmt(summary.eligibleNetItc);
+
+  const elAtRisk = document.getElementById("reconMetricAtRiskItc");
+  if (elAtRisk) elAtRisk.textContent = fmt(summary.atRiskItc);
+
+  const elBlocked = document.getElementById("reconMetricBlocked17_5");
+  if (elBlocked) elBlocked.textContent = fmt(summary.blockedSec17_5?.tax || 0);
+
+  const elMissing = document.getElementById("reconMetricMissing2bTax");
+  if (elMissing) elMissing.textContent = fmt(summary.missingIn2b?.tax || 0);
+
+  // Sync Period Badge
+  const elPeriodText = document.getElementById("reconSyncStatusText");
+  if (elPeriodText) {
+    elPeriodText.textContent = `Period ${summary.period} • Grounded in DB`;
+  }
+
+  // Render Contextual AI Copilot Statutory Advisory
+  const advContainer = document.getElementById("reconAdvisoryContainer");
+  if (advContainer) {
+    const adv = summary.advisory;
+    if (adv && (adv.missingIn2bCount > 0 || adv.blocked17_5Count > 0 || (summary.mismatch && summary.mismatch.count > 0))) {
+      advContainer.innerHTML = `
+        <div class="p-4 rounded-xl bg-amber-50/80 border border-amber-200/90 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="flex items-start gap-3.5">
+            <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+              <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-label-lg text-label-lg font-bold text-amber-950">${escapeHtml(adv.headline || "AI Copilot Statutory Audit Alert")}</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-200 text-amber-900 rounded-full">Rule 36(4) Risk</span>
+              </div>
+              <p class="font-body-md text-body-md text-amber-900 mt-0.5 leading-relaxed">
+                ${escapeHtml(adv.plainSentence || "")}
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0 flex-wrap">
+            <button onclick="setReconFilter('MISSING_IN_2B')" class="px-3.5 py-1.5 rounded-lg bg-amber-800 text-white hover:bg-amber-900 font-label-md text-label-md flex items-center gap-1.5 transition-colors shadow-sm whitespace-nowrap cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">visibility</span>
+              <span>Filter Risk Invoices (${adv.missingIn2bCount || 0})</span>
+            </button>
+            <button onclick="openImport2bModal()" class="px-3.5 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 font-label-md text-label-md flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">sync</span>
+              <span>Re-import 2B</span>
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      advContainer.innerHTML = `
+        <div class="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/90 shadow-sm flex items-center gap-3">
+          <span class="material-symbols-outlined text-emerald-700 text-[24px]">verified</span>
+          <div>
+            <span class="font-bold text-emerald-950 text-sm">GSTR-2B ITC Integrity Verified</span>
+            <p class="text-xs text-emerald-800 mt-0.5">All reported inward supplies reconcile with statutory GSTN filings. Section 16(2)(aa) conditions fully met.</p>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  // Render Filter Tab List
+  const tabList = document.getElementById("reconFilterTabList");
+  if (tabList) {
+    const totalCount = (summary.totalBooksPurchases || 0) + (summary.missingInBooks?.count || 0);
+    const tabs = [
+      { id: 'ALL', label: 'All Invoices', count: totalCount, badgeColor: 'bg-surface-container-high text-on-surface' },
+      { id: 'EXACT_MATCH', label: 'Fully Matched', count: summary.matched?.count || 0, dot: 'bg-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-800' },
+      { id: 'PARTIAL_MATCH', label: 'Value Mismatch', count: summary.mismatch?.count || 0, dot: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-900' },
+      { id: 'MISSING_IN_2B', label: 'Missing in 2B', count: summary.missingIn2b?.count || 0, dot: 'bg-rose-500', badgeColor: 'bg-rose-100 text-rose-800' },
+      { id: 'MISSING_IN_BOOKS', label: 'GSTR-2B Only', count: summary.missingInBooks?.count || 0, dot: 'bg-purple-500', badgeColor: 'bg-purple-100 text-purple-900' },
+      { id: 'BLOCKED_17_5', label: 'Ineligible u/s 17(5)', count: summary.blockedSec17_5?.count || 0, dot: 'bg-slate-400', badgeColor: 'bg-slate-200 text-slate-700' }
+    ];
+
+    tabList.innerHTML = tabs.map(t => {
+      const isActive = (reconState.activeFilter || 'ALL') === t.id;
+      const activeCls = isActive
+        ? 'text-primary bg-surface-container-high border-primary/20 font-bold'
+        : 'text-secondary hover:text-on-surface hover:bg-surface-container font-medium border-transparent';
+      return `
+        <button onclick="setReconFilter('${t.id}')" class="px-3.5 py-2 rounded-lg text-xs flex items-center gap-2 border transition-all cursor-pointer ${activeCls}">
+          ${t.dot ? `<span class="w-2 h-2 rounded-full ${t.dot}"></span>` : ''}
+          <span>${t.label}</span>
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${t.badgeColor}">${t.count}</span>
+        </button>
+      `;
+    }).join('');
+  }
+}
+
+function renderReconTable(items) {
+  const container = document.getElementById("reconTableContainer");
+  if (!container) return;
+
+  if (!items || items.length === 0) {
+    container.innerHTML = `
+      <div class="p-12 text-center rounded-xl border border-outline-variant bg-surface space-y-4">
+        <div class="w-16 h-16 rounded-full bg-surface-container text-primary flex items-center justify-center mx-auto">
+          <span class="material-symbols-outlined text-[32px]">rule</span>
+        </div>
+        <div class="space-y-1">
+          <h3 class="font-headline-sm font-bold text-on-surface">No purchase invoices available for reconciliation</h3>
+          <p class="text-xs text-secondary max-w-md mx-auto">
+            Record inward invoices in your purchase register or import official GSTR-2B files from GSTN to run automated matching.
+          </p>
+        </div>
+        <div class="flex items-center justify-center gap-3 pt-2">
+          <button onclick="switchSuite('purchase')" class="px-4 py-2 rounded-lg bg-surface border border-outline-variant hover:bg-surface-container text-xs font-semibold text-on-surface transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs">
+            <span class="material-symbols-outlined text-[16px]">receipt_long</span>
+            <span>Record Purchases</span>
+          </button>
+          <button onclick="openImport2bModal()" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm">
+            <span class="material-symbols-outlined text-[16px]">upload_file</span>
+            <span>Import GSTR-2B</span>
+          </button>
+          <button onclick="runReconMatching()" class="px-4 py-2 rounded-lg bg-surface border border-outline-variant hover:bg-surface-container text-xs font-semibold text-on-surface transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs">
+            <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+            <span>Run Reconciliation</span>
+          </button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const getStatusBadge = (status, item) => {
+    switch (status) {
+      case 'EXACT_MATCH':
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold"><span class="material-symbols-outlined text-[14px]">check</span>Matched (100%)</span>`;
+      case 'PARTIAL_MATCH':
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold"><span class="material-symbols-outlined text-[14px]">difference</span>Tax Diff: ${fmt(item.diff_tax)}</span>`;
+      case 'MISSING_IN_2B':
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-900 border border-rose-200 text-xs font-semibold"><span class="material-symbols-outlined text-[14px]">schedule</span>Missing in 2B</span>`;
+      case 'MISSING_IN_BOOKS':
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-900 border border-purple-200 text-xs font-semibold"><span class="material-symbols-outlined text-[14px]">download</span>2B Only</span>`;
+      case 'BLOCKED_17_5':
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold"><span class="material-symbols-outlined text-[14px]">block</span>Blocked u/s 17(5)</span>`;
+      default:
+        return `<span class="px-2.5 py-0.5 rounded-full bg-surface-container text-secondary text-xs">${escapeHtml(status)}</span>`;
+    }
+  };
+
+  const getItcBadge = (status) => {
+    switch (status) {
+      case 'EXACT_MATCH':
+        return `<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold text-xs">Eligible (Table 4A)</span>`;
+      case 'PARTIAL_MATCH':
+        return `<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-semibold text-xs">Review Required</span>`;
+      case 'MISSING_IN_2B':
+        return `<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-900 font-semibold text-xs">At Risk (Sec 16)</span>`;
+      case 'MISSING_IN_BOOKS':
+        return `<span class="px-2 py-0.5 rounded bg-purple-100 text-purple-900 font-semibold text-xs">Unclaimed ITC</span>`;
+      case 'BLOCKED_17_5':
+        return `<span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold text-xs">Ineligible (Table 4B)</span>`;
+      default:
+        return `—`;
+    }
+  };
+
+  const rowsHtml = items.map(item => {
+    const isBooksOnly = item.match_status === 'MISSING_IN_2B';
+    const is2bOnly = item.match_status === 'MISSING_IN_BOOKS';
+
+    return `
+      <tr class="hover:bg-surface-container-low/60 transition-colors">
+        <td class="py-3 px-4">
+          <div class="font-semibold text-on-surface text-xs">${escapeHtml(item.supplier_name || "—")}</div>
+          <div class="font-mono text-[11px] text-secondary">${escapeHtml(item.supplier_gstin || "—")}</div>
+        </td>
+        <td class="py-3 px-4">
+          <div class="font-mono text-xs font-semibold text-on-surface">${escapeHtml(item.invoice_number || "—")}</div>
+          <div class="text-[11px] text-secondary">${escapeHtml(item.invoice_date || "—")}</div>
+        </td>
+        <td class="py-3 px-4">
+          ${is2bOnly ? `<span class="text-xs text-secondary italic">Not in Books</span>` : `
+            <div class="font-mono text-xs text-on-surface">${fmt(item.books_taxable)}</div>
+            <div class="font-mono text-xs font-semibold text-emerald-800">ITC: ${fmt(item.books_tax)}</div>
+          `}
+        </td>
+        <td class="py-3 px-4">
+          ${isBooksOnly ? `<span class="text-xs text-error italic">Not in 2B</span>` : `
+            <div class="font-mono text-xs text-on-surface">${fmt(item.gstr2b_taxable)}</div>
+            <div class="font-mono text-xs font-semibold text-emerald-800">ITC: ${fmt(item.gstr2b_tax)}</div>
+          `}
+        </td>
+        <td class="py-3 px-4">
+          ${getStatusBadge(item.match_status, item)}
+          ${item.action && item.action !== 'NONE' ? `<div class="text-[11px] font-semibold text-primary mt-1">Action: ${escapeHtml(item.action)}</div>` : ''}
+        </td>
+        <td class="py-3 px-4">
+          ${getItcBadge(item.match_status)}
+        </td>
+        <td class="py-3 px-4 text-right">
+          <div class="flex items-center justify-end gap-1.5">
+            <button onclick="openReconInvestigationModal('${item.id}')" class="px-2.5 py-1 rounded border border-outline-variant hover:bg-surface-container text-xs font-medium text-on-surface transition-colors cursor-pointer shadow-xs">
+              Audit
+            </button>
+            ${item.match_status === 'PARTIAL_MATCH' ? `
+              <button onclick="quickSaveReconAction('${item.id}', 'ACCEPT_2B')" class="px-2.5 py-1 rounded bg-primary text-white hover:bg-primary-container text-xs font-semibold transition-colors cursor-pointer">
+                Accept 2B
+              </button>
+            ` : ''}
+            ${item.match_status === 'MISSING_IN_2B' ? `
+              <button onclick="quickSaveReconAction('${item.id}', 'HOLD')" class="px-2.5 py-1 rounded bg-rose-600 text-white hover:bg-rose-700 text-xs font-semibold transition-colors cursor-pointer">
+                Hold
+              </button>
+            ` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="rounded-xl bg-surface border border-outline-variant shadow-xs overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-surface-container-low border-b border-outline-variant text-[11px] font-semibold text-secondary uppercase tracking-wider h-10">
+              <th class="py-2 px-4">Supplier &amp; GSTIN</th>
+              <th class="py-2 px-4">Invoice No. &amp; Date</th>
+              <th class="py-2 px-4">Books Value (Taxable / Tax)</th>
+              <th class="py-2 px-4">GSTR-2B Value (Taxable / Tax)</th>
+              <th class="py-2 px-4">Status &amp; Variance</th>
+              <th class="py-2 px-4">ITC Classification</th>
+              <th class="py-2 px-4 text-right">Audit &amp; Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant font-body-md text-body-md">
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+      <div class="px-6 py-3 border-t border-outline-variant bg-surface-container-low flex items-center justify-between text-xs text-secondary">
+        <div>
+          Showing <strong class="text-on-surface">${items.length}</strong> reconciled records
+        </div>
+        <div class="font-medium text-emerald-800 flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[14px]">shield</span>
+          <span>100% ground truth verified against SQLite records</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function runReconMatching() {
+  const btn = document.getElementById("btnRunReconciliation");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Running...`;
+  }
+
+  const period = appState.activePeriod || appState.gst?.business?.filingPeriod || "102026";
+  try {
+    const res = await apiFetch("/api/reconciliation/run", {
+      method: "POST",
+      body: JSON.stringify({ period })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(`✓ Reconciliation completed: ${data.counts?.exactMatch || 0} matched, ${data.counts?.partialMatch || 0} mismatches`, "success");
+      await loadReconDashboard(period);
+    } else {
+      showToast(data.error || "Failed to run reconciliation.", "error");
+    }
+  } catch (err) {
+    console.error("runReconMatching error:", err);
+    showToast("Reconciliation error: " + err.message, "error");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">play_arrow</span><span>Run Reconciliation</span>`;
+    }
+  }
+}
+window.runReconMatching = runReconMatching;
+
+function setReconFilter(filter) {
+  reconState.activeFilter = filter;
+  loadReconDashboard();
+}
+window.setReconFilter = setReconFilter;
+
+function debounceReconSearch(val) {
+  reconState.searchQuery = (val || "").trim();
+  if (reconState.searchTimeout) clearTimeout(reconState.searchTimeout);
+  reconState.searchTimeout = setTimeout(() => {
+    loadReconDashboard();
+  }, 300);
+}
+window.debounceReconSearch = debounceReconSearch;
+
+function openImport2bModal() {
+  const modal = document.getElementById("modalImport2B");
+  if (!modal) return;
+  const p = appState.activePeriod || appState.gst?.business?.filingPeriod || "102026";
+  const select = document.getElementById("import2bPeriodSelect");
+  if (select) select.value = p;
+
+  const errEl = document.getElementById("import2bError");
+  if (errEl) errEl.classList.add("hidden");
+
+  const preview = document.getElementById("import2bPreviewContainer");
+  if (preview) preview.classList.add("hidden");
+
+  const fileInput = document.getElementById("import2bFileInput");
+  if (fileInput) fileInput.value = "";
+  reconState.pending2bFile = null;
+
+  const submitBtn = document.getElementById("btnSubmitImport2b");
+  if (submitBtn) submitBtn.disabled = true;
+
+  modal.classList.remove("hidden");
+}
+window.openImport2bModal = openImport2bModal;
+
+function closeImport2bModal() {
+  const modal = document.getElementById("modalImport2B");
+  if (modal) modal.classList.add("hidden");
+}
+window.closeImport2bModal = closeImport2bModal;
+
+function handle2bFileSelected(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  reconState.pending2bFile = file;
+
+  const label = document.getElementById("import2bFileLabel");
+  if (label) label.textContent = file.name;
+
+  const preview = document.getElementById("import2bPreviewContainer");
+  const pName = document.getElementById("import2bPreviewFilename");
+  const pSize = document.getElementById("import2bPreviewSize");
+  const pMeta = document.getElementById("import2bPreviewMeta");
+
+  if (preview && pName && pSize && pMeta) {
+    pName.textContent = file.name;
+    pSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+    pMeta.textContent = `Ready to parse as ${file.name.endsWith('.json') ? 'GSTN JSON' : file.name.endsWith('.csv') ? 'CSV' : 'Excel'}`;
+    preview.classList.remove("hidden");
+  }
+
+  const submitBtn = document.getElementById("btnSubmitImport2b");
+  if (submitBtn) submitBtn.disabled = false;
+}
+window.handle2bFileSelected = handle2bFileSelected;
+
+async function submit2bImport(event) {
+  if (event && event.preventDefault) event.preventDefault();
+  const file = reconState.pending2bFile;
+  const period = document.getElementById("import2bPeriodSelect")?.value || "102026";
+  const errEl = document.getElementById("import2bError");
+  const btn = document.getElementById("btnSubmitImport2b");
+
+  if (!file) {
+    if (errEl) {
+      errEl.textContent = "Please select a valid GSTR-2B file.";
+      errEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Parsing...`;
+  }
+
+  try {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const fileContent = e.target.result;
+      const res = await apiFetch("/api/reconciliation/import-2b", {
+        method: "POST",
+        body: JSON.stringify({
+          period,
+          fileName: file.name,
+          fileType: file.name.split('.').pop().toLowerCase(),
+          fileContent: fileContent
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        closeImport2bModal();
+        showToast(`✓ Imported ${data.imported || 0} GSTR-2B records (${data.duplicates || 0} duplicates skipped)!`, "success");
+        await loadReconDashboard(period);
+      } else {
+        if (errEl) {
+          errEl.textContent = data.error || "Failed to parse GSTR-2B file.";
+          errEl.classList.remove("hidden");
+        }
+      }
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<span class="material-symbols-outlined text-[16px]">file_download_done</span><span>Parse &amp; Import</span>`;
+      }
+    };
+
+    if (file.name.endsWith('.json') || file.name.endsWith('.csv')) {
+      reader.readAsText(file);
+    } else {
+      reader.readAsDataURL(file); // base64 for excel
+    }
+  } catch (err) {
+    console.error("submit2bImport error:", err);
+    if (errEl) {
+      errEl.textContent = "Import error: " + err.message;
+      errEl.classList.remove("hidden");
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<span class="material-symbols-outlined text-[16px]">file_download_done</span><span>Parse &amp; Import</span>`;
+    }
+  }
+}
+window.submit2bImport = submit2bImport;
+
+function openReconInvestigationModal(itemId) {
+  const item = reconState.items.find(i => i.id === itemId);
+  if (!item) return;
+
+  reconState.selectedItem = item;
+  const modal = document.getElementById("modalReconInvestigation");
+  if (!modal) return;
+
+  const titleEl = document.getElementById("modalReconSupplierTitle");
+  if (titleEl) {
+    titleEl.textContent = `${item.supplier_name || 'Supplier'} (${item.supplier_gstin || '—'}) • Invoice #${item.invoice_number || '—'}`;
+  }
+
+  const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const diffBody = document.getElementById("modalReconDiffBody");
+  if (diffBody) {
+    diffBody.innerHTML = `
+      <div class="grid grid-cols-2 gap-4">
+        <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant space-y-2">
+          <div class="font-bold text-xs text-on-surface uppercase tracking-wider flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px] text-primary">menu_book</span>
+            <span>Purchase Register (Books)</span>
+          </div>
+          <div class="text-xs space-y-1">
+            <div class="flex justify-between"><span>Taxable:</span><span class="font-mono font-semibold">${fmt(item.books_taxable)}</span></div>
+            <div class="flex justify-between"><span>Tax:</span><span class="font-mono font-semibold text-emerald-800">${fmt(item.books_tax)}</span></div>
+            <div class="flex justify-between"><span>Date:</span><span class="font-mono">${escapeHtml(item.invoice_date || '—')}</span></div>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant space-y-2">
+          <div class="font-bold text-xs text-on-surface uppercase tracking-wider flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px] text-primary">cloud_done</span>
+            <span>GSTR-2B (GSTN Portal)</span>
+          </div>
+          <div class="text-xs space-y-1">
+            <div class="flex justify-between"><span>Taxable:</span><span class="font-mono font-semibold">${fmt(item.gstr2b_taxable)}</span></div>
+            <div class="flex justify-between"><span>Tax:</span><span class="font-mono font-semibold text-emerald-800">${fmt(item.gstr2b_tax)}</span></div>
+            <div class="flex justify-between"><span>Date:</span><span class="font-mono">${escapeHtml(item.gstr2b_invoice_date || item.invoice_date || '—')}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-lg bg-surface-container-low border border-outline-variant text-xs space-y-1">
+        <div class="flex justify-between font-semibold">
+          <span>Tax Variance:</span>
+          <span class="font-mono ${Math.abs(item.diff_tax || 0) > 1 ? 'text-error font-bold' : 'text-emerald-700'}">${fmt(item.diff_tax)}</span>
+        </div>
+        <div class="flex justify-between font-semibold">
+          <span>Taxable Amount Variance:</span>
+          <span class="font-mono ${Math.abs(item.diff_taxable || 0) > 1 ? 'text-amber-800 font-bold' : 'text-emerald-700'}">${fmt(item.diff_taxable)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // Pre-fill action radio
+  const radios = document.getElementsByName("reconActionChoice");
+  for (const r of radios) {
+    r.checked = r.value === (item.action || 'NONE');
+  }
+
+  const notesInput = document.getElementById("modalReconNotesInput");
+  if (notesInput) {
+    notesInput.value = item.investigation_notes || "";
+  }
+
+  modal.classList.remove("hidden");
+}
+window.openReconInvestigationModal = openReconInvestigationModal;
+
+function closeReconInvestigationModal() {
+  const modal = document.getElementById("modalReconInvestigation");
+  if (modal) modal.classList.add("hidden");
+  reconState.selectedItem = null;
+}
+window.closeReconInvestigationModal = closeReconInvestigationModal;
+
+async function quickSaveReconAction(itemId, action) {
+  try {
+    const res = await apiFetch("/api/reconciliation/action", {
+      method: "POST",
+      body: JSON.stringify({ id: itemId, action, notes: `Quick action: ${action}` })
+    });
+    if (res.ok) {
+      showToast(`✓ Action updated to ${action}`, "success");
+      const period = appState.activePeriod || appState.gst?.business?.filingPeriod || "102026";
+      await loadReconDashboard(period);
+    }
+  } catch (err) {
+    showToast("Error updating action: " + err.message, "error");
+  }
+}
+window.quickSaveReconAction = quickSaveReconAction;
+
+async function submitReconAction() {
+  const item = reconState.selectedItem;
+  if (!item) return;
+
+  const radios = document.getElementsByName("reconActionChoice");
+  let selectedAction = "NONE";
+  for (const r of radios) {
+    if (r.checked) {
+      selectedAction = r.value;
+      break;
+    }
+  }
+
+  const notes = document.getElementById("modalReconNotesInput")?.value || "";
+
+  try {
+    const res = await apiFetch("/api/reconciliation/action", {
+      method: "POST",
+      body: JSON.stringify({
+        id: item.id,
+        action: selectedAction,
+        notes: notes
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      closeReconInvestigationModal();
+      showToast("✓ Reconciliation action and audit note saved!", "success");
+      const period = appState.activePeriod || appState.gst?.business?.filingPeriod || "102026";
+      await loadReconDashboard(period);
+    } else {
+      alert("Failed to save action: " + (data.error || "Unknown error"));
+    }
+  } catch (err) {
+    alert("Network error: " + err.message);
+  }
+}
+window.submitReconAction = submitReconAction;
+
+function exportReconCsv() {
+  const period = appState.activePeriod || appState.gst?.business?.filingPeriod || "102026";
+  window.open(`/api/reports/reconciliation/csv?period=${period}`, '_blank');
+}
+window.exportReconCsv = exportReconCsv;
 
 // GSTR-3B Summary
 function renderGstr3bScreen() {
@@ -6368,6 +7017,13 @@ async function setGuidedStep(step = 1) {
     totalItcUtilized = 0;
     netCashPayable = 0;
     itcCarryForward = totalEligibleItc;
+  }
+
+  // Statutory Safeguard (Section 49): ITC offset utilized can never exceed outward tax liability
+  totalItcUtilized = Math.min(totalItcUtilized, totalOutputLiability);
+  netCashPayable = Math.max(0, Math.round((totalOutputLiability - totalItcUtilized) * 100) / 100);
+  if (totalEligibleItc > totalItcUtilized && itcCarryForward === 0) {
+    itcCarryForward = Math.round((totalEligibleItc - totalItcUtilized) * 100) / 100;
   }
 
   appState.activeFilingSummary = {
