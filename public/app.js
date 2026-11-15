@@ -707,6 +707,8 @@ function executeSwitchSuite(suite) {
       viewExpert.style.display = "block";
     }
     highlightSidebarNav('nav-link-experts');
+    if (typeof loadExpertPlans === "function") loadExpertPlans();
+    if (typeof refreshExpertStatus === "function") refreshExpertStatus();
     highlightBottomNav('bottom-nav-experts');
   } else if (suite === "startup" || suite === "settings" || suite === "multigstin") {
     if (viewStartup) {
@@ -3159,8 +3161,8 @@ async function loadExpertPlans() {
 }
 
 function filterExpertPlans(category, btnElement) {
-  document.querySelectorAll(".filter-tab-pill").forEach(p => p.classList.remove("active"));
-  if (btnElement) btnElement.classList.add("active");
+  document.querySelectorAll(".filter-tab-pill").forEach(p => { p.classList.remove("active"); p.setAttribute("aria-pressed", "false"); });
+  if (btnElement) { btnElement.classList.add("active"); btnElement.setAttribute("aria-pressed", "true"); }
   renderExpertPlans(category);
 }
 
@@ -3272,25 +3274,27 @@ function renderExpertPlans(category = "all") {
 
   const filtered = category === "all" ? plans : plans.filter(p => p.category === category);
 
-  container.innerHTML = filtered.map(plan => `
-    <div class="expert-plan-card ${plan.badge === 'Most Popular' ? 'popular-border' : ''}">
-      <div class="plan-card-top">
-        ${plan.badge ? `<span class="plan-badge-tag">${plan.badge}</span>` : ''}
-        <h3 class="plan-card-title">${plan.title}</h3>
-        <div class="plan-pricing-row">
-          <span class="original-price-strike">₹ ${Number(plan.originalPrice).toLocaleString("en-IN")}</span>
-          <span class="current-price">₹ ${Number(plan.price).toLocaleString("en-IN")}</span>
-        </div>
-        <div class="plan-turnaround-chip">Turnaround: ${plan.turnaround}</div>
-        <ul class="plan-features-list">
-          ${plan.features.map(f => `<li>${f}</li>`).join("")}
-        </ul>
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="sg-empty" style="grid-column:1/-1"><b>No plans in this category</b></div>`;
+    return;
+  }
+  const money = n => "₹" + Number(n || 0).toLocaleString("en-IN");
+  container.innerHTML = filtered.map(plan => {
+    const isFree = Number(plan.price) === 0;
+    const jsTitle = String(plan.title).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const feature = f => `<li><span class="material-symbols-rounded" aria-hidden="true">check</span><span>${escapeHtml(f)}</span></li>`;
+    return `
+    <article class="ex-plan${plan.badge === "Most Popular" ? " is-featured" : ""}">
+      <div class="ex-plan-top">
+        <h3 class="ex-plan-title">${escapeHtml(plan.title)}</h3>
+        ${plan.badge === "Most Popular" ? `<span class="sg-pill-ok">Most chosen</span>` : ""}
       </div>
-      <button class="btn btn-primary btn-block" onclick="openBookExpertModal('${plan.id}', '${plan.title.replace(/'/g, "\\'")}', ${plan.price})">
-        Book CA Consultation
-      </button>
-    </div>
-  `).join("");
+      <div class="ex-plan-price"><b>${isFree ? "Free" : money(plan.price)}</b>${Number(plan.originalPrice) > Number(plan.price) ? `<s>${money(plan.originalPrice)}</s>` : ""}${isFree ? `<span class="sg-meta">for 1 month</span>` : ""}</div>
+      <p class="sg-meta">Typical turnaround: ${escapeHtml(String(plan.turnaround || "").replace(/\s*•\s*/g, ", "))}</p>
+      <ul class="ex-plan-list">${(plan.features || []).map(feature).join("")}</ul>
+      <button type="button" class="${plan.badge === "Most Popular" || isFree ? "sg-btn-primary" : "sg-btn"} ex-plan-cta" onclick="openBookExpertModal('${escapeHtml(plan.id)}', '${escapeHtml(jsTitle)}', ${Number(plan.price) || 0})">${isFree ? "Start free month" : "Book this plan"}</button>
+    </article>`;
+  }).join("");
 }
 
 // Interactive Savings Estimator
@@ -3337,11 +3341,18 @@ let bookingState = {
 };
 
 function openBookExpertModal(planId, planTitle, price) {
+  const couponInp = document.getElementById("bookCouponInput");
+  const couponFeedback = document.getElementById("bookCouponFeedback");
+  if (couponFeedback) couponFeedback.textContent = "";
   if (planId === "plan-free-trial" || price === 0) {
     bookingState.couponApplied = true;
     bookingState.discountPercent = 100;
-    const couponInp = document.getElementById("bookCouponInput");
     if (couponInp) couponInp.value = "FREE30DAYS";
+  } else {
+    // Start each booking fresh: a code applied to an earlier plan must not carry over.
+    bookingState.couponApplied = false;
+    bookingState.discountPercent = 0;
+    if (couponInp) couponInp.value = "";
   }
   bookingState.planId = planId;
   bookingState.planTitle = planTitle;
@@ -3365,21 +3376,21 @@ function applyBookingCoupon() {
     bookingState.couponApplied = true;
     bookingState.discountPercent = 100;
     if (feedback) {
-      feedback.textContent = "Code applied! 100% Free for 1 Month (₹0.00 payable).";
+      feedback.textContent = "Code applied: free for 1 month.";
       feedback.style.color = "#16A34A";
     }
   } else if (input === "TAXHERO65") {
     bookingState.couponApplied = true;
     bookingState.discountPercent = 65;
     if (feedback) {
-      feedback.textContent = "Code TAXHERO65 applied! 65% Instant Discount.";
+      feedback.textContent = "Code applied: 65% off.";
       feedback.style.color = "#16A34A";
     }
   } else {
     bookingState.couponApplied = false;
     bookingState.discountPercent = 0;
     if (feedback) {
-      feedback.textContent = "Invalid or expired promo code.";
+      feedback.textContent = "That code isn't valid.";
       feedback.style.color = "#EA580C";
     }
   }
@@ -3403,7 +3414,7 @@ async function submitExpertBooking() {
     pan: document.getElementById("bookClientPan")?.value || "CVBBC4433W",
     phone: document.getElementById("bookClientPhone")?.value || "9876543210",
     slot: document.getElementById("bookSlotSelect")?.value || "Today at 03:00 PM (IST)",
-    couponCode: bookingState.couponApplied ? "TAXHERO65" : ""
+    couponCode: bookingState.couponApplied ? (document.getElementById("bookCouponInput")?.value || "").trim().toUpperCase() : ""
   };
 
   try {
@@ -3415,15 +3426,14 @@ async function submitExpertBooking() {
     const result = await res.json();
     if (result.success) {
       const box = document.getElementById("bookingConfirmationResult");
-      box.className = "filing-success-box info-note-box";
+      box.className = "rounded-xl border p-4 text-sm flex flex-col gap-1";
+      box.style.background = "var(--sg-green-soft)"; box.style.borderColor = "#B7E0C5";
       box.innerHTML = `
-        <h4 style="color: #15803D;">CA Consultation Confirmed!</h4>
-        <div class="mt-1"><strong>Booking Reference ID:</strong> ${result.bookingId}</div>
-        <div><strong>Assigned Expert:</strong> ${result.assignedExpert.name} (${result.assignedExpert.role})</div>
-        <div><strong>Scheduled Slot:</strong> ${result.slot}</div>
-        <div><strong>Secure Video Meeting Room:</strong> <a href="${result.meetingLink}" target="_blank" class="blue-link">${result.meetingLink}</a></div>
-        <div><strong>Total Fee Charged:</strong> ₹${result.finalPrice} (Demo sandbox transaction)</div>
-        <div class="text-xs text-muted mt-1">Guaranteed: ${result.guarantee}</div>
+        <b style="color: var(--sg-green);">Booking confirmed</b>
+        <div>Reference: <strong>${escapeHtml(result.bookingId)}</strong></div>
+        <div>Your CA: ${escapeHtml(result.assignedExpert?.name || "")}${result.assignedExpert?.role ? ` (${escapeHtml(result.assignedExpert.role)})` : ""}</div>
+        <div>Time: ${escapeHtml(result.slot)}</div>
+        <div>Charged: ₹${escapeHtml(result.finalPrice)} (demo sandbox, no payment taken)</div>
       `;
       box.classList.remove("hidden");
       document.getElementById("btnConfirmBooking").style.display = "none";
@@ -4912,12 +4922,9 @@ async function claimOneMonthFreeTrial() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast("1-Month Free CA Advisory Trial Activated!", "success");
-      const workspace = document.getElementById("expertClientWorkspace");
-      if (workspace) {
-        workspace.scrollIntoView({ behavior: "smooth" });
-      }
-      refreshExpertStatus();
+      showToast("Your free month with a CA has started", "success");
+      await refreshExpertStatus();
+      document.getElementById("expertClientWorkspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   } catch (err) {
     console.error("Free trial claim failed:", err);
@@ -4930,7 +4937,14 @@ async function refreshExpertStatus() {
   try {
     const res = await fetch(`/api/expert/status/${pan}`);
     const data = await res.json();
-    if (data.success && data.booking) {
+    const workspace = document.getElementById("expertClientWorkspace");
+    const freeCallout = document.getElementById("expertFreeCallout");
+    // The server returns a placeholder "CT-TRIAL-DEMO" record for anyone without a booking;
+    // only a real claim or booking (stored with its own ID) counts as an active filing.
+    const hasBooking = Boolean(data.success && data.booking && data.booking.bookingId && data.booking.bookingId !== "CT-TRIAL-DEMO");
+    if (workspace) workspace.classList.toggle("hidden", !hasBooking);
+    if (freeCallout) freeCallout.classList.toggle("hidden", hasBooking);
+    if (hasBooking) {
       const b = data.booking;
       if (b.chatHistory && b.chatHistory.length > 0) {
         renderCaChatMessages(b.chatHistory);
@@ -4947,8 +4961,8 @@ function renderCaChatMessages(messages) {
   if (!container) return;
   container.innerHTML = messages.map(m => `
     <div class="ca-chat-bubble ${m.role === 'Client' ? 'from-user' : 'from-ca'}">
-      <strong>${m.sender}:</strong><br>
-      ${m.text}
+      <strong>${escapeHtml(m.sender)}:</strong><br>
+      ${escapeHtml(m.text)}
     </div>
   `).join("");
   container.scrollTop = container.scrollHeight;
@@ -4964,7 +4978,7 @@ async function sendCaChatMessage() {
   if (container) {
     container.innerHTML += `
       <div class="ca-chat-bubble from-user">
-        <strong>You:</strong><br>${msg}
+        <strong>You:</strong><br>${escapeHtml(msg)}
       </div>
     `;
     container.scrollTop = container.scrollHeight;

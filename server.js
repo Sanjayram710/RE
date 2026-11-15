@@ -333,7 +333,7 @@ export async function handleRequest(req, res) {
               "Old vs New Tax Regime Arbitrage & Deduction Audit",
               "Automated Form 16, AIS/TIS & 26AS Reconciliation",
               "Section 80C, 80D, 80CCD & HRA Tax Optimization",
-              "ClearTax Client Workspace with Real-Time CA Chat",
+              "SimpleGST client workspace with real-time CA chat",
               "100% Free for 30 Days • Zero Advance Payment"
             ]
           },
