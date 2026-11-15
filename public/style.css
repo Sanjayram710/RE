@@ -3904,3 +3904,62 @@ a.sg-w { transition: border-color .15s ease; } a.sg-w:hover { border-color: var(
   .sg-reg-info { flex: 1 1 calc(100% - 54px); }
   .sg-sec-tools .sg-search { min-width: 0; }
 }
+
+/* ==========================================================================
+   Tax Experts page
+   ========================================================================== */
+.ex-page .ex-free { background: var(--sg-brand-soft); border-color: #B0DBC8; }
+@media (max-width: 767px) { .ex-page .ex-free .sg-wh { flex-wrap: wrap; } .ex-page .ex-free .sg-wh-end { margin-left: 0; width: 100%; } .ex-page .ex-free .sg-btn-primary { width: 100%; } }
+
+/* filter tabs */
+.ex-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 767px) { .ex-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; } .ex-tabs::-webkit-scrollbar { display: none; } }
+.ex-tabs .filter-tab-pill { border: 1px solid var(--sg-line-2) !important; background: #fff !important; color: var(--sg-ink-2) !important; border-radius: 999px; padding: 7px 14px; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color .15s ease; }
+.ex-tabs .filter-tab-pill:hover { background: #F1F3F6 !important; }
+.ex-tabs .filter-tab-pill.active { background: var(--sg-brand-soft) !important; border-color: transparent !important; color: var(--sg-brand) !important; font-weight: 600; }
+
+/* plan cards */
+.ex-page .expert-plans-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 1199px) { .ex-page .expert-plans-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 767px) { .ex-page .expert-plans-grid { grid-template-columns: 1fr; gap: 12px; } }
+.ex-plan { background: #fff; border: 1px solid var(--sg-line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ex-plan.is-featured { border-color: var(--sg-brand); }
+.ex-plan-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.ex-plan-title { margin: 0; font-size: 15.5px; font-weight: 600; color: var(--sg-ink); line-height: 1.35; }
+.ex-plan-price { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ex-plan-price b { font-size: 26px; font-weight: 700; color: var(--sg-ink); font-variant-numeric: tabular-nums; }
+.ex-plan-price s { font-size: 14px; color: var(--sg-ink-3); }
+.ex-plan-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; font-size: 13.5px; color: var(--sg-ink-2); }
+.ex-plan-list li { display: flex; gap: 8px; align-items: flex-start; }
+.ex-plan-list .material-symbols-rounded { font-size: 18px; color: var(--sg-green); flex-shrink: 0; }
+.ex-plan-cta { margin-top: auto; width: 100%; }
+.ex-plan .sg-btn-primary.ex-plan-cta { padding: 11px 16px; font-size: 15px; }
+
+/* how it works */
+.ex-how { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; counter-reset: exhow; }
+@media (max-width: 767px) { .ex-how { grid-template-columns: 1fr; } }
+.ex-how li { counter-increment: exhow; display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; color: var(--sg-ink-2); }
+.ex-how li::before { content: counter(exhow); width: 24px; height: 24px; border-radius: 50%; background: var(--sg-brand); color: #fff; font-size: 12.5px; font-weight: 700; display: grid; place-items: center; margin-bottom: 6px; }
+.ex-how b { color: var(--sg-ink); font-weight: 600; font-size: 14.5px; }
+
+/* estimator: match the widget template */
+.ex-page .savings-estimator-card { background: #fff !important; border: 1px solid var(--sg-line) !important; box-shadow: none !important; padding: 20px !important; border-radius: 14px !important; }
+.ex-page .savings-estimator-card .field-label { font-size: 13px !important; color: var(--sg-ink-2); font-weight: 500; }
+.ex-page .savings-estimator-card .text-input { border-radius: 10px; border-color: var(--sg-line-2); }
+.ex-page .savings-estimator-card #calcEstSavingsVal { color: var(--sg-ink) !important; font-size: 24px !important; font-weight: 700 !important; }
+.ex-page .savings-estimator-card > div[style*="86EFAC"] { border-color: var(--sg-line) !important; background: #F6F8FA !important; }
+.ex-page .savings-estimator-card .btn { border-color: var(--sg-line-2) !important; color: var(--sg-ink) !important; border-radius: 10px; font-weight: 600 !important; }
+
+/* filing workspace: shared widget look, calmer step colours */
+.ex-page .expert-client-workspace { padding: 20px !important; margin-bottom: 0 !important; border: 1px solid var(--sg-line) !important; box-shadow: none !important; border-radius: 14px !important; }
+.ex-page .expert-client-workspace.hidden { display: none !important; }
+.ex-page .expert-client-workspace h4 { color: var(--sg-ink) !important; font-size: 16px !important; font-weight: 700 !important; }
+.ex-page .expert-client-workspace .btn { border-radius: 10px; }
+.ex-page .expert-client-workspace .btn[disabled] { opacity: .55; cursor: not-allowed; }
+.ex-page .ca-chat-container { border: 1px solid var(--sg-line) !important; border-radius: 12px !important; background: #fff !important; box-shadow: none !important; }
+.ex-page .ca-chat-bubble { font-size: 13.5px; }
+
+.sg-input { border: 1px solid var(--sg-line-2); border-radius: 10px; padding: 9px 12px; font: inherit; font-size: 14px; font-weight: 400; color: var(--sg-ink); background: #fff; width: 100%; min-width: 0; }
+.sg-input:focus { border-color: var(--sg-brand); box-shadow: 0 0 0 3px var(--sg-brand-soft); outline: 0; }
+
+.sg-input.uppercase::placeholder { text-transform: none; }
