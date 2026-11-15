@@ -180,7 +180,7 @@
           Maximum Tax Refund
         </button>
         <button onclick="setCarouselSlide(1)" id="carousel-tab-1" class="carousel-tab px-4 sm:px-5 py-2.5 rounded-full font-display font-semibold text-xs sm:text-sm transition-all duration-200 bg-slate-100 text-slate-700 hover:bg-slate-200">
-          100% Statutory Accuracy
+          Checked before you file
         </button>
         <button onclick="setCarouselSlide(2)" id="carousel-tab-2" class="carousel-tab px-4 sm:px-5 py-2.5 rounded-full font-display font-semibold text-xs sm:text-sm transition-all duration-200 bg-slate-100 text-slate-700 hover:bg-slate-200">
           24x7 Dedicated CA Support
@@ -193,7 +193,7 @@
       <!-- Main Carousel Card Stage -->
       <div class="relative bg-[#FAFAFD] rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm overflow-hidden min-h-[460px] flex items-center">
         
-        <!-- SLIDE 0: MAXIMUM TAX REFUND (Photo: tax-refund-success.jpg) -->
+        <!-- SLIDE 0: MAXIMUM TAX REFUND (Unsplash photo) -->
         <div id="slide-0" class="carousel-slide grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full transition-opacity duration-300">
           <div class="lg:col-span-6 space-y-5">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-bold border border-brand-200">
@@ -224,31 +224,24 @@
             </div>
           </div>
           <div class="lg:col-span-6 flex justify-center">
-            <div class="relative max-w-[420px] w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white group">
-              <img src="/photo/tax-refund-success.jpg" alt="Taxpayer receiving maximum ₹89,090 tax refund" class="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-105">
-              <div class="absolute bottom-4 left-4 right-4 bg-white/95 p-3.5 rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-between">
-                <div>
-                  <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Verified Total Refund</span>
-                  <div class="font-display font-black text-xl text-brand-600">₹ 89,090</div>
-                </div>
-                <div class="text-[11px] font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-200 flex items-center gap-1 shadow-sm">
-                  <span class="material-symbols-rounded text-[15px] text-brand-600">verified</span>
-                  Direct Bank Credit
-                </div>
-              </div>
-            </div>
+            <figure class="relative max-w-[460px] w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
+              <picture>
+                <source srcset="/photo/filing-on-phone.webp" type="image/webp">
+                <img src="/photo/filing-on-phone.jpg" alt="Hands using a phone in front of an open laptop on a cafe table" width="1200" height="900" loading="lazy" decoding="async" class="w-full h-auto aspect-[4/3] object-cover">
+              </picture>
+            </figure>
           </div>
         </div>
 
-        <!-- SLIDE 1: 100% STATUTORY ACCURACY (Photo: tax-statutory-accuracy.jpg) -->
+        <!-- SLIDE 1: CHECKED BEFORE YOU FILE (product screenshot) -->
         <div id="slide-1" class="carousel-slide hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full transition-opacity duration-300">
           <div class="lg:col-span-6 space-y-5">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-bold border border-brand-200">
               <span class="material-symbols-rounded text-[16px]">verified</span>
-              Zero-Calculation-Error Guarantee
+              Built-in checks
             </div>
             <h3 class="font-display font-extrabold text-3xl sm:text-4xl text-slate-900 leading-tight">
-              100% Statutory <span class="text-brand-600">Accuracy</span>
+              Every figure checked <span class="text-brand-600">before you file</span>
             </h3>
             <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
               Our error-detection technology cross-checks your entries against 120+ statutory rules, catching omissions, duplicate claims, and mismatched TDS before final filing.
@@ -275,26 +268,13 @@
             </div>
           </div>
           <div class="lg:col-span-6 flex justify-center">
-            <div class="relative max-w-[420px] w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white group">
-              <img src="/photo/tax-statutory-accuracy.jpg" alt="Senior tax compliance auditor verifying statutory accuracy" class="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-105">
-              <div class="absolute top-4 right-4 bg-white/95 px-3.5 py-2 rounded-xl border border-slate-200 shadow-md">
-                <div class="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                  <span class="material-symbols-rounded text-[18px] text-brand-500">task_alt</span>
-                  <span>100% Notice Protected</span>
-                </div>
-              </div>
-              <div class="absolute bottom-4 left-4 right-4 bg-white/95 p-3 rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-between text-xs font-medium text-slate-700">
-                <span class="flex items-center gap-1 text-slate-600">
-                  <span class="w-2 h-2 rounded-full bg-brand-500"></span>
-                  Rule 88A Exhaustion
-                </span>
-                <span class="text-brand-700 font-bold bg-brand-50 px-2 py-0.5 rounded border border-brand-200 text-[11px]">Audit Passed</span>
-              </div>
-            </div>
+            <figure class="relative max-w-[460px] w-full rounded-2xl overflow-hidden border border-slate-200 bg-white">
+              <img src="/photo/product-home-checks.webp" alt="SimpleGST Home showing the three filing steps with sales and purchases added and the return ready to review" width="980" height="735" loading="lazy" decoding="async" class="w-full h-auto aspect-[4/3] object-cover object-left-top">
+            </figure>
           </div>
         </div>
 
-        <!-- SLIDE 2: 24x7 DEDICATED EXPERT SUPPORT (Photo: ca-expert-support.jpg) -->
+        <!-- SLIDE 2: CA SUPPORT (Unsplash photo) -->
         <div id="slide-2" class="carousel-slide hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full transition-opacity duration-300">
           <div class="lg:col-span-6 space-y-5">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-bold border border-brand-200">
@@ -325,26 +305,12 @@
             </div>
           </div>
           <div class="lg:col-span-6 flex justify-center">
-            <div class="relative max-w-[420px] w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white group">
-              <img src="/photo/ca-expert-support.jpg" alt="Chartered Accountant providing 24x7 live tax advisory" class="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-105">
-              <div class="absolute bottom-4 left-4 right-4 bg-white/95 p-3.5 rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/25">
-                    <span class="material-symbols-rounded text-[20px]">headset_mic</span>
-                  </div>
-                  <div>
-                    <div class="text-xs font-bold text-slate-900">Senior CA Connected</div>
-                    <div class="text-[11px] text-slate-500 flex items-center gap-1">
-                      <span class="w-1.5 h-1.5 rounded-full bg-brand-500 "></span>
-                      Active Live Advisory
-                    </div>
-                  </div>
-                </div>
-                <div class="text-[11px] font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-200">
-                  ICAI Verified
-                </div>
-              </div>
-            </div>
+            <figure class="relative max-w-[460px] w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
+              <picture>
+                <source srcset="/photo/ca-advisory-consultation.webp" type="image/webp">
+                <img src="/photo/ca-advisory-consultation.jpg" alt="A client in a one-to-one conversation with an adviser across a table" width="1200" height="900" loading="lazy" decoding="async" class="w-full h-auto aspect-[4/3] object-cover">
+              </picture>
+            </figure>
           </div>
         </div>
 
@@ -379,9 +345,9 @@
             </div>
           </div>
           <div class="lg:col-span-6 flex justify-center">
-            <div class="relative max-w-[480px] rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white">
-              <img src="/stitch_screens/bills_documents_document_management_split_view_ocr_review.png" alt="SimpleGST Split View Document Management OCR Review" class="w-full object-cover">
-            </div>
+            <figure class="relative max-w-[460px] w-full rounded-2xl overflow-hidden border border-slate-200 bg-white">
+              <img src="/screens/app-documents.webp" alt="SimpleGST Documents page with uploaded bills, review status and upload area" width="1420" height="799" loading="lazy" decoding="async" class="w-full h-auto aspect-[16/9] object-cover object-left-top">
+            </figure>
           </div>
         </div>
 
@@ -801,16 +767,16 @@
       <!-- Tour Tabs -->
       <div class="flex items-center justify-center gap-2 sm:gap-4 flex-wrap mb-8">
         <button onclick="setTourScreen(0)" id="tour-tab-0" class="tour-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-display font-bold bg-brand-600 text-white shadow-sm">
-          GSTR-2B ITC Reconciler
+          Home dashboard
         </button>
         <button onclick="setTourScreen(1)" id="tour-tab-1" class="tour-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-display font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">
-          GST Copilot & Health Score
+          My invoices
         </button>
         <button onclick="setTourScreen(2)" id="tour-tab-2" class="tour-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-display font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">
-          Vendor Compliance Hub
+          GST Copilot
         </button>
         <button onclick="setTourScreen(3)" id="tour-tab-3" class="tour-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-display font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">
-          PMT-06 Challan Payment
+          Documents
         </button>
       </div>
 
@@ -826,7 +792,7 @@
           </div>
           <div class="px-4 py-1 rounded-lg bg-slate-100 text-slate-600 font-mono text-[11px] flex items-center gap-2">
             <span class="material-symbols-rounded text-[13px] text-brand-600">lock</span>
-            <span id="tour-url">https://simplegst.in/app/reconciliation/gstr2b</span>
+            <span id="tour-url">simplegst.in/app/home</span>
           </div>
           <a href="/app?auth=signin" class="text-brand-600 font-bold hover:underline flex items-center gap-1">
             <span>Open in App</span>
@@ -838,8 +804,9 @@
         <div class="rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 aspect-[16/10] sm:aspect-[16/9] flex items-center justify-center">
           <img 
             id="tour-img" 
-            src="/stitch_screens/file_gst_gstr_2b_input_tax_credit_itc_reconciliation_engine.png" 
-            alt="SimpleGST GSTR-2B Input Tax Credit Reconciliation Engine" 
+            src="/screens/app-home.webp" 
+            width="1420" height="799"
+            alt="SimpleGST Home dashboard" 
             class="w-full h-full object-cover object-top transition-opacity duration-300"
           />
         </div>
@@ -1005,6 +972,7 @@
       <div class="mt-6 pt-6 border-t border-slate-100 text-[11px] text-slate-400 text-center sm:text-left leading-relaxed">
         Disclaimer: SimpleGST is an autonomous digital tax compliance platform and GST Suvidha Provider (GSP) partner. Tax figures are computed strictly using deterministic rules per the Income Tax Act, 1961, and Central Goods and Services Tax Act, 2017. All demo GSTINs and PANs shown are for statutory illustration only.
       </div>
+      <p class="mt-3 text-[11px] text-slate-400 text-center sm:text-left">Photos: <a href="https://unsplash.com/photos/rRWiVQzLm7k" class="underline hover:text-slate-600" rel="noopener">advisory meeting</a> and <a href="https://unsplash.com/photos/gUIJ0YszPig" class="underline hover:text-slate-600" rel="noopener">phone and laptop</a> via Unsplash, used under the Unsplash License.</p>
     </div>
   </footer>
 
@@ -1165,22 +1133,10 @@
 
     // --- 3. PLATFORM TOUR SCREEN TABS ---
     const tourScreens = [
-      {
-        url: "https://simplegst.in/app/reconciliation/gstr2b",
-        src: "/stitch_screens/file_gst_gstr_2b_input_tax_credit_itc_reconciliation_engine.png"
-      },
-      {
-        url: "https://simplegst.in/app/copilot-studio",
-        src: "/stitch_screens/gst_compliance_health_score_gst_copilot_studio.png"
-      },
-      {
-        url: "https://simplegst.in/app/vendor-hub",
-        src: "/stitch_screens/bills_documents_vendor_communication_compliance_reminders_hub.png"
-      },
-      {
-        url: "https://simplegst.in/app/challan-payment/pmt06",
-        src: "/stitch_screens/file_gst_form_gst_pmt_06_challan_generation_payment_modal.png"
-      }
+      { url: "simplegst.in/app/home", src: "/screens/app-home.webp" },
+      { url: "simplegst.in/app/invoices", src: "/screens/app-invoices.webp" },
+      { url: "simplegst.in/app/copilot", src: "/screens/app-copilot.webp" },
+      { url: "simplegst.in/app/documents", src: "/screens/app-documents.webp" }
     ];
 
     function setTourScreen(index) {
