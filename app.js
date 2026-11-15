@@ -715,6 +715,7 @@ function executeSwitchSuite(suite) {
       viewStartup.style.display = "block";
     }
     highlightSidebarNav('nav-link-settings');
+    if (typeof showSettingsSection === "function") showSettingsSection(null);
     if (typeof loadMultiGstinHub === "function") {
       loadMultiGstinHub();
     }
@@ -1840,6 +1841,7 @@ function renderAuthState() {
     if (headerUserInitial) headerUserInitial.textContent = userInitial;
     if (sidebarUserRole) sidebarUserRole.textContent = user.role || "Taxpayer";
     if (greetingHeader) greetingHeader.textContent = `Hello, ${String(user.name || "there").split(" ")[0]}`;
+    document.getElementById("viewHomeSuite")?.classList.remove("is-guest");
 
     if (btnMenuAuthAction) {
       btnMenuAuthAction.innerHTML = `<span class="material-symbols-rounded text-[16px]">logout</span> Log Out`;
@@ -1895,6 +1897,7 @@ function renderAuthState() {
     if (headerUserInitialGuest) headerUserInitialGuest.textContent = "G";
     if (sidebarUserRole) sidebarUserRole.textContent = "Not Signed In";
     if (greetingHeader) greetingHeader.textContent = "Welcome to SimpleGST";
+    document.getElementById("viewHomeSuite")?.classList.add("is-guest");
 
     if (btnMenuAuthAction) {
       btnMenuAuthAction.innerHTML = `<span class="material-symbols-rounded text-[16px]">login</span> Sign In`;
@@ -4185,8 +4188,7 @@ async function loadMultiGstinHub() {
 
   container.innerHTML = `
     <div class="p-8 text-center text-secondary flex flex-col items-center justify-center">
-      <span class="inline-block animate-spin text-2xl text-primary mb-2"></span>
-      <p class="text-xs">Loading pan-India branch registrations...</p>
+      <p class="text-sm">Loading your GST registrations...</p>
     </div>
   `;
 
@@ -4195,7 +4197,10 @@ async function loadMultiGstinHub() {
     const res = await apiFetch(`/api/gstins?period=${period}`);
     const data = await res.json();
     if (!res.ok || !data.gstins) {
-      container.innerHTML = `<div class="p-4 text-xs text-error bg-error/10 rounded-lg">Failed to load branches: ${escapeHtml(data.error || "Network error")}</div>`;
+      const unauth = res.status === 401 || /auth/i.test(String(data.error || ""));
+      container.innerHTML = unauth
+        ? `<div class="sg-empty"><span class="material-symbols-rounded" aria-hidden="true">lock</span><b>Sign in to see your GST registrations</b><button type="button" class="sg-btn-primary sg-btn-sm" onclick="openAuthModal('signin')">Sign in</button></div>`
+        : `<div class="sg-empty"><span class="material-symbols-rounded" aria-hidden="true">cloud_off</span><b>We couldn't load your registrations</b><span class="sg-meta">Please check your connection and try again.</span><button type="button" class="sg-btn sg-btn-sm" onclick="loadMultiGstinHub()">Try again</button></div>`;
       return;
     }
 
@@ -4210,7 +4215,7 @@ async function loadMultiGstinHub() {
     const metrics = data.consolidatedMetrics || {};
 
     const elTotal = document.getElementById("multiTotalGstinsCount");
-    if (elTotal) elTotal.textContent = `${totalGstins} ${totalGstins === 1 ? "Branch" : "Branches"}`;
+    if (elTotal) elTotal.textContent = `${totalGstins} registration${totalGstins === 1 ? "" : "s"}`;
 
     const elStates = document.getElementById("multiStatesListDisplay");
     if (elStates) {
@@ -4242,7 +4247,7 @@ async function loadMultiGstinHub() {
     if (elRegimes) elRegimes.textContent = `${metrics.monthlyRegimesCount || 0} Monthly / ${metrics.qrmpRegimesCount || 0} QRMP`;
 
     const elPanBadge = document.getElementById("multiCorporatePanBadge");
-    if (elPanBadge) elPanBadge.textContent = `Corporate PAN: ${corpPan}`;
+    if (elPanBadge) elPanBadge.textContent = corpPan;
 
     const elEntriesCount = document.getElementById("multiRegistryEntriesCount");
     if (elEntriesCount) elEntriesCount.textContent = `${totalGstins} ${totalGstins === 1 ? "Branch" : "Branches"}`;
@@ -4250,7 +4255,8 @@ async function loadMultiGstinHub() {
     renderMultiGstinCards(gstins);
   } catch (err) {
     console.error("Failed to load Multi-GSTIN hub:", err);
-    container.innerHTML = `<div class="p-4 text-xs text-error bg-error/10 rounded-lg">Error loading branches: ${escapeHtml(err.message)}</div>`;
+    console.warn("Could not load GST registrations:", err);
+    container.innerHTML = `<div class="sg-empty"><span class="material-symbols-rounded" aria-hidden="true">cloud_off</span><b>We couldn't load your registrations</b><span class="sg-meta">Please check your connection and try again.</span><button type="button" class="sg-btn sg-btn-sm" onclick="loadMultiGstinHub()">Try again</button></div>`;
   }
 }
 window.loadMultiGstinHub = loadMultiGstinHub;
@@ -4260,22 +4266,12 @@ function renderMultiGstinCards(branches) {
   if (!container) return;
 
   if (!branches || branches.length === 0) {
-    const corpPan = appState.organization?.pan || "—";
-    container.innerHTML = `
-      <div class="p-8 rounded-xl border border-dashed border-outline-variant bg-surface-container-lowest text-center flex flex-col items-center justify-center">
-        <span class="material-symbols-rounded text-4xl text-secondary mb-2">add_business</span>
-        <h3 class="font-bold text-sm text-on-surface">No State Branches Registered Yet</h3>
-        <p class="text-xs text-secondary mt-1 max-w-md">Register your state GSTIN branches across India sharing PAN <strong class="font-mono text-primary">${escapeHtml(corpPan)}</strong>.</p>
-        <button onclick="openAddGstinModal()" class="mt-4 px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
-          <span class="material-symbols-rounded text-[16px]">add_business</span>
-          <span>Add First State GSTIN</span>
-        </button>
-      </div>
-    `;
+    const searching = (document.getElementById("multiGstinSearchInput")?.value || "").trim() !== "";
+    container.innerHTML = searching
+      ? `<div class="sg-empty"><span class="material-symbols-rounded" aria-hidden="true">search_off</span><b>No registrations match your search</b></div>`
+      : `<div class="sg-empty"><span class="material-symbols-rounded" aria-hidden="true">add_business</span><b>No GST registrations yet</b><span class="sg-meta">Add the GSTIN for each state you operate in.</span><button type="button" class="sg-btn-primary sg-btn-sm" onclick="openAddGstinModal()">Add registration</button></div>`;
     return;
   }
-
-  const period = appState.activePeriod || "102026";
 
   container.innerHTML = branches.map(b => {
     const isAct = Boolean(b.isActiveForFiling);
@@ -4283,83 +4279,108 @@ function renderMultiGstinCards(branches) {
     const stateName = escapeHtml(b.state_name || "State " + stateCode);
     const gstinStr = escapeHtml(b.gstin);
     const tradeName = escapeHtml(b.trade_name || "Branch");
-    const address = escapeHtml(b.address || "Principal / Additional Place of Business");
-    const freq = escapeHtml(b.filing_frequency || "MONTHLY");
-    const isMonthly = freq.toUpperCase() === "MONTHLY";
-    const turnoverStr = Number(b.turnover || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
-    const taxStr = Number(b.outputTax || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
-    const salesCount = Number(b.salesCount || 0);
-
-    const badgeBg = isAct ? 'bg-brand-50 border-brand-300 text-brand-800' : 'bg-slate-100 border-slate-200 text-slate-800';
-
+    const jsName = String(b.trade_name || "Branch").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const freq = String(b.filing_frequency || "MONTHLY").toUpperCase() === "MONTHLY" ? "Monthly returns" : "Quarterly returns (QRMP)";
+    const kind = b.is_primary ? "Principal place" : "Branch";
     return `
-      <div class="p-4 rounded-xl border ${isAct ? 'border-brand-500 ring-2 ring-brand-500/20 bg-brand-50/10' : 'border-outline-variant bg-surface-container-lowest'} hover:border-primary/60 transition-all shadow-xs">
-        <div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
-          <div class="flex items-start gap-3">
-            <div class="h-10 w-10 rounded-lg ${badgeBg} border flex flex-col items-center justify-center font-bold shrink-0">
-              <span class="text-xs">${stateCode}</span>
-              <span class="text-[9px] -mt-1 font-semibold uppercase">${stateName.substring(0, 2)}</span>
-            </div>
-            <div class="flex flex-col">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-mono text-sm sm:text-base font-bold text-on-surface tracking-wide">${gstinStr}</span>
-                ${b.is_primary ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">Principal Place</span>` : `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-surface-container text-secondary border border-outline-variant">Branch</span>`}
-                ${isAct 
-                  ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-100 text-brand-800 border border-brand-300">
-                      <span class="h-1.5 w-1.5 rounded-full bg-brand-600 "></span>
-                      Active for GST Filing
-                     </span>`
-                  : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-secondary border border-slate-200">
-                      Alternate Branch
-                     </span>`
-                }
-              </div>
-              <span class="font-headline-sm text-sm font-semibold text-on-surface mt-0.5">${tradeName}</span>
-              <p class="font-body-sm text-xs text-secondary mt-0.5">${address}</p>
-            </div>
-          </div>
-
-          <!-- Filing Frequency & Activity -->
-          <div class="flex md:flex-col items-end gap-1.5 shrink-0">
-            <span class="px-2.5 py-1 rounded text-xs font-semibold ${isMonthly ? 'bg-surface-container text-on-surface border border-outline-variant' : 'bg-amber-50 text-amber-900 border border-amber-300'}">
-              ${isMonthly ? 'Regular Monthly (GSTR-1 & 3B)' : 'QRMP Scheme (Quarterly)'}
-            </span>
-            <span class="text-[11px] text-secondary font-mono">
-              ${salesCount} outward supplies in ${period}
-            </span>
-          </div>
+      <div class="sg-reg${isAct ? " is-active" : ""}">
+        <span class="sg-reg-code" aria-hidden="true">${stateCode}</span>
+        <div class="sg-reg-info">
+          <b>${tradeName}</b>
+          <span>${gstinStr} &middot; ${stateName} &middot; ${kind} &middot; ${freq}</span>
         </div>
-
-        <!-- Real Period Metrics Strip (Zero Fake Numbers) -->
-        <div class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div class="flex flex-wrap items-center gap-4 text-secondary">
-            <div>Taxable Turnover: <strong class="text-on-surface font-semibold font-mono">₹${turnoverStr}</strong></div>
-            <div>Output Tax: <strong class="text-on-surface font-semibold font-mono">₹${taxStr}</strong></div>
-            <div>GSTR-3B: <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${b.gstr3bStatus === 'FILED' || b.gstr3bStatus === 'FILED_SIMULATED' ? 'bg-brand-100 text-brand-800' : 'bg-amber-100 text-amber-800'}">${b.gstr3bStatus}</span></div>
-          </div>
-
-          <!-- Action Buttons for Switching GSTIN -->
-          <div class="flex items-center gap-2">
-            ${isAct 
-              ? `<button disabled class="px-3.5 py-1.5 rounded-lg bg-brand-600 text-white font-semibold text-xs shadow-xs flex items-center gap-1.5 cursor-default">
-                  <span class="material-symbols-rounded text-[16px]">check_circle</span>
-                  <span>Active Filing Branch</span>
-                 </button>`
-              : `<button onclick="switchActiveGstinForFiling('${b.id}', '${gstinStr}', '${tradeName.replace(/'/g, "\\'")}')" class="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-semibold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
-                  <span class="material-symbols-rounded text-[16px]">swap_horiz</span>
-                  <span>Switch for GST Filing</span>
-                 </button>`
-            }
-            <button onclick="quickFileForBranch('${b.id}', '${gstinStr}', '${tradeName.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary hover:text-on-surface transition-colors flex items-center gap-1 cursor-pointer" title="Switch & Open Invoices">
-              <span class="material-symbols-rounded text-[16px] text-primary">receipt_long</span>
-              <span>File Invoices</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
+        ${isAct
+          ? `<span class="sg-pill-ok">Used for filing</span>`
+          : `<button type="button" class="sg-btn sg-btn-sm" onclick="requestGstinSwitch('${escapeHtml(String(b.id))}', '${gstinStr}', '${escapeHtml(jsName)}')">Use for filing</button>`}
+      </div>`;
   }).join("");
 }
+
+// Ask before changing the GSTIN that every page files under.
+function requestGstinSwitch(gstinId, gstinStr, tradeName) {
+  const modal = document.getElementById("modalConfirmGstinSwitch");
+  if (!modal) return switchActiveGstinForFiling(gstinId, gstinStr, tradeName);
+  const text = document.getElementById("confirmGstinText");
+  if (text) text.innerHTML = `Invoices, bills and returns across SimpleGST will show <strong>${escapeHtml(tradeName)} (${escapeHtml(gstinStr)})</strong>. You can switch back at any time.`;
+  const btn = document.getElementById("confirmGstinBtn");
+  if (btn) btn.onclick = async () => { closeConfirmGstinSwitch(); await switchActiveGstinForFiling(gstinId, gstinStr, tradeName); };
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  btn?.focus();
+}
+window.requestGstinSwitch = requestGstinSwitch;
+
+function closeConfirmGstinSwitch() {
+  const modal = document.getElementById("modalConfirmGstinSwitch");
+  if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+}
+window.closeConfirmGstinSwitch = closeConfirmGstinSwitch;
+
+// ---------------- Settings page sections ----------------
+function isSignedIn() {
+  return Boolean(appState?.auth?.isLoggedIn);
+}
+
+function showSettingsSection(name) {
+  const page = document.getElementById("settingsPage");
+  if (!page) return;
+  const signedIn = isSignedIn();
+  document.getElementById("settingsSignedOut")?.classList.toggle("hidden", signedIn);
+  document.getElementById("settingsLayout")?.classList.toggle("hidden", !signedIn);
+  if (!signedIn) return;
+
+  const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+  // On phones, null shows the section list; on larger screens default to registrations.
+  const section = name || (isMobile ? null : (page.dataset.section || "registrations"));
+  page.classList.toggle("is-list", !section);
+  if (section) page.dataset.section = section;
+  page.querySelectorAll(".sg-sec").forEach(s => s.classList.toggle("is-shown", s.dataset.section === section));
+  page.querySelectorAll(".sg-snav-item").forEach(btn => {
+    const on = btn.dataset.target === section;
+    btn.classList.toggle("is-active", on);
+    if (on) btn.setAttribute("aria-current", "page"); else btn.removeAttribute("aria-current");
+  });
+
+  if (section === "registrations") loadMultiGstinHub();
+  if (section === "profile" || section === "account") fillSettingsProfile();
+  if (section === "preferences") syncSettingsControls();
+  if (isMobile && section) page.scrollIntoView({ block: "start" });
+}
+window.showSettingsSection = showSettingsSection;
+
+function syncSettingsControls() {
+  const sel = document.getElementById("settingsPeriodSelect");
+  if (sel && typeof getActivePeriod === "function") sel.value = getActivePeriod();
+  const tgl = document.getElementById("settingsFocusToggle");
+  if (tgl) {
+    const on = document.body.classList.contains("kiosk-mode");
+    tgl.classList.toggle("is-on", on);
+    tgl.setAttribute("aria-checked", on ? "true" : "false");
+  }
+}
+window.syncSettingsControls = syncSettingsControls;
+
+// Reuses the read-only profile data already loaded for the profile modal.
+async function fillSettingsProfile() {
+  if (typeof populateProfileData === "function") {
+    try { await populateProfileData(); } catch (e) { console.warn("Profile data unavailable:", e); }
+  }
+  const get = id => (document.getElementById(id)?.textContent || "").trim();
+  const clean = v => (!v || /^(—|-|N\/A|null|undefined)$/i.test(v)) ? "—" : v;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = clean(v); };
+  set("setProfLegalName", get("profLegalName"));
+  set("setProfTradeName", get("profTradeName"));
+  set("setProfBusinessType", get("profBusinessType"));
+  set("setProfPan", get("profPan"));
+  set("setProfGstin", get("profGstin"));
+  set("setProfState", get("profState"));
+  set("setProfAddress", get("profBusinessAddress"));
+  const bank = [get("profBankName"), get("profBankAccount")].map(clean).filter(v => v !== "—").join(" · ");
+  set("setProfBank", bank);
+  set("setAccName", get("profFullName") || appState?.auth?.user?.name || "");
+  set("setAccEmail", get("profEmail") || appState?.auth?.user?.email || "");
+}
+window.fillSettingsProfile = fillSettingsProfile;
 
 async function switchActiveGstinForFiling(gstinId, gstinStr, tradeName) {
   try {
@@ -5370,6 +5391,7 @@ window.resolveScoreMismatch = function() {
 let isKioskModeActive = false;
 
 function toggleKioskMode(forceState) {
+  setTimeout(() => { if (typeof syncSettingsControls === "function") syncSettingsControls(); }, 0);
   const nextState = typeof forceState === 'boolean' ? forceState : !isKioskModeActive;
   if (nextState) {
     enterKioskMode();
@@ -5613,6 +5635,10 @@ function updateHomeFilingSteps(metrics) {
   };
   setStep("homeStepSales", "homeStepSalesStatus", sales, "invoice");
   setStep("homeStepPurchases", "homeStepPurchasesStatus", purchases, "bill");
+  const salesNote = document.getElementById("homeSalesCountNote");
+  if (salesNote) salesNote.textContent = `${sales} sales invoice${sales === 1 ? "" : "s"}`;
+  const purchNote = document.getElementById("homePurchasesCountNote");
+  if (purchNote) purchNote.textContent = `${purchases} purchase bill${purchases === 1 ? "" : "s"}`;
   const fileStatus = document.getElementById("homeStepFileStatus");
   if (fileStatus) fileStatus.textContent = sales > 0 || purchases > 0 ? "Ready to review" : "After steps 1 and 2";
 }
@@ -5664,7 +5690,7 @@ async function loadDashboardData(period) {
     // Update hero banner texts
     const heroDesc = document.getElementById("homeHeroDescription");
     if (heroDesc && data.metrics) {
-      heroDesc.innerHTML = `<span id="dashSalesCountText">${data.metrics.salesCount}</span> sales invoice${data.metrics.salesCount === 1 ? "" : "s"} and ${data.metrics.purchasesCount || 0} purchase bill${data.metrics.purchasesCount === 1 ? "" : "s"} added for ${escapeHtml(details.short)}.`;
+      heroDesc.innerHTML = `<span id="dashSalesCountText">${data.metrics.salesCount}</span> invoice${data.metrics.salesCount === 1 ? "" : "s"} and ${data.metrics.purchasesCount || 0} bill${data.metrics.purchasesCount === 1 ? "" : "s"} added`;
     }
     updateHomeFilingSteps(data.metrics || {});
 

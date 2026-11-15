@@ -491,7 +491,7 @@ test("Regression & Defect Audit: Mobile File GST navigation targets file-gst", (
 
   // 2. Sidebar Quick File button must also navigate to file-gst
   assert.ok(
-    html.includes('<button type="button" class="sg-btn-primary w-full" onclick="switchSuite(\'file-gst\')">'),
+    html.includes('<button type="button" class="sg-btn-primary" onclick="switchSuite(\'file-gst\')">'),
     "Home File GST button must call switchSuite('file-gst')"
   );
 });
