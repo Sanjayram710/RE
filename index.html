@@ -239,22 +239,6 @@
         <span class="hidden sm:inline font-semibold">Kiosk Mode</span>
       </button>
 
-      <!-- Role Switcher -->
-      <div class="relative">
-        <button onclick="toggleRoleMenu(event)" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container font-label-sm text-secondary hover:text-on-surface font-medium cursor-pointer transition-colors text-xs">
-          <span id="currentUserRole">Business Owner</span>
-          <span class="material-symbols-rounded text-[14px]">expand_more</span>
-        </button>
-        <div id="roleDropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm z-50 p-1.5">
-          <button onclick="switchRole('owner')" class="w-full text-left px-3 py-2 rounded-lg text-xs hover:bg-surface-container text-on-surface font-medium flex items-center gap-2 cursor-pointer">
-            <span class="material-symbols-rounded text-[16px] text-primary">person</span> Business Owner
-          </button>
-          <button onclick="switchRole('ca')" class="w-full text-left px-3 py-2 rounded-lg text-xs hover:bg-surface-container text-on-surface font-medium flex items-center gap-2 cursor-pointer">
-            <span class="material-symbols-rounded text-[16px] text-primary">account_balance</span> Chartered Accountant
-          </button>
-        </div>
-      </div>
-
       <!-- Expert Help Shortcut Button -->
       <button onclick="switchSuite('expert')" aria-label="Help from a tax expert" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-outline-variant text-on-surface font-semibold text-sm hover:bg-surface-container transition-colors cursor-pointer">
         <span class="material-symbols-rounded text-[20px]" aria-hidden="true">help</span><span>Help</span>
@@ -1515,122 +1499,125 @@
     <!-- 1. HOME DASHBOARD SUITE (Stitch Screen 1)                                -->
     <!-- ========================================================================= -->
     <div id="viewHomeSuite" class="app-suite-container active">
-      <main class="p-4 sm:p-6 md:p-8 space-y-5 max-w-[1400px] w-full mx-auto">
-  <!-- Greeting -->
-  <section class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-    <div>
-      <h1 class="font-display font-bold text-2xl sm:text-[28px] text-on-surface tracking-tight" id="dashboardGreetingHeader">Welcome to SimpleGST</h1>
-      <p class="text-base text-on-surface-variant mt-1">Let's file your GST for <span class="sg-chip dynamic-period-short">Oct 2026</span> in 3 simple steps.</p>
+      <main class="p-4 sm:p-6 md:p-8 max-w-[1400px] w-full mx-auto flex flex-col gap-5">
+  <!-- Page header -->
+  <section class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+    <div class="min-w-0">
+      <h1 class="font-display font-bold text-2xl sm:text-[26px] text-on-surface tracking-tight" id="dashboardGreetingHeader">Welcome to SimpleGST</h1>
+      <p class="text-base text-on-surface-variant mt-1">Let's file your GST for <span class="sg-chip dynamic-period-short">Oct 2026</span> in 3 simple steps.
+        <span class="sg-meta whitespace-nowrap"><span id="liveGstnSyncBadge" class="hidden"></span><button type="button" class="sg-link" onclick="syncPortalData()">Refresh from portal</button></span>
+      </p>
     </div>
-    <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
-      <span id="liveGstnSyncBadge" class="hidden"></span>
-      <button onclick="syncPortalData()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-lowest border border-outline hover:bg-surface-container text-on-surface font-semibold text-sm transition-colors cursor-pointer">
-        <span class="material-symbols-rounded text-[18px]" aria-hidden="true">sync</span><span>Refresh from portal</span>
-      </button>
-      <button onclick="switchSuite('bills')" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-lowest border border-outline hover:bg-surface-container text-on-surface font-semibold text-sm transition-colors cursor-pointer">
-        <span class="material-symbols-rounded text-[18px]" aria-hidden="true">upload</span><span>Upload documents</span>
-      </button>
-      <button onclick="openNewInvoiceModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-lowest border border-outline hover:bg-surface-container text-on-surface font-semibold text-sm transition-colors cursor-pointer">
-        <span class="material-symbols-rounded text-[18px]" aria-hidden="true">add</span><span>New invoice</span>
-      </button>
+    <div class="flex flex-wrap items-center gap-2 shrink-0">
+      <button type="button" onclick="switchSuite('bills')" class="sg-btn"><span class="material-symbols-rounded text-[18px]" aria-hidden="true">upload</span>Upload documents</button>
+      <button type="button" onclick="openNewInvoiceModal()" class="sg-btn"><span class="material-symbols-rounded text-[18px]" aria-hidden="true">add</span>New invoice</button>
     </div>
   </section>
 
-  <!-- 3-step filing card -->
-  <section class="sg-card p-5 sm:p-6" aria-labelledby="homeHeroStepTitle">
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-      <h2 class="font-display font-bold text-lg sm:text-xl text-on-surface" id="homeHeroStepTitle">File my GST (Oct 2026)</h2>
-      <span class="text-sm text-on-surface-variant" id="homeHeroDeadline">Due Nov 20, 2026</span>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] xl:grid-cols-[1fr_auto_1fr_auto_1fr_210px] gap-3 md:gap-4 items-center">
-      <button type="button" id="homeStepSales" class="sg-step is-sales" onclick="switchSuite('sales')">
-        <span class="sg-check" aria-hidden="true"><span class="material-symbols-rounded">check</span></span>
-        <span class="sg-tile blue on-white mb-3"><span class="material-symbols-rounded" aria-hidden="true">upload_file</span></span>
-        <span class="flex items-center"><span class="sg-num">1</span><span class="font-bold text-base text-on-surface">Add sales</span></span>
-        <span class="block text-sm text-on-surface-variant mt-1">Your bills to customers</span>
-        <span class="block text-xs font-semibold mt-2 text-[#2F6FEB]" id="homeStepSalesStatus">Not started</span>
-      </button>
-      <span class="material-symbols-rounded text-secondary hidden md:inline" aria-hidden="true">arrow_forward</span>
-      <button type="button" id="homeStepPurchases" class="sg-step is-purchases" onclick="switchSuite('purchase')">
-        <span class="sg-check" aria-hidden="true"><span class="material-symbols-rounded">check</span></span>
-        <span class="sg-tile violet on-white mb-3"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span></span>
-        <span class="flex items-center"><span class="sg-num">2</span><span class="font-bold text-base text-on-surface">Add purchases</span></span>
-        <span class="block text-sm text-on-surface-variant mt-1">Bills from your suppliers</span>
-        <span class="block text-xs font-semibold mt-2 text-[#6D4FD8]" id="homeStepPurchasesStatus">Not started</span>
-      </button>
-      <span class="material-symbols-rounded text-secondary hidden md:inline" aria-hidden="true">arrow_forward</span>
-      <button type="button" id="homeStepFile" class="sg-step is-file" onclick="switchSuite('recon')">
-        <span class="sg-tile green on-white mb-3"><span class="material-symbols-rounded" aria-hidden="true">verified</span></span>
-        <span class="flex items-center"><span class="sg-num">3</span><span class="font-bold text-base text-on-surface">File return</span></span>
-        <span class="block text-sm text-on-surface-variant mt-1">We check your credit, calculate tax and file</span>
-        <span class="block text-xs font-semibold mt-2 text-[#15803D]" id="homeStepFileStatus">After steps 1 and 2</span>
-      </button>
-      <div class="flex flex-col gap-2 md:col-span-5 xl:col-span-1">
-        <button type="button" class="sg-btn-primary w-full" onclick="switchSuite('file-gst')">File GST now <span class="material-symbols-rounded text-[20px]" aria-hidden="true">arrow_forward</span></button>
-        <span class="text-center text-xs text-secondary">Nothing to report? <a href="#file-gst" class="text-primary font-semibold" onclick="switchSuite('file-gst'); return false;">File a nil return</a></span>
+  <div class="sg-grid">
+    <!-- Filing card -->
+    <section class="sg-w sg-span-12" aria-labelledby="homeHeroStepTitle">
+      <div class="sg-wh">
+        <span class="sg-tile brand"><span class="material-symbols-rounded" aria-hidden="true">description</span></span>
+        <div class="min-w-0">
+          <h2 class="sg-wt" id="homeHeroStepTitle">File my GST (Oct 2026)</h2>
+          <p class="sg-meta" id="homeHeroDeadline">Due Nov 20, 2026</p>
+        </div>
+        <div class="sg-wh-end">
+          <span class="sg-meta hidden lg:inline" id="homeHeroDescription">Sign in to see your progress.</span>
+          <button type="button" class="sg-btn-primary" onclick="switchSuite('file-gst')">File GST now <span class="material-symbols-rounded text-[20px]" aria-hidden="true">arrow_forward</span></button>
+        </div>
       </div>
-    </div>
-    <div class="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-outline-variant">
-      <p class="text-sm text-on-surface-variant" id="homeHeroDescription">Sign in to see your business's invoices and filing progress.</p>
-      <div class="flex items-center gap-4 text-sm font-semibold">
-        <button type="button" class="text-primary cursor-pointer" onclick="switchSuite('gst')">Reports</button>
-        <button type="button" class="text-primary cursor-pointer" onclick="switchSuite('taxcalc')">Tax calculation</button>
-        <button type="button" class="text-primary cursor-pointer" onclick="openHealthScoreModal()">Compliance score</button>
+      <div class="sg-steps">
+        <button type="button" id="homeStepSales" class="sg-step is-sales" onclick="switchSuite('sales')">
+          <span class="sg-check" aria-hidden="true"><span class="material-symbols-rounded">check</span></span>
+          <span class="sg-tile blue on-white"><span class="material-symbols-rounded" aria-hidden="true">upload_file</span></span>
+          <span class="sg-step-title"><span class="sg-num">1</span>Add sales</span>
+          <span class="sg-step-desc">Your bills to customers</span>
+          <span class="sg-step-status" id="homeStepSalesStatus">Not started</span>
+        </button>
+        <button type="button" id="homeStepPurchases" class="sg-step is-purchases" onclick="switchSuite('purchase')">
+          <span class="sg-check" aria-hidden="true"><span class="material-symbols-rounded">check</span></span>
+          <span class="sg-tile violet on-white"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span></span>
+          <span class="sg-step-title"><span class="sg-num">2</span>Add purchases</span>
+          <span class="sg-step-desc">Bills from your suppliers</span>
+          <span class="sg-step-status" id="homeStepPurchasesStatus">Not started</span>
+        </button>
+        <button type="button" id="homeStepFile" class="sg-step is-file" onclick="switchSuite('recon')">
+          <span class="sg-tile green on-white"><span class="material-symbols-rounded" aria-hidden="true">verified</span></span>
+          <span class="sg-step-title"><span class="sg-num">3</span>File return</span>
+          <span class="sg-step-desc">We check your credit, calculate tax and file</span>
+          <span class="sg-step-status" id="homeStepFileStatus">After steps 1 and 2</span>
+        </button>
       </div>
-    </div>
-  </section>
+      <div class="sg-wf">
+        <span class="sg-meta">Nothing to report this month? <a href="#file-gst" class="sg-link" onclick="switchSuite('file-gst'); return false;">File a nil return</a></span>
+        <span class="flex flex-wrap gap-x-5 gap-y-1">
+          <button type="button" class="sg-link" onclick="switchSuite('gst')">Reports</button>
+          <button type="button" class="sg-link" onclick="switchSuite('taxcalc')">Tax calculation</button>
+          <button type="button" class="sg-link" onclick="openHealthScoreModal()">Compliance score</button>
+        </span>
+      </div>
+    </section>
 
-  <!-- Four stats -->
-  <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" aria-label="This month at a glance">
-    <a href="#sales" onclick="switchSuite('sales'); return false;" class="sg-card p-5 flex items-center gap-4 hover:border-outline transition-colors">
-      <span class="sg-tile blue"><span class="material-symbols-rounded" aria-hidden="true">upload_file</span></span>
-      <span><span class="block text-sm font-medium text-on-surface-variant">Total sales</span><span class="block text-2xl font-bold text-on-surface" id="dashSalesTotal">₹0.00</span></span>
+    <!-- Four stats -->
+    <a href="#sales" onclick="switchSuite('sales'); return false;" class="sg-w sg-span-3 sg-stat">
+      <span class="sg-wh"><span class="sg-tile blue"><span class="material-symbols-rounded" aria-hidden="true">upload_file</span></span><span class="sg-wt">Total sales</span></span>
+      <span class="sg-val" id="dashSalesTotal">₹0.00</span><span class="sg-guest-note">Sign in to see</span>
+      <span class="sg-wf"><span class="sg-meta" id="homeSalesCountNote">Sales invoices</span><span class="sg-link">View<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></span></span>
     </a>
-    <a href="#purchases" onclick="switchSuite('purchase'); return false;" class="sg-card p-5 flex items-center gap-4 hover:border-outline transition-colors">
-      <span class="sg-tile violet"><span class="material-symbols-rounded" aria-hidden="true">shopping_cart</span></span>
-      <span><span class="block text-sm font-medium text-on-surface-variant">Total purchases</span><span class="block text-2xl font-bold text-on-surface" id="dashPurchasesTotal">₹0.00</span></span>
+    <a href="#purchases" onclick="switchSuite('purchase'); return false;" class="sg-w sg-span-3 sg-stat">
+      <span class="sg-wh"><span class="sg-tile violet"><span class="material-symbols-rounded" aria-hidden="true">shopping_cart</span></span><span class="sg-wt">Total purchases</span></span>
+      <span class="sg-val" id="dashPurchasesTotal">₹0.00</span><span class="sg-guest-note">Sign in to see</span>
+      <span class="sg-wf"><span class="sg-meta" id="homePurchasesCountNote">Purchase bills</span><span class="sg-link">View<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></span></span>
     </a>
-    <a href="#reconciliation" onclick="switchSuite('recon'); return false;" class="sg-card p-5 flex items-center gap-4 hover:border-outline transition-colors">
-      <span class="sg-tile green"><span class="material-symbols-rounded" aria-hidden="true">stacks</span></span>
-      <span><span class="block text-sm font-medium text-on-surface-variant">Tax credit (ITC)</span><span class="block text-2xl font-bold text-on-surface" id="dashEligibleItc">₹0.00</span></span>
+    <a href="#reconciliation" onclick="switchSuite('recon'); return false;" class="sg-w sg-span-3 sg-stat">
+      <span class="sg-wh"><span class="sg-tile green"><span class="material-symbols-rounded" aria-hidden="true">stacks</span></span><span class="sg-wt">Tax credit (ITC)</span></span>
+      <span class="sg-val" id="dashEligibleItc">₹0.00</span><span class="sg-guest-note">Sign in to see</span>
+      <span class="sg-wf"><span class="sg-meta">Eligible to claim</span><span class="sg-link">Check<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></span></span>
     </a>
-    <a href="#tax" onclick="switchSuite('taxcalc'); return false;" class="sg-card p-5 flex items-center gap-4 hover:border-outline transition-colors">
-      <span class="sg-tile amber"><span class="material-symbols-rounded" aria-hidden="true">currency_rupee</span></span>
-      <span><span class="block text-sm font-medium text-on-surface-variant">Tax to pay</span><span class="block text-2xl font-bold text-on-surface" id="dashNetTaxPayable">₹0.00</span></span>
+    <a href="#tax" onclick="switchSuite('taxcalc'); return false;" class="sg-w sg-span-3 sg-stat">
+      <span class="sg-wh"><span class="sg-tile amber"><span class="material-symbols-rounded" aria-hidden="true">currency_rupee</span></span><span class="sg-wt">Tax to pay</span></span>
+      <span class="sg-val" id="dashNetTaxPayable">₹0.00</span><span class="sg-guest-note">Sign in to see</span>
+      <span class="sg-wf"><span class="sg-meta">After tax credit</span><span class="sg-link">Details<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></span></span>
     </a>
-  </section>
 
-  <!-- Due date + Copilot -->
-  <section class="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-4">
-    <div class="sg-card p-5 flex items-center gap-4">
-      <span class="sg-tile amber"><span class="material-symbols-rounded" aria-hidden="true">event</span></span>
-      <span class="flex-1 min-w-0"><span class="block font-bold text-base text-on-surface">Next due date</span><span class="block text-sm text-on-surface-variant">GSTR-3B for <span class="dynamic-period-short">Oct 2026</span> &middot; <span class="dynamic-deadline-label">Nov 20, 2026</span></span></span>
-      <span class="sg-pill-due" id="homeDueCountdown">Due soon</span>
-    </div>
-    <a href="#copilot" onclick="switchSuite('copilot'); return false;" class="sg-card p-5 flex items-center gap-4 hover:border-outline transition-colors">
-      <span class="sg-tile brand"><span class="material-symbols-rounded" aria-hidden="true">forum</span></span>
-      <span class="flex-1 min-w-0"><span class="block font-bold text-base text-on-surface">Ask GST Copilot</span><span class="block text-sm text-on-surface-variant">"How much tax do I owe?" &middot; "How much ITC can I claim?"</span></span>
-      <span class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-primary shrink-0"><span class="material-symbols-rounded" aria-hidden="true">arrow_forward</span></span>
+    <!-- Due date + Copilot -->
+    <section class="sg-w sg-span-6" aria-label="Next due date">
+      <div class="sg-wh">
+        <span class="sg-tile amber"><span class="material-symbols-rounded" aria-hidden="true">event</span></span>
+        <div class="min-w-0"><h3 class="sg-wt">Next due date</h3><p class="sg-meta">GSTR-3B for <span class="dynamic-period-short">Oct 2026</span> &middot; <span class="dynamic-deadline-label">Nov 20, 2026</span></p></div>
+        <span class="sg-wh-end"><span class="sg-pill-due" id="homeDueCountdown">Due soon</span></span>
+      </div>
+      <div class="sg-wf"><span class="sg-meta">Filing after the due date attracts a late fee.</span><button type="button" class="sg-link" onclick="switchSuite('file-gst')">File now<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></button></div>
+    </section>
+    <a href="#copilot" onclick="switchSuite('copilot'); return false;" class="sg-w sg-span-6" aria-label="Ask GST Copilot">
+      <span class="sg-wh">
+        <span class="sg-tile brand"><span class="material-symbols-rounded" aria-hidden="true">forum</span></span>
+        <span class="min-w-0"><span class="sg-wt block">Ask GST Copilot</span><span class="sg-meta block">Answers from your own invoices and bills</span></span>
+      </span>
+      <span class="sg-wf"><span class="sg-meta truncate">"How much tax do I owe?" &middot; "How much ITC can I claim?"</span><span class="sg-link">Ask<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></span></span>
     </a>
-  </section>
 
-  <!-- Recent activity -->
-  <section class="sg-card overflow-hidden" aria-labelledby="homeRecentTitle">
-    <div class="px-5 py-4 border-b border-outline-variant flex items-center justify-between">
-      <h3 class="font-bold text-base text-on-surface" id="homeRecentTitle">Recent invoices</h3>
-      <a href="#sales" onclick="switchSuite('sales'); return false;" class="text-sm font-semibold text-primary">See all</a>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-surface-container-low text-secondary text-xs">
-          <tr><th class="text-left font-semibold py-2.5 px-5">Invoice</th><th class="text-left font-semibold py-2.5 px-4">Type</th><th class="text-right font-semibold py-2.5 px-4">Amount</th><th class="text-right font-semibold py-2.5 px-5">Status</th></tr>
-        </thead>
-        <tbody id="dashRecentActivityBody" class="divide-y divide-outline-variant">
-          <tr><td colspan="4" class="py-8 text-center text-secondary text-sm">Sign in to see your recent invoices.</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+    <!-- Recent invoices -->
+    <section class="sg-w sg-span-12" aria-labelledby="homeRecentTitle">
+      <div class="sg-wh">
+        <span class="sg-tile blue"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span></span>
+        <h3 class="sg-wt" id="homeRecentTitle">Recent invoices</h3>
+        <span class="sg-wh-end"><a href="#sales" onclick="switchSuite('sales'); return false;" class="sg-link">See all</a></span>
+      </div>
+      <div class="overflow-x-auto -mx-5 px-5">
+        <table class="w-full text-sm">
+          <thead class="text-secondary text-xs">
+            <tr class="border-b border-outline-variant"><th class="text-left font-semibold py-2.5 pr-4">Invoice</th><th class="text-left font-semibold py-2.5 px-4">Type</th><th class="text-right font-semibold py-2.5 px-4">Amount</th><th class="text-right font-semibold py-2.5 pl-4">Status</th></tr>
+          </thead>
+          <tbody id="dashRecentActivityBody" class="divide-y divide-outline-variant">
+            <tr><td colspan="4" class="py-8 text-center text-secondary text-sm">Sign in to see your recent invoices.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 </main>
     </div>
 
@@ -5453,324 +5440,107 @@ The Electronic Cash Ledger (PMT-05) has insufficient funds (₹15,000 available 
     <!-- 10. MULTI-GSTIN & BUSINESS ONBOARDING (Stitch Screen 12)                 -->
     <!-- ========================================================================= -->
     <div id="viewStartupSuite" class="app-suite-container hidden">
-      <main class="flex-1 overflow-y-auto custom-scroll p-6 lg:p-8 flex flex-col gap-6 max-w-[1600px] w-full mx-auto">
-<!-- Breadcrumbs -->
-<nav class="flex items-center gap-2 text-xs font-label-md text-secondary">
-<a class="hover:text-primary transition-colors" href="#">Settings</a>
-<span class="text-outline-variant">›</span>
-<a class="hover:text-primary transition-colors" href="#">Business Entities &amp; Onboarding</a>
-<span class="text-outline-variant">›</span>
-<span class="text-on-surface font-semibold">Multi-GSTIN Management Hub</span>
-</nav>
-<!-- ===================================================================== -->
-<!-- SECTION 1: EXECUTIVE HEADER & MULTI-GSTIN SUMMARY                     -->
-<!-- ===================================================================== -->
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
-  <div class="flex flex-col gap-1 max-w-3xl">
-    <div class="flex items-center gap-2.5 flex-wrap">
-      <h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
-        Business Onboarding &amp; Multi-GSTIN Management Hub
-      </h1>
-      <span id="multiCorporatePanBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-100 text-brand-800 border border-brand-300">
-        PAN Verified
-      </span>
-    </div>
-    <p class="font-body-md text-body-md text-secondary">
-      Manage all state branch GSTINs registered under your Corporate PAN across India. Switch active filing branch anytime to scope Sales, Purchases, and GST Returns.
-    </p>
-  </div>
-  <!-- Quick Action Buttons -->
-  <div class="flex items-center gap-2.5 flex-wrap shrink-0">
-    <button onclick="loadMultiGstinHub()" class="min-h-[36px] px-3.5 py-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0">
-      <span class="material-symbols-rounded text-[18px] text-primary">sync</span>
-      <span>Refresh Branches</span>
-    </button>
-    <button onclick="openAddGstinModal()" class="min-h-[36px] px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0">
-      <span class="material-symbols-rounded text-[18px]">add_business</span>
-      <span>Add New State GSTIN</span>
-    </button>
-  </div>
-</div>
-
-<!-- KEY METRIC CARDS (4 Cards Dynamic Bento Grid) -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-  <!-- Metric 1: Registered GSTINs -->
-  <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col justify-between hover:border-primary transition-all">
-    <div class="flex items-center justify-between">
-      <span class="font-label-md text-label-md text-secondary uppercase font-semibold">Registered GSTINs</span>
-      <div class="h-8 w-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
-        <span class="material-symbols-rounded text-[20px]">domain</span>
-      </div>
-    </div>
-    <div class="my-2">
-      <div class="flex items-baseline gap-2">
-        <span id="multiTotalGstinsCount" class="font-numeric-lg text-numeric-lg font-bold text-on-surface">— Branches</span>
-      </div>
-    </div>
-    <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-      <span id="multiStatesListDisplay" class="font-label-sm text-label-sm text-secondary font-medium">Pan-India Branch Network</span>
-      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-50 text-brand-800 border border-brand-200">Shared PAN</span>
-    </div>
+      <main class="p-4 sm:p-6 md:p-8 max-w-[1400px] w-full mx-auto flex flex-col gap-5" id="settingsPage" data-section="registrations">
+  <div>
+    <h1 class="font-display font-bold text-2xl sm:text-[26px] text-on-surface tracking-tight">Settings</h1>
+    <p class="text-base text-on-surface-variant mt-1">Manage your business, GST registrations and preferences.</p>
   </div>
 
-  <!-- Metric 2: Active Filing Branch -->
-  <div class="p-4 rounded-xl border border-brand-300 bg-brand-50/20 shadow-sm flex flex-col justify-between hover:border-brand-500 transition-all">
-    <div class="flex items-center justify-between">
-      <span class="font-label-md text-label-md text-brand-800 uppercase font-semibold flex items-center gap-1">
-        <span class="h-2 w-2 rounded-full bg-brand-600 "></span>
-        Active For Filing
-      </span>
-      <div class="h-8 w-8 rounded-lg bg-brand-100 text-brand-800 flex items-center justify-center">
-        <span class="material-symbols-rounded text-[20px]">check_circle</span>
-      </div>
-    </div>
-    <div class="my-2">
-      <span id="multiActiveBranchName" class="font-numeric-lg text-sm font-bold text-on-surface truncate block">—</span>
-      <span id="multiActiveGstinCode" class="font-mono text-xs text-primary font-bold block mt-0.5">—</span>
-    </div>
-    <div class="pt-2 border-t border-brand-100 flex items-center justify-between text-xs text-secondary">
-      <span>Scoped to Sales, Bills &amp; Returns</span>
-      <span class="text-primary font-bold text-[11px]">Primary</span>
-    </div>
-  </div>
+  <!-- Signed-out state -->
+  <section class="sg-w hidden" id="settingsSignedOut">
+    <div class="sg-wh"><span class="sg-tile brand"><span class="material-symbols-rounded" aria-hidden="true">lock</span></span><div><h2 class="sg-wt">Sign in to manage your settings</h2><p class="sg-meta">Your business profile and GST registrations appear here once you're signed in.</p></div>
+    <span class="sg-wh-end"><button type="button" class="sg-btn-primary" onclick="openAuthModal('signin')">Sign in</button></span></div>
+  </section>
 
-  <!-- Metric 3: Aggregate Corporate Turnover -->
-  <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col justify-between hover:border-primary transition-all">
-    <div class="flex items-center justify-between">
-      <span class="font-label-md text-label-md text-secondary uppercase font-semibold">Aggregate PAN Turnover</span>
-      <div class="h-8 w-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
-        <span class="material-symbols-rounded text-[20px]">currency_rupee</span>
-      </div>
-    </div>
-    <div class="my-2">
-      <div class="flex items-baseline gap-1.5">
-        <span id="multiAggTurnover" class="font-numeric-lg text-numeric-lg font-bold text-on-surface">₹0.00</span>
-      </div>
-    </div>
-    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-      <span id="multiPeriodLabelDisplay" class="text-secondary font-mono">Period: 102026</span>
-      <span id="multiTotalTaxDisplay" class="text-primary font-semibold font-mono">Output Tax: ₹0.00</span>
-    </div>
-  </div>
+  <div class="sg-settings" id="settingsLayout">
+    <!-- Section list -->
+    <nav class="sg-snav" aria-label="Settings sections">
+      <button type="button" class="sg-snav-item" data-target="profile" onclick="showSettingsSection('profile')"><span class="material-symbols-rounded" aria-hidden="true">store</span><span><span class="block">Business profile</span><small>Name, PAN, address</small></span><span class="material-symbols-rounded sg-snav-chev" aria-hidden="true">chevron_right</span></button>
+      <button type="button" class="sg-snav-item" data-target="registrations" onclick="showSettingsSection('registrations')"><span class="material-symbols-rounded" aria-hidden="true">description</span><span><span class="block">GST registrations</span><small id="multiTotalGstinsCount">Your GSTINs</small></span><span class="material-symbols-rounded sg-snav-chev" aria-hidden="true">chevron_right</span></button>
+      <button type="button" class="sg-snav-item" data-target="preferences" onclick="showSettingsSection('preferences')"><span class="material-symbols-rounded" aria-hidden="true">tune</span><span><span class="block">Filing preferences</span><small>Period, focus mode</small></span><span class="material-symbols-rounded sg-snav-chev" aria-hidden="true">chevron_right</span></button>
+      <button type="button" class="sg-snav-item" data-target="connections" onclick="showSettingsSection('connections')"><span class="material-symbols-rounded" aria-hidden="true">power</span><span><span class="block">Connections</span><small>GST portal, e-invoice</small></span><span class="material-symbols-rounded sg-snav-chev" aria-hidden="true">chevron_right</span></button>
+      <button type="button" class="sg-snav-item" data-target="account" onclick="showSettingsSection('account')"><span class="material-symbols-rounded" aria-hidden="true">lock</span><span><span class="block">Account</span><small>Email, sign out</small></span><span class="material-symbols-rounded sg-snav-chev" aria-hidden="true">chevron_right</span></button>
+    </nav>
 
-  <!-- Metric 4: Filing Regimes -->
-  <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col justify-between hover:border-primary transition-all">
-    <div class="flex items-center justify-between">
-      <span class="font-label-md text-label-md text-secondary uppercase font-semibold">Filing Regimes</span>
-      <div class="h-8 w-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
-        <span class="material-symbols-rounded text-[20px]">calendar_month</span>
-      </div>
-    </div>
-    <div class="my-2">
-      <span id="multiFilingRegimes" class="font-numeric-lg text-numeric-lg font-bold text-on-surface">— Monthly</span>
-    </div>
-    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-secondary">
-      <span>Sec 25 Multi-State Compliance</span>
-      <span class="text-brand-700 font-bold">100% ACID DB</span>
-    </div>
-  </div>
-</div>
+    <div class="min-w-0">
+      <button type="button" class="sg-link sg-settings-back mb-3" onclick="showSettingsSection(null)"><span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_left</span>All settings</button>
 
-<!-- SECTION 2: MULTI-GSTIN ARCHITECTURE CALLOUT -->
-<div class="p-4 rounded-xl border border-brand-200 bg-brand-50/60 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all">
-  <div class="flex items-start gap-3.5">
-    <div class="h-9 w-9 rounded-lg bg-brand-100 text-brand-800 flex items-center justify-center shrink-0 mt-0.5">
-      <span class="material-symbols-rounded text-[22px]">hub</span>
-    </div>
-    <div class="flex flex-col">
-      <div class="flex items-center gap-2">
-        <h2 class="font-headline-sm text-headline-sm font-semibold text-brand-950">
-          Multi-State Pan-India GSTIN Switcher
-        </h2>
-        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-brand-200 text-brand-900">Section 25 CGST</span>
-      </div>
-      <p class="font-body-md text-body-md text-brand-900 mt-0.5">
-        All state branches registered under your Corporate PAN share the same 10-digit PAN (digits 3–12 of each GSTIN). Click <strong>"Switch for GST Filing"</strong> on any branch card to instantly direct all Sales Invoices, Purchase Bills, GSTR-1, and GSTR-3B return filing workflows to that operative state branch.
-      </p>
-    </div>
-  </div>
-  <div class="flex items-center gap-2 shrink-0 self-end md:self-center">
-    <button onclick="openAddGstinModal()" class="h-9 px-4 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
-      <span class="material-symbols-rounded text-[16px]">add</span>
-      <span>Add Branch</span>
-    </button>
-  </div>
-</div>
+      <!-- Business profile -->
+      <section class="sg-sec" data-section="profile" aria-labelledby="setProfileTitle">
+        <div class="sg-sec-h"><h2 id="setProfileTitle">Business profile</h2><p>From your registration. To change these details, contact support or your CA.</p></div>
+        <dl class="sg-kv">
+          <dt>Legal name</dt><dd id="setProfLegalName">—</dd>
+          <dt>Trade name</dt><dd id="setProfTradeName">—</dd>
+          <dt>Business type</dt><dd id="setProfBusinessType">—</dd>
+          <dt>PAN</dt><dd id="setProfPan">—</dd>
+          <dt>GSTIN in use</dt><dd id="setProfGstin">—</dd>
+          <dt>State</dt><dd id="setProfState">—</dd>
+          <dt>Registered office</dt><dd id="setProfAddress">—</dd>
+          <dt>Bank</dt><dd id="setProfBank">—</dd>
+        </dl>
+      </section>
 
-<!-- TWO COLUMN WORKSPACE: 3. REGISTRY TABLE & 4/5. COMPLIANCE SIDE PANEL  -->
-<div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-  <!-- LEFT 8 COLUMNS: MULTI-STATE GSTIN MASTER REGISTRY                     -->
-  <div class="xl:col-span-8 flex flex-col gap-4">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      <div class="flex items-center gap-2">
-        <h2 class="font-headline-md text-headline-md font-bold text-on-surface">Multi-State GSTIN Master Registry</h2>
-        <span id="multiRegistryEntriesCount" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-surface-container text-secondary">— Branches</span>
-      </div>
-      <!-- Table Controls -->
-      <div class="flex items-center gap-2">
-        <div class="relative">
-          <span class="material-symbols-rounded absolute left-2.5 top-2 text-[18px] text-secondary">search</span>
-          <input id="multiGstinSearchInput" oninput="filterMultiGstinCards(this.value)" class="h-8 pl-8 pr-3 text-xs rounded-lg border border-outline-variant bg-surface-container-lowest focus:ring-1 focus:ring-primary focus:border-primary w-64" placeholder="Search GSTIN, State or Trade Name..." type="text"/>
+      <!-- GST registrations -->
+      <section class="sg-sec" data-section="registrations" aria-labelledby="setRegTitle">
+        <div class="sg-sec-h sg-sec-h-row">
+          <div><h2 id="setRegTitle">GST registrations</h2><p>All GSTINs under PAN <span id="multiCorporatePanBadge">—</span>. The one marked "Used for filing" applies to invoices, bills and returns across SimpleGST.</p></div>
+          <button type="button" class="sg-btn-primary sg-btn-sm" onclick="openAddGstinModal()"><span class="material-symbols-rounded text-[18px]" aria-hidden="true">add</span>Add registration</button>
         </div>
-      </div>
-    </div>
+        <div class="sg-sec-tools">
+          <label class="sg-search"><span class="material-symbols-rounded text-[18px]" aria-hidden="true">search</span><span class="sr-only">Search registrations</span><input id="multiGstinSearchInput" type="search" placeholder="Search by GSTIN, state or name" oninput="filterMultiGstinCards(this.value)"></label>
+          <button type="button" class="sg-btn sg-btn-sm" onclick="loadMultiGstinHub()"><span class="material-symbols-rounded text-[18px]" aria-hidden="true">refresh</span>Refresh</button>
+        </div>
+        <div id="multiGstinRegistryList" class="sg-reg-list" aria-live="polite"></div>
+      </section>
 
-    <!-- DYNAMIC REAL GSTIN REGISTRY CARDS CONTAINER (Zero Fake Sample Data) -->
-    <div id="multiGstinRegistryList" class="flex flex-col gap-3.5">
-      <!-- Populated dynamically by loadMultiGstinHub() -->
-    </div>
+      <!-- Filing preferences -->
+      <section class="sg-sec" data-section="preferences" aria-labelledby="setPrefTitle">
+        <div class="sg-sec-h"><h2 id="setPrefTitle">Filing preferences</h2><p>How SimpleGST shows your returns on this device. Changes apply straight away.</p></div>
+        <div class="sg-row">
+          <div class="sg-row-l"><label for="settingsPeriodSelect" class="sg-row-t">Filing period</label><span class="sg-meta">The month every page shows. Also available in the top bar.</span></div>
+          <select id="settingsPeriodSelect" class="sg-select" onchange="switchFilingPeriod(this.value)">
+            <option value="112026">November 2026</option>
+            <option value="102026">October 2026</option>
+            <option value="092026">September 2026</option>
+            <option value="082026">August 2026</option>
+          </select>
+        </div>
+        <div class="sg-row">
+          <div class="sg-row-l"><span class="sg-row-t" id="settingsFocusLabel">Focus mode</span><span class="sg-meta">Hides the sidebar and fills the screen. Press Esc to leave.</span></div>
+          <button type="button" role="switch" aria-checked="false" aria-labelledby="settingsFocusLabel" id="settingsFocusToggle" class="sg-toggle" onclick="toggleKioskMode(); syncSettingsControls();"></button>
+        </div>
+      </section>
 
-    <!-- Table Bottom Helper Note -->
-    <div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-outline-variant text-xs text-secondary">
-      <div class="flex items-center gap-2">
-        <span class="material-symbols-rounded text-[16px] text-primary">security</span>
-        <span>Switching GSTIN immediately scopes all Sales, Purchases, Ledgers, and Form GSTR-1/3B filing modules.</span>
-      </div>
-      <a class="text-primary font-semibold hover:underline" href="#" onclick="switchSuite('sales'); return false;">Open Sales Register</a>
+      <!-- Connections -->
+      <section class="sg-sec" data-section="connections" aria-labelledby="setConnTitle">
+        <div class="sg-sec-h sg-sec-h-row"><div><h2 id="setConnTitle">Connections</h2><p>Sample connections for this demo. No real government portal is contacted.</p></div><span class="sg-pill-demo">Demo</span></div>
+        <div class="sg-row"><div class="sg-row-l"><span class="sg-row-t">GST portal (GSP)</span><span class="sg-meta">Sandbox</span></div><span class="sg-pill-neutral">Demo connected</span></div>
+        <div class="sg-row"><div class="sg-row-l"><span class="sg-row-t">e-Invoice and e-Way Bill</span><span class="sg-meta">Sandbox</span></div><span class="sg-pill-neutral">Demo connected</span></div>
+        <div class="sg-row"><div class="sg-row-l"><span class="sg-row-t">Digital signature (DSC)</span><span class="sg-meta" id="dscCertificateHolder">Test certificate</span></div><span class="sg-pill-neutral">Demo</span></div>
+      </section>
+
+      <!-- Account -->
+      <section class="sg-sec" data-section="account" aria-labelledby="setAccTitle">
+        <div class="sg-sec-h"><h2 id="setAccTitle">Account</h2><p id="setAccSummary">Your sign-in details.</p></div>
+        <div class="sg-row"><div class="sg-row-l"><span class="sg-row-t">Name</span><span class="sg-meta" id="setAccName">—</span></div></div>
+        <div class="sg-row"><div class="sg-row-l"><span class="sg-row-t">Email</span><span class="sg-meta" id="setAccEmail">—</span></div></div>
+        <div class="sg-row"><div class="sg-row-l"><span class="sg-row-t">Sign out</span><span class="sg-meta">Ends your session on this device.</span></div><button type="button" class="sg-btn sg-btn-danger" onclick="logoutAction()"><span class="material-symbols-rounded text-[18px]" aria-hidden="true">logout</span>Sign out</button></div>
+      </section>
     </div>
   </div>
-
-  <!-- RIGHT 4 COLUMNS: 4. GST PORTAL API AUTH DRAWER & 5. STATUTORY READINESS -->
-<div class="xl:col-span-4 flex flex-col gap-6">
-<!-- 4. GST PORTAL API & AUTHENTICATION HEALTH MANAGEMENT PANEL -->
-<div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col gap-4">
-<div class="flex items-center justify-between border-b border-outline-variant pb-3">
-<div class="flex items-center gap-2">
-<div class="h-8 w-8 rounded-lg bg-brand-50 text-primary flex items-center justify-center">
-<span class="material-symbols-rounded text-[20px]">hub</span>
-</div>
-<div>
-<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">GST Portal &amp; GSP Gateway</h3>
-<span class="text-xs text-secondary">Authentication &amp; Token Health</span>
-</div>
-</div>
-<span class="h-2 w-2 rounded-full bg-brand-500"></span>
-</div>
-<!-- Integration Status List -->
-<div class="flex flex-col gap-3 text-xs">
-<!-- GSP Provider -->
-<div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant flex items-center justify-between">
-<div class="flex flex-col">
-<span class="text-secondary font-medium">GST Suvidha Provider (GSP)</span>
-<span class="text-on-surface font-semibold">Licensed GST Suvidha Provider (GSP)</span>
-</div>
-<div class="text-right">
-<span class="inline-flex items-center text-brand-700 font-semibold gap-1">
-<span class="material-symbols-rounded text-[14px]">check_circle</span>
-                    Connected
-                  </span>
-<span class="block text-[11px] text-secondary font-mono">280ms latency</span>
-</div>
-</div>
-<!-- e-Invoice / e-Way Bill API -->
-<div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant flex items-center justify-between">
-<div class="flex flex-col">
-<span class="text-secondary font-medium">e-Way Bill &amp; e-Invoice API</span>
-<span class="text-on-surface font-semibold">NIC Portal SSO Gateway</span>
-</div>
-<div class="text-right">
-<span class="inline-flex items-center text-brand-700 font-semibold gap-1">
-<span class="material-symbols-rounded text-[14px]">check_circle</span>
-                    Token Active
-                  </span>
-<span class="block text-[11px] text-secondary font-mono">Auto-push ON</span>
-</div>
-</div>
-<!-- DSC / emSigner Status -->
-<div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant flex flex-col gap-1.5">
-<div class="flex items-center justify-between">
-<span class="text-secondary font-medium">Digital Signature (DSC / emSigner)</span>
-<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-brand-100 text-brand-800">
-                    USB Connected
-                  </span>
-</div>
-<div class="flex items-center justify-between">
-<div>
-<span class="text-on-surface font-semibold block" id="dscCertificateHolder">Authorized Signatory (Class 3)</span>
-<span class="text-[11px] text-secondary font-mono">Token Expiry: 14 Aug 2025</span>
-</div>
-<button class="px-2 py-1 rounded border border-outline-variant bg-surface-container-lowest text-[11px] font-medium hover:bg-surface-container text-on-surface">
-                    Test Sign
-                  </button>
-</div>
-</div>
-</div>
-<!-- Quick OTP Re-Auth Action -->
-<div class="pt-2 border-t border-slate-100 flex flex-col gap-2">
-<button class="w-full h-9 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-label-md text-label-md font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
-<span class="material-symbols-rounded text-[18px]">password</span>
-<span>Quick OTP Re-Auth (Refresh All Tokens)</span>
-</button>
-<span class="text-[11px] text-center text-secondary">Last synchronized across GSTN at 11:42 AM IST today</span>
-</div>
-</div>
-<!-- 5. ONBOARDING CHECKLIST & STATUTORY COMPLIANCE READINESS -->
-<div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm flex flex-col gap-4">
-<div class="flex items-center justify-between">
-<div>
-<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Onboarding Health</h3>
-<span class="text-xs text-secondary">Statutory Compliance Readiness</span>
-</div>
-<span class="px-2 py-1 rounded-full text-xs font-bold bg-brand-100 text-brand-800">94% Complete</span>
-</div>
-<!-- Progress Bar -->
-<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
-<div class="bg-primary h-full rounded-full" style="width: 94%"></div>
-</div>
-<!-- Checklist Items -->
-<div class="flex flex-col gap-2.5 text-xs">
-<div class="flex items-start gap-2.5">
-<span class="material-symbols-rounded text-[18px] text-brand-600 shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">PAN Master Verification Completed</span>
-<span class="text-secondary text-[11px]">Validated against NSDL database</span>
-</div>
-</div>
-<div class="flex items-start gap-2.5">
-<span class="material-symbols-rounded text-[18px] text-brand-600 shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">4 State GSTINs Validated</span>
-<span class="text-secondary text-[11px]">Real-time match with GST portal records</span>
-</div>
-</div>
-<div class="flex items-start gap-2.5">
-<span class="material-symbols-rounded text-[18px] text-brand-600 shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">Bank Accounts Linked for Refund</span>
-<span class="text-secondary text-[11px]">HDFC Bank &amp; ICICI Bank pre-validated</span>
-</div>
-</div>
-<div class="flex items-start gap-2.5">
-<span class="material-symbols-rounded text-[18px] text-brand-600 shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">DSC Mapped for Automated Filing</span>
-<span class="text-secondary text-[11px]">Ready for one-click GSTR-1 &amp; 3B submissions</span>
-</div>
-</div>
-<!-- Pending Item -->
-<div class="p-2 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
-<span class="material-symbols-rounded text-[18px] text-amber-700 shrink-0 mt-0.5">warning</span>
-<div class="flex flex-col">
-<span class="font-semibold text-amber-950">2 Pending Action Items</span>
-<span class="text-amber-900 text-[11px] mt-0.5 leading-normal">
-                    1. Upload West Bengal Trade License.<br/>
-                    2. Authorize APOB for Karnataka warehouse.
-                  </span>
-<a class="text-primary font-semibold text-[11px] mt-1 hover:underline" href="#">Complete Pending Tasks →</a>
-</div>
-</div>
-</div>
-<div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-<span class="text-xs text-secondary">Need onboarding assistance?</span>
-<button class="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
-<span>Book CA Session</span>
-<span class="material-symbols-rounded text-[14px]">arrow_forward</span>
-</button>
-</div>
-</div>
-</div>
-</div>
 </main>
+
+<!-- Confirm switching the GSTIN used for filing -->
+<div id="modalConfirmGstinSwitch" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/40" role="dialog" aria-modal="true" aria-labelledby="confirmGstinTitle" onclick="if (event.target === this) closeConfirmGstinSwitch()">
+  <div class="bg-surface-container-lowest rounded-2xl p-6 w-full max-w-md border border-outline-variant">
+    <h2 id="confirmGstinTitle" class="text-lg font-bold text-on-surface">Use this registration for filing?</h2>
+    <p id="confirmGstinText" class="text-sm text-on-surface-variant mt-2 mb-5"></p>
+    <div class="flex justify-end gap-2">
+      <button type="button" class="sg-btn" onclick="closeConfirmGstinSwitch()">Cancel</button>
+      <button type="button" class="sg-btn-primary sg-btn-sm" id="confirmGstinBtn">Switch</button>
+    </div>
+  </div>
+</div>
     </div>
 
     <!-- ========================================================================= -->
