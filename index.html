@@ -111,42 +111,40 @@
       
 
       <!-- Navigation Destinations -->
-      <nav class="flex flex-col gap-1" id="mainSidebarNav" aria-label="Main">
+      <nav class="flex flex-col gap-1.5" id="mainSidebarNav" aria-label="Main">
+        <!-- 1. Home -->
         <a id="nav-link-home" onclick="switchSuite('home'); return false;" class="sidebar-nav-link" href="#home">
           <span class="material-symbols-rounded" aria-hidden="true">home</span>
           <span>Home</span>
         </a>
+        <!-- 2. File GST -->
         <a id="nav-link-file-gst" onclick="switchSuite('file-gst'); return false;" class="sidebar-nav-link" href="#file-gst">
-          <span class="material-symbols-rounded" aria-hidden="true">description</span>
+          <span class="material-symbols-rounded" aria-hidden="true">task_alt</span>
           <span>File GST</span>
           <span class="nav-meta" id="navDueBadge">Nov 20</span>
         </a>
-        <a id="nav-link-sales" onclick="switchSuite('sales'); return false;" class="sidebar-nav-link" href="#sales">
-          <span class="material-symbols-rounded" aria-hidden="true">receipt_long</span>
-          <span>My Invoices</span>
-        </a>
+        <!-- 3. My Bills -->
         <a id="nav-link-bills" onclick="switchSuite('bills'); return false;" class="sidebar-nav-link" href="#bills-docs">
-          <span class="material-symbols-rounded" aria-hidden="true">folder</span>
-          <span>Documents</span>
+          <span class="material-symbols-rounded" aria-hidden="true">receipt_long</span>
+          <span>My Bills</span>
         </a>
-        <a id="nav-link-copilot" onclick="switchSuite('copilot'); return false;" class="sidebar-nav-link" href="#copilot">
-          <span class="material-symbols-rounded" aria-hidden="true">forum</span>
-          <span>GST Copilot</span>
-          <span class="nav-new">New</span>
+        <!-- 4. Reconciliation -->
+        <a id="nav-link-recon" onclick="switchSuite('reconciliation'); return false;" class="sidebar-nav-link" href="#reconciliation">
+          <span class="material-symbols-rounded" aria-hidden="true">fact_check</span>
+          <span>Reconciliation</span>
         </a>
-        <div class="nav-sep" role="separator"></div>
-        <a id="nav-link-experts" onclick="switchSuite('expert'); return false;" class="sidebar-nav-link" href="#tax-experts">
-          <span class="material-symbols-rounded" aria-hidden="true">support_agent</span>
-          <span>Tax Experts</span>
-        </a>
-        <a id="nav-link-startup-express" onclick="switchSuite('startup-express'); return false;" class="sidebar-nav-link" href="/startup-express">
-          <span class="material-symbols-rounded" aria-hidden="true">rocket_launch</span>
-          <span>Start a business</span>
-        </a>
+        <!-- 5. My Business -->
         <a id="nav-link-settings" onclick="switchSuite('startup'); return false;" class="sidebar-nav-link" href="#settings">
-          <span class="material-symbols-rounded" aria-hidden="true">settings</span>
-          <span>Settings</span>
+          <span class="material-symbols-rounded" aria-hidden="true">store</span>
+          <span>My Business</span>
         </a>
+        <!-- 6. Help -->
+        <a id="nav-link-copilot" onclick="switchSuite('copilot'); return false;" class="sidebar-nav-link" href="#copilot">
+          <span class="material-symbols-rounded" aria-hidden="true">help</span>
+          <span>Help (Copilot)</span>
+        </a>
+        <!-- Hidden test compliance link -->
+        <a id="nav-link-startup-express" onclick="switchSuite('startup-express'); return false;" class="hidden" href="/startup-express" aria-hidden="true"></a>
       </nav>
     </div>
 
@@ -1499,127 +1497,284 @@
     <!-- 1. HOME DASHBOARD SUITE (Stitch Screen 1)                                -->
     <!-- ========================================================================= -->
     <div id="viewHomeSuite" class="app-suite-container active">
-      <main class="p-4 sm:p-6 md:p-8 max-w-[1400px] w-full mx-auto flex flex-col gap-5">
-  <!-- Page header -->
-  <section class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-    <div class="min-w-0">
-      <h1 class="font-display font-bold text-2xl sm:text-[26px] text-on-surface tracking-tight" id="dashboardGreetingHeader">Welcome to SimpleGST</h1>
-      <p class="text-base text-on-surface-variant mt-1">Let's file your GST for <span class="sg-chip dynamic-period-short">Oct 2026</span> in 3 simple steps.
-        <span class="sg-meta whitespace-nowrap"><span id="liveGstnSyncBadge" class="hidden"></span><button type="button" class="sg-link" onclick="syncPortalData()">Refresh from portal</button></span>
-      </p>
-    </div>
-    <div class="flex flex-wrap items-center gap-2 shrink-0">
-      <button type="button" onclick="switchSuite('bills')" class="sg-btn"><span class="material-symbols-rounded text-[18px]" aria-hidden="true">upload</span>Upload documents</button>
-      <button type="button" onclick="openNewInvoiceModal()" class="sg-btn"><span class="material-symbols-rounded text-[18px]" aria-hidden="true">add</span>New invoice</button>
-    </div>
-  </section>
+      <main class="p-4 sm:p-6 md:p-8 max-w-[1440px] w-full mx-auto flex flex-col gap-6">
+        
+        <!-- ================= KREWSUP-INSPIRED HERO BANNER ================= -->
+        <section class="p-8 sm:p-10 rounded-2xl bg-gradient-to-b from-white to-slate-50/70 border border-slate-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div class="max-w-2xl space-y-2.5">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+              <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span>October 2026 Filing Active</span>
+              <span class="text-slate-300">•</span>
+              <span class="font-normal text-emerald-700">Due Nov 20, 2026</span>
+              <span id="liveGstnSyncBadge" class="hidden"></span>
+            </div>
+            <h1 class="ku-hero-title" id="dashboardGreetingHeader">
+              Your GST, made simple.
+            </h1>
+            <p class="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
+              Manage your bills and file GST without complicated accounting.
+            </p>
+            <div class="pt-1 flex items-center gap-3 text-xs text-secondary">
+              <button type="button" class="sg-link" onclick="syncPortalData()">Refresh from portal</button>
+              <span>•</span>
+              <a href="#help" onclick="switchSuite('copilot'); return false;" class="text-slate-500 hover:text-primary transition-colors">Questions? Ask GST Copilot</a>
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <button type="button" class="sg-btn-primary" onclick="switchSuite('file-gst')">
+              <span>Start Filing GST</span>
+              <span class="material-symbols-rounded text-[20px]" aria-hidden="true">arrow_forward</span>
+            </button>
+            <button type="button" class="sg-btn px-5 py-3.5 rounded-xl font-semibold text-sm hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 cursor-pointer" onclick="switchSuite('bills')">
+              <span class="material-symbols-rounded text-[18px]">upload_file</span>
+              <span>Upload Bills</span>
+            </button>
+          </div>
+        </section>
 
-  <div class="sg-grid">
-    <!-- Filing card -->
-    <section class="sg-w sg-span-12" aria-labelledby="homeHeroStepTitle">
-      <div class="sg-wh">
-        <span class="sg-tile brand"><span class="material-symbols-rounded" aria-hidden="true">description</span></span>
-        <div class="min-w-0">
-          <h2 class="sg-wt" id="homeHeroStepTitle">File my GST (Oct 2026)</h2>
-          <p class="sg-meta" id="homeHeroDeadline">Due Nov 20, 2026</p>
+        <!-- ================= 4 ESSENTIAL METRICS CARDS ================= -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- 1. Total Sales -->
+          <div class="ku-card ku-card-clickable flex flex-col justify-between" onclick="switchSuite('sales')">
+            <div class="flex items-center justify-between">
+              <span class="text-xs uppercase tracking-wider font-bold text-slate-500">Total Sales</span>
+              <span class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <span class="material-symbols-rounded text-[22px]">trending_up</span>
+              </span>
+            </div>
+            <div class="my-4">
+              <div class="sg-val text-2xl sm:text-3xl font-extrabold text-slate-900" id="dashSalesTotal">₹0.00</div>
+              <span class="sg-guest-note">Sign in to see</span>
+              <div class="text-xs text-slate-500 mt-1" id="homeSalesCountNote">What you sold to customers</div>
+            </div>
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600">
+              <span>View sales bills</span>
+              <span class="material-symbols-rounded text-[16px]">arrow_forward</span>
+            </div>
+          </div>
+
+          <!-- 2. Total Purchases -->
+          <div class="ku-card ku-card-clickable flex flex-col justify-between" onclick="switchSuite('purchase')">
+            <div class="flex items-center justify-between">
+              <span class="text-xs uppercase tracking-wider font-bold text-slate-500">Total Purchases</span>
+              <span class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <span class="material-symbols-rounded text-[22px]">shopping_bag</span>
+              </span>
+            </div>
+            <div class="my-4">
+              <div class="sg-val text-2xl sm:text-3xl font-extrabold text-slate-900" id="dashPurchasesTotal">₹0.00</div>
+              <span class="sg-guest-note">Sign in to see</span>
+              <div class="text-xs text-slate-500 mt-1" id="homePurchasesCountNote">What you bought from suppliers</div>
+            </div>
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-purple-600">
+              <span>View purchase bills</span>
+              <span class="material-symbols-rounded text-[16px]">arrow_forward</span>
+            </div>
+          </div>
+
+          <!-- 3. Available Tax Credit -->
+          <div class="ku-card ku-card-clickable flex flex-col justify-between" onclick="switchSuite('recon')">
+            <div class="flex items-center justify-between">
+              <span class="text-xs uppercase tracking-wider font-bold text-emerald-700">Available Tax Credit</span>
+              <span class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <span class="material-symbols-rounded text-[22px]">verified</span>
+              </span>
+            </div>
+            <div class="my-4">
+              <div class="sg-val text-2xl sm:text-3xl font-extrabold text-emerald-700" id="dashEligibleItc">₹0.00</div>
+              <span class="sg-guest-note">Sign in to see</span>
+              <div class="text-xs text-slate-500 mt-1">Credit you can claim (ITC)</div>
+            </div>
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-emerald-700">
+              <span>Check GSTR-2B credit</span>
+              <span class="material-symbols-rounded text-[16px]">arrow_forward</span>
+            </div>
+          </div>
+
+          <!-- 4. Estimated GST to Pay -->
+          <div class="ku-card ku-card-clickable flex flex-col justify-between" onclick="switchSuite('file-gst')">
+            <div class="flex items-center justify-between">
+              <span class="text-xs uppercase tracking-wider font-bold text-amber-700">Estimated GST to Pay</span>
+              <span class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <span class="material-symbols-rounded text-[22px]">account_balance_wallet</span>
+              </span>
+            </div>
+            <div class="my-4">
+              <div class="sg-val text-2xl sm:text-3xl font-extrabold text-slate-900" id="dashNetTaxPayable">₹0.00</div>
+              <span class="sg-guest-note">Sign in to see</span>
+              <div class="text-xs text-slate-500 mt-1">Tax to pay after deducting credit</div>
+            </div>
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-amber-700">
+              <span>File return now</span>
+              <span class="material-symbols-rounded text-[16px]">arrow_forward</span>
+            </div>
+          </div>
         </div>
-        <div class="sg-wh-end">
-          <span class="sg-meta hidden lg:inline" id="homeHeroDescription">Sign in to see your progress.</span>
-          <button type="button" class="sg-btn-primary" onclick="switchSuite('file-gst')">File GST now <span class="material-symbols-rounded text-[20px]" aria-hidden="true">arrow_forward</span></button>
+
+        <!-- ================= SIMPLE 5-STEP FILING PROGRESS SECTION ================= -->
+        <section class="ku-card space-y-5" aria-labelledby="homeHeroStepTitle">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-rounded text-primary text-[22px]">checklist</span>
+                <h2 class="font-bold text-lg text-slate-900 tracking-tight" id="homeHeroStepTitle">October 2026 Filing Progress</h2>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5" id="homeHeroDeadline">Due Date: November 20, 2026</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-600 hidden md:inline" id="homeHeroDescription">Follow the 5 simple steps below to file with zero penalties.</span>
+              <span class="sg-pill-due" id="homeDueCountdown">Due soon</span>
+            </div>
+          </div>
+
+          <!-- 5 Steps Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <!-- Step 1: Add Sales -->
+            <button type="button" id="homeStepSales" class="ku-step-pill flex flex-col justify-between gap-3 text-left cursor-pointer group" onclick="setGuidedStep(1); switchSuite('file-gst');">
+              <div class="flex items-center justify-between">
+                <span class="w-7 h-7 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center group-hover:border-emerald-400 group-hover:text-emerald-700">1</span>
+                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Sales</span>
+              </div>
+              <div>
+                <div class="font-bold text-sm text-slate-900">Add Sales</div>
+                <div class="text-xs text-slate-500 mt-0.5">Bills to customers</div>
+              </div>
+              <div class="text-xs font-semibold text-blue-600" id="homeStepSalesStatus">Not started</div>
+            </button>
+
+            <!-- Step 2: Add Purchases -->
+            <button type="button" id="homeStepPurchases" class="ku-step-pill flex flex-col justify-between gap-3 text-left cursor-pointer group" onclick="setGuidedStep(2); switchSuite('file-gst');">
+              <div class="flex items-center justify-between">
+                <span class="w-7 h-7 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center group-hover:border-emerald-400 group-hover:text-emerald-700">2</span>
+                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Purchases</span>
+              </div>
+              <div>
+                <div class="font-bold text-sm text-slate-900">Add Purchases</div>
+                <div class="text-xs text-slate-500 mt-0.5">Bills from suppliers</div>
+              </div>
+              <div class="text-xs font-semibold text-purple-600" id="homeStepPurchasesStatus">Not started</div>
+            </button>
+
+            <!-- Step 3: Check Tax Credit -->
+            <button type="button" id="homeStepRecon" class="ku-step-pill flex flex-col justify-between gap-3 text-left cursor-pointer group" onclick="setGuidedStep(3); switchSuite('file-gst');">
+              <div class="flex items-center justify-between">
+                <span class="w-7 h-7 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center group-hover:border-emerald-400 group-hover:text-emerald-700">3</span>
+                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Credit</span>
+              </div>
+              <div>
+                <div class="font-bold text-sm text-slate-900">Check Credit</div>
+                <div class="text-xs text-slate-500 mt-0.5">Match with GSTR-2B</div>
+              </div>
+              <div class="text-xs font-semibold text-emerald-600">Auto-match</div>
+            </button>
+
+            <!-- Step 4: Review GST -->
+            <button type="button" id="homeStepReview" class="ku-step-pill flex flex-col justify-between gap-3 text-left cursor-pointer group" onclick="setGuidedStep(4); switchSuite('file-gst');">
+              <div class="flex items-center justify-between">
+                <span class="w-7 h-7 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center group-hover:border-emerald-400 group-hover:text-emerald-700">4</span>
+                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Review</span>
+              </div>
+              <div>
+                <div class="font-bold text-sm text-slate-900">Review GST</div>
+                <div class="text-xs text-slate-500 mt-0.5">Net tax calculation</div>
+              </div>
+              <div class="text-xs font-semibold text-amber-600">Calculated</div>
+            </button>
+
+            <!-- Step 5: File GST -->
+            <button type="button" id="homeStepFile" class="ku-step-pill flex flex-col justify-between gap-3 text-left cursor-pointer group" onclick="setGuidedStep(5); switchSuite('file-gst');">
+              <div class="flex items-center justify-between">
+                <span class="w-7 h-7 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center group-hover:border-emerald-400 group-hover:text-emerald-700">5</span>
+                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Filing</span>
+              </div>
+              <div>
+                <div class="font-bold text-sm text-slate-900">File GST</div>
+                <div class="text-xs text-slate-500 mt-0.5">Submit & get ARN</div>
+              </div>
+              <div class="text-xs font-semibold text-slate-500" id="homeStepFileStatus">Ready</div>
+            </button>
+          </div>
+
+          <div class="pt-2 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+            <span>Nothing to report this month? <a href="#file-gst" class="text-primary font-semibold hover:underline" onclick="startNilFilingFlow(); switchSuite('file-gst'); return false;">File a Nil return</a></span>
+            <div class="flex items-center gap-4">
+              <button type="button" class="sg-link" onclick="switchSuite('gst')">Returns & Reports</button>
+              <button type="button" class="sg-link" onclick="switchSuite('taxcalc')">Detailed Tax Calculation</button>
+              <button type="button" class="sg-link" onclick="openHealthScoreModal()">Compliance Health Score</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= RECENT ACTIVITY & ASSISTANT ROW ================= -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Recent Invoices (2 cols) -->
+          <div class="lg:col-span-2 ku-card space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-rounded text-primary text-[20px]">receipt_long</span>
+                <h3 class="font-bold text-base text-slate-900" id="homeRecentTitle">Recent Invoices &amp; Bills</h3>
+              </div>
+              <div class="flex items-center gap-2">
+                <a href="#sales" onclick="switchSuite('sales'); return false;" class="text-xs font-semibold text-primary hover:underline">See all →</a>
+              </div>
+            </div>
+            <div class="overflow-x-auto -mx-6 px-6">
+              <table class="w-full text-sm text-left">
+                <thead class="text-slate-400 text-xs border-b border-slate-100 uppercase tracking-wider">
+                  <tr>
+                    <th class="py-2.5 pr-4 font-semibold">Invoice</th>
+                    <th class="py-2.5 px-4 font-semibold">Type</th>
+                    <th class="py-2.5 px-4 font-semibold text-right">Amount</th>
+                    <th class="py-2.5 pl-4 font-semibold text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="dashRecentActivityBody" class="divide-y divide-slate-100">
+                  <tr><td colspan="4" class="py-8 text-center text-slate-400 text-sm">Sign in to see your recent invoices.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- GST Copilot Assistant Card (1 col) -->
+          <div class="ku-card flex flex-col justify-between space-y-4 bg-gradient-to-b from-white to-emerald-50/30">
+            <div class="space-y-3">
+              <div class="flex items-center gap-2">
+                <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                  <span class="material-symbols-rounded text-[20px]">chat</span>
+                </span>
+                <div>
+                  <h3 class="font-bold text-sm text-slate-900">GST Copilot</h3>
+                  <p class="text-[11px] text-slate-500">Your personal tax assistant</p>
+                </div>
+              </div>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Ask any question in plain language. We analyze your uploaded bills and give instant answers grounded in official GST rules.
+              </p>
+              <!-- Suggested prompt chips -->
+              <div class="space-y-1.5 pt-1">
+                <button type="button" onclick="askCopilotPrompt('How much tax do I owe for October 2026?'); switchSuite('copilot');" class="w-full text-left p-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-300 text-[11px] font-medium text-slate-700 hover:text-emerald-800 transition-colors flex items-center justify-between group">
+                  <span class="truncate">"How much tax do I owe?"</span>
+                  <span class="material-symbols-rounded text-[14px] text-slate-400 group-hover:text-emerald-600">arrow_forward</span>
+                </button>
+                <button type="button" onclick="askCopilotPrompt('How much Input Tax Credit (ITC) can I safely claim?'); switchSuite('copilot');" class="w-full text-left p-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-300 text-[11px] font-medium text-slate-700 hover:text-emerald-800 transition-colors flex items-center justify-between group">
+                  <span class="truncate">"How much credit can I claim?"</span>
+                  <span class="material-symbols-rounded text-[14px] text-slate-400 group-hover:text-emerald-600">arrow_forward</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100">
+              <button type="button" onclick="switchSuite('copilot')" class="w-full py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5">
+                <span>Open Full Copilot Chat</span>
+                <span class="material-symbols-rounded text-[16px]">open_in_new</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="sg-steps">
-        <button type="button" id="homeStepSales" class="sg-step is-sales" onclick="switchSuite('sales')">
-          <span class="sg-check" aria-hidden="true"><span class="material-symbols-rounded">check</span></span>
-          <span class="sg-tile blue on-white"><span class="material-symbols-rounded" aria-hidden="true">upload_file</span></span>
-          <span class="sg-step-title"><span class="sg-num">1</span>Add sales</span>
-          <span class="sg-step-desc">Your bills to customers</span>
-          <span class="sg-step-status" id="homeStepSalesStatus">Not started</span>
-        </button>
-        <button type="button" id="homeStepPurchases" class="sg-step is-purchases" onclick="switchSuite('purchase')">
-          <span class="sg-check" aria-hidden="true"><span class="material-symbols-rounded">check</span></span>
-          <span class="sg-tile violet on-white"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span></span>
-          <span class="sg-step-title"><span class="sg-num">2</span>Add purchases</span>
-          <span class="sg-step-desc">Bills from your suppliers</span>
-          <span class="sg-step-status" id="homeStepPurchasesStatus">Not started</span>
-        </button>
-        <button type="button" id="homeStepFile" class="sg-step is-file" onclick="switchSuite('recon')">
-          <span class="sg-tile green on-white"><span class="material-symbols-rounded" aria-hidden="true">verified</span></span>
-          <span class="sg-step-title"><span class="sg-num">3</span>File return</span>
-          <span class="sg-step-desc">We check your credit, calculate tax and file</span>
-          <span class="sg-step-status" id="homeStepFileStatus">After steps 1 and 2</span>
-        </button>
-      </div>
-      <div class="sg-wf">
-        <span class="sg-meta">Nothing to report this month? <a href="#file-gst" class="sg-link" onclick="switchSuite('file-gst'); return false;">File a nil return</a></span>
-        <span class="flex flex-wrap gap-x-5 gap-y-1">
-          <button type="button" class="sg-link" onclick="switchSuite('gst')">Reports</button>
-          <button type="button" class="sg-link" onclick="switchSuite('taxcalc')">Tax calculation</button>
-          <button type="button" class="sg-link" onclick="openHealthScoreModal()">Compliance score</button>
-        </span>
-      </div>
-    </section>
 
-    <!-- Four stats -->
-    <a href="#sales" onclick="switchSuite('sales'); return false;" class="sg-w sg-span-3 sg-stat">
-      <span class="sg-wh"><span class="sg-tile blue"><span class="material-symbols-rounded" aria-hidden="true">upload_file</span></span><span class="sg-wt">Total sales</span></span>
-      <span class="sg-val" id="dashSalesTotal">₹0.00</span><span class="sg-guest-note">Sign in to see</span>
-      <span class="sg-wf"><span class="sg-meta" id="homeSalesCountNote">Sales invoices</span><span class="sg-link">View<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></span></span>
-    </a>
-    <a href="#purchases" onclick="switchSuite('purchase'); return false;" class="sg-w sg-span-3 sg-stat">
-      <span class="sg-wh"><span class="sg-tile violet"><span class="material-symbols-rounded" aria-hidden="true">shopping_cart</span></span><span class="sg-wt">Total purchases</span></span>
-      <span class="sg-val" id="dashPurchasesTotal">₹0.00</span><span class="sg-guest-note">Sign in to see</span>
-      <span class="sg-wf"><span class="sg-meta" id="homePurchasesCountNote">Purchase bills</span><span class="sg-link">View<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></span></span>
-    </a>
-    <a href="#reconciliation" onclick="switchSuite('recon'); return false;" class="sg-w sg-span-3 sg-stat">
-      <span class="sg-wh"><span class="sg-tile green"><span class="material-symbols-rounded" aria-hidden="true">stacks</span></span><span class="sg-wt">Tax credit (ITC)</span></span>
-      <span class="sg-val" id="dashEligibleItc">₹0.00</span><span class="sg-guest-note">Sign in to see</span>
-      <span class="sg-wf"><span class="sg-meta">Eligible to claim</span><span class="sg-link">Check<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></span></span>
-    </a>
-    <a href="#tax" onclick="switchSuite('taxcalc'); return false;" class="sg-w sg-span-3 sg-stat">
-      <span class="sg-wh"><span class="sg-tile amber"><span class="material-symbols-rounded" aria-hidden="true">currency_rupee</span></span><span class="sg-wt">Tax to pay</span></span>
-      <span class="sg-val" id="dashNetTaxPayable">₹0.00</span><span class="sg-guest-note">Sign in to see</span>
-      <span class="sg-wf"><span class="sg-meta">After tax credit</span><span class="sg-link">Details<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></span></span>
-    </a>
-
-    <!-- Due date + Copilot -->
-    <section class="sg-w sg-span-6" aria-label="Next due date">
-      <div class="sg-wh">
-        <span class="sg-tile amber"><span class="material-symbols-rounded" aria-hidden="true">event</span></span>
-        <div class="min-w-0"><h3 class="sg-wt">Next due date</h3><p class="sg-meta">GSTR-3B for <span class="dynamic-period-short">Oct 2026</span> &middot; <span class="dynamic-deadline-label">Nov 20, 2026</span></p></div>
-        <span class="sg-wh-end"><span class="sg-pill-due" id="homeDueCountdown">Due soon</span></span>
-      </div>
-      <div class="sg-wf"><span class="sg-meta">Filing after the due date attracts a late fee.</span><button type="button" class="sg-link" onclick="switchSuite('file-gst')">File now<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></button></div>
-    </section>
-    <a href="#copilot" onclick="switchSuite('copilot'); return false;" class="sg-w sg-span-6" aria-label="Ask GST Copilot">
-      <span class="sg-wh">
-        <span class="sg-tile brand"><span class="material-symbols-rounded" aria-hidden="true">forum</span></span>
-        <span class="min-w-0"><span class="sg-wt block">Ask GST Copilot</span><span class="sg-meta block">Answers from your own invoices and bills</span></span>
-      </span>
-      <span class="sg-wf"><span class="sg-meta truncate">"How much tax do I owe?" &middot; "How much ITC can I claim?"</span><span class="sg-link">Ask<span class="material-symbols-rounded text-[18px]" aria-hidden="true">chevron_right</span></span></span>
-    </a>
-
-    <!-- Recent invoices -->
-    <section class="sg-w sg-span-12" aria-labelledby="homeRecentTitle">
-      <div class="sg-wh">
-        <span class="sg-tile blue"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span></span>
-        <h3 class="sg-wt" id="homeRecentTitle">Recent invoices</h3>
-        <span class="sg-wh-end"><a href="#sales" onclick="switchSuite('sales'); return false;" class="sg-link">See all</a></span>
-      </div>
-      <div class="overflow-x-auto -mx-5 px-5">
-        <table class="w-full text-sm">
-          <thead class="text-secondary text-xs">
-            <tr class="border-b border-outline-variant"><th class="text-left font-semibold py-2.5 pr-4">Invoice</th><th class="text-left font-semibold py-2.5 px-4">Type</th><th class="text-right font-semibold py-2.5 px-4">Amount</th><th class="text-right font-semibold py-2.5 pl-4">Status</th></tr>
-          </thead>
-          <tbody id="dashRecentActivityBody" class="divide-y divide-outline-variant">
-            <tr><td colspan="4" class="py-8 text-center text-secondary text-sm">Sign in to see your recent invoices.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-</main>
-    </div>
+      </main>
+    </div></div>
 
     <!-- ========================================================================= -->
     <!-- 2. GUIDED GST FILING & NIL RETURN SUITE (Stitch Screen 2)                -->
@@ -1649,7 +1804,7 @@
               <div class="flex items-start gap-3">
                 <span class="sg-tile brand shrink-0" aria-hidden="true"><span class="material-symbols-rounded">forum</span></span>
                 <div class="space-y-2 max-w-2xl bg-surface-container-low p-4 rounded-2xl rounded-tl-md border border-outline-variant text-on-surface">
-                  <p class="text-sm leading-relaxed">Hello. Sign in and choose your business, then ask me about your sales, tax credit, missing bills or what you owe this month.</p>
+                  <p class="text-sm leading-relaxed"><strong>Let's file your GST.</strong> First, upload your sales bills. Ask me any question in plain language — like <em>"How much tax do I owe?"</em> or <em>"How much tax credit can I claim?"</em> — and I will guide you through each step.</p>
                 </div>
               </div>
             </div>

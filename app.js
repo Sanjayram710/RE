@@ -7244,7 +7244,7 @@ async function setGuidedStep(step = 1) {
           <div class="space-y-1">
             <h3 class="font-headline-sm font-bold text-on-surface">Sales Invoices</h3>
             <p class="font-body-md text-secondary">
-              Review and record all sales invoices issued to customers during this month.
+              Add the bills you issued to customers this month. You can upload invoice PDFs or images, or add them manually.
             </p>
           </div>
 
@@ -7293,7 +7293,7 @@ async function setGuidedStep(step = 1) {
           <div class="space-y-1">
             <h3 class="font-headline-sm font-bold text-on-surface">Purchases</h3>
             <p class="font-body-md text-secondary">
-              Review inward purchase bills and expenses received from suppliers.
+              Add the bills you received from your suppliers. This allows you to claim tax credit (ITC) and reduce your tax.
             </p>
           </div>
 
@@ -7347,7 +7347,7 @@ async function setGuidedStep(step = 1) {
           <div class="space-y-1">
             <h3 class="font-headline-sm font-bold text-on-surface">Available Input Tax Credit</h3>
             <p class="font-body-md text-secondary">
-              Input Tax Credit available to reduce your tax payment, matched against supplier GSTR-2B.
+              We compare your purchase bills with what your suppliers submitted to the government (GSTR-2B) to make sure your tax credit is safe to claim.
             </p>
           </div>
 
@@ -7401,7 +7401,7 @@ async function setGuidedStep(step = 1) {
           <div class="space-y-1">
             <h3 class="font-headline-sm font-bold text-on-surface">Tax Summary</h3>
             <p class="font-body-md text-secondary">
-              Calculate your net tax liability after offsetting available Input Tax Credit.
+              Here is your simple tax summary. Your purchase tax credit is automatically subtracted from the tax you collected from customers.
             </p>
           </div>
 
@@ -7468,7 +7468,7 @@ async function setGuidedStep(step = 1) {
           <div class="space-y-1">
             <h3 class="font-headline-sm font-bold text-on-surface">Review & File GSTR-3B</h3>
             <p class="font-body-md text-secondary">
-              Review your monthly return details before submitting.
+              Review your final return details below. Authorize submission with one click to file your return and generate your official ARN.
             </p>
           </div>
 

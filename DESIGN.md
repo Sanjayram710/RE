@@ -50,16 +50,21 @@ CSS custom properties `--sg-*` in `style.css` mirror these values.
 
 ## 5. Components (see `style.css`, "SimpleGST design system")
 
-- `sidebar-nav-link` + `is-active`: the main navigation. Items: Home, File GST, My Invoices,
-  Documents, GST Copilot, Tax Experts, Start a business, Settings. Grouped pages (Purchases,
-  Reconciliation, Tax calculation, Vendors) highlight their parent via `SIDEBAR_NAV_ALIASES` in `app.js`.
-- Mobile bottom bar: Home, File, Invoices, Copilot, More (opens the drawer).
-- `sg-card`: white, 1px line border, 14px radius, no shadow.
-- `sg-step` (`is-sales` / `is-purchases` / `is-file`, plus `is-done`): the Home 3-step filing card.
-- `sg-tile` (`blue` / `violet` / `green` / `amber` / `brand`): 40px tinted icon tile for stats.
-- `sg-btn-primary`: the single main action on a screen.
+- `sidebar-nav-link` + `is-active`: the minimal 6-item main navigation inspired by KrewsUp:
+  1. **Home**
+  2. **File GST** (guided 5-step flow)
+  3. **My Bills** (combines sales invoices, purchase bills, and documents)
+  4. **Reconciliation** (GSTR-2B ITC matching)
+  5. **My Business** (business profile, multi-GSTIN branches, taxpayer details)
+  6. **Help** (GST Copilot & Tax Experts help)
+  Grouped technical pages highlight their parent via `SIDEBAR_NAV_ALIASES` in `app.js`.
+- Mobile bottom bar: Home, File GST, My Bills, Reconciliation, Help.
+- `ku-card` / `sg-card`: clean modern cards with 18px radius, soft borders, subtle elevation.
+- `ku-hero`: friendly hero banner ("Your GST, made simple. Manage your bills and file GST without complicated accounting.")
+- `ku-step-pill`: interactive 5-step filing progress indicators.
+- `sg-btn-primary`: the high-contrast main action on a screen ("Start Filing GST").
 - `sg-chip`, `sg-pill-due`: period chip and due-date countdown.
-- Shadows only on menus and dialogs. No gradients, glass or blur.
+- Shadows only on menus, dialogs, and subtle card hover. No gratuitous gradients or glows.
 
 ## 6. Motion
 

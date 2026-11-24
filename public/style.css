@@ -3963,3 +3963,72 @@ a.sg-w { transition: border-color .15s ease; } a.sg-w:hover { border-color: var(
 .sg-input:focus { border-color: var(--sg-brand); box-shadow: 0 0 0 3px var(--sg-brand-soft); outline: 0; }
 
 .sg-input.uppercase::placeholder { text-transform: none; }
+
+/* ==========================================================================
+   KrewsUp-Inspired Modern Minimal Design System
+   Approachable, clear, uncluttered experience for retail shop owners
+   ========================================================================== */
+.ku-card {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.ku-card:hover {
+  border-color: rgba(203, 213, 225, 0.9);
+}
+.ku-card-clickable {
+  cursor: pointer;
+}
+.ku-card-clickable:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -3px rgba(0, 0, 0, 0.05);
+}
+.ku-hero {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 24px;
+}
+.ku-hero-title {
+  font-family: var(--font-sans);
+  font-size: 2.25rem !important;
+  font-weight: 800;
+  line-height: 1.15 !important;
+  letter-spacing: -0.025em;
+  color: #0f172a;
+}
+@media (min-width: 640px) {
+  .ku-hero-title {
+    font-size: 2.75rem !important;
+  }
+}
+.ku-step-pill {
+  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: #f8fafc;
+  padding: 16px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ku-step-pill:hover {
+  border-color: #a7f3d0;
+  background: #f0fdf4;
+}
+.ku-step-pill.is-active {
+  border-color: var(--primary-blue);
+  background: #ecfdf5;
+}
+.ku-step-pill.is-done {
+  border-color: #6ee7b7;
+  background: #ffffff;
+}
+.ku-step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
