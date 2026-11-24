@@ -133,18 +133,22 @@
           <span class="material-symbols-rounded" aria-hidden="true">fact_check</span>
           <span>Reconciliation</span>
         </a>
-        <!-- 5. My Business -->
+        <!-- 5. Startup Express -->
+        <a id="nav-link-startup-express" onclick="switchSuite('startup-express'); return false;" class="sidebar-nav-link" href="/startup-express">
+          <span class="material-symbols-rounded" aria-hidden="true">rocket_launch</span>
+          <span>Startup Express</span>
+          <span class="nav-new">7 Stages</span>
+        </a>
+        <!-- 6. My Business -->
         <a id="nav-link-settings" onclick="switchSuite('startup'); return false;" class="sidebar-nav-link" href="#settings">
           <span class="material-symbols-rounded" aria-hidden="true">store</span>
           <span>My Business</span>
         </a>
-        <!-- 6. Help -->
+        <!-- 7. Help -->
         <a id="nav-link-copilot" onclick="switchSuite('copilot'); return false;" class="sidebar-nav-link" href="#copilot">
           <span class="material-symbols-rounded" aria-hidden="true">help</span>
           <span>Help (Copilot)</span>
         </a>
-        <!-- Hidden test compliance link -->
-        <a id="nav-link-startup-express" onclick="switchSuite('startup-express'); return false;" class="hidden" href="/startup-express" aria-hidden="true"></a>
       </nav>
     </div>
 
@@ -1531,6 +1535,28 @@
               <span>Upload Bills</span>
             </button>
           </div>
+        </section>
+
+        <!-- ================= STARTUP EXPRESS HIGHLIGHT BANNER ================= -->
+        <section class="p-6 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50/50 to-white border border-emerald-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-start sm:items-center gap-3.5">
+            <div class="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-xs">
+              <span class="material-symbols-rounded text-[26px]">rocket_launch</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-bold text-base text-slate-900">Startup Express — Business Formation to GST Compliance</h3>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">7-Stage Guided Journey</span>
+              </div>
+              <p class="text-xs text-slate-600 mt-1">
+                Register a Proprietorship, Partnership, LLP, or Pvt Ltd, upload documents, and activate your GST compliance workspace.
+              </p>
+            </div>
+          </div>
+          <button type="button" onclick="switchSuite('startup-express')" class="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+            <span>Launch Startup Express</span>
+            <span class="material-symbols-rounded text-[16px]">arrow_forward</span>
+          </button>
         </section>
 
         <!-- ================= 4 ESSENTIAL METRICS CARDS ================= -->
