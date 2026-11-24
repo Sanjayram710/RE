@@ -493,8 +493,8 @@ test("Regression & Defect Audit: Mobile File GST navigation targets file-gst", (
 
   // 2. Sidebar Quick File button must also navigate to file-gst
   assert.ok(
-    html.includes('<button onclick="switchSuite(\'file-gst\')" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary'),
-    "Sidebar Quick File button must call switchSuite('file-gst')"
+    html.includes('<button type="button" class="sg-btn-primary" onclick="switchSuite(\'file-gst\')">'),
+    "Home File GST button must call switchSuite('file-gst')"
   );
 });
 
@@ -565,7 +565,7 @@ test("Regression & Defect Audit: Five-step filing navigation integrity & Nil Ret
   const js = fs.readFileSync(path.join(process.cwd(), "app.js"), "utf8");
 
   // 1. All 5 steps exist in the filing flow
-  assert.ok(html.includes("Step 2 of 5"), "Filing flow progress banner present");
+  assert.ok(html.includes('id="homeHeroStepTitle"') && html.includes('id="homeStepSales"'), "Home filing steps card present");
   assert.ok(html.includes("onclick=\"switchSuite('gst')\""), "Step 1 Sales navigates to registers/reports");
   assert.ok(html.includes("onclick=\"switchSuite('bills')\""), "Step 2 Purchases navigates to bills");
   assert.ok(html.includes("onclick=\"switchSuite('recon')\""), "Step 3 Recon navigates to reconciliation");

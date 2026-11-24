@@ -391,7 +391,7 @@ function showToast(message, type = "info") {
   if (!container) return;
   const pill = document.createElement("div");
   pill.className = `toast-pill ${type === "success" ? "toast-success" : ""}`;
-  const icon = type === "success" ? "✓ " : "ℹ ";
+  const icon = type === "success" ? "" : "";
   pill.textContent = icon + message.replace(/[\r\n]+/g, " ");
   container.appendChild(pill);
   setTimeout(() => {
@@ -572,8 +572,8 @@ function executeSwitchSuite(suite) {
 
   // Reset nav highlights
   document.querySelectorAll('.sidebar-nav-link').forEach(l => {
-    l.classList.remove('bg-surface-container-high', 'text-primary', 'font-bold', 'border-l-4', 'border-primary');
-    l.classList.add('text-on-surface-variant');
+    l.classList.remove('is-active');
+    l.removeAttribute('aria-current');
   });
   document.querySelectorAll('.bottom-nav-btn').forEach(b => {
     b.classList.remove('text-primary', 'font-bold');
@@ -722,6 +722,8 @@ function executeSwitchSuite(suite) {
       viewExpert.style.display = "block";
     }
     highlightSidebarNav('nav-link-experts');
+    if (typeof loadExpertPlans === "function") loadExpertPlans();
+    if (typeof refreshExpertStatus === "function") refreshExpertStatus();
     highlightBottomNav('bottom-nav-experts');
   } else if (suite === "startup" || suite === "settings" || suite === "multigstin") {
     if (viewStartup) {
@@ -730,6 +732,7 @@ function executeSwitchSuite(suite) {
       viewStartup.style.display = "block";
     }
     highlightSidebarNav('nav-link-settings');
+    if (typeof showSettingsSection === "function") showSettingsSection(null);
     if (typeof loadMultiGstinHub === "function") {
       loadMultiGstinHub();
     }
@@ -772,10 +775,40 @@ function executeSwitchSuite(suite) {
 }
 window.switchSuite = executeSwitchSuite;
 
+// Pages that live under a grouped navigation item highlight their parent.
+const SIDEBAR_NAV_ALIASES = {
+  'nav-link-purchase': 'nav-link-sales',
+  'nav-link-purchases': 'nav-link-sales',
+  'nav-link-recon': 'nav-link-file-gst',
+  'nav-link-taxcalc': 'nav-link-file-gst',
+  'nav-link-vendor': 'nav-link-file-gst',
+  'nav-link-reports': 'nav-link-file-gst',
+  'nav-link-practice': 'nav-link-settings'
+};
+
+// Mobile bottom bar mirrors the sidebar: Home, File, Invoices, Copilot, More.
+const BOTTOM_NAV_FOR_SIDEBAR = {
+  'nav-link-home': 'bottom-nav-home',
+  'nav-link-file-gst': 'bottom-nav-file-gst',
+  'nav-link-sales': 'bottom-nav-invoices',
+  'nav-link-copilot': 'bottom-nav-copilot'
+};
+
 function highlightSidebarNav(id) {
-  const el = document.getElementById(id);
+  const resolved = SIDEBAR_NAV_ALIASES[id] || id;
+  const el = document.getElementById(resolved);
   if (el) {
-    el.classList.add('bg-surface-container-high', 'text-primary', 'font-bold', 'border-l-4', 'border-primary');
+    el.classList.add('is-active');
+    el.setAttribute('aria-current', 'page');
+  }
+  document.querySelectorAll('.bottom-nav-btn').forEach(b => {
+    b.classList.remove('text-primary', 'font-bold');
+    b.classList.add('text-secondary');
+  });
+  const bottom = document.getElementById(BOTTOM_NAV_FOR_SIDEBAR[resolved] || 'bottom-nav-more');
+  if (bottom) {
+    bottom.classList.remove('text-secondary');
+    bottom.classList.add('text-primary', 'font-bold');
   }
 }
 
@@ -924,7 +957,7 @@ function validateLivePan(value) {
     }
   } else {
     if (panFeedback) {
-      panFeedback.textContent = `✓ Valid CBDT PAN format (Category '${pan[3]}')`;
+      panFeedback.textContent = `Valid CBDT PAN format (Category '${pan[3]}')`;
       panFeedback.style.color = "#16A34A";
     }
     // Update logged in user object if active
@@ -990,7 +1023,7 @@ function updatePersonalInfoState() {
     }
     if (pillBadge1) {
       pillBadge1.className = "pill-badge pill-badge-success";
-      pillBadge1.textContent = "✓";
+      pillBadge1.textContent = "";
     }
   }
 }
@@ -1010,7 +1043,7 @@ function fetchIncomeDetailsDemo() {
   updateIncomeDisplayBadges();
   recalculateItrTax();
 
-  alert("✓ Prefill Data Fetched from Income Tax Dept!\n- Gross Salary: ₹12,00,000 (Form 16)\n- TDS: ₹95,000\n- Contact Details Synced");
+  alert("Prefill Data Fetched from Income Tax Dept!\n- Gross Salary: ₹12,00,000 (Form 16)\n- TDS: ₹95,000\n- Contact Details Synced");
 }
 
 // ============================================================================
@@ -1044,7 +1077,7 @@ function updateIncomeDisplayBadges() {
     if (zeroBanner) zeroBanner.style.display = "none";
     if (pillBadge2) {
       pillBadge2.className = "pill-badge pill-badge-success";
-      pillBadge2.textContent = "✓";
+      pillBadge2.textContent = "";
     }
   }
 }
@@ -1075,7 +1108,7 @@ function openForm16UploadModal() {
     appState.itr.income.taxesPaid.tds = 95000;
     updateIncomeDisplayBadges();
     recalculateItrTax();
-    alert("✓ Form 16 Parsed: Gross Salary ₹12,00,000 and TDS ₹95,000 auto-populated!");
+    alert("Form 16 Parsed: Gross Salary ₹12,00,000 and TDS ₹95,000 auto-populated!");
   };
   fileInput.click();
 }
@@ -1185,7 +1218,7 @@ function importFromItdAction() {
   appState.itr.income.taxesPaid.tds = 95000;
   updateDeductionBadges();
   recalculateItrTax();
-  alert("✓ Form 26AS & AIS Synced: TDS of ₹95,000 matched from Income Tax Department.");
+  alert("Form 26AS & AIS Synced: TDS of ₹95,000 matched from Income Tax Department.");
 }
 
 function openAisModal() {
@@ -1455,7 +1488,7 @@ async function confirmFilingOtpAction() {
       const box = document.getElementById("filingSuccessResult");
       box.className = "filing-success-box info-note-box";
       box.innerHTML = `
-        <h4 style="color: #15803D;">✓ Return Filed & E-Verified Successfully!</h4>
+        <h4 style="color: #15803D;">Return Filed & E-Verified Successfully!</h4>
         <div class="mt-1"><strong>ITR-V Acknowledgement Number:</strong> ${data.acknowledgementNumber}</div>
         <div><strong>Assessee PAN:</strong> ${data.pan}</div>
         <div><strong>Status:</strong> ${data.status}</div>
@@ -1720,9 +1753,9 @@ window.toggleMoreServicesMenu = function(e) {
 };
 
 function viewMyReturns() {
-  alert("📋 My GST Returns:\n• October 2026: GSTR-3B Ready to File (₹70,200)\n• September 2026: Filed & Verified (ARN: AA320926019284A)\n• August 2026: Filed & Verified (ARN: AA320826982104A)");
+  alert("My GST Returns:\n• October 2026: GSTR-3B Ready to File (₹70,200)\n• September 2026: Filed & Verified (ARN: AA320926019284A)\n• August 2026: Filed & Verified (ARN: AA320826982104A)");
 }
-function openOrdersModal() { alert("🎁 Referral Rewards & Credits:\nAvailable Wallet: ₹1,500\nReferral Code: MALABAR500\nCashback: ₹500 instant discount on filings."); }
+function openOrdersModal() { alert("Referral Rewards & Credits:\nAvailable Wallet: ₹1,500\nReferral Code: MALABAR500\nCashback: ₹500 instant discount on filings."); }
 function openRewardsModal() { alert("My Rewards: ₹500 Referral voucher available with code REWARD500."); }
 function openAdvancedModal() { alert("Advanced Options: Statutory 182-API live inspection and deterministic engine controls."); }
 function openRectificationModal() { alert("Rectification: Defect notices can be cleared under the GST compliance tab."); }
@@ -1818,11 +1851,17 @@ function renderAuthState() {
     if (menuUserName) menuUserName.textContent = user.name || "Assessee";
     if (menuUserEmail) menuUserEmail.textContent = user.email || "user@simplegst.tax";
     if (sidebarUserName) sidebarUserName.textContent = user.name || "Assessee";
+    const sidebarUserInitial = document.getElementById("sidebarUserInitial");
+    const userInitial = String(user.name || "U").trim().charAt(0).toUpperCase();
+    if (sidebarUserInitial) sidebarUserInitial.textContent = userInitial;
+    const headerUserInitial = document.getElementById("headerUserInitial");
+    if (headerUserInitial) headerUserInitial.textContent = userInitial;
     if (sidebarUserRole) sidebarUserRole.textContent = user.role || "Taxpayer";
-    if (greetingHeader) greetingHeader.textContent = `Welcome, ${user.name || "Taxpayer"}`;
+    if (greetingHeader) greetingHeader.textContent = `Hello, ${String(user.name || "there").split(" ")[0]}`;
+    document.getElementById("viewHomeSuite")?.classList.remove("is-guest");
 
     if (btnMenuAuthAction) {
-      btnMenuAuthAction.innerHTML = `<span class="material-symbols-outlined text-[16px]">logout</span> Log Out`;
+      btnMenuAuthAction.innerHTML = `<span class="material-symbols-rounded text-[16px]">logout</span> Log Out`;
       btnMenuAuthAction.onclick = logoutAction;
       btnMenuAuthAction.className = "w-full text-left flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-error hover:bg-error-container/20 font-semibold cursor-pointer";
     }
@@ -1869,11 +1908,16 @@ function renderAuthState() {
     if (menuUserName) menuUserName.textContent = "Guest Taxpayer";
     if (menuUserEmail) menuUserEmail.textContent = "Not signed in";
     if (sidebarUserName) sidebarUserName.textContent = "Guest Taxpayer";
+    const sidebarUserInitialGuest = document.getElementById("sidebarUserInitial");
+    if (sidebarUserInitialGuest) sidebarUserInitialGuest.textContent = "G";
+    const headerUserInitialGuest = document.getElementById("headerUserInitial");
+    if (headerUserInitialGuest) headerUserInitialGuest.textContent = "G";
     if (sidebarUserRole) sidebarUserRole.textContent = "Not Signed In";
     if (greetingHeader) greetingHeader.textContent = "Welcome to SimpleGST";
+    document.getElementById("viewHomeSuite")?.classList.add("is-guest");
 
     if (btnMenuAuthAction) {
-      btnMenuAuthAction.innerHTML = `<span class="material-symbols-outlined text-[16px]">login</span> Sign In`;
+      btnMenuAuthAction.innerHTML = `<span class="material-symbols-rounded text-[16px]">login</span> Sign In`;
       btnMenuAuthAction.onclick = () => openAuthModal("signin");
       btnMenuAuthAction.className = "w-full text-left flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-primary hover:bg-primary-container/20 font-semibold cursor-pointer";
     }
@@ -2018,7 +2062,7 @@ async function handleSignInSubmit(e) {
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.dataset.origText = submitBtn.innerHTML;
-    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Signing in...`;
+    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1"></span> Signing in...`;
   }
 
   try {
@@ -2220,9 +2264,9 @@ function onRegisterPanInput(val) {
   const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
   if (panRegex.test(pan)) {
     const code = pan[3];
-    feedback.innerHTML = `<span class="text-success font-medium">✓ Valid PAN syntax (Entity category: '${code}')</span>`;
+    feedback.innerHTML = `<span class="text-success font-medium">Valid PAN syntax (Entity category: '${code}')</span>`;
   } else if (pan.length > 0) {
-    feedback.innerHTML = `<span class="text-danger font-medium">✗ Expected 5 letters, 4 digits, 1 letter</span>`;
+    feedback.innerHTML = `<span class="text-danger font-medium">Expected 5 letters, 4 digits, 1 letter</span>`;
   } else {
     feedback.innerHTML = "Tier 1 regex: 5 letters, 4 digits, 1 letter.";
   }
@@ -2602,7 +2646,7 @@ async function saveManualInvoice(type) {
       if (typeof showToast === "function") {
         showToast(`${type === "sales" ? "Sales Invoice" : "Purchase Bill"} ${invNo} saved to database!`, "success");
       } else {
-        alert(`✓ ${type === "sales" ? "Sales Invoice" : "Purchase Bill"} ${invNo} added!`);
+        alert(`${type === "sales" ? "Sales Invoice" : "Purchase Bill"} ${invNo} added!`);
       }
       if (typeof refreshInvoices === "function") {
         await refreshInvoices(type);
@@ -2717,7 +2761,7 @@ function updateReconAction(idx, newAction) {
 }
 
 function sendSupplierReminder(supplier, invNo) {
-  alert(`✓ Simulated WhatsApp reminder dispatched to ${supplier} for Invoice ${invNo}.`);
+  alert(`Simulated WhatsApp reminder dispatched to ${supplier} for Invoice ${invNo}.`);
 }
 
 function exportReconReport() {
@@ -2777,6 +2821,11 @@ async function loadReconDashboard(period) {
     }
   }
 }
+
+function runReconciliation() {
+  return runReconMatching();
+}
+window.runReconciliation = runReconciliation;
 window.loadReconDashboard = loadReconDashboard;
 
 function renderReconDashboard(summary) {
@@ -3415,8 +3464,8 @@ async function renderTaxCalcSuite(period) {
     const elItcSub = document.getElementById("taxCalcMetricItcSub");
     if (elItcSub) {
       elItcSub.innerHTML = itcCarryForward > 0
-        ? `<span class="material-symbols-outlined text-[14px]">account_balance_wallet</span><span>${fmt(itcCarryForward)} carried forward</span>`
-        : `<span class="material-symbols-outlined text-[14px]">verified</span><span>100% Reconciled vs GSTR-2B</span>`;
+        ? `<span class="material-symbols-rounded text-[14px]">account_balance_wallet</span><span>${fmt(itcCarryForward)} carried forward</span>`
+        : `<span class="material-symbols-rounded text-[14px]">verified</span><span>100% Reconciled vs GSTR-2B</span>`;
     }
 
     const elShortfall = document.getElementById("taxCalcMetricNetShortfall");
@@ -3430,9 +3479,9 @@ async function renderTaxCalcSuite(period) {
     const elShortfallSub = document.getElementById("taxCalcMetricShortfallSub");
     if (elShortfallSub) {
       if (netCashPayable > 0) {
-        elShortfallSub.innerHTML = `<span>CGST ${fmt(remainingLiability.cgst || 0)} + SGST ${fmt(remainingLiability.sgst || 0)}</span><span class="material-symbols-outlined text-[14px]">warning</span>`;
+        elShortfallSub.innerHTML = `<span>CGST ${fmt(remainingLiability.cgst || 0)} + SGST ${fmt(remainingLiability.sgst || 0)}</span><span class="material-symbols-rounded text-[14px]">warning</span>`;
       } else {
-        elShortfallSub.innerHTML = `<span class="text-emerald-700 font-medium">₹0.00 cash payment required</span><span class="material-symbols-outlined text-[14px] text-emerald-700">check_circle</span>`;
+        elShortfallSub.innerHTML = `<span class="text-brand-700 font-medium">₹0.00 cash payment required</span><span class="material-symbols-rounded text-[14px] text-brand-700">check_circle</span>`;
       }
     }
 
@@ -3581,11 +3630,11 @@ function onTwoTierPanInput(val) {
     const code = pan[3];
     const entityType = PAN_ENTITY_MAP[code] || "Other Taxpayer Entity";
     if (entityTitle) entityTitle.textContent = `${entityType} (Category: ${code})`;
-    if (inline) inline.innerHTML = `<span class="text-success font-medium">✓ Valid PAN syntax (${entityType})</span>`;
+    if (inline) inline.innerHTML = `<span class="text-success font-medium">Valid PAN syntax (${entityType})</span>`;
     if (badge) { badge.textContent = "SYNTAX VALID"; badge.className = "status-chip success-chip"; }
   } else {
     if (entityTitle) entityTitle.textContent = "Invalid PAN Format";
-    if (inline) inline.innerHTML = `<span class="text-danger font-medium">✗ Expected 5 letters, 4 digits, 1 letter (e.g. AAACB1234F)</span>`;
+    if (inline) inline.innerHTML = `<span class="text-danger font-medium">Expected 5 letters, 4 digits, 1 letter (e.g. AAACB1234F)</span>`;
     if (badge) { badge.textContent = "SYNTAX ERROR"; badge.className = "status-chip danger-chip"; }
   }
 
@@ -3616,7 +3665,7 @@ function checkCrossLinkTier1() {
 
   const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
   if (!gstinRegex.test(gstin)) {
-    if (gstinInline) gstinInline.innerHTML = `<span class="text-danger font-medium">✗ Invalid GSTIN structure (15 chars)</span>`;
+    if (gstinInline) gstinInline.innerHTML = `<span class="text-danger font-medium">Invalid GSTIN structure (15 chars)</span>`;
     return;
   }
 
@@ -3625,11 +3674,11 @@ function checkCrossLinkTier1() {
   if (stateCodeEl) stateCodeEl.textContent = `${state}`;
 
   if (pan && embedded === pan) {
-    if (gstinInline) gstinInline.innerHTML = `<span class="text-success font-medium">✓ Mathematical Link Validated: Chars 3-12 match PAN '${pan}'</span>`;
+    if (gstinInline) gstinInline.innerHTML = `<span class="text-success font-medium">Mathematical Link Validated: Chars 3-12 match PAN '${pan}'</span>`;
     if (detailText) detailText.textContent = `Mathematical link: Matched (GSTIN ${gstin} embeds PAN ${pan}).`;
     if (badge) { badge.textContent = "LINK MATCHED"; badge.className = "status-chip success-chip"; }
   } else if (pan) {
-    if (gstinInline) gstinInline.innerHTML = `<span class="text-danger font-bold">✗ PAN-GSTIN MISMATCH: GSTIN embeds '${embedded}', not '${pan}'</span>`;
+    if (gstinInline) gstinInline.innerHTML = `<span class="text-danger font-bold">PAN-GSTIN MISMATCH: GSTIN embeds '${embedded}', not '${pan}'</span>`;
     if (detailText) detailText.textContent = `PAN Mismatch: Entered PAN is '${pan}', but GSTIN belongs to '${embedded}'.`;
     if (badge) { badge.textContent = "PAN MISMATCH"; badge.className = "status-chip danger-chip"; }
   }
@@ -3738,7 +3787,7 @@ function applyDiscoveredGstin(gstin) {
   const gstinInput = document.getElementById("twoTierGstinInput");
   if (gstinInput) gstinInput.value = gstin;
   checkCrossLinkTier1();
-  alert(`✓ Selected GSTIN ${gstin} applied! Tier 1 cross-link verified with PAN.`);
+  alert(`Selected GSTIN ${gstin} applied! Tier 1 cross-link verified with PAN.`);
 }
 
 // Backward compatibility aliases
@@ -3766,8 +3815,8 @@ async function loadExpertPlans() {
 }
 
 function filterExpertPlans(category, btnElement) {
-  document.querySelectorAll(".filter-tab-pill").forEach(p => p.classList.remove("active"));
-  if (btnElement) btnElement.classList.add("active");
+  document.querySelectorAll(".filter-tab-pill").forEach(p => { p.classList.remove("active"); p.setAttribute("aria-pressed", "false"); });
+  if (btnElement) { btnElement.classList.add("active"); btnElement.setAttribute("aria-pressed", "true"); }
   renderExpertPlans(category);
 }
 
@@ -3790,7 +3839,7 @@ function renderExpertPlans(category = "all") {
         "Old vs New Tax Regime Arbitrage & Deduction Audit",
         "Automated Form 16, AIS/TIS & 26AS Reconciliation",
         "Section 80C, 80D, 80CCD & HRA Tax Optimization",
-        "ClearTax Client Workspace with Real-Time CA Chat",
+        "SimpleGST Client Workspace with Real-Time CA Chat",
         "100% Free for 30 Days • Zero Advance Payment"
       ]
     },
@@ -3879,25 +3928,27 @@ function renderExpertPlans(category = "all") {
 
   const filtered = category === "all" ? plans : plans.filter(p => p.category === category);
 
-  container.innerHTML = filtered.map(plan => `
-    <div class="expert-plan-card ${plan.badge === 'Most Popular' ? 'popular-border' : ''}">
-      <div class="plan-card-top">
-        ${plan.badge ? `<span class="plan-badge-tag">${plan.badge}</span>` : ''}
-        <h3 class="plan-card-title">${plan.title}</h3>
-        <div class="plan-pricing-row">
-          <span class="original-price-strike">₹ ${Number(plan.originalPrice).toLocaleString("en-IN")}</span>
-          <span class="current-price">₹ ${Number(plan.price).toLocaleString("en-IN")}</span>
-        </div>
-        <div class="plan-turnaround-chip">⏱ Turnaround: ${plan.turnaround}</div>
-        <ul class="plan-features-list">
-          ${plan.features.map(f => `<li>${f}</li>`).join("")}
-        </ul>
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="sg-empty" style="grid-column:1/-1"><b>No plans in this category</b></div>`;
+    return;
+  }
+  const money = n => "₹" + Number(n || 0).toLocaleString("en-IN");
+  container.innerHTML = filtered.map(plan => {
+    const isFree = Number(plan.price) === 0;
+    const jsTitle = String(plan.title).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const feature = f => `<li><span class="material-symbols-rounded" aria-hidden="true">check</span><span>${escapeHtml(f)}</span></li>`;
+    return `
+    <article class="ex-plan${plan.badge === "Most Popular" ? " is-featured" : ""}">
+      <div class="ex-plan-top">
+        <h3 class="ex-plan-title">${escapeHtml(plan.title)}</h3>
+        ${plan.badge === "Most Popular" ? `<span class="sg-pill-ok">Most chosen</span>` : ""}
       </div>
-      <button class="btn btn-primary btn-block" onclick="openBookExpertModal('${plan.id}', '${plan.title.replace(/'/g, "\\'")}', ${plan.price})">
-        Book CA Consultation
-      </button>
-    </div>
-  `).join("");
+      <div class="ex-plan-price"><b>${isFree ? "Free" : money(plan.price)}</b>${Number(plan.originalPrice) > Number(plan.price) ? `<s>${money(plan.originalPrice)}</s>` : ""}${isFree ? `<span class="sg-meta">for 1 month</span>` : ""}</div>
+      <p class="sg-meta">Typical turnaround: ${escapeHtml(String(plan.turnaround || "").replace(/\s*•\s*/g, ", "))}</p>
+      <ul class="ex-plan-list">${(plan.features || []).map(feature).join("")}</ul>
+      <button type="button" class="${plan.badge === "Most Popular" || isFree ? "sg-btn-primary" : "sg-btn"} ex-plan-cta" onclick="openBookExpertModal('${escapeHtml(plan.id)}', '${escapeHtml(jsTitle)}', ${Number(plan.price) || 0})">${isFree ? "Start free month" : "Book this plan"}</button>
+    </article>`;
+  }).join("");
 }
 
 // Interactive Savings Estimator
@@ -3944,11 +3995,18 @@ let bookingState = {
 };
 
 function openBookExpertModal(planId, planTitle, price) {
+  const couponInp = document.getElementById("bookCouponInput");
+  const couponFeedback = document.getElementById("bookCouponFeedback");
+  if (couponFeedback) couponFeedback.textContent = "";
   if (planId === "plan-free-trial" || price === 0) {
     bookingState.couponApplied = true;
     bookingState.discountPercent = 100;
-    const couponInp = document.getElementById("bookCouponInput");
     if (couponInp) couponInp.value = "FREE30DAYS";
+  } else {
+    // Start each booking fresh: a code applied to an earlier plan must not carry over.
+    bookingState.couponApplied = false;
+    bookingState.discountPercent = 0;
+    if (couponInp) couponInp.value = "";
   }
   bookingState.planId = planId;
   bookingState.planTitle = planTitle;
@@ -3968,25 +4026,25 @@ function openBookExpertModal(planId, planTitle, price) {
 function applyBookingCoupon() {
   const input = document.getElementById("bookCouponInput")?.value.trim().toUpperCase();
   const feedback = document.getElementById("bookCouponFeedback");
-  if (input === "FREE30DAYS" || input === "CLEARTAXFREE" || input === "1MONTHFREE") {
+  if (input === "FREE30DAYS" || input === "SIMPLEGSTFREE" || input === "1MONTHFREE" || input === "CLEARTAXFREE") {
     bookingState.couponApplied = true;
     bookingState.discountPercent = 100;
     if (feedback) {
-      feedback.textContent = "✓ Code applied! 100% Free for 1 Month (₹0.00 payable).";
+      feedback.textContent = "Code applied: free for 1 month.";
       feedback.style.color = "#16A34A";
     }
   } else if (input === "TAXHERO65") {
     bookingState.couponApplied = true;
     bookingState.discountPercent = 65;
     if (feedback) {
-      feedback.textContent = "✓ Code TAXHERO65 applied! 65% Instant Discount.";
+      feedback.textContent = "Code applied: 65% off.";
       feedback.style.color = "#16A34A";
     }
   } else {
     bookingState.couponApplied = false;
     bookingState.discountPercent = 0;
     if (feedback) {
-      feedback.textContent = "Invalid or expired promo code.";
+      feedback.textContent = "That code isn't valid.";
       feedback.style.color = "#EA580C";
     }
   }
@@ -4010,7 +4068,7 @@ async function submitExpertBooking() {
     pan: document.getElementById("bookClientPan")?.value || "CVBBC4433W",
     phone: document.getElementById("bookClientPhone")?.value || "9876543210",
     slot: document.getElementById("bookSlotSelect")?.value || "Today at 03:00 PM (IST)",
-    couponCode: bookingState.couponApplied ? "TAXHERO65" : ""
+    couponCode: bookingState.couponApplied ? (document.getElementById("bookCouponInput")?.value || "").trim().toUpperCase() : ""
   };
 
   try {
@@ -4022,15 +4080,14 @@ async function submitExpertBooking() {
     const result = await res.json();
     if (result.success) {
       const box = document.getElementById("bookingConfirmationResult");
-      box.className = "filing-success-box info-note-box";
+      box.className = "rounded-xl border p-4 text-sm flex flex-col gap-1";
+      box.style.background = "var(--sg-green-soft)"; box.style.borderColor = "#B7E0C5";
       box.innerHTML = `
-        <h4 style="color: #15803D;">✓ CA Consultation Confirmed!</h4>
-        <div class="mt-1"><strong>Booking Reference ID:</strong> ${result.bookingId}</div>
-        <div><strong>Assigned Expert:</strong> ${result.assignedExpert.name} (${result.assignedExpert.role})</div>
-        <div><strong>Scheduled Slot:</strong> ${result.slot}</div>
-        <div><strong>Secure Video Meeting Room:</strong> <a href="${result.meetingLink}" target="_blank" class="blue-link">${result.meetingLink}</a></div>
-        <div><strong>Total Fee Charged:</strong> ₹${result.finalPrice} (Demo sandbox transaction)</div>
-        <div class="text-xs text-muted mt-1">Guaranteed: ${result.guarantee}</div>
+        <b style="color: var(--sg-green);">Booking confirmed</b>
+        <div>Reference: <strong>${escapeHtml(result.bookingId)}</strong></div>
+        <div>Your CA: ${escapeHtml(result.assignedExpert?.name || "")}${result.assignedExpert?.role ? ` (${escapeHtml(result.assignedExpert.role)})` : ""}</div>
+        <div>Time: ${escapeHtml(result.slot)}</div>
+        <div>Charged: ₹${escapeHtml(result.finalPrice)} (demo sandbox, no payment taken)</div>
       `;
       box.classList.remove("hidden");
       document.getElementById("btnConfirmBooking").style.display = "none";
@@ -4129,7 +4186,7 @@ async function importPrefillData(rawJson) {
     syncPersonalInfoInputs();
     updatePersonalInfoState();
     await recalculateItrTax();
-    alert(`✓ Official CBDT Pre-fill JSON Successfully Ingested!\n- PAN: ${parsed.pan}\n- Gross Salary: ₹${parsed.salary?.grossSalary?.toLocaleString("en-IN")}\n- Total TDS Credited: ₹${((parsed.taxesPaid?.totalTdsSalary || 0) + (parsed.taxesPaid?.totalTdsOther || 0))?.toLocaleString("en-IN")}\n- Bank: ${parsed.bankAccounts?.[0]?.bankName || "Linked"}`);
+    alert(`Official CBDT Pre-fill JSON Successfully Ingested!\n- PAN: ${parsed.pan}\n- Gross Salary: ₹${parsed.salary?.grossSalary?.toLocaleString("en-IN")}\n- Total TDS Credited: ₹${((parsed.taxesPaid?.totalTdsSalary || 0) + (parsed.taxesPaid?.totalTdsOther || 0))?.toLocaleString("en-IN")}\n- Bank: ${parsed.bankAccounts?.[0]?.bankName || "Linked"}`);
   } catch (err) {
     console.error("Prefill import failed:", err);
     alert("Prefill import failed: " + err.message);
@@ -4246,7 +4303,7 @@ function applyBrokerGainsToReturn() {
   if (badge) badge.textContent = "₹ " + Number(taxableGains).toLocaleString("en-IN");
   recalculateItrTax();
   closeModal("modalBrokerPnl");
-  alert(`✓ Capital Gains of ₹${Number(taxableGains).toLocaleString("en-IN")} (STCG @ 20% & LTCG @ 12.5% u/s 112A) applied to your tax return!`);
+  alert(`Capital Gains of ₹${Number(taxableGains).toLocaleString("en-IN")} (STCG @ 20% & LTCG @ 12.5% u/s 112A) applied to your tax return!`);
 }
 
 // ============================================================================
@@ -4388,7 +4445,7 @@ async function submitSimulatedNoticeReply() {
       if (successBox) {
         successBox.className = "filing-success-box info-note-box";
         successBox.innerHTML = `
-          <h4 style="color: #15803D;">✓ Statutory Objection Successfully Lodged!</h4>
+          <h4 style="color: #15803D;">Statutory Objection Successfully Lodged!</h4>
           <div class="mt-1"><strong>ITD Submission Token:</strong> ${result.submissionId}</div>
           <div><strong>Notice Reference DIN:</strong> ${result.din}</div>
           <div><strong>Section Invoked:</strong> Section ${result.section} / 154 Rectification</div>
@@ -4454,7 +4511,7 @@ function renderVaultTable(docs) {
         <td>${d.fileSize || "1.2 MB"}</td>
         <td>${d.uploadedAt ? d.uploadedAt.split("T")[0] : "2026-10-31"}</td>
         <td>
-          <span class="status-chip success-chip">${d.verifiedWithCbdt ? "✓ Verified CBDT" : "Stored Safe"}</span>
+          <span class="status-chip success-chip">${d.verifiedWithCbdt ? "Verified CBDT" : "Stored Safe"}</span>
         </td>
         <td>
           <div class="flex-gap">
@@ -4514,7 +4571,7 @@ async function submitVaultUpload() {
     if (result.success) {
       closeModal("modalVaultUpload");
       loadVaultDocuments(currentVaultCategory);
-      alert(`✓ Document "${title}" securely stored in Tax Document Vault!`);
+      alert(`Document "${title}" securely stored in Tax Document Vault!`);
     }
   } catch (err) {
     alert("Vault upload failed: " + err.message);
@@ -4560,7 +4617,7 @@ async function submitGenerateEinvoice() {
     document.getElementById("einvTotalValDisplay").textContent = `₹ ${Number(data.valDetails.totalInvoiceValue).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (Tax: ₹${data.valDetails.totalTax.toLocaleString("en-IN")})`;
     document.getElementById("einvQrPayloadText").value = data.qrCodeData;
     document.getElementById("einvResultCard")?.classList.remove("hidden");
-    alert(`✓ E-Invoice Successfully Generated!\n- IRN: ${data.irn.substring(0, 16)}...\n- Signed Payload & Dynamic QR Code ready for dispatch.`);
+    alert(`E-Invoice Successfully Generated!\n- IRN: ${data.irn.substring(0, 16)}...\n- Signed Payload & Dynamic QR Code ready for dispatch.`);
   } catch (err) {
     alert("Failed to generate E-Invoice: " + err.message);
   }
@@ -4589,7 +4646,7 @@ async function cancelCurrentEinvoice() {
     const data = await res.json();
     if (data.success) {
       document.getElementById("einvAckDisplay").textContent = `Status: CANCELLED (CNL) on ${new Date().toLocaleString("en-IN")}`;
-      alert("✓ E-Invoice successfully cancelled on IRP.");
+      alert("E-Invoice successfully cancelled on IRP.");
     }
   } catch (err) {
     alert("Cancellation error: " + err.message);
@@ -4659,7 +4716,7 @@ async function submitGenerateEwayBill() {
     document.getElementById("ewbResultCard")?.classList.remove("hidden");
     const updateInput = document.getElementById("updateEwbNo");
     if (updateInput) updateInput.value = data.ewbNo;
-    alert(`✓ Statutory E-Way Bill Generated!\n- EWB No: ${data.ewbNo}\n- Validity: ${data.validityDays} Day(s)\n- Vehicle: ${data.partB.vehicleNo}`);
+    alert(`Statutory E-Way Bill Generated!\n- EWB No: ${data.ewbNo}\n- Validity: ${data.validityDays} Day(s)\n- Vehicle: ${data.partB.vehicleNo}`);
   } catch (err) {
     alert("Failed to generate EWB: " + err.message);
   }
@@ -4694,7 +4751,7 @@ async function submitUpdatePartBVehicle() {
     if (data.success) {
       closeModal("modalUpdatePartB");
       document.getElementById("ewbVehicleDisplay").textContent = `${data.updatedVehicleNo} (Updated at ${fromPlace})`;
-      alert(`✓ Part-B Updated! New vehicle: ${data.updatedVehicleNo}`);
+      alert(`Part-B Updated! New vehicle: ${data.updatedVehicleNo}`);
     } else {
       alert("Update failed: " + data.error);
     }
@@ -4795,8 +4852,7 @@ async function loadMultiGstinHub() {
 
   container.innerHTML = `
     <div class="p-8 text-center text-secondary flex flex-col items-center justify-center">
-      <span class="inline-block animate-spin text-2xl text-primary mb-2">⟳</span>
-      <p class="text-xs">Loading pan-India branch registrations...</p>
+      <p class="text-sm">Loading your GST registrations...</p>
     </div>
   `;
 
@@ -4805,7 +4861,10 @@ async function loadMultiGstinHub() {
     const res = await apiFetch(`/api/gstins?period=${period}`);
     const data = await res.json();
     if (!res.ok || !data.gstins) {
-      container.innerHTML = `<div class="p-4 text-xs text-error bg-error/10 rounded-lg">Failed to load branches: ${escapeHtml(data.error || "Network error")}</div>`;
+      const unauth = res.status === 401 || /auth/i.test(String(data.error || ""));
+      container.innerHTML = unauth
+        ? `<div class="sg-empty"><span class="material-symbols-rounded" aria-hidden="true">lock</span><b>Sign in to see your GST registrations</b><button type="button" class="sg-btn-primary sg-btn-sm" onclick="openAuthModal('signin')">Sign in</button></div>`
+        : `<div class="sg-empty"><span class="material-symbols-rounded" aria-hidden="true">cloud_off</span><b>We couldn't load your registrations</b><span class="sg-meta">Please check your connection and try again.</span><button type="button" class="sg-btn sg-btn-sm" onclick="loadMultiGstinHub()">Try again</button></div>`;
       return;
     }
 
@@ -4820,7 +4879,7 @@ async function loadMultiGstinHub() {
     const metrics = data.consolidatedMetrics || {};
 
     const elTotal = document.getElementById("multiTotalGstinsCount");
-    if (elTotal) elTotal.textContent = `${totalGstins} ${totalGstins === 1 ? "Branch" : "Branches"}`;
+    if (elTotal) elTotal.textContent = `${totalGstins} registration${totalGstins === 1 ? "" : "s"}`;
 
     const elStates = document.getElementById("multiStatesListDisplay");
     if (elStates) {
@@ -4852,7 +4911,7 @@ async function loadMultiGstinHub() {
     if (elRegimes) elRegimes.textContent = `${metrics.monthlyRegimesCount || 0} Monthly / ${metrics.qrmpRegimesCount || 0} QRMP`;
 
     const elPanBadge = document.getElementById("multiCorporatePanBadge");
-    if (elPanBadge) elPanBadge.textContent = `Corporate PAN: ${corpPan}`;
+    if (elPanBadge) elPanBadge.textContent = corpPan;
 
     const elEntriesCount = document.getElementById("multiRegistryEntriesCount");
     if (elEntriesCount) elEntriesCount.textContent = `${totalGstins} ${totalGstins === 1 ? "Branch" : "Branches"}`;
@@ -4860,7 +4919,8 @@ async function loadMultiGstinHub() {
     renderMultiGstinCards(gstins);
   } catch (err) {
     console.error("Failed to load Multi-GSTIN hub:", err);
-    container.innerHTML = `<div class="p-4 text-xs text-error bg-error/10 rounded-lg">Error loading branches: ${escapeHtml(err.message)}</div>`;
+    console.warn("Could not load GST registrations:", err);
+    container.innerHTML = `<div class="sg-empty"><span class="material-symbols-rounded" aria-hidden="true">cloud_off</span><b>We couldn't load your registrations</b><span class="sg-meta">Please check your connection and try again.</span><button type="button" class="sg-btn sg-btn-sm" onclick="loadMultiGstinHub()">Try again</button></div>`;
   }
 }
 window.loadMultiGstinHub = loadMultiGstinHub;
@@ -4870,22 +4930,12 @@ function renderMultiGstinCards(branches) {
   if (!container) return;
 
   if (!branches || branches.length === 0) {
-    const corpPan = appState.organization?.pan || "—";
-    container.innerHTML = `
-      <div class="p-8 rounded-xl border border-dashed border-outline-variant bg-surface-container-lowest text-center flex flex-col items-center justify-center">
-        <span class="material-symbols-outlined text-4xl text-secondary mb-2">add_business</span>
-        <h3 class="font-bold text-sm text-on-surface">No State Branches Registered Yet</h3>
-        <p class="text-xs text-secondary mt-1 max-w-md">Register your state GSTIN branches across India sharing PAN <strong class="font-mono text-primary">${escapeHtml(corpPan)}</strong>.</p>
-        <button onclick="openAddGstinModal()" class="mt-4 px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[16px]">add_business</span>
-          <span>Add First State GSTIN</span>
-        </button>
-      </div>
-    `;
+    const searching = (document.getElementById("multiGstinSearchInput")?.value || "").trim() !== "";
+    container.innerHTML = searching
+      ? `<div class="sg-empty"><span class="material-symbols-rounded" aria-hidden="true">search_off</span><b>No registrations match your search</b></div>`
+      : `<div class="sg-empty"><span class="material-symbols-rounded" aria-hidden="true">add_business</span><b>No GST registrations yet</b><span class="sg-meta">Add the GSTIN for each state you operate in.</span><button type="button" class="sg-btn-primary sg-btn-sm" onclick="openAddGstinModal()">Add registration</button></div>`;
     return;
   }
-
-  const period = appState.activePeriod || "102026";
 
   container.innerHTML = branches.map(b => {
     const isAct = Boolean(b.isActiveForFiling);
@@ -4893,83 +4943,108 @@ function renderMultiGstinCards(branches) {
     const stateName = escapeHtml(b.state_name || "State " + stateCode);
     const gstinStr = escapeHtml(b.gstin);
     const tradeName = escapeHtml(b.trade_name || "Branch");
-    const address = escapeHtml(b.address || "Principal / Additional Place of Business");
-    const freq = escapeHtml(b.filing_frequency || "MONTHLY");
-    const isMonthly = freq.toUpperCase() === "MONTHLY";
-    const turnoverStr = Number(b.turnover || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
-    const taxStr = Number(b.outputTax || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
-    const salesCount = Number(b.salesCount || 0);
-
-    const badgeBg = isAct ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-slate-100 border-slate-200 text-slate-800';
-
+    const jsName = String(b.trade_name || "Branch").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const freq = String(b.filing_frequency || "MONTHLY").toUpperCase() === "MONTHLY" ? "Monthly returns" : "Quarterly returns (QRMP)";
+    const kind = b.is_primary ? "Principal place" : "Branch";
     return `
-      <div class="p-4 rounded-xl border ${isAct ? 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/10' : 'border-outline-variant bg-surface-container-lowest'} hover:border-primary/60 transition-all shadow-xs">
-        <div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
-          <div class="flex items-start gap-3">
-            <div class="h-10 w-10 rounded-lg ${badgeBg} border flex flex-col items-center justify-center font-bold shrink-0">
-              <span class="text-xs">${stateCode}</span>
-              <span class="text-[9px] -mt-1 font-semibold uppercase">${stateName.substring(0, 2)}</span>
-            </div>
-            <div class="flex flex-col">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-mono text-sm sm:text-base font-bold text-on-surface tracking-wide">${gstinStr}</span>
-                ${b.is_primary ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">Principal Place</span>` : `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-surface-container text-secondary border border-outline-variant">Branch</span>`}
-                ${isAct 
-                  ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      <span class="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
-                      Active for GST Filing
-                     </span>`
-                  : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-secondary border border-slate-200">
-                      Alternate Branch
-                     </span>`
-                }
-              </div>
-              <span class="font-headline-sm text-sm font-semibold text-on-surface mt-0.5">${tradeName}</span>
-              <p class="font-body-sm text-xs text-secondary mt-0.5">${address}</p>
-            </div>
-          </div>
-
-          <!-- Filing Frequency & Activity -->
-          <div class="flex md:flex-col items-end gap-1.5 shrink-0">
-            <span class="px-2.5 py-1 rounded text-xs font-semibold ${isMonthly ? 'bg-surface-container text-on-surface border border-outline-variant' : 'bg-amber-50 text-amber-900 border border-amber-300'}">
-              ${isMonthly ? 'Regular Monthly (GSTR-1 & 3B)' : 'QRMP Scheme (Quarterly)'}
-            </span>
-            <span class="text-[11px] text-secondary font-mono">
-              ${salesCount} outward supplies in ${period}
-            </span>
-          </div>
+      <div class="sg-reg${isAct ? " is-active" : ""}">
+        <span class="sg-reg-code" aria-hidden="true">${stateCode}</span>
+        <div class="sg-reg-info">
+          <b>${tradeName}</b>
+          <span>${gstinStr} &middot; ${stateName} &middot; ${kind} &middot; ${freq}</span>
         </div>
-
-        <!-- Real Period Metrics Strip (Zero Fake Numbers) -->
-        <div class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div class="flex flex-wrap items-center gap-4 text-secondary">
-            <div>Taxable Turnover: <strong class="text-on-surface font-semibold font-mono">₹${turnoverStr}</strong></div>
-            <div>Output Tax: <strong class="text-on-surface font-semibold font-mono">₹${taxStr}</strong></div>
-            <div>GSTR-3B: <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${b.gstr3bStatus === 'FILED' || b.gstr3bStatus === 'FILED_SIMULATED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${b.gstr3bStatus}</span></div>
-          </div>
-
-          <!-- Action Buttons for Switching GSTIN -->
-          <div class="flex items-center gap-2">
-            ${isAct 
-              ? `<button disabled class="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold text-xs shadow-xs flex items-center gap-1.5 cursor-default">
-                  <span class="material-symbols-outlined text-[16px]">check_circle</span>
-                  <span>Active Filing Branch</span>
-                 </button>`
-              : `<button onclick="switchActiveGstinForFiling('${b.id}', '${gstinStr}', '${tradeName.replace(/'/g, "\\'")}')" class="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-semibold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
-                  <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
-                  <span>Switch for GST Filing</span>
-                 </button>`
-            }
-            <button onclick="quickFileForBranch('${b.id}', '${gstinStr}', '${tradeName.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-semibold text-secondary hover:text-on-surface transition-colors flex items-center gap-1 cursor-pointer" title="Switch & Open Invoices">
-              <span class="material-symbols-outlined text-[16px] text-primary">receipt_long</span>
-              <span>File Invoices</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
+        ${isAct
+          ? `<span class="sg-pill-ok">Used for filing</span>`
+          : `<button type="button" class="sg-btn sg-btn-sm" onclick="requestGstinSwitch('${escapeHtml(String(b.id))}', '${gstinStr}', '${escapeHtml(jsName)}')">Use for filing</button>`}
+      </div>`;
   }).join("");
 }
+
+// Ask before changing the GSTIN that every page files under.
+function requestGstinSwitch(gstinId, gstinStr, tradeName) {
+  const modal = document.getElementById("modalConfirmGstinSwitch");
+  if (!modal) return switchActiveGstinForFiling(gstinId, gstinStr, tradeName);
+  const text = document.getElementById("confirmGstinText");
+  if (text) text.innerHTML = `Invoices, bills and returns across SimpleGST will show <strong>${escapeHtml(tradeName)} (${escapeHtml(gstinStr)})</strong>. You can switch back at any time.`;
+  const btn = document.getElementById("confirmGstinBtn");
+  if (btn) btn.onclick = async () => { closeConfirmGstinSwitch(); await switchActiveGstinForFiling(gstinId, gstinStr, tradeName); };
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  btn?.focus();
+}
+window.requestGstinSwitch = requestGstinSwitch;
+
+function closeConfirmGstinSwitch() {
+  const modal = document.getElementById("modalConfirmGstinSwitch");
+  if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+}
+window.closeConfirmGstinSwitch = closeConfirmGstinSwitch;
+
+// ---------------- Settings page sections ----------------
+function isSignedIn() {
+  return Boolean(appState?.auth?.isLoggedIn);
+}
+
+function showSettingsSection(name) {
+  const page = document.getElementById("settingsPage");
+  if (!page) return;
+  const signedIn = isSignedIn();
+  document.getElementById("settingsSignedOut")?.classList.toggle("hidden", signedIn);
+  document.getElementById("settingsLayout")?.classList.toggle("hidden", !signedIn);
+  if (!signedIn) return;
+
+  const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+  // On phones, null shows the section list; on larger screens default to registrations.
+  const section = name || (isMobile ? null : (page.dataset.section || "registrations"));
+  page.classList.toggle("is-list", !section);
+  if (section) page.dataset.section = section;
+  page.querySelectorAll(".sg-sec").forEach(s => s.classList.toggle("is-shown", s.dataset.section === section));
+  page.querySelectorAll(".sg-snav-item").forEach(btn => {
+    const on = btn.dataset.target === section;
+    btn.classList.toggle("is-active", on);
+    if (on) btn.setAttribute("aria-current", "page"); else btn.removeAttribute("aria-current");
+  });
+
+  if (section === "registrations") loadMultiGstinHub();
+  if (section === "profile" || section === "account") fillSettingsProfile();
+  if (section === "preferences") syncSettingsControls();
+  if (isMobile && section) page.scrollIntoView({ block: "start" });
+}
+window.showSettingsSection = showSettingsSection;
+
+function syncSettingsControls() {
+  const sel = document.getElementById("settingsPeriodSelect");
+  if (sel && typeof getActivePeriod === "function") sel.value = getActivePeriod();
+  const tgl = document.getElementById("settingsFocusToggle");
+  if (tgl) {
+    const on = document.body.classList.contains("kiosk-mode");
+    tgl.classList.toggle("is-on", on);
+    tgl.setAttribute("aria-checked", on ? "true" : "false");
+  }
+}
+window.syncSettingsControls = syncSettingsControls;
+
+// Reuses the read-only profile data already loaded for the profile modal.
+async function fillSettingsProfile() {
+  if (typeof populateProfileData === "function") {
+    try { await populateProfileData(); } catch (e) { console.warn("Profile data unavailable:", e); }
+  }
+  const get = id => (document.getElementById(id)?.textContent || "").trim();
+  const clean = v => (!v || /^(—|-|N\/A|null|undefined)$/i.test(v)) ? "—" : v;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = clean(v); };
+  set("setProfLegalName", get("profLegalName"));
+  set("setProfTradeName", get("profTradeName"));
+  set("setProfBusinessType", get("profBusinessType"));
+  set("setProfPan", get("profPan"));
+  set("setProfGstin", get("profGstin"));
+  set("setProfState", get("profState"));
+  set("setProfAddress", get("profBusinessAddress"));
+  const bank = [get("profBankName"), get("profBankAccount")].map(clean).filter(v => v !== "—").join(" · ");
+  set("setProfBank", bank);
+  set("setAccName", get("profFullName") || appState?.auth?.user?.name || "");
+  set("setAccEmail", get("profEmail") || appState?.auth?.user?.email || "");
+}
+window.fillSettingsProfile = fillSettingsProfile;
 
 async function switchActiveGstinForFiling(gstinId, gstinStr, tradeName) {
   try {
@@ -5008,7 +5083,7 @@ async function switchActiveGstinForFiling(gstinId, gstinStr, tradeName) {
     if (typeof renderCopilotWorkspace === "function") renderCopilotWorkspace();
     if (typeof renderFilingDropdownItems === "function") renderFilingDropdownItems();
 
-    showToast(`✓ Active workspace switched to ${entityName} (${gstinStr}) for GST filing`, "success");
+    showToast(`Active workspace switched to ${entityName} (${gstinStr}) for GST filing`, "success");
   } catch (err) {
     console.error("Error switching GSTIN:", err);
     showToast("Network error while switching GSTIN branch", "error");
@@ -5101,7 +5176,7 @@ async function submitAddGstin(e) {
 
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Registering...`;
+    btn.innerHTML = `<span class="inline-block animate-spin mr-1"></span> Registering...`;
   }
 
   try {
@@ -5127,7 +5202,7 @@ async function submitAddGstin(e) {
     }
 
     closeAddGstinModal();
-    showToast(`✓ Branch registered: ${tradeName} (${gstin})`, "success");
+    showToast(`Branch registered: ${tradeName} (${gstin})`, "success");
     loadMultiGstinHub();
     if (typeof renderFilingDropdownItems === "function") renderFilingDropdownItems();
   } catch (err) {
@@ -5139,7 +5214,7 @@ async function submitAddGstin(e) {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span><span>Register State Branch</span>`;
+      btn.innerHTML = `<span class="material-symbols-rounded text-[16px]">save</span><span>Register State Branch</span>`;
     }
   }
 }
@@ -5165,7 +5240,7 @@ async function runGstr9Consolidation() {
     document.getElementById("gstr9T6Availed").textContent = "₹ " + Number(data.table6_ItcAvailed.totalItcAvailed).toLocaleString("en-IN");
     document.getElementById("gstr9T8Portal").textContent = "₹ " + Number(data.table8_ItcReconciliation.itcAsPer2a2b).toLocaleString("en-IN");
     document.getElementById("gstr9T8Diff").textContent = `+ ₹ ${Number(data.table8_ItcReconciliation.difference).toLocaleString("en-IN")} (Surplus Available)`;
-    alert("✓ Full-year GSTR-9 statutory tables consolidated successfully from 12 monthly filings!");
+    alert("Full-year GSTR-9 statutory tables consolidated successfully from 12 monthly filings!");
   } catch (err) {
     alert("GSTR-9 consolidation failed: " + err.message);
   }
@@ -5225,7 +5300,7 @@ function applyHarvestedTaxPlan() {
   if (badge) badge.textContent = "₹ " + Number(optimizedTaxable).toLocaleString("en-IN");
   recalculateItrTax();
   closeModal("modalTaxLossHarvesting");
-  alert(`✓ Tax-Loss Harvesting Plan Applied!\n- Estimated Tax Saved: ₹${Number(currentTlhData.potentialTaxSaved).toLocaleString("en-IN")}\n- Capital Gains offset updated in your ITR computation.`);
+  alert(`Tax-Loss Harvesting Plan Applied!\n- Estimated Tax Saved: ₹${Number(currentTlhData.potentialTaxSaved).toLocaleString("en-IN")}\n- Capital Gains offset updated in your ITR computation.`);
 }
 
 
@@ -5484,7 +5559,7 @@ async function runBatchApiHealthCheck() {
 
 
 // =========================================================================
-// ClearTax Expert Assisted Filing & 1-Month Free Trial Workflows
+// SimpleGST Expert Assisted Filing & 1-Month Free Trial Workflows
 // =========================================================================
 
 async function claimOneMonthFreeTrial() {
@@ -5501,12 +5576,9 @@ async function claimOneMonthFreeTrial() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast("🎉 1-Month Free CA Advisory Trial Activated!", "success");
-      const workspace = document.getElementById("expertClientWorkspace");
-      if (workspace) {
-        workspace.scrollIntoView({ behavior: "smooth" });
-      }
-      refreshExpertStatus();
+      showToast("Your free month with a CA has started", "success");
+      await refreshExpertStatus();
+      document.getElementById("expertClientWorkspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   } catch (err) {
     console.error("Free trial claim failed:", err);
@@ -5519,7 +5591,14 @@ async function refreshExpertStatus() {
   try {
     const res = await fetch(`/api/expert/status/${pan}`);
     const data = await res.json();
-    if (data.success && data.booking) {
+    const workspace = document.getElementById("expertClientWorkspace");
+    const freeCallout = document.getElementById("expertFreeCallout");
+    // The server returns a placeholder "CT-TRIAL-DEMO" record for anyone without a booking;
+    // only a real claim or booking (stored with its own ID) counts as an active filing.
+    const hasBooking = Boolean(data.success && data.booking && data.booking.bookingId && data.booking.bookingId !== "CT-TRIAL-DEMO");
+    if (workspace) workspace.classList.toggle("hidden", !hasBooking);
+    if (freeCallout) freeCallout.classList.toggle("hidden", hasBooking);
+    if (hasBooking) {
       const b = data.booking;
       if (b.chatHistory && b.chatHistory.length > 0) {
         renderCaChatMessages(b.chatHistory);
@@ -5536,8 +5615,8 @@ function renderCaChatMessages(messages) {
   if (!container) return;
   container.innerHTML = messages.map(m => `
     <div class="ca-chat-bubble ${m.role === 'Client' ? 'from-user' : 'from-ca'}">
-      <strong>${m.sender}:</strong><br>
-      ${m.text}
+      <strong>${escapeHtml(m.sender)}:</strong><br>
+      ${escapeHtml(m.text)}
     </div>
   `).join("");
   container.scrollTop = container.scrollHeight;
@@ -5553,7 +5632,7 @@ async function sendCaChatMessage() {
   if (container) {
     container.innerHTML += `
       <div class="ca-chat-bubble from-user">
-        <strong>You:</strong><br>${msg}
+        <strong>You:</strong><br>${escapeHtml(msg)}
       </div>
     `;
     container.scrollTop = container.scrollHeight;
@@ -5639,7 +5718,7 @@ async function approveCaDraftAndFile() {
       if (resultDiv) {
         resultDiv.className = "filing-success-box info-note-box";
         resultDiv.innerHTML = `
-          <h4 style="color: #15803D;">✓ ITR-V Filing Successfully Transmitted!</h4>
+          <h4 style="color: #15803D;">ITR-V Filing Successfully Transmitted!</h4>
           <div class="mt-1"><strong>Official Acknowledgement Number (ARN):</strong> ${arn}</div>
           <div><strong>Filing Mode:</strong> ${data.verificationMode}</div>
           <div><strong>Status:</strong> ${data.status}</div>
@@ -5647,7 +5726,7 @@ async function approveCaDraftAndFile() {
         `;
         resultDiv.classList.remove("hidden");
       }
-      showToast("✓ Return Approved & Transmitted to Sandbox!", "success");
+      showToast("Return Approved & Transmitted to Sandbox!", "success");
 
       // Seamlessly switch to Step 5 to reveal the official ITR-V Filing Confirmation
       viewExpertPipelineStep(5);
@@ -5800,8 +5879,8 @@ window.selectStartupType = function(typeId) {
   Object.keys(cards).forEach(k => {
     if (cards[k]) {
       if (k === typeId) {
-        cards[k].style.background = '#EFF6FF';
-        cards[k].style.borderColor = '#2563EB';
+        cards[k].style.background = '#E8F3EE';
+        cards[k].style.borderColor = '#0A6B4F';
       } else {
         cards[k].style.background = '#FFFFFF';
         cards[k].style.borderColor = '#E2E8F0';
@@ -5838,16 +5917,16 @@ window.verifyStartupPan = function() {
   const fourth = pan[3];
   const type = cdaState.selectedStartupType;
   if (type === 'proprietorship' && fourth !== 'P') {
-    feedback.textContent = "⚠️ Sole Proprietorship requires individual PAN (4th character 'P'). Found '" + fourth + "'";
+    feedback.textContent = "Sole Proprietorship requires individual PAN (4th character 'P'). Found '" + fourth + "'";
     feedback.className = "text-xs text-danger mt-1";
   } else if (type === 'partnership' && fourth !== 'F') {
-    feedback.textContent = "⚠️ Partnership/LLP requires firm PAN (4th character 'F'). Found '" + fourth + "'";
+    feedback.textContent = "Partnership/LLP requires firm PAN (4th character 'F'). Found '" + fourth + "'";
     feedback.className = "text-xs text-danger mt-1";
   } else if ((type === 'pvt_ltd' || type === 'opc') && fourth !== 'C') {
-    feedback.textContent = "⚠️ Corporate entity requires Company PAN (4th character 'C'). Found '" + fourth + "'";
+    feedback.textContent = "Corporate entity requires Company PAN (4th character 'C'). Found '" + fourth + "'";
     feedback.className = "text-xs text-danger mt-1";
   } else {
-    feedback.textContent = "✓ PAN valid & entity character '" + fourth + "' matches " + type;
+    feedback.textContent = "PAN valid & entity character '" + fourth + "' matches " + type;
     feedback.className = "text-xs text-success mt-1";
   }
 };
@@ -5864,12 +5943,12 @@ window.lookupStartupCin = async function() {
     const json = await res.json();
     if (json.success && json.company) {
       if (feedback) {
-        feedback.innerHTML = "✓ MCA Record Verified: <strong>" + json.company.companyName + "</strong> (" + json.company.directors.length + " Directors, " + json.company.complianceStatus + ")";
+        feedback.innerHTML = "MCA Record Verified: <strong>" + json.company.companyName + "</strong> (" + json.company.directors.length + " Directors, " + json.company.complianceStatus + ")";
         feedback.className = "text-xs text-success mt-1";
       }
     } else {
       if (feedback) {
-        feedback.textContent = "⚠️ " + (json.error || "CIN not found in MCA registry");
+        feedback.textContent = "" + (json.error || "CIN not found in MCA registry");
         feedback.className = "text-xs text-danger mt-1";
       }
     }
@@ -5969,7 +6048,7 @@ window.resolveScoreMismatch = function() {
   loadComplianceScore(0);
   const btn = document.getElementById('btnQuickFixMismatch');
   if (btn) {
-    btn.textContent = "✓ All 2 Discrepancies Accepted in GSTR-2B";
+    btn.textContent = "All 2 Discrepancies Accepted in GSTR-2B";
     btn.style.color = "#059669";
     btn.style.borderColor = "#10B981";
   }
@@ -5980,6 +6059,7 @@ window.resolveScoreMismatch = function() {
 let isKioskModeActive = false;
 
 function toggleKioskMode(forceState) {
+  setTimeout(() => { if (typeof syncSettingsControls === "function") syncSettingsControls(); }, 0);
   const nextState = typeof forceState === 'boolean' ? forceState : !isKioskModeActive;
   if (nextState) {
     enterKioskMode();
@@ -6002,8 +6082,8 @@ function enterKioskMode() {
   const btn = document.getElementById('btnToggleKiosk');
   if (btn) {
     btn.innerHTML = `
-      <span class="material-symbols-outlined text-[16px] text-emerald-600">fullscreen_exit</span>
-      <span class="hidden sm:inline font-semibold text-emerald-700">Exit Kiosk</span>
+      <span class="material-symbols-rounded text-[16px] text-brand-600">fullscreen_exit</span>
+      <span class="hidden sm:inline font-semibold text-brand-700">Exit Kiosk</span>
     `;
     btn.setAttribute('title', 'Exit Kiosk Mode');
   }
@@ -6027,7 +6107,7 @@ function exitKioskMode() {
   const btn = document.getElementById('btnToggleKiosk');
   if (btn) {
     btn.innerHTML = `
-      <span class="material-symbols-outlined text-[16px] text-primary">fullscreen</span>
+      <span class="material-symbols-rounded text-[16px] text-primary">fullscreen</span>
       <span class="hidden sm:inline font-semibold">Kiosk Mode</span>
     `;
     btn.setAttribute('title', 'Enter Kiosk Mode (Distraction-Free Fullscreen)');
@@ -6203,12 +6283,50 @@ function syncPeriodAcrossUi(periodStr = "102026") {
     el.textContent = details.fy;
   });
 
+  updateHomeDueCountdown(typeof getActivePeriod === "function" ? getActivePeriod() : null);
   const homeDeadline = document.getElementById("homeHeroDeadline");
-  if (homeDeadline) homeDeadline.textContent = `Statutory Deadline: ${details.gstr3bDeadlineShort}, ${details.year}`;
+  if (homeDeadline) homeDeadline.textContent = `Due ${details.gstr3bDeadlineShort}, ${details.year}`;
   const homeStepHeader = document.getElementById("homeHeroStepTitle");
-  if (homeStepHeader) homeStepHeader.textContent = `Step 2: Purchases — Add inward invoices for ${details.short}`;
+  if (homeStepHeader) homeStepHeader.textContent = `File my GST (${details.short})`;
 }
 window.syncPeriodAcrossUi = syncPeriodAcrossUi;
+
+// Home: reflect real progress on the 3-step filing card.
+function updateHomeFilingSteps(metrics) {
+  const sales = Number(metrics.salesCount || 0);
+  const purchases = Number(metrics.purchasesCount || 0);
+  const setStep = (stepId, statusId, count, noun) => {
+    const step = document.getElementById(stepId);
+    const status = document.getElementById(statusId);
+    if (step) step.classList.toggle("is-done", count > 0);
+    if (status) status.textContent = count > 0 ? `${count} ${noun}${count === 1 ? "" : "s"} added` : "Not started";
+  };
+  setStep("homeStepSales", "homeStepSalesStatus", sales, "invoice");
+  setStep("homeStepPurchases", "homeStepPurchasesStatus", purchases, "bill");
+  const salesNote = document.getElementById("homeSalesCountNote");
+  if (salesNote) salesNote.textContent = `${sales} sales invoice${sales === 1 ? "" : "s"}`;
+  const purchNote = document.getElementById("homePurchasesCountNote");
+  if (purchNote) purchNote.textContent = `${purchases} purchase bill${purchases === 1 ? "" : "s"}`;
+  const fileStatus = document.getElementById("homeStepFileStatus");
+  if (fileStatus) fileStatus.textContent = sales > 0 || purchases > 0 ? "Ready to review" : "After steps 1 and 2";
+}
+window.updateHomeFilingSteps = updateHomeFilingSteps;
+
+// Home: days left until the GSTR-3B due date (20th of the following month).
+function updateHomeDueCountdown(period) {
+  const el = document.getElementById("homeDueCountdown");
+  if (!el || !period || String(period).length !== 6) return;
+  const month = parseInt(String(period).slice(0, 2), 10);
+  const year = parseInt(String(period).slice(2), 10);
+  const due = new Date(year, month, 20);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const days = Math.round((due - today) / 86400000);
+  el.textContent = days > 1 ? `Due in ${days} days` : days === 1 ? "Due tomorrow" : days === 0 ? "Due today" : `Overdue by ${-days} day${days === -1 ? "" : "s"}`;
+  const urgent = days <= 7;
+  el.style.background = urgent ? "" : "var(--sg-amber-soft)";
+  el.style.color = urgent ? "" : "var(--sg-amber)";
+}
+window.updateHomeDueCountdown = updateHomeDueCountdown;
 
 // ============================================================================
 // Dashboard Dynamic Data Loader & Table Hydration
@@ -6240,15 +6358,16 @@ async function loadDashboardData(period) {
     // Update hero banner texts
     const heroDesc = document.getElementById("homeHeroDescription");
     if (heroDesc && data.metrics) {
-      heroDesc.innerHTML = `<span id="dashSalesCountText">${data.metrics.salesCount}</span> Sales invoices recorded (${fmt(data.metrics.taxableSales)}). Reconcile purchase bills to confirm eligible Input Tax Credit (ITC) before submission.`;
+      heroDesc.innerHTML = `<span id="dashSalesCountText">${data.metrics.salesCount}</span> invoice${data.metrics.salesCount === 1 ? "" : "s"} and ${data.metrics.purchasesCount || 0} bill${data.metrics.purchasesCount === 1 ? "" : "s"} added`;
     }
+    updateHomeFilingSteps(data.metrics || {});
 
     // Update sync badge
     const syncBadge = document.getElementById("liveGstnSyncBadge");
     if (syncBadge) {
       if (data.environment && data.environment.isLive) {
-        syncBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>Live GSTN Sync`;
-        syncBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200";
+        syncBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-brand-600 "></span>Live GSTN Sync`;
+        syncBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label-sm font-semibold bg-brand-50 text-brand-800 border border-brand-200";
       } else {
         syncBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Sandbox Simulation (Demo Data)`;
         syncBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label-sm font-medium bg-amber-50 text-amber-800 border border-amber-200";
@@ -6269,7 +6388,7 @@ async function loadDashboardData(period) {
         tableBody.innerHTML = `
           <tr>
             <td colspan="4" class="py-8 text-center text-secondary text-xs">
-              No transactions recorded for ${escapeHtml(details.short)}. Click <strong>+ New Invoice</strong> to add sales invoices or file a Nil Return.
+              No invoices yet for ${escapeHtml(details.short)}. Add a sales invoice, or file a nil return if nothing happened this month.
             </td>
           </tr>
         `;
@@ -6281,7 +6400,7 @@ async function loadDashboardData(period) {
               <div class="font-body-sm text-secondary">${escapeHtml(item.entity)}</div>
             </td>
             <td class="py-3 px-4">
-              <span class="px-2 py-0.5 rounded text-xs ${item.isSale ? 'bg-surface-container text-secondary font-medium' : 'bg-blue-50 text-blue-800 font-medium'}">
+              <span class="px-2 py-0.5 rounded text-xs ${item.isSale ? 'bg-surface-container text-secondary font-medium' : 'bg-brand-50 text-brand-800 font-medium'}">
                 ${item.isSale ? 'B2B Sales' : 'Purchase Bill'}
               </span>
             </td>
@@ -6289,7 +6408,7 @@ async function loadDashboardData(period) {
               ${fmt(item.taxable_amount)}
             </td>
             <td class="py-3 px-5 text-right">
-              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm ${item.isSale ? 'bg-emerald-50 text-emerald-800' : 'bg-blue-50 text-blue-800'} font-semibold">
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm ${item.isSale ? 'bg-brand-50 text-brand-800' : 'bg-brand-50 text-brand-800'} font-semibold">
                 ${item.isSale ? 'Approved' : 'Verified'}
               </span>
             </td>
@@ -6317,7 +6436,7 @@ async function renderCopilotWorkspace(period) {
 
     const entityDisplay = document.getElementById("copilotActiveGstinDisplay");
     if (entityDisplay && data.activeEntity) {
-      entityDisplay.innerHTML = `${escapeHtml(data.activeEntity.tradeName)} (${escapeHtml(data.activeEntity.gstin)}) • ${escapeHtml(data.periodLabel || details.full)}`;
+      entityDisplay.innerHTML = `${escapeHtml(data.activeEntity.tradeName)} &middot; ${escapeHtml(data.periodLabel || details.full)}`;
     }
 
     const chatContainer = document.getElementById("copilotChatMessages");
@@ -6330,22 +6449,16 @@ async function renderCopilotWorkspace(period) {
       const netCash = fmt(Math.max(0, (data.summary?.outputLiability || 0) - (data.summary?.inputTaxCredit || 0)));
 
       chatContainer.innerHTML = `
-        <div class="flex items-start gap-3.5">
-          <div class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-xs">
-            <span class="material-symbols-outlined text-[18px]">smart_toy</span>
-          </div>
-          <div class="space-y-2 max-w-2xl bg-surface p-4 rounded-2xl rounded-tl-none border border-outline-variant/80 text-on-surface shadow-xs">
-            <p class="font-body-md text-sm leading-relaxed">
-              Hello! I am your <strong>SimpleGST Copilot</strong>. I am grounded directly in active database records for <strong>${activeName} (${gstin})</strong> for <strong>${escapeHtml(data.periodLabel || details.full)}</strong>.
-            </p>
-            <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/50 text-xs space-y-1 font-mono">
-              <div class="flex justify-between"><span>Gross Output Liability (Table 3.1):</span> <strong class="text-on-surface">${grossOut}</strong></div>
-              <div class="flex justify-between"><span>Eligible Inward ITC (Table 4):</span> <strong class="text-emerald-700">${eligibleItc}</strong></div>
-              <div class="flex justify-between border-t border-outline-variant pt-1 text-red-600"><span>Net Cash Shortfall (PMT-06):</span> <strong>${netCash}</strong></div>
+        <div class="flex items-start gap-3">
+          <span class="sg-tile brand shrink-0" aria-hidden="true"><span class="material-symbols-rounded">forum</span></span>
+          <div class="space-y-3 max-w-2xl bg-surface-container-low p-4 rounded-2xl rounded-tl-md border border-outline-variant text-on-surface">
+            <p class="text-sm leading-relaxed">Hello. I can answer questions about <strong>${activeName}</strong> for <strong>${escapeHtml(data.periodLabel || details.full)}</strong>, using the invoices and bills you've added.</p>
+            <div class="grid grid-cols-3 gap-3 text-sm">
+              <div><div class="text-xs text-secondary">GST on sales</div><div class="font-bold">${grossOut}</div></div>
+              <div><div class="text-xs text-secondary">Tax credit (ITC)</div><div class="font-bold text-[#15803D]">${eligibleItc}</div></div>
+              <div><div class="text-xs text-secondary">To pay in cash</div><div class="font-bold">${netCash}</div></div>
             </div>
-            <p class="text-xs text-secondary">
-              Ask me anything about your active invoices, Rule 88A setoff rules, GSTR-2B reconciliation mismatches, or Nil return eligibility for ${escapeHtml(data.periodLabel || details.full)}.
-            </p>
+            <p class="text-xs text-secondary">GSTIN ${gstin}. Pick a suggested question below, or type your own.</p>
           </div>
         </div>
       `;
@@ -6355,6 +6468,86 @@ async function renderCopilotWorkspace(period) {
   }
 }
 window.renderCopilotWorkspace = renderCopilotWorkspace;
+
+// ============================================================================
+// GST Copilot chat controller
+// Sends questions to the existing /api/copilot/ask endpoint and renders the
+// answer with its citations. Copilot answers from the active GSTIN's records
+// using fixed rules; it is not a free-form AI model.
+// ============================================================================
+function appendCopilotBubble(role, html) {
+  const stream = document.getElementById("copilotChatMessages");
+  if (!stream) return null;
+  const row = document.createElement("div");
+  if (role === "user") {
+    row.className = "flex justify-end";
+    row.innerHTML = `<div class="max-w-[80%] bg-primary text-on-primary px-4 py-2.5 rounded-2xl rounded-br-md text-sm leading-relaxed">${html}</div>`;
+  } else {
+    row.className = "flex items-start gap-3";
+    row.innerHTML = `
+      <span class="sg-tile brand shrink-0" aria-hidden="true"><span class="material-symbols-rounded">forum</span></span>
+      <div class="max-w-2xl bg-surface-container-low p-4 rounded-2xl rounded-tl-md border border-outline-variant text-on-surface text-sm leading-relaxed">${html}</div>`;
+  }
+  stream.appendChild(row);
+  stream.scrollTop = stream.scrollHeight;
+  return row;
+}
+
+async function askCopilotPrompt(question) {
+  const q = String(question || "").trim();
+  if (!q) return;
+  const input = document.getElementById("copilotQueryInput");
+  const sendBtn = document.getElementById("copilotSendBtn");
+  if (input) input.value = "";
+  appendCopilotBubble("user", escapeHtml(q));
+  const pending = appendCopilotBubble("assistant", `<span class="text-secondary">Checking your records...</span>`);
+  if (sendBtn) sendBtn.disabled = true;
+
+  try {
+    const period = typeof getActivePeriod === "function" ? getActivePeriod() : undefined;
+    const res = await apiFetch("/api/copilot/ask", {
+      method: "POST",
+      body: JSON.stringify({ question: q, period })
+    });
+    const data = await res.json().catch(() => ({}));
+    let html;
+    if (!res.ok) {
+      html = data.error === "No active GSTIN"
+        ? "Please sign in and choose a business first, so I can look at your invoices."
+        : "Sorry, I couldn't answer that right now. Please try again in a moment.";
+    } else {
+      html = `<p>${escapeHtml(data.answer || "I don't have an answer for that yet.")}</p>`;
+      if (Array.isArray(data.citations) && data.citations.length) {
+        html += `<p class="mt-2 text-xs text-secondary flex items-start gap-1.5"><span class="material-symbols-rounded text-[16px]" aria-hidden="true">menu_book</span><span>Based on: ${data.citations.map(escapeHtml).join("; ")}</span></p>`;
+      }
+      if (data.requiresCa) {
+        html += `<p class="mt-3"><a href="#tax-experts" class="text-primary font-semibold" onclick="switchSuite('expert'); return false;">Talk to a tax expert about this</a></p>`;
+      }
+    }
+    if (pending) pending.querySelector("div").innerHTML = html;
+  } catch (err) {
+    console.warn("Copilot request failed:", err);
+    if (pending) pending.querySelector("div").innerHTML = "Sorry, I couldn't reach the server. Please check your connection and try again.";
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+    if (input) input.focus();
+  }
+}
+window.askCopilotPrompt = askCopilotPrompt;
+
+function handleCopilotSubmit(event) {
+  if (event) event.preventDefault();
+  const input = document.getElementById("copilotQueryInput");
+  askCopilotPrompt(input ? input.value : "");
+}
+window.handleCopilotSubmit = handleCopilotSubmit;
+
+function clearCopilotChat() {
+  if (typeof renderCopilotWorkspace === "function") renderCopilotWorkspace();
+  const input = document.getElementById("copilotQueryInput");
+  if (input) { input.value = ""; input.focus(); }
+}
+window.clearCopilotChat = clearCopilotChat;
 
 // ============================================================================
 // Modal Controllers: New Sales Invoice Modal
@@ -6701,7 +6894,7 @@ async function startNilFilingFlow() {
         <div class="p-6 md:p-8 rounded-xl border-2 border-amber-300 bg-amber-50/60 space-y-5">
           <div class="flex items-start gap-4">
             <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
-              <span class="material-symbols-outlined text-[28px]">warning</span>
+              <span class="material-symbols-rounded text-[28px]">warning</span>
             </div>
             <div class="space-y-1.5">
               <h3 class="font-headline-sm text-headline-sm font-bold text-amber-950">
@@ -6733,7 +6926,7 @@ async function startNilFilingFlow() {
           <div class="flex flex-col sm:flex-row items-center gap-3 pt-3 border-t border-amber-200">
             <button onclick="startGuidedFiling(1)" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
               <span>Proceed with Standard Filing</span>
-              <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+              <span class="material-symbols-rounded text-[18px]">arrow_forward</span>
             </button>
             <button onclick="resetFileGstChoice()" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-secondary font-label-md hover:bg-surface-container transition-colors cursor-pointer">
               ← Change Choice
@@ -6744,20 +6937,20 @@ async function startNilFilingFlow() {
     } else {
       content.innerHTML = `
         <div class="space-y-6">
-          <div class="p-5 rounded-xl border border-emerald-300 bg-emerald-50/70 space-y-1.5">
-            <div class="flex items-center gap-2 text-emerald-900 font-headline-sm font-bold">
-              <span class="material-symbols-outlined text-emerald-700 text-[24px]">verified</span>
+          <div class="p-5 rounded-xl border border-brand-300 bg-brand-50/70 space-y-1.5">
+            <div class="flex items-center gap-2 text-brand-900 font-headline-sm font-bold">
+              <span class="material-symbols-rounded text-brand-700 text-[24px]">verified</span>
               <span>Eligibility Verified: Ready to File Nil Return</span>
             </div>
-            <p class="font-body-md text-emerald-800">
+            <p class="font-body-md text-brand-800">
               ${data.message}
             </p>
-            <div class="pt-1 flex items-center gap-4 text-xs font-medium text-emerald-900">
+            <div class="pt-1 flex items-center gap-4 text-xs font-medium text-brand-900">
               <span>GSTIN: <strong class="font-mono">${data.gstin}</strong></span>
               <span>•</span>
               <span>Filing Period: <strong>${data.periodLabel}</strong></span>
               <span>•</span>
-              <span>Status: <strong class="text-emerald-700">Zero Ledger Verified ✓</strong></span>
+              <span>Status: <strong class="text-brand-700">Zero Ledger Verified </strong></span>
             </div>
           </div>
 
@@ -6775,7 +6968,7 @@ async function startNilFilingFlow() {
             </div>
 
             <div class="p-3.5 rounded-lg bg-surface-container text-xs text-secondary flex items-start gap-2.5">
-              <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">info</span>
+              <span class="material-symbols-rounded text-primary text-[18px] shrink-0 mt-0.5">info</span>
               <span><strong>Notice:</strong> Submitting updates your compliance status and generates a simulated statutory acknowledgement receipt. It does not transmit live data to the GSTN portal without live credentials.</span>
             </div>
           </div>
@@ -6785,7 +6978,7 @@ async function startNilFilingFlow() {
               ← Change Choice
             </button>
             <button id="btnSubmitNilReturn" onclick="executeNilFilingSubmission()" disabled class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold opacity-40 cursor-not-allowed hover:bg-primary-container transition-all flex items-center justify-center gap-2 shadow-sm">
-              <span class="material-symbols-outlined text-[18px]">verified</span>
+              <span class="material-symbols-rounded text-[18px]">verified</span>
               <span>Submit Nil Return (Simulated)</span>
             </button>
           </div>
@@ -6865,14 +7058,14 @@ async function executeNilFilingSubmission() {
       showToast(data.error || "Filing failed", "error");
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">verified</span> Submit Nil Return (Simulated)`;
+        btn.innerHTML = `<span class="material-symbols-rounded text-[18px]">verified</span> Submit Nil Return (Simulated)`;
       }
     }
   } catch (err) {
     showToast("Failed to submit Nil Return: " + err.message, "error");
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">verified</span> Submit Nil Return (Simulated)`;
+      btn.innerHTML = `<span class="material-symbols-rounded text-[18px]">verified</span> Submit Nil Return (Simulated)`;
     }
   }
 }
@@ -6939,8 +7132,8 @@ async function setGuidedStep(step = 1) {
       p.className = "stepper-pill flex items-center gap-2 p-2.5 rounded-lg border text-left cursor-pointer transition-all active border-primary bg-surface-container-high text-primary font-semibold";
       if (numSpan) numSpan.className = "w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-bold shrink-0";
     } else if (pStep < step) {
-      p.className = "stepper-pill flex items-center gap-2 p-2.5 rounded-lg border text-left cursor-pointer transition-all border-emerald-300 bg-emerald-50/70 text-emerald-900 font-medium";
-      if (numSpan) numSpan.className = "w-6 h-6 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs font-bold shrink-0";
+      p.className = "stepper-pill flex items-center gap-2 p-2.5 rounded-lg border text-left cursor-pointer transition-all border-brand-300 bg-brand-50/70 text-brand-900 font-medium";
+      if (numSpan) numSpan.className = "w-6 h-6 rounded-full bg-brand-700 text-white flex items-center justify-center text-xs font-bold shrink-0";
     } else {
       p.className = "stepper-pill flex items-center gap-2 p-2.5 rounded-lg border text-left cursor-pointer transition-all border-outline-variant bg-surface text-secondary";
       if (numSpan) numSpan.className = "w-6 h-6 rounded-full bg-surface-container-highest text-secondary flex items-center justify-center text-xs font-bold shrink-0";
@@ -7083,12 +7276,12 @@ async function setGuidedStep(step = 1) {
 
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-outline-variant">
           <button onclick="switchSuite('sales')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
-            <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+            <span class="material-symbols-rounded text-[18px]">receipt_long</span>
             <span>View / Add Sales Invoices</span>
           </button>
           <button onclick="setGuidedStep(2)" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
             <span>Continue to Purchases</span>
-            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            <span class="material-symbols-rounded text-[18px]">arrow_forward</span>
           </button>
         </div>
       </div>
@@ -7136,13 +7329,13 @@ async function setGuidedStep(step = 1) {
               ← Back to Sales
             </button>
             <button onclick="switchSuite('purchase')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
-              <span class="material-symbols-outlined text-[18px]">upload_file</span>
+              <span class="material-symbols-rounded text-[18px]">upload_file</span>
               <span>View / Upload Bills</span>
             </button>
           </div>
           <button onclick="setGuidedStep(3)" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
             <span>Continue to Input Tax Credit</span>
-            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            <span class="material-symbols-rounded text-[18px]">arrow_forward</span>
           </button>
         </div>
       </div>
@@ -7160,8 +7353,8 @@ async function setGuidedStep(step = 1) {
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
-              <span class="text-xs uppercase font-semibold text-emerald-800">Available Credit</span>
-              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">${fmtCurrency(totalEligibleItc)}</div>
+              <span class="text-xs uppercase font-semibold text-brand-800">Available Credit</span>
+              <div class="font-numeric-lg text-xl font-bold text-brand-700 mt-1">${fmtCurrency(totalEligibleItc)}</div>
               <p class="text-xs text-secondary mt-0.5">Matched with supplier GSTR-2B</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
@@ -7190,13 +7383,13 @@ async function setGuidedStep(step = 1) {
               ← Back to Purchases
             </button>
             <button onclick="switchSuite('recon')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
-              <span class="material-symbols-outlined text-[18px]">rule</span>
+              <span class="material-symbols-rounded text-[18px]">rule</span>
               <span>Reconcile Bills</span>
             </button>
           </div>
           <button onclick="setGuidedStep(4)" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
             <span>Continue to Tax Summary</span>
-            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            <span class="material-symbols-rounded text-[18px]">arrow_forward</span>
           </button>
         </div>
       </div>
@@ -7219,8 +7412,8 @@ async function setGuidedStep(step = 1) {
               <p class="text-xs text-secondary mt-0.5">Gross liability assessed</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
-              <span class="text-xs uppercase font-semibold text-emerald-800">Less: ITC Offset Applied</span>
-              <div class="font-numeric-lg text-xl font-bold text-emerald-700 mt-1">-${fmtCurrency(totalItcUtilized)}</div>
+              <span class="text-xs uppercase font-semibold text-brand-800">Less: ITC Offset Applied</span>
+              <div class="font-numeric-lg text-xl font-bold text-brand-700 mt-1">-${fmtCurrency(totalItcUtilized)}</div>
               <p class="text-xs text-secondary mt-0.5">${itcCarryForward > 0 ? `Carried forward: ${fmtCurrency(itcCarryForward)}` : 'Auto-offset applied u/r 88A'}</p>
             </div>
             <div class="p-4 rounded-lg bg-surface border border-outline-variant shadow-xs">
@@ -7231,8 +7424,8 @@ async function setGuidedStep(step = 1) {
           </div>
 
           ${itcCarryForward > 0 ? `
-          <div class="p-3.5 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-xs text-emerald-900 flex items-start gap-2.5">
-            <span class="material-symbols-outlined text-emerald-700 text-[18px] shrink-0 mt-0.5">account_balance_wallet</span>
+          <div class="p-3.5 rounded-lg bg-brand-50/80 border border-brand-200/80 text-xs text-brand-900 flex items-start gap-2.5">
+            <span class="material-symbols-rounded text-brand-700 text-[18px] shrink-0 mt-0.5">account_balance_wallet</span>
             <div>
               <strong>Electronic Credit Ledger Balance:</strong> ${fmtCurrency(totalItcUtilized)} utilized to fully offset outward tax liability. The remaining excess eligible ITC of <strong>${fmtCurrency(itcCarryForward)}</strong> is retained in your Electronic Credit Ledger and carried forward to future tax periods.
             </div>
@@ -7253,13 +7446,13 @@ async function setGuidedStep(step = 1) {
               ← Back to Credit
             </button>
             <button onclick="switchSuite('taxcalc')" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
-              <span class="material-symbols-outlined text-[18px]">calculate</span>
+              <span class="material-symbols-rounded text-[18px]">calculate</span>
               <span>View Offset Details</span>
             </button>
           </div>
           <button onclick="setGuidedStep(5)" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
             <span>Continue to Review & File</span>
-            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            <span class="material-symbols-rounded text-[18px]">arrow_forward</span>
           </button>
         </div>
       </div>
@@ -7294,12 +7487,12 @@ async function setGuidedStep(step = 1) {
             </div>
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
               <span class="text-secondary">Input Tax Credit Offset</span>
-              <span class="font-mono font-medium text-emerald-700" id="reviewItcOffset">-${fmtCurrency(totalItcUtilized)}</span>
+              <span class="font-mono font-medium text-brand-700" id="reviewItcOffset">-${fmtCurrency(totalItcUtilized)}</span>
             </div>
             ${itcCarryForward > 0 ? `
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/60 text-sm">
               <span class="text-secondary">ITC Balance Carried Forward</span>
-              <span class="font-mono font-medium text-emerald-800" id="reviewItcCarryForward">${fmtCurrency(itcCarryForward)}</span>
+              <span class="font-mono font-medium text-brand-800" id="reviewItcCarryForward">${fmtCurrency(itcCarryForward)}</span>
             </div>
             ` : ''}
             <div class="flex items-center justify-between py-2 text-base font-bold">
@@ -7309,8 +7502,8 @@ async function setGuidedStep(step = 1) {
           </div>
 
           ${itcCarryForward > 0 ? `
-          <div class="p-3.5 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-xs text-emerald-900 flex items-start gap-2.5">
-            <span class="material-symbols-outlined text-emerald-700 text-[18px] shrink-0 mt-0.5">account_balance_wallet</span>
+          <div class="p-3.5 rounded-lg bg-brand-50/80 border border-brand-200/80 text-xs text-brand-900 flex items-start gap-2.5">
+            <span class="material-symbols-rounded text-brand-700 text-[18px] shrink-0 mt-0.5">account_balance_wallet</span>
             <div>
               <strong>Rule 88A Optimization:</strong> Outward tax liability of ${fmtCurrency(totalOutputLiability)} is 100% discharged via ITC. The remaining unutilized credit of <strong>${fmtCurrency(itcCarryForward)}</strong> is carried forward to your next return.
             </div>
@@ -7318,7 +7511,7 @@ async function setGuidedStep(step = 1) {
           ` : ''}
 
           <div class="p-3.5 rounded-lg bg-surface-container text-xs text-secondary flex items-start gap-2.5">
-            <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">verified_user</span>
+            <span class="material-symbols-rounded text-primary text-[18px] shrink-0 mt-0.5">verified_user</span>
             <span><strong>Notice:</strong> Submitting prepares your Form GSTR-3B with EVC OTP authorization and updates your electronic ledgers persistently.</span>
           </div>
         </div>
@@ -7328,7 +7521,7 @@ async function setGuidedStep(step = 1) {
             ← Back to Tax Summary
           </button>
           <button onclick="startGstr3bFilingFlow()" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-on-primary font-label-lg font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-            <span class="material-symbols-outlined text-[18px]">verified</span>
+            <span class="material-symbols-rounded text-[18px]">verified</span>
             <span>File GSTR-3B Return (Simulated)</span>
           </button>
         </div>
@@ -7534,7 +7727,7 @@ async function completeReturnFiling({ otp = "123456", paymentDone = false } = {}
       return;
     }
 
-    showToast("🎉 GSTR-3B Return successfully verified & filed in sandbox database!", "success");
+    showToast("GSTR-3B Return successfully verified & filed in sandbox database!", "success");
     openArnModalWithData(data);
     if (typeof loadDashboardData === "function") loadDashboardData(period);
   } catch (err) {
@@ -7601,25 +7794,25 @@ function openArnModalWithData(data = {}) {
         <td class="px-4 py-2 text-right font-mono font-medium">₹${igstAssessed.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
         <td class="px-4 py-2 text-right font-mono text-primary font-medium">₹${igstItc.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
         <td class="px-4 py-2 text-right font-mono text-secondary">₹${igstCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
-        <td class="px-5 py-2 text-right font-mono text-emerald-700 font-semibold">₹0.00</td>
+        <td class="px-5 py-2 text-right font-mono text-brand-700 font-semibold">₹0.00</td>
       </tr>
       <tr class="hover:bg-surface-container-low/60 transition-colors h-11">
         <td class="px-5 py-2 font-medium text-on-surface flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Central Tax (CGST)
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span> Central Tax (CGST)
         </td>
         <td class="px-4 py-2 text-right font-mono font-medium">₹${cgstAssessed.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
         <td class="px-4 py-2 text-right font-mono text-primary font-medium">₹${cgstItc.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
         <td class="px-4 py-2 text-right font-mono text-on-surface font-medium">₹${cgstCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
-        <td class="px-5 py-2 text-right font-mono text-emerald-700 font-semibold">₹0.00</td>
+        <td class="px-5 py-2 text-right font-mono text-brand-700 font-semibold">₹0.00</td>
       </tr>
       <tr class="hover:bg-surface-container-low/60 transition-colors h-11">
         <td class="px-5 py-2 font-medium text-on-surface flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> State / UT Tax (SGST)
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span> State / UT Tax (SGST)
         </td>
         <td class="px-4 py-2 text-right font-mono font-medium">₹${sgstAssessed.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
         <td class="px-4 py-2 text-right font-mono text-primary font-medium">₹${sgstItc.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
         <td class="px-4 py-2 text-right font-mono text-on-surface font-medium">₹${sgstCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
-        <td class="px-5 py-2 text-right font-mono text-emerald-700 font-semibold">₹0.00</td>
+        <td class="px-5 py-2 text-right font-mono text-brand-700 font-semibold">₹0.00</td>
       </tr>
       <tr class="hover:bg-surface-container-low/60 transition-colors h-11">
         <td class="px-5 py-2 font-medium text-secondary flex items-center gap-2">
@@ -7628,7 +7821,7 @@ function openArnModalWithData(data = {}) {
         <td class="px-4 py-2 text-right font-mono text-secondary">₹0.00</td>
         <td class="px-4 py-2 text-right font-mono text-secondary">₹0.00</td>
         <td class="px-4 py-2 text-right font-mono text-secondary">₹0.00</td>
-        <td class="px-5 py-2 text-right font-mono text-emerald-700 font-semibold">₹0.00</td>
+        <td class="px-5 py-2 text-right font-mono text-brand-700 font-semibold">₹0.00</td>
       </tr>
     `;
 
@@ -7640,7 +7833,7 @@ function openArnModalWithData(data = {}) {
           <td class="px-4 py-2 text-right font-mono">₹${totalAssessed.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
           <td class="px-4 py-2 text-right font-mono text-primary">₹${totalItc.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
           <td class="px-4 py-2 text-right font-mono text-on-surface">₹${totalCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
-          <td class="px-5 py-2 text-right font-mono text-emerald-700">₹0.00</td>
+          <td class="px-5 py-2 text-right font-mono text-brand-700">₹0.00</td>
         </tr>
       `;
     }
@@ -7679,7 +7872,7 @@ window.openDueDatesModal = async function() {
             <div class="text-xs text-danger" style="margin-top: 2px;">Penalty: ${d.penaltyRule}</div>
           </div>
           <div style="text-align: right;">
-            <div class="font-mono" style="font-size: 16px; font-weight: 800; color: ${d.daysRemaining <= 10 ? '#DC2626' : '#2563EB'};">
+            <div class="font-mono" style="font-size: 16px; font-weight: 800; color: ${d.daysRemaining <= 10 ? '#DC2626' : '#0A6B4F'};">
               ${d.daysRemaining} Days Left
             </div>
             <div class="text-xs text-muted">${new Date(d.dueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
@@ -7731,7 +7924,7 @@ window.simulateNotification = async function(channel) {
         `;
       } else if (channel === 'sms') {
         box.innerHTML = `
-          <div style="font-size: 11px; font-weight: 700; color: #2563EB; text-transform: uppercase;">TRAI DLT SMS Gateway Preview</div>
+          <div style="font-size: 11px; font-weight: 700; color: #0A6B4F; text-transform: uppercase;">TRAI DLT SMS Gateway Preview</div>
           <div style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; padding: 12px; margin: 8px 0; font-family: monospace; font-size: 13px;">
             [${p.senderId}] ${p.message}
           </div>
@@ -7829,7 +8022,7 @@ window.executeMcaLookup = async function(cin) {
       box.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 12px;">
           <div>
-            <div style="font-size: 16px; font-weight: 800; color: #1E40AF;">${c.companyName}</div>
+            <div style="font-size: 16px; font-weight: 800; color: #08583F;">${c.companyName}</div>
             <div class="font-mono text-xs text-muted mt-1">${c.cin} • ${c.roc}</div>
           </div>
           <span class="status-chip success-chip">${c.complianceStatus}</span>
@@ -7852,7 +8045,7 @@ window.executeMcaLookup = async function(cin) {
         </div>
       `;
     } else {
-      box.innerHTML = `<div class="text-danger text-xs">⚠️ ${json.error || 'CIN lookup failed'}</div>`;
+      box.innerHTML = `<div class="text-danger text-xs">${json.error || 'CIN lookup failed'}</div>`;
     }
   } catch(e) {
     box.innerHTML = `<div class="text-danger text-xs">Failed to connect to MCA service: ${e.message}</div>`;
@@ -7899,7 +8092,7 @@ window.openNilFilingModal = function(e) {
   if (successBox) successBox.classList.add("hidden");
   if (submitBtn) {
     submitBtn.disabled = false;
-    submitBtn.textContent = "✓ Confirm & File Nil Return";
+    submitBtn.textContent = "Confirm & File Nil Return";
   }
   if (modal) {
     modal.classList.remove("hidden");
@@ -7923,7 +8116,7 @@ window.submitNilFiling = async function() {
 
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = "⏳ EVC Verifying & Transmitting...";
+    submitBtn.textContent = "EVC Verifying & Transmitting...";
   }
 
   try {
@@ -7942,8 +8135,8 @@ window.submitNilFiling = async function() {
     if (json.success) {
       if (arnText) arnText.textContent = "Simulated ARN: " + (json.simulationReference || json.arn);
       if (successBox) successBox.classList.remove("hidden");
-      if (submitBtn) submitBtn.textContent = "✓ Filed (Sandbox Mode)";
-      showToast("🎉 Nil return recorded successfully in sandbox! Ref: " + (json.simulationReference || json.arn), "success");
+      if (submitBtn) submitBtn.textContent = "Filed (Sandbox Mode)";
+      showToast("Nil return recorded successfully in sandbox! Ref: " + (json.simulationReference || json.arn), "success");
     } else {
       showToast("Failed to file Nil return: " + (json.error || "Unknown error"), "error");
       if (submitBtn) {
@@ -7955,7 +8148,7 @@ window.submitNilFiling = async function() {
     const fallbackArn = "SIM-NIL-AA321026" + Math.floor(100000 + Math.random() * 900000);
     if (arnText) arnText.textContent = "Simulated ARN: " + fallbackArn;
     if (successBox) successBox.classList.remove("hidden");
-    showToast("🎉 Nil return recorded (Sandbox): " + fallbackArn, "success");
+    showToast("Nil return recorded (Sandbox): " + fallbackArn, "success");
   }
 };
 
@@ -7996,7 +8189,7 @@ window.loadSampleAiDoc = async function(type) {
     const json = await res.json();
     if (json.success) {
       renderExtractedDocResult(json);
-      showToast("✓ Extracted successfully (" + json.confidence + " confidence)", "success");
+      showToast("Extracted successfully (" + json.confidence + " confidence)", "success");
     }
   } catch(e) {
     console.error("Extraction error:", e);
@@ -8020,7 +8213,7 @@ window.handleAiFileSelect = async function(e) {
     const json = await res.json();
     if (json.success) {
       renderExtractedDocResult(json);
-      showToast("✓ Extracted " + file.name + " (" + json.confidence + ")", "success");
+      showToast("Extracted " + file.name + " (" + json.confidence + ")", "success");
     }
   } catch(err) {
     console.error(err);
@@ -8040,7 +8233,7 @@ function renderExtractedDocResult(json) {
   card.classList.remove("hidden");
 
   if (docName) docName.textContent = json.filename;
-  if (conf) conf.textContent = "✓ Extracted (" + json.confidence + " confidence)";
+  if (conf) conf.textContent = "Extracted (" + json.confidence + " confidence)";
   if (sentence) sentence.textContent = json.plainEnglishSummary;
 
   const d = json.data;
@@ -8053,8 +8246,8 @@ function renderExtractedDocResult(json) {
       </div>
       <div style="background:#FFF; padding:12px; border-radius:8px; border:1px solid #E2E8F0;">
         <div class="text-xs text-muted">Total Sales Credits</div>
-        <div class="font-mono" style="font-size:18px; font-weight:800; color:#2563EB;">₹${(d.totalCredits || 1240000).toLocaleString('en-IN')}</div>
-        <div class="text-xs text-success">✓ 14 customer payments reconciled</div>
+        <div class="font-mono" style="font-size:18px; font-weight:800; color:#0A6B4F;">₹${(d.totalCredits || 1240000).toLocaleString('en-IN')}</div>
+        <div class="text-xs text-success">14 customer payments reconciled</div>
       </div>
       <div style="background:#FFF; padding:12px; border-radius:8px; border:1px solid #E2E8F0;">
         <div class="text-xs text-muted">Total Supplier Debits</div>
@@ -8072,8 +8265,8 @@ function renderExtractedDocResult(json) {
       </div>
       <div style="background:#FFF; padding:12px; border-radius:8px; border:1px solid #E2E8F0;">
         <div class="text-xs text-muted">GSTIN Identifier</div>
-        <div class="font-mono" style="font-weight:700; color:#1E40AF;">${d.gstin}</div>
-        <div class="text-xs text-success">✓ Structure & State Code Valid</div>
+        <div class="font-mono" style="font-weight:700; color:#08583F;">${d.gstin}</div>
+        <div class="text-xs text-success">Structure & State Code Valid</div>
       </div>
       <div style="background:#FFF; padding:12px; border-radius:8px; border:1px solid #E2E8F0;">
         <div class="text-xs text-muted">Taxable Value & GST</div>
@@ -8085,7 +8278,7 @@ function renderExtractedDocResult(json) {
     if (json.documentType === 'purchase_bill' && d.statutoryMatch) {
       if (safetyBanner) {
         safetyBanner.classList.remove("hidden");
-        safetyBanner.innerHTML = `<strong>✓ Section 16(2)(aa) Check:</strong> Supplier filed GSTR-1. ₹${(d.totalGst || 0).toLocaleString('en-IN')} tax discount is 100% matched in GSTR-2B and safe to claim.`;
+        safetyBanner.innerHTML = `<strong>Section 16(2)(aa) Check:</strong> Supplier filed GSTR-1. ₹${(d.totalGst || 0).toLocaleString('en-IN')} tax discount is 100% matched in GSTR-2B and safe to claim.`;
       }
     } else {
       if (safetyBanner) safetyBanner.classList.add("hidden");
@@ -8098,7 +8291,7 @@ window.addExtractedDocToReturn = function() {
     showToast("Please scan or upload a document first.", "warning");
     return;
   }
-  showToast("✓ Invoice successfully added to October return computation!", "success");
+  showToast("Invoice successfully added to October return computation!", "success");
   document.getElementById("aiExtractionResultCard")?.classList.add("hidden");
   viewCopilotStep(4);
 };
@@ -8119,7 +8312,7 @@ window.renderCadenceTimeline = async function() {
           <div class="cadence-day-badge">Day ${s.dayOfMonth}</div>
           <div style="font-size: 13px; font-weight: 700; color: #0F172A; margin: 2px 0;">${s.stage}</div>
           <div style="font-size: 11.5px; color: #64748B; line-height: 1.4;">${s.statusText}</div>
-          <div style="font-size: 11px; color: #2563EB; font-weight: 600; margin-top: 8px;">📱 View WhatsApp →</div>
+          <div style="font-size: 11px; color: #0A6B4F; font-weight: 600; margin-top: 8px;">View WhatsApp →</div>
         </div>
       `).join('');
     }
@@ -8130,16 +8323,16 @@ window.renderCadenceTimeline = async function() {
 
 window.previewCadenceWhatsApp = function(code) {
   const messages = {
-    'CADENCE_1ST_WINDOW_OPEN': 'Good morning! 🌅 GST portal for October 2026 is now open. File early to avoid last-minute server congestion. Open SimpleGST to start.',
-    'CADENCE_3RD_GATHER_DOCS': 'Hi there! 🧾 Please collect your sales bills, supplier invoices, and bank statements for October. Uploading them one-by-one takes only 2 minutes.',
-    'CADENCE_5TH_UPLOAD_PROMPT': 'Reminder 📸: 5 days into the month! Upload your October invoices today so our AI can automatically reconcile your supplier tax credits.',
-    'CADENCE_7TH_GSTR1_WARNING': '⏳ Only 3 days left! GSTR-1 sales returns must be filed before the 10th. If delayed, your buyers cannot claim tax credit. File now!',
-    'CADENCE_9TH_FINAL_CALL': '🚨 CRITICAL: GSTR-1 deadline is TOMORROW! Complete your sales return now to protect your business reputation and avoid statutory late fees.',
-    'CADENCE_20TH_FINAL_GSTR3B': '⏰ FINAL DEADLINE TODAY: GSTR-3B must be filed by 11:59 PM tonight. Late filing from tomorrow will incur ₹50/day late fee + 18% interest.'
+    'CADENCE_1ST_WINDOW_OPEN': 'Good morning! GST portal for October 2026 is now open. File early to avoid last-minute server congestion. Open SimpleGST to start.',
+    'CADENCE_3RD_GATHER_DOCS': 'Hi there! Please collect your sales bills, supplier invoices, and bank statements for October. Uploading them one-by-one takes only 2 minutes.',
+    'CADENCE_5TH_UPLOAD_PROMPT': 'Reminder : 5 days into the month! Upload your October invoices today so our AI can automatically reconcile your supplier tax credits.',
+    'CADENCE_7TH_GSTR1_WARNING': 'Only 3 days left! GSTR-1 sales returns must be filed before the 10th. If delayed, your buyers cannot claim tax credit. File now!',
+    'CADENCE_9TH_FINAL_CALL': 'CRITICAL: GSTR-1 deadline is TOMORROW! Complete your sales return now to protect your business reputation and avoid statutory late fees.',
+    'CADENCE_20TH_FINAL_GSTR3B': 'FINAL DEADLINE TODAY: GSTR-3B must be filed by 11:59 PM tonight. Late filing from tomorrow will incur ₹50/day late fee + 18% interest.'
   };
 
   const text = messages[code] || 'Statutory GST filing reminder for October 2026.';
-  alert(`📱 WhatsApp Automated Customer Reminder\n\nRecipient: Malabar Spice Traders (+91 98*** **294)\n\n"${text}"`);
+  alert(`WhatsApp Automated Customer Reminder\n\nRecipient: Malabar Spice Traders (+91 98*** **294)\n\n"${text}"`);
 };
 
 window.onDelaySliderChange = async function(days) {
@@ -8162,7 +8355,7 @@ window.onDelaySliderChange = async function(days) {
 
       if (ewayElem) {
         if (json.ewayBillBlocked) {
-          ewayElem.textContent = "🚨 BLOCKED (Rule 138E)";
+          ewayElem.textContent = "BLOCKED (Rule 138E)";
           ewayElem.style.color = "#DC2626";
         } else {
           ewayElem.textContent = "ACTIVE (Compliant)";
@@ -8172,13 +8365,13 @@ window.onDelaySliderChange = async function(days) {
 
       if (badgeElem) {
         if (d === 0) {
-          badgeElem.textContent = "✓ Filing Today: ₹0 Fine";
+          badgeElem.textContent = "Filing Today: ₹0 Fine";
           badgeElem.className = "status-chip success-chip";
         } else if (d <= 5) {
-          badgeElem.textContent = `⚠️ Delayed by ${d} Days: ₹${json.totalEscalationFine} Penalty`;
+          badgeElem.textContent = `Delayed by ${d} Days: ₹${json.totalEscalationFine} Penalty`;
           badgeElem.className = "status-chip warning-chip";
         } else {
-          badgeElem.textContent = `🚨 Delayed by ${d} Days: ₹${json.totalEscalationFine.toLocaleString("en-IN")} Penalty`;
+          badgeElem.textContent = `Delayed by ${d} Days: ₹${json.totalEscalationFine.toLocaleString("en-IN")} Penalty`;
           badgeElem.className = "status-chip danger-chip";
         }
       }
@@ -8254,11 +8447,11 @@ window.loadPracticeData = async function() {
             <td style="padding: 8px 10px;">
               ${c.itcStatus.unmatchedExcess > 0 
                 ? `<span style="color: #DC2626; font-weight: 700;">+₹${c.itcStatus.unmatchedExcess.toLocaleString("en-IN")} Excess</span>` 
-                : `<span style="color: #16A34A; font-weight: 700;">✓ 100% Matched</span>`}
+                : `<span style="color: #16A34A; font-weight: 700;">100% Matched</span>`}
             </td>
             <td style="padding: 8px 10px;">
               <button class="btn btn-outline btn-xs" onclick="sendClientReminder('${c.clientId}')">
-                📩 Send Reminder
+                Send Reminder
               </button>
             </td>
           </tr>
@@ -8392,7 +8585,7 @@ window.generateStatutoryChallan = async function() {
       if (box) {
         box.style.display = 'block';
         box.innerHTML = `
-          <div style="font-weight: 700; color: #1E40AF; margin-bottom: 4px;">Form GST PMT-06 Challan Generated:</div>
+          <div style="font-weight: 700; color: #08583F; margin-bottom: 4px;">Form GST PMT-06 Challan Generated:</div>
           <div><strong>14-Digit CPIN:</strong> <span class="font-mono" style="font-weight: 700; color: #0F172A;">${ch.cpin}</span></div>
           <div><strong>Total Amount:</strong> ₹${ch.totalChallanAmount.toLocaleString("en-IN")}</div>
           <div><strong>Statutory Validity:</strong> 15 Days (Expires: ${new Date(ch.expiryDate).toLocaleDateString()})</div>
@@ -8438,9 +8631,9 @@ window.load180DaysData = async function() {
             <div class="text-xs text-muted">0-90 Days (Normal)</div>
             <div style="font-size: 16px; font-weight: 800; color: #166534;">${sum.current0To90Count} Invoices</div>
           </div>
-          <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 10px;">
+          <div style="background: #E8F3EE; border: 1px solid #B0DBC8; border-radius: 8px; padding: 10px;">
             <div class="text-xs text-muted">91-150 Days (Aging)</div>
-            <div style="font-size: 16px; font-weight: 800; color: #1D4ED8;">${sum.watchlist91To150Count} Invoices</div>
+            <div style="font-size: 16px; font-weight: 800; color: #08583F;">${sum.watchlist91To150Count} Invoices</div>
           </div>
           <div style="background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px; padding: 10px;">
             <div class="text-xs text-muted">151-179 Days (Critical)</div>
@@ -8527,7 +8720,7 @@ window.loadRcmData = async function() {
               <div style="font-size: 18px; font-weight: 800; color: #DC2626;">₹${json.gstr3bTable3_1_d.totalTax.toLocaleString("en-IN")}</div>
             </div>
           </div>
-          <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px; font-size: 12px; margin-bottom: 10px;">
+          <div style="background: #E8F3EE; border: 1px solid #B0DBC8; border-radius: 6px; padding: 10px; font-size: 12px; margin-bottom: 10px;">
             <strong>Subsequent ITC Claim (Table 4(A)(3)):</strong> Eligible ₹${json.gstr3bTable4_A_3.eligibleTotal.toLocaleString("en-IN")} will be unlocked in your Electronic Credit Ledger <em>immediately after</em> Table 3.1(d) is paid in cash.
           </div>
           <div class="text-xs text-muted">
@@ -8918,7 +9111,7 @@ function filterSalesTable() {
         <td class="py-3 px-4 text-right font-mono text-xs">₹${Number(inv.sgst || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
         <td class="py-3 px-4 text-right font-mono font-semibold text-on-surface">₹${Number(inv.total_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
         <td class="py-3 px-4 text-center">
-          <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-brand-100 text-brand-800 border border-brand-300">
             ${escapeHtml(inv.status || "VALIDATED")}
           </span>
         </td>
@@ -8928,7 +9121,7 @@ function filterSalesTable() {
               Verified
             </span>
             <button type="button" title="Delete sales invoice" onclick="deleteSalesInvoice('${inv.id}', '${escapeHtml(inv.invoice_number)}')" class="text-rose-600 hover:text-rose-800 transition-colors p-1 rounded hover:bg-rose-50 cursor-pointer flex items-center">
-              <span class="material-symbols-outlined text-[15px]">delete</span>
+              <span class="material-symbols-rounded text-[15px]">delete</span>
             </button>
           </div>
         </td>
@@ -9003,7 +9196,7 @@ function filterPurchaseTable() {
     tbody.innerHTML = filtered.map(p => {
       const isEligible = p.itc_eligibility === "ELIGIBLE";
       const itcBadge = isEligible
-        ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">Eligible ITC</span>`
+        ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-brand-100 text-brand-800 border border-brand-300">Eligible ITC</span>`
         : `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800 border border-rose-300">Blocked / Ineligible</span>`;
       return `
         <tr class="hover:bg-surface-container-low transition-colors">
@@ -9013,11 +9206,11 @@ function filterPurchaseTable() {
           <td class="py-3 px-4 font-mono text-xs text-secondary">${escapeHtml(p.supplier_gstin || "—")}</td>
           <td class="py-3 px-4 text-right font-mono">₹${Number(p.taxable_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
           <td class="py-3 px-4 text-right font-mono">${p.gst_rate || 0}%</td>
-          <td class="py-3 px-4 text-right font-mono font-medium ${isEligible ? 'text-emerald-700' : 'text-secondary'}">₹${Number(p.total_tax || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+          <td class="py-3 px-4 text-right font-mono font-medium ${isEligible ? 'text-brand-700' : 'text-secondary'}">₹${Number(p.total_tax || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
           <td class="py-3 px-4 text-right font-mono font-semibold text-on-surface">₹${Number(p.total_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
           <td class="py-3 px-4 text-center">${itcBadge}</td>
           <td class="py-3 px-4 text-center">
-            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-medium ${p.payment_status === 'FULLY_PAID' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'}">
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-medium ${p.payment_status === 'FULLY_PAID' ? 'bg-brand-50 text-brand-700' : 'bg-slate-100 text-slate-700'}">
               ${escapeHtml(p.payment_status || "UNPAID")}
             </span>
           </td>
@@ -9027,7 +9220,7 @@ function filterPurchaseTable() {
                 Verified
               </span>
               <button type="button" title="Delete purchase bill" onclick="deletePurchaseInvoice('${p.id}', '${escapeHtml(p.invoice_number)}')" class="text-rose-600 hover:text-rose-800 transition-colors p-1 rounded hover:bg-rose-50 cursor-pointer flex items-center">
-                <span class="material-symbols-outlined text-[15px]">delete</span>
+                <span class="material-symbols-rounded text-[15px]">delete</span>
               </button>
             </div>
           </td>
@@ -9352,7 +9545,7 @@ function setOcrDocumentType(type, triggerRecalc = true) {
     }
     if (itcWrapper) itcWrapper.style.display = "none";
     if (btnSave) {
-      btnSave.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span> <span>Save to Sales Register</span>`;
+      btnSave.innerHTML = `<span class="material-symbols-rounded text-[16px]">save</span> <span>Save to Sales Register</span>`;
     }
   } else {
     if (btnPurchase) {
@@ -9363,7 +9556,7 @@ function setOcrDocumentType(type, triggerRecalc = true) {
     }
     if (itcWrapper) itcWrapper.style.display = "block";
     if (btnSave) {
-      btnSave.innerHTML = `<span class="material-symbols-outlined text-[16px]">save</span> <span>Save to Purchase Register</span>`;
+      btnSave.innerHTML = `<span class="material-symbols-rounded text-[16px]">save</span> <span>Save to Purchase Register</span>`;
     }
   }
 
@@ -9428,7 +9621,7 @@ function renderOcrLineItems() {
       </td>
       <td class="py-1 px-1 text-center">
         <button type="button" onclick="removeOcrLineItem(${idx})" class="p-1 text-secondary hover:text-error hover:bg-surface-container rounded cursor-pointer" title="Delete item">
-          <span class="material-symbols-outlined text-[16px]">delete</span>
+          <span class="material-symbols-rounded text-[16px]">delete</span>
         </button>
       </td>
     </tr>
@@ -9590,7 +9783,7 @@ function renderOcrWarnings(warnings = []) {
 
   box.innerHTML = `
     <div class="font-bold flex items-center gap-1.5 text-amber-900">
-      <span class="material-symbols-outlined text-[16px]">warning</span>
+      <span class="material-symbols-rounded text-[16px]">warning</span>
       <span>Document Extraction Review Notices (${warnings.length}):</span>
     </div>
     <ul class="list-disc list-inside space-y-0.5 text-[11px] text-amber-800">
@@ -9949,18 +10142,18 @@ function renderBillsDashboard() {
   if (emptyState) emptyState.classList.add('hidden');
 
   const categoryLabels = {
-    sales_invoice: { label: "Sales", badge: "bg-emerald-100 text-emerald-800 border-emerald-300" },
-    purchase_bill: { label: "Purchase", badge: "bg-indigo-100 text-indigo-800 border-indigo-300" },
+    sales_invoice: { label: "Sales", badge: "bg-brand-100 text-brand-800 border-brand-300" },
+    purchase_bill: { label: "Purchase", badge: "bg-brand-100 text-brand-800 border-brand-300" },
     expense_bill: { label: "Expense", badge: "bg-amber-100 text-amber-800 border-amber-300" },
-    credit_note: { label: "Credit Note", badge: "bg-purple-100 text-purple-800 border-purple-300" },
-    debit_note: { label: "Debit Note", badge: "bg-cyan-100 text-cyan-800 border-cyan-300" },
+    credit_note: { label: "Credit Note", badge: "bg-brand-100 text-brand-800 border-brand-300" },
+    debit_note: { label: "Debit Note", badge: "bg-brand-100 text-brand-800 border-brand-300" },
     other: { label: "Other", badge: "bg-slate-100 text-slate-800 border-slate-300" }
   };
 
   const statusConfig = {
-    APPROVED: { label: "Approved", badge: "bg-emerald-100 text-emerald-800 border-emerald-300", icon: "check_circle" },
+    APPROVED: { label: "Approved", badge: "bg-brand-100 text-brand-800 border-brand-300", icon: "check_circle" },
     PENDING_REVIEW: { label: "Pending Review", badge: "bg-amber-100 text-amber-800 border-amber-300", icon: "pending_actions" },
-    DRAFT: { label: "Draft", badge: "bg-blue-100 text-blue-800 border-blue-300", icon: "edit_note" },
+    DRAFT: { label: "Draft", badge: "bg-brand-100 text-brand-800 border-brand-300", icon: "edit_note" },
     REJECTED: { label: "Rejected", badge: "bg-rose-100 text-rose-800 border-rose-300", icon: "cancel" }
   };
 
@@ -9969,7 +10162,7 @@ function renderBillsDashboard() {
     const isPdf = fileName.toLowerCase().endsWith(".pdf");
     const isImg = /\.(png|jpe?g)$/i.test(fileName);
     const fileIcon = isPdf ? "picture_as_pdf" : (isImg ? "image" : "description");
-    const fileColor = isPdf ? "text-rose-600" : (isImg ? "text-blue-600" : "text-slate-600");
+    const fileColor = isPdf ? "text-rose-600" : (isImg ? "text-brand-600" : "text-slate-600");
 
     const catCfg = categoryLabels[doc.category] || categoryLabels.other;
     const stCfg = statusConfig[doc.status] || statusConfig.PENDING_REVIEW;
@@ -9987,7 +10180,7 @@ function renderBillsDashboard() {
     const total = doc.total_amount || doc.extracted_invoice?.totals?.totalAmount || 0;
 
     let conf = Math.round((doc.confidence || 0.95) * 100);
-    let confBadge = `bg-emerald-100 text-emerald-800 border-emerald-300`;
+    let confBadge = `bg-brand-100 text-brand-800 border-brand-300`;
     if (doc.is_scanned || isImg) {
       confBadge = `bg-amber-100 text-amber-800 border-amber-300`;
     }
@@ -9998,7 +10191,7 @@ function renderBillsDashboard() {
         <!-- Document / File -->
         <td class="py-3 px-4">
           <div class="flex items-center gap-2.5">
-            <span class="material-symbols-outlined text-xl ${fileColor}">${fileIcon}</span>
+            <span class="material-symbols-rounded text-xl ${fileColor}">${fileIcon}</span>
             <div class="flex flex-col">
               <span class="font-semibold text-on-surface truncate max-w-[180px] sm:max-w-[240px]" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</span>
               <div class="flex items-center gap-2 text-[11px] text-secondary font-mono">
@@ -10042,7 +10235,7 @@ function renderBillsDashboard() {
         <!-- Status -->
         <td class="py-3 px-3 text-center">
           <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${stCfg.badge}">
-            <span class="material-symbols-outlined text-[13px]">${stCfg.icon}</span>
+            <span class="material-symbols-rounded text-[13px]">${stCfg.icon}</span>
             <span>${stCfg.label}</span>
           </span>
         </td>
@@ -10061,13 +10254,13 @@ function renderBillsDashboard() {
               Review
             </button>
             <button onclick="openDocumentPreviewModal('${doc.id}', '${escapeHtml(doc.filename)}')" class="p-1 rounded-md hover:bg-surface-container text-secondary hover:text-on-surface transition-colors cursor-pointer" title="Preview Original">
-              <span class="material-symbols-outlined text-[16px]">visibility</span>
+              <span class="material-symbols-rounded text-[16px]">visibility</span>
             </button>
             <a href="/api/documents/${doc.id}/download" target="_blank" download class="p-1 rounded-md hover:bg-surface-container text-secondary hover:text-on-surface transition-colors cursor-pointer" title="Download Document">
-              <span class="material-symbols-outlined text-[16px]">download</span>
+              <span class="material-symbols-rounded text-[16px]">download</span>
             </a>
             <button onclick="deleteDocument('${doc.id}')" class="p-1 rounded-md hover:bg-rose-50 text-secondary hover:text-rose-600 transition-colors cursor-pointer" title="Delete Document">
-              <span class="material-symbols-outlined text-[16px]">delete</span>
+              <span class="material-symbols-rounded text-[16px]">delete</span>
             </button>
           </div>
         </td>
@@ -10672,7 +10865,7 @@ function goToOnboardingStep(step) {
     if (i < step) {
       // Completed step
       if (badge) {
-        badge.innerHTML = "✓";
+        badge.innerHTML = "";
         badge.className = "w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs bg-primary/20 text-primary border border-primary/40 transition-all";
       }
       if (label) {
@@ -10753,18 +10946,18 @@ function checkPasswordStrength(val) {
   const updateRule = (id, ok) => {
     const el = document.getElementById(id);
     if (!el) return;
-    const icon = el.querySelector(".material-symbols-outlined");
+    const icon = el.querySelector(".material-symbols-rounded");
     if (ok) {
-      el.className = "flex items-center gap-1.5 text-emerald-600 font-medium";
+      el.className = "flex items-center gap-1.5 text-brand-600 font-medium";
       if (icon) {
         icon.textContent = "check_circle";
-        icon.className = "material-symbols-outlined text-[14px] text-emerald-600";
+        icon.className = "material-symbols-rounded text-[14px] text-brand-600";
       }
     } else {
       el.className = "flex items-center gap-1.5 text-secondary";
       if (icon) {
         icon.textContent = "radio_button_unchecked";
-        icon.className = "material-symbols-outlined text-[14px] text-secondary";
+        icon.className = "material-symbols-rounded text-[14px] text-secondary";
       }
     }
   };
@@ -10818,13 +11011,13 @@ function onOnbGstinInput(val) {
     const embeddedPan = clean.slice(2, 12);
     if (pan && embeddedPan !== pan) {
       if (feedback) {
-        feedback.textContent = `⚠️ Embedded PAN (${embeddedPan}) does not match entered PAN (${pan})`;
+        feedback.textContent = `Embedded PAN (${embeddedPan}) does not match entered PAN (${pan})`;
         feedback.className = "text-[11px] text-error font-medium";
       }
     } else {
       if (feedback) {
-        feedback.textContent = "✓ Valid 15-character GSTIN matching PAN";
-        feedback.className = "text-[11px] text-emerald-600 font-medium";
+        feedback.textContent = "Valid 15-character GSTIN matching PAN";
+        feedback.className = "text-[11px] text-brand-600 font-medium";
       }
     }
   } else {
@@ -10902,7 +11095,7 @@ async function submitOnboardingStep1(e) {
   if (errorEl) errorEl.classList.add("hidden");
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Creating Account...`;
+    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1"></span> Creating Account...`;
   }
 
   try {
@@ -10937,7 +11130,7 @@ async function submitOnboardingStep1(e) {
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<span>Continue to Taxpayer ID</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span>`;
+      submitBtn.innerHTML = `<span>Continue to Taxpayer ID</span><span class="material-symbols-rounded text-[18px]">arrow_forward</span>`;
     }
   }
 }
@@ -10981,7 +11174,7 @@ async function submitOnboardingStep2(e) {
   if (errorEl) errorEl.classList.add("hidden");
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Verifying...`;
+    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1"></span> Verifying...`;
   }
 
   try {
@@ -11003,7 +11196,7 @@ async function submitOnboardingStep2(e) {
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<span>Continue to Bank Details</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span>`;
+      submitBtn.innerHTML = `<span>Continue to Bank Details</span><span class="material-symbols-rounded text-[18px]">arrow_forward</span>`;
     }
   }
 }
@@ -11043,7 +11236,7 @@ async function submitOnboardingStep3(e) {
   if (errorEl) errorEl.classList.add("hidden");
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Saving...`;
+    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1"></span> Saving...`;
   }
 
   try {
@@ -11065,7 +11258,7 @@ async function submitOnboardingStep3(e) {
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<span>Continue to Business Details</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span>`;
+      submitBtn.innerHTML = `<span>Continue to Business Details</span><span class="material-symbols-rounded text-[18px]">arrow_forward</span>`;
     }
   }
 }
@@ -11112,7 +11305,7 @@ async function submitOnboardingStep4(e) {
   if (errorEl) errorEl.classList.add("hidden");
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1">⟳</span> Completing Registration...`;
+    submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1"></span> Completing Registration...`;
   }
 
   try {
@@ -11144,7 +11337,7 @@ async function submitOnboardingStep4(e) {
     // Reinitialize full authenticated state
     await initSessionFromBackend();
 
-    showToast(`🎉 Registration complete! Welcome to SimpleGST, ${legalName}.`, "success");
+    showToast(`Registration complete! Welcome to SimpleGST, ${legalName}.`, "success");
 
     // Navigate to dashboard
     if (typeof switchView === "function") {
@@ -11162,7 +11355,7 @@ async function submitOnboardingStep4(e) {
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<span class="material-symbols-outlined text-[18px]">verified</span><span>Complete Registration</span>`;
+      submitBtn.innerHTML = `<span class="material-symbols-rounded text-[18px]">verified</span><span>Complete Registration</span>`;
     }
   }
 }
@@ -11304,7 +11497,7 @@ function updateStructureSpecificFields(structure) {
     container.innerHTML = `
       <div class="space-y-2">
         <h4 class="font-bold text-xs text-on-surface flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[16px] text-emerald-600">person</span>
+          <span class="material-symbols-rounded text-[16px] text-brand-600">person</span>
           <span>Sole Proprietorship Constitution</span>
         </h4>
         <p class="text-[11px] text-secondary leading-relaxed">
@@ -11326,7 +11519,7 @@ function updateStructureSpecificFields(structure) {
     container.innerHTML = `
       <div class="space-y-2">
         <h4 class="font-bold text-xs text-on-surface flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[16px] text-blue-600">handshake</span>
+          <span class="material-symbols-rounded text-[16px] text-brand-600">handshake</span>
           <span>Partnership Firm Constitution Details</span>
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
@@ -11349,7 +11542,7 @@ function updateStructureSpecificFields(structure) {
     container.innerHTML = `
       <div class="space-y-2">
         <h4 class="font-bold text-xs text-on-surface flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[16px] text-indigo-600">shield</span>
+          <span class="material-symbols-rounded text-[16px] text-brand-600">shield</span>
           <span>Limited Liability Partnership (LLP) Details</span>
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
@@ -11368,7 +11561,7 @@ function updateStructureSpecificFields(structure) {
     container.innerHTML = `
       <div class="space-y-2">
         <h4 class="font-bold text-xs text-on-surface flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[16px] text-purple-600">corporate_fare</span>
+          <span class="material-symbols-rounded text-[16px] text-brand-600">corporate_fare</span>
           <span>Private Limited Corporate Information</span>
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
@@ -11387,7 +11580,7 @@ function updateStructureSpecificFields(structure) {
     container.innerHTML = `
       <div class="space-y-2">
         <h4 class="font-bold text-xs text-on-surface flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[16px] text-amber-600">domain_add</span>
+          <span class="material-symbols-rounded text-[16px] text-amber-600">domain_add</span>
           <span>Specialized Entity Charter Details</span>
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
@@ -11615,8 +11808,8 @@ function renderStartupStepper() {
     let pillClass = "border-outline-variant bg-surface-container-lowest text-secondary";
 
     if (isCompleted) {
-      badgeClass = "bg-emerald-100 text-emerald-800";
-      pillClass = "border-emerald-200 bg-emerald-50/50 text-emerald-900";
+      badgeClass = "bg-brand-100 text-brand-800";
+      pillClass = "border-brand-200 bg-brand-50/50 text-brand-900";
     }
     if (isCurrent) {
       badgeClass = "bg-primary text-on-primary";
@@ -11628,7 +11821,7 @@ function renderStartupStepper() {
     return `
       <div onclick="goToStage(${s})" class="p-2.5 rounded-lg border ${pillClass} transition-all cursor-pointer flex items-center gap-2 select-none">
         <span class="w-5 h-5 rounded-full ${badgeClass} text-[11px] font-bold flex items-center justify-center shrink-0">
-          ${isCompleted && !isCurrent ? '<span class="material-symbols-outlined text-[13px]">check</span>' : s}
+          ${isCompleted && !isCurrent ? '<span class="material-symbols-rounded text-[13px]">check</span>' : s}
         </span>
         <div class="truncate">
           <p class="text-[11px] font-semibold truncate leading-tight">${shortTitles[s - 1]}</p>
@@ -11680,7 +11873,7 @@ function updateStage3Guidance(structure) {
   if (structure === 'PROPRIETORSHIP') {
     box.innerHTML = `
       <div class="flex items-start gap-2.5">
-        <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">verified</span>
+        <span class="material-symbols-rounded text-primary text-[20px] shrink-0 mt-0.5">verified</span>
         <div class="space-y-1 text-xs">
           <p class="font-bold text-on-surface">Recommended: MSME Udyam Registration &bull; Instant Statutory Proof</p>
           <p class="text-secondary">A Sole Proprietorship does not have a central MCA incorporation. Instead, register directly on the Ministry of MSME Udyam portal to obtain legal proof of enterprise and MSME priority lending benefits.</p>
@@ -11692,7 +11885,7 @@ function updateStage3Guidance(structure) {
   } else if (structure === 'PARTNERSHIP') {
     box.innerHTML = `
       <div class="flex items-start gap-2.5">
-        <span class="material-symbols-outlined text-blue-600 text-[20px] shrink-0 mt-0.5">handshake</span>
+        <span class="material-symbols-rounded text-brand-600 text-[20px] shrink-0 mt-0.5">handshake</span>
         <div class="space-y-1 text-xs">
           <p class="font-bold text-on-surface">Partnership Deed &amp; Registrar of Firms (RoF)</p>
           <p class="text-secondary">Draft a formal Partnership Deed executed on non-judicial stamp paper with partner profit-sharing ratios. Optionally file Form 1 with your state Registrar of Firms (RoF) for statutory enforceability.</p>
@@ -11704,7 +11897,7 @@ function updateStage3Guidance(structure) {
   } else if (structure === 'LLP') {
     box.innerHTML = `
       <div class="flex items-start gap-2.5">
-        <span class="material-symbols-outlined text-indigo-600 text-[20px] shrink-0 mt-0.5">shield</span>
+        <span class="material-symbols-rounded text-brand-600 text-[20px] shrink-0 mt-0.5">shield</span>
         <div class="space-y-1 text-xs">
           <p class="font-bold text-on-surface">MCA LLP Incorporation (RUN-LLP &amp; FiLLiP)</p>
           <p class="text-secondary">Obtain Digital Signature Certificates (DSC) for designated partners, reserve name via RUN-LLP, and file FiLLiP (Form for Incorporation of LLP) on the Ministry of Corporate Affairs portal.</p>
@@ -11716,7 +11909,7 @@ function updateStage3Guidance(structure) {
   } else if (structure === 'PRIVATE_LIMITED') {
     box.innerHTML = `
       <div class="flex items-start gap-2.5">
-        <span class="material-symbols-outlined text-purple-600 text-[20px] shrink-0 mt-0.5">corporate_fare</span>
+        <span class="material-symbols-rounded text-brand-600 text-[20px] shrink-0 mt-0.5">corporate_fare</span>
         <div class="space-y-1 text-xs">
           <p class="font-bold text-on-surface">MCA SPICe+ (INC-32) Integrated Incorporation</p>
           <p class="text-secondary">File SPICe+ Part A for name reservation and Part B for simultaneous incorporation, PAN, TAN, EPFO, ESIC, and corporate bank account generation through the MCA V3 portal.</p>
@@ -11728,7 +11921,7 @@ function updateStage3Guidance(structure) {
   } else {
     box.innerHTML = `
       <div class="flex items-start gap-2.5">
-        <span class="material-symbols-outlined text-amber-600 text-[20px] shrink-0 mt-0.5">domain_add</span>
+        <span class="material-symbols-rounded text-amber-600 text-[20px] shrink-0 mt-0.5">domain_add</span>
         <div class="space-y-1 text-xs">
           <p class="font-bold text-on-surface">Statutory Charter Execution</p>
           <p class="text-secondary">Ensure trust deeds, society bye-laws, or section 8 license applications are filed with the relevant state charity commissioner or central MCA registrar.</p>
@@ -11820,13 +12013,13 @@ function validatePanField(fieldId) {
   if (val.length === 10) {
     if (/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val)) {
       input.classList.remove('border-red-500');
-      input.classList.add('border-emerald-500');
+      input.classList.add('border-brand-500');
     } else {
-      input.classList.remove('border-emerald-500');
+      input.classList.remove('border-brand-500');
       input.classList.add('border-red-500');
     }
   } else {
-    input.classList.remove('border-emerald-500', 'border-red-500');
+    input.classList.remove('border-brand-500', 'border-red-500');
   }
 }
 
@@ -11922,7 +12115,7 @@ function renderUploadedDocsList() {
     return `
       <div class="flex items-center justify-between p-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest">
         <div class="flex items-center gap-2 truncate">
-          <span class="material-symbols-outlined text-primary text-[18px] shrink-0">description</span>
+          <span class="material-symbols-rounded text-primary text-[18px] shrink-0">description</span>
           <div class="truncate">
             <span class="font-semibold text-on-surface truncate block text-[11px]">${d.original_filename}</span>
             <span class="text-[9px] text-secondary font-mono">${d.category} &bull; ${sizeKb} KB &bull; ${dateFormatted}</span>
@@ -11931,7 +12124,7 @@ function renderUploadedDocsList() {
         <div class="flex items-center gap-2 shrink-0">
           <a href="/api/startup-express/documents/${d.id}" target="_blank" rel="noopener noreferrer" class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high text-primary font-semibold text-[10px] flex items-center gap-1">
             <span>View</span>
-            <span class="material-symbols-outlined text-[12px]">open_in_new</span>
+            <span class="material-symbols-rounded text-[12px]">open_in_new</span>
           </a>
           <button type="button" onclick="deleteStartupDocument('${d.id}')" class="px-2 py-1 rounded hover:bg-error/10 text-error font-semibold text-[10px] cursor-pointer">
             Delete
@@ -12333,7 +12526,7 @@ function updateInvoicePreview() {
     if (previewGstin) previewGstin.textContent = `GSTIN: ${gstin}`;
     if (previewBadge) {
       previewBadge.textContent = "TAX INVOICE";
-      previewBadge.className = "text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded";
+      previewBadge.className = "text-[10px] font-mono font-bold bg-brand-100 text-brand-800 px-2 py-0.5 rounded";
     }
   }
 
@@ -12370,8 +12563,8 @@ function renderPreActivationMatrix(p) {
         <span class="font-semibold block truncate ${c.ready ? 'text-on-surface' : 'text-amber-800'}">${c.label}</span>
         <span class="text-[10px] text-secondary truncate block">${c.detail}</span>
       </div>
-      <span class="shrink-0 text-xs font-bold ${c.ready ? 'text-emerald-700' : 'text-amber-600'}">
-        ${c.ready ? '✓ Ready' : 'Pending'}
+      <span class="shrink-0 text-xs font-bold ${c.ready ? 'text-brand-700' : 'text-amber-600'}">
+        ${c.ready ? 'Ready' : 'Pending'}
       </span>
     </div>
   `).join('');
@@ -12379,13 +12572,13 @@ function renderPreActivationMatrix(p) {
   const badge = document.getElementById('badgeActivationReadiness');
   if (badge) {
     if (p.activation_status === 'ACTIVATED_GST_REGISTERED') {
-      badge.innerHTML = '<span class="material-symbols-outlined text-[14px]">verified</span><span>Active &bull; GST Registered</span>';
-      badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+      badge.innerHTML = '<span class="material-symbols-rounded text-[14px]">verified</span><span>Active &bull; GST Registered</span>';
+      badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-100 text-brand-800 border border-brand-300";
     } else if (p.activation_status === 'ACTIVATED_NON_GST') {
-      badge.innerHTML = '<span class="material-symbols-outlined text-[14px]">check_circle</span><span>Active &bull; Non-GST Business</span>';
-      badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300";
+      badge.innerHTML = '<span class="material-symbols-rounded text-[14px]">check_circle</span><span>Active &bull; Non-GST Business</span>';
+      badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-100 text-brand-800 border border-brand-300";
     } else {
-      badge.innerHTML = '<span class="material-symbols-outlined text-[14px]">pending</span><span>Ready for Workspace Activation</span>';
+      badge.innerHTML = '<span class="material-symbols-rounded text-[14px]">pending</span><span>Ready for Workspace Activation</span>';
     }
   }
 
@@ -12617,19 +12810,19 @@ function applyProfileToDashboard(p) {
     itemsContainer.innerHTML = `
       <div class="flex items-center justify-between">
         <span>Founder Identity Proof</span>
-        <span class="${chk.doc_identity || docCount > 0 ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_identity || docCount > 0 ? '✓ Ready' : 'Pending'}</span>
+        <span class="${chk.doc_identity || docCount > 0 ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_identity || docCount > 0 ? 'Ready' : 'Pending'}</span>
       </div>
       <div class="flex items-center justify-between">
         <span>Premises Address Proof</span>
-        <span class="${chk.doc_address ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_address ? '✓ Ready' : 'Pending'}</span>
+        <span class="${chk.doc_address ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_address ? 'Ready' : 'Pending'}</span>
       </div>
       <div class="flex items-center justify-between">
         <span>Passport Photo</span>
-        <span class="${chk.doc_photo ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_photo ? '✓ Ready' : 'Pending'}</span>
+        <span class="${chk.doc_photo ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_photo ? 'Ready' : 'Pending'}</span>
       </div>
       <div class="flex items-center justify-between">
         <span>Rent Agreement &amp; Owner NOC</span>
-        <span class="${chk.doc_rent_noc ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_rent_noc ? '✓ Ready' : 'Pending'}</span>
+        <span class="${chk.doc_rent_noc ? 'text-primary font-bold' : 'text-secondary'}">${chk.doc_rent_noc ? 'Ready' : 'Pending'}</span>
       </div>
     `;
   }

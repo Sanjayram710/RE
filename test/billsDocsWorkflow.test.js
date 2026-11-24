@@ -671,6 +671,9 @@ test("Bills & Docs 13: Deleting a file from Bills & Docs removes the linked invo
       try { fs.unlinkSync(d.storage_path); } catch {}
     }
   }
+  try {
+    db.prepare("DELETE FROM reconciliation_results WHERE purchase_invoice_id IN (SELECT id FROM purchase_invoices WHERE invoice_number = ? OR document_id IN (SELECT id FROM documents WHERE org_id IN (?, ?)))").run(invToKeep, primaryOrg.id, tenantBOrg.id);
+  } catch {}
   db.prepare("DELETE FROM purchase_invoices WHERE invoice_number = ?").run(invToKeep);
   db.prepare("DELETE FROM purchase_invoices WHERE document_id IN (SELECT id FROM documents WHERE org_id IN (?, ?))").run(primaryOrg.id, tenantBOrg.id);
   db.prepare("DELETE FROM sales_invoices WHERE document_id IN (SELECT id FROM documents WHERE org_id IN (?, ?))").run(primaryOrg.id, tenantBOrg.id);

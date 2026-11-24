@@ -388,7 +388,7 @@ test("Startup Express: Navigation & UI Template Integrity", async () => {
   assert.ok(html.includes("rocket_launch"), "Must include rocket_launch icon");
   assert.ok(html.includes('href="/startup-express"'), "Must include /startup-express route");
   assert.ok(html.includes("NEW"), "Must include NEW badge");
-  assert.ok(html.includes('id="bottom-nav-startup"'), "Must include bottom navigation for mobile");
+  assert.ok(html.includes('id="bottom-nav-more" onclick="toggleMobileSidebar()"'), "Mobile bottom bar must open the navigation drawer that lists Startup Express");
 
   // 2. Removal of Tax Calc and Reports from mainSidebarNav
   const sidebarStart = html.indexOf('id="mainSidebarNav"');
