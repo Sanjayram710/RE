@@ -13,3 +13,6 @@ data/simplegst.db
 data/uploads/*
 !data/uploads/.gitkeep
 
+
+# Uploaded reference screen templates
+SimpleGST*.html

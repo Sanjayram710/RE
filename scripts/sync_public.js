@@ -10,11 +10,13 @@ function sha256(path) {
 fs.copyFileSync('index.html', 'public/index.html');
 fs.copyFileSync('app.js', 'public/app.js');
 fs.copyFileSync('style.css', 'public/style.css');
+fs.copyFileSync('landing.html', 'public/landing.html');
 
 const pairs = [
   ['index.html', 'public/index.html'],
   ['app.js', 'public/app.js'],
-  ['style.css', 'public/style.css']
+  ['style.css', 'public/style.css'],
+  ['landing.html', 'public/landing.html']
 ];
 
 console.log('Verifying SHA-256 Parity:');
