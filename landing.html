@@ -5,8 +5,6 @@
 <style>
 :root{--bg:#FFFFFF;--ink:#12142B;--mut:#5F6487;--card:#fff;--line:#E6E8F2;--acc:#4B3FE0;--on:#fff;--cor:#FF7A59;--soft:#EEEDFE;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
-:root[data-a=emerald]{--acc:#0B7A5A;--soft:#DDF3EA}:root[data-a=rose]{--acc:#D6336C;--soft:#FCE4EC}
-.sw{position:fixed;left:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:19;display:flex;gap:2px;background:var(--card);border:1px solid var(--line);padding:4px;border-radius:999px;box-shadow:0 12px 30px rgba(40,30,120,.15)}.sw button{width:44px;height:44px;border-radius:50%;border:8px solid var(--card);cursor:pointer;transition:transform .2s}.sw button:hover{transform:scale(1.1)}.sw button[aria-pressed=true]{outline:2px solid var(--ink);outline-offset:-2px}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:hidden}
 h1,h2,h3,.d{font-family:"Plus Jakarta Sans",Inter,sans-serif;letter-spacing:-.03em;margin:0}
 a{color:inherit;text-decoration:none}.w{max-width:1200px;margin:0 auto;padding:0 24px}
@@ -52,7 +50,6 @@ footer{padding:40px 0 60px;color:var(--mut);font-size:14px;display:flex;justify-
 </style></head><body>
 <nav id="nv"><div class="w"><a class="lg" href="/">Simple<i>GST</i></a><div class="lk"><a href="#why">Why SimpleGST</a><a href="#dash">Tax calculator</a><a href="#faq">Who we help</a><a href="#how">Product tour</a><a href="#copilot">Notice support</a></div><div style="display:flex;align-items:center;gap:22px"><a href="/app" style="font-weight:600">Sign in</a><a class="btn" href="/app">Start filing →</a></div></div></nav>
 <a class="btn fab" href="#copilot">Ask GST Copilot</a>
-<div class="sw" role="group" aria-label="Colour theme"><button type="button" data-a="indigo" aria-pressed="true" aria-label="Indigo theme" style="background:#4B3FE0"></button><button type="button" data-a="emerald" aria-pressed="false" aria-label="Emerald theme" style="background:#0B7A5A"></button><button type="button" data-a="rose" aria-pressed="false" aria-label="Rose theme" style="background:#D6336C"></button></div>
 <header class="hero"><div class="w hg"><div>
 <div class="lab rv">(01) GST and income tax filing</div>
 <h1 aria-label="GST and income tax returns, without the guesswork."><span class="wd"><span style="--i:0">GST</span></span> <span class="wd"><span style="--i:1">and</span></span> <span class="wd"><span style="--i:2">income</span></span> <span class="wd"><span style="--i:3">tax</span></span> <span class="wd"><span style="--i:4">returns,</span></span> <em><span class="wd"><span style="--i:5">without</span></span> <span class="wd"><span style="--i:6">the</span></span> <span class="wd"><span style="--i:7">guesswork.</span></span></em></h1>
@@ -103,6 +100,5 @@ function ask(q){if(!q.trim())return;add("u",q);var d=add("b","");d.className="m 
 document.querySelectorAll(".cs button").forEach(function(b){b.addEventListener("click",function(){ask(b.dataset.q)})});
 document.getElementById("cb").addEventListener("click",function(){ask(ci.value);ci.value=""});ci.addEventListener("keydown",function(e){if(e.key==="Enter"){ask(ci.value);ci.value=""}});
 var once=new IntersectionObserver(function(es){if(es[0].isIntersecting){once.disconnect();setTimeout(function(){ask("What is my tax to pay for Oct?")},700)}},{threshold:.5});once.observe(document.getElementById("ch"));
-var sb=[].slice.call(document.querySelectorAll(".sw button"));sb.forEach(function(b){b.addEventListener("click",function(){document.documentElement.dataset.a=b.dataset.a;sb.forEach(function(x){x.setAttribute("aria-pressed",x===b)})})});
 addEventListener("scroll",tick,{passive:true});tick()})();
 </script></body></html>
