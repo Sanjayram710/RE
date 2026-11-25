@@ -7,7 +7,8 @@ h1,h2,h3,.d{font-family:"Plus Jakarta Sans",Inter,sans-serif;letter-spacing:-.03
 .tb{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;padding:12px 0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid color-mix(in srgb,var(--line) 40%,transparent)}
 .tb .w{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .lg{font:800 21px "Plus Jakarta Sans",sans-serif;letter-spacing:-.04em;flex-shrink:0;cursor:pointer}
-.nv{display:flex;gap:3px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:0 4px 18px rgba(40,30,120,.05);overflow:visible;flex-wrap:nowrap;flex-shrink:1;align-items:center;justify-content:center}
+.nv{display:flex;gap:3px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:0 4px 18px rgba(40,30,120,.05);overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;flex-shrink:1;align-items:center;justify-content:flex-start;margin:0 auto;max-width:100%}
+.nv::-webkit-scrollbar{display:none}
 .nv button{border:0;background:none;padding:0 13px;min-height:38px;border-radius:999px;color:var(--mut);font-weight:500;transition:.2s;display:inline-flex;align-items:center;white-space:nowrap;gap:5px;font-size:13.5px;flex-shrink:0}
 .nv button:hover{color:var(--ink)}.nv button[aria-current=page]{background:var(--acc);color:var(--on);font-weight:600}
 .nv button svg{width:15px;height:15px;flex-shrink:0;vertical-align:-2px}
@@ -130,8 +131,9 @@ h1.pt{font-size:32px;font-weight:800;margin-top:24px}.sub{color:var(--mut);margi
 .auth-body{padding:16px 28px 26px}
 .auth-err{background:var(--corb);color:var(--cor);border:1px solid var(--cor);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
 
-@media(max-width:1220px){.nv button{padding:0 9px;font-size:12.5px;gap:4px}.nv button svg{width:14px;height:14px}.u-text small{display:none}}
-@media(max-width:980px){.hg,.g2,.g3,.cpg{grid-template-columns:1fr}.kp{grid-template-columns:1fr 1fr}.lg,.u-text{display:none}.nv button{padding:0 8px;font-size:12px}.rg{width:130px;height:130px}}
+@media(max-width:1320px){.nv button{padding:0 10px;font-size:13px;gap:4px}.nv button svg{width:14px;height:14px}}
+@media(max-width:1180px){.nv button{padding:0 8px;font-size:12px;gap:3px}.nv button svg{width:13px;height:13px}.u-text small{display:none}}
+@media(max-width:980px){.hg,.g2,.g3,.cpg{grid-template-columns:1fr}.kp{grid-template-columns:1fr 1fr}.lg,.u-text{display:none}.nv button{padding:0 7px;font-size:11.5px}.rg{width:130px;height:130px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.gr span i{transform:none}}
 </style></head><body>
 <header class="tb"><div class="w">
