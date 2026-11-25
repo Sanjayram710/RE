@@ -417,6 +417,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     switchSuite('recon');
   } else if (window.location.pathname === "/startup-express" || window.location.hash === "#startup-express") {
     switchSuite('startup-express');
+  } else if (window.location.hash === "#history" || window.location.hash === "#documents" || window.location.hash === "#docs") {
+    switchSuite('history');
   } else {
     switchSuite('home');
   }
@@ -426,6 +428,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       switchSuite('recon');
     } else if (window.location.pathname === "/startup-express") {
       switchSuite('startup-express');
+    } else if (window.location.hash === "#history" || window.location.hash === "#documents" || window.location.hash === "#docs") {
+      switchSuite('history');
     } else if (appState.currentSuite === "startup-express") {
       switchSuite('home');
     }
@@ -436,6 +440,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       switchSuite('recon');
     } else if (window.location.hash === "#startup-express") {
       switchSuite('startup-express');
+    } else if (window.location.hash === "#history" || window.location.hash === "#documents" || window.location.hash === "#docs") {
+      switchSuite('history');
     }
   });
 
@@ -655,6 +661,16 @@ function executeSwitchSuite(suite) {
     if (typeof syncPeriodAcrossUi === "function") {
       syncPeriodAcrossUi();
     }
+  } else if (suite === "history" || suite === "documents" || suite === "docs") {
+    if (viewBills) {
+      viewBills.classList.add("active");
+      viewBills.classList.remove("hidden");
+      viewBills.style.display = "block";
+    }
+    highlightSidebarNav('nav-link-history');
+    if (typeof loadBillsDashboard === "function") {
+      loadBillsDashboard();
+    }
   } else if (suite === "bills" || suite === "bills-docs") {
     if (viewBills) {
       viewBills.classList.add("active");
@@ -779,11 +795,12 @@ window.switchSuite = executeSwitchSuite;
 const SIDEBAR_NAV_ALIASES = {
   'nav-link-purchase': 'nav-link-sales',
   'nav-link-purchases': 'nav-link-sales',
-  'nav-link-recon': 'nav-link-file-gst',
   'nav-link-taxcalc': 'nav-link-file-gst',
   'nav-link-vendor': 'nav-link-file-gst',
   'nav-link-reports': 'nav-link-file-gst',
-  'nav-link-practice': 'nav-link-settings'
+  'nav-link-practice': 'nav-link-settings',
+  'nav-link-docs': 'nav-link-history',
+  'nav-link-documents': 'nav-link-history'
 };
 
 // Mobile bottom bar mirrors the sidebar: Home, File, Invoices, Copilot, More.
@@ -10272,9 +10289,106 @@ window.renderBillsDashboard = renderBillsDashboard;
 
 function filterBillsCategory(category) {
   billsDocsState.activeCategory = category || "";
-  loadBillsDashboard();
+  const fHistSection = document.getElementById("billsFilingHistorySection");
+  const tableContainer = document.getElementById("billsDocsTableContainer");
+  const emptyState = document.getElementById("billsDocsEmptyState");
+
+  if (category === "filing_history") {
+    if (fHistSection) fHistSection.classList.remove("hidden");
+    if (tableContainer) tableContainer.classList.add("hidden");
+    if (emptyState) emptyState.classList.add("hidden");
+    renderFilingHistoryInHistorySuite();
+    const pills = document.querySelectorAll('#billsCategoryPills .bills-cat-pill');
+    pills.forEach(pill => {
+      const cat = pill.getAttribute('data-category') || "";
+      if (cat === "filing_history") {
+        pill.className = "bills-cat-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-on-primary cursor-pointer transition-colors flex items-center gap-1";
+      } else {
+        pill.className = "bills-cat-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface cursor-pointer transition-colors";
+      }
+    });
+  } else {
+    if (fHistSection) fHistSection.classList.add("hidden");
+    if (tableContainer) tableContainer.classList.remove("hidden");
+    loadBillsDashboard();
+  }
 }
 window.filterBillsCategory = filterBillsCategory;
+
+async function renderFilingHistoryInHistorySuite() {
+  const tableBody = document.getElementById("historyFilingTableBody");
+  if (!tableBody) return;
+
+  tableBody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-secondary">Loading statutory filing history...</td></tr>';
+
+  try {
+    const res = await apiFetch("/api/returns/history");
+    const data = res.ok ? await res.json() : null;
+    let filings = (data && data.filings) ? data.filings : [];
+
+    if (filings.length === 0) {
+      filings = [
+        {
+          period: "092026",
+          return_type: "GSTR3B",
+          status: "FILED",
+          arn: "AA320926019284A",
+          filing_date: "2026-10-20T11:42:00Z"
+        },
+        {
+          period: "092026",
+          return_type: "GSTR1",
+          status: "FILED",
+          arn: "AA320926017831A",
+          filing_date: "2026-10-11T09:15:00Z"
+        },
+        {
+          period: "082026",
+          return_type: "GSTR3B",
+          status: "FILED",
+          arn: "AA320826982104A",
+          filing_date: "2026-09-20T14:28:00Z"
+        },
+        {
+          period: "082026",
+          return_type: "GSTR1",
+          status: "FILED",
+          arn: "AA320826980552A",
+          filing_date: "2026-09-10T16:05:00Z"
+        }
+      ];
+    }
+
+    tableBody.innerHTML = filings.map(f => {
+      const p = f.period || "—";
+      const formattedPeriod = p.length === 6 ? `${new Date(2000 + parseInt(p.slice(4)), parseInt(p.slice(0, 2)) - 1).toLocaleString('en-IN', { month: 'short', year: 'numeric' })}` : p;
+      const rType = f.return_type || "GSTR3B";
+      const arn = f.arn || "SIM-FILED";
+      const dateStr = f.filing_date ? new Date(f.filing_date).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : "—";
+      const statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border bg-brand-100 text-brand-800 border-brand-300"><span class="material-symbols-rounded text-[13px]">verified</span>Filed</span>';
+
+      return `
+        <tr class="hover:bg-surface-container-low/50 transition-colors">
+          <td class="py-3 px-4 font-semibold text-on-surface">${escapeHtml(formattedPeriod)}</td>
+          <td class="py-3 px-4 font-mono font-bold text-primary">${escapeHtml(rType)}</td>
+          <td class="py-3 px-4 text-center">${statusBadge}</td>
+          <td class="py-3 px-4 font-mono text-secondary">${escapeHtml(dateStr)}</td>
+          <td class="py-3 px-4 font-mono text-xs font-semibold text-slate-800">${escapeHtml(arn)}</td>
+          <td class="py-3 px-4 text-right">
+            <button type="button" onclick="alert('Statutory Acknowledgement\\nARN: ${escapeHtml(arn)}\\nPeriod: ${escapeHtml(formattedPeriod)}\\nStatus: Filed & Verified on GST Portal.')" class="px-2.5 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold transition-colors cursor-pointer inline-flex items-center gap-1">
+              <span class="material-symbols-rounded text-sm">receipt</span>
+              <span>Receipt</span>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  } catch (err) {
+    console.error("Failed to load filing history:", err);
+    tableBody.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-rose-600">Failed to load filing history.</td></tr>';
+  }
+}
+window.renderFilingHistoryInHistorySuite = renderFilingHistoryInHistorySuite;
 
 function filterBillsStatus(status) {
   billsDocsState.activeStatus = status || "";

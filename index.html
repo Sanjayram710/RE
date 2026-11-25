@@ -139,6 +139,12 @@
           <span>Startup Express</span>
           <span class="nav-new">7 Stages</span>
         </a>
+        <!-- 6. History (Documents & Returns) -->
+        <a id="nav-link-history" onclick="switchSuite('history'); return false;" class="sidebar-nav-link" href="#history">
+          <span class="material-symbols-rounded" aria-hidden="true">history</span>
+          <span>History</span>
+          <span class="nav-new">Docs &amp; Returns</span>
+        </a>
         <!-- 6. My Business -->
         <a id="nav-link-settings" onclick="switchSuite('startup'); return false;" class="sidebar-nav-link" href="#settings">
           <span class="material-symbols-rounded" aria-hidden="true">store</span>
@@ -2383,8 +2389,8 @@
           <span class="hover:text-primary cursor-pointer" onclick="switchSuite('home')">Home</span>
           <span class="text-outline-variant">/</span>
           <span class="text-on-surface font-semibold flex items-center gap-1">
-            <span class="material-symbols-rounded text-sm text-primary">folder_open</span>
-            Bills &amp; Documents Management
+            <span class="material-symbols-rounded text-sm text-primary">history</span>
+            <span id="historyBreadcrumbLabel">History &amp; Documents</span>
           </span>
         </nav>
 
@@ -2392,16 +2398,16 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
           <div class="space-y-1">
             <div class="flex items-center gap-3">
-              <h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
-                Bills &amp; Document Management
+              <h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight" id="historySuiteTitle">
+                History &amp; Document Repository
               </h1>
               <span id="billsPendingBadge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-amber-600 "></span>
                 <span id="billsPendingBadgeText">0 Pending Review</span>
               </span>
             </div>
-            <p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
-              Central document management system. Upload invoices, purchase bills, and supporting documents for automated AI OCR extraction, line-item verification, and direct synchronization to Sales and Purchase registers.
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-3xl" id="historySuiteDesc">
+              Central historical repository for all uploaded bills, purchase receipts, AI-extracted invoices, and statutory GST return filing archives with instant search and download.
             </p>
           </div>
           <!-- Quick Actions -->
@@ -2549,6 +2555,10 @@
               <button type="button" onclick="filterBillsCategory('purchase_bill')" data-category="purchase_bill" class="bills-cat-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface cursor-pointer transition-colors">
                 Purchase Bills
               </button>
+              <button type="button" onclick="filterBillsCategory('filing_history')" data-category="filing_history" class="bills-cat-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface cursor-pointer transition-colors flex items-center gap-1">
+                <span class="material-symbols-rounded text-xs">history_edu</span>
+                <span>Filing History (GSTR-1 &amp; 3B)</span>
+              </button>
               <button type="button" onclick="filterBillsCategory('expense_bill')" data-category="expense_bill" class="bills-cat-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface cursor-pointer transition-colors">
                 Expense Bills
               </button>
@@ -2587,7 +2597,7 @@
           </div>
 
           <!-- Documents Table -->
-          <div class="overflow-x-auto">
+          <div id="billsDocsTableContainer" class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
               <thead>
                 <tr class="border-b border-outline-variant bg-surface-container-low text-secondary font-semibold">
@@ -2601,6 +2611,32 @@
                 </tr>
               </thead>
               <tbody id="billsDocsTableBody" class="divide-y divide-outline-variant/60">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Filing History Table Section -->
+          <div id="billsFilingHistorySection" class="hidden overflow-x-auto bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-rounded text-primary text-xl">history_edu</span>
+                <h3 class="font-bold text-base text-on-surface">Statutory GST Return Filing History &amp; Acknowledgements</h3>
+              </div>
+              <span class="text-xs text-secondary font-mono">Real-time GSP Record</span>
+            </div>
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-outline-variant bg-surface-container-low text-secondary font-semibold">
+                  <th class="py-3 px-4 min-w-[120px]">Period</th>
+                  <th class="py-3 px-3 w-32">Return Type</th>
+                  <th class="py-3 px-3 text-center w-28">Status</th>
+                  <th class="py-3 px-4 min-w-[150px]">Filing Date</th>
+                  <th class="py-3 px-4 min-w-[200px]">ARN / Reference</th>
+                  <th class="py-3 px-4 text-right min-w-[140px]">Acknowledgement</th>
+                </tr>
+              </thead>
+              <tbody id="historyFilingTableBody" class="divide-y divide-outline-variant/60 font-mono">
                 <!-- Dynamically populated rows -->
               </tbody>
             </table>

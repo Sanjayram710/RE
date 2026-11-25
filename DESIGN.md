@@ -50,13 +50,15 @@ CSS custom properties `--sg-*` in `style.css` mirror these values.
 
 ## 5. Components (see `style.css`, "SimpleGST design system")
 
-- `sidebar-nav-link` + `is-active`: the minimal 6-item main navigation inspired by KrewsUp:
+- `sidebar-nav-link` + `is-active`: the clean, accessible primary navigation:
   1. **Home**
   2. **File GST** (guided 5-step flow)
-  3. **My Bills** (combines sales invoices, purchase bills, and documents)
+  3. **My Bills** (sales invoices, purchase bills, and invoice generation)
   4. **Reconciliation** (GSTR-2B ITC matching)
-  5. **My Business** (business profile, multi-GSTIN branches, taxpayer details)
-  6. **Help** (GST Copilot & Tax Experts help)
+  5. **Startup Express** (7-stage business formation & compliance onboarding)
+  6. **History** (documents repository, uploaded bills, AI extractions & return filing history)
+  7. **My Business** (business profile, multi-GSTIN branches, taxpayer details)
+  8. **Help** (GST Copilot & Tax Experts help)
   Grouped technical pages highlight their parent via `SIDEBAR_NAV_ALIASES` in `app.js`.
 - Mobile bottom bar: Home, File GST, My Bills, Reconciliation, Help.
 - `ku-card` / `sg-card`: clean modern cards with 18px radius, soft borders, subtle elevation.
