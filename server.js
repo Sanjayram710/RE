@@ -1423,7 +1423,7 @@ export async function handleRequest(req, res) {
       relativePath = "landing.html";
     } else if (pathname === "/startup-express" || pathname === "/v1" || pathname === "/legacy") {
       relativePath = "index.html";
-    } else if (pathname === "/app" || pathname === "/dashboard" || pathname === "/v2" || pathname === "/app-v2" || pathname === "/simplegst-app-v2" || pathname === "/simplegst-app-v2.html") {
+    } else if (pathname === "/app" || pathname === "/dashboard" || pathname === "/v2" || pathname === "/app-v2" || pathname === "/simplegst-app-v2" || pathname === "/simplegst-app-v2.html" || pathname === "/login" || pathname === "/signin") {
       relativePath = "simplegst-app-v2.html";
     } else {
       relativePath = pathname.replace(/^\//, "");
