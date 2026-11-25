@@ -218,7 +218,7 @@ function tbl(rows,rest,n,hd,type){
 
 function load(k){
   var s=k==="s",on=s?S.s:S.p;
-  return on?tbl(s?DS:DP,s?SALES-432000:PUR-279000,s?7:3,s?"Invoice":"Bill",s?"s":"p"):'<div class="dz" data-act="drop-browse" data-k="'+k+'" role="button" tabindex="0"><b>Drag &amp; drop '+(s?"sales invoices":"purchase bills")+" here, or browse</b>PDF, PNG, JPG, CSV · AI reads every line. Click to load or upload.</div>';
+  return on?tbl(s?DS:DP,s?SALES-432000:PUR-279000,s?7:3,s?"Invoice":"Bill",s?"s":"p"):'<div class="dz" data-act="drop-browse" data-k="'+k+'" role="button" tabindex="0"><b>Drag &amp; drop '+(s?"sales invoices":"purchase bills")+' here, or browse</b>PDF, PNG, JPG, CSV · AI reads every line. Click to load or upload.</div>';
 }
 
 // 1. HOME VIEW
