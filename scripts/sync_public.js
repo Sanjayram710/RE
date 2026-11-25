@@ -11,12 +11,14 @@ fs.copyFileSync('index.html', 'public/index.html');
 fs.copyFileSync('app.js', 'public/app.js');
 fs.copyFileSync('style.css', 'public/style.css');
 fs.copyFileSync('landing.html', 'public/landing.html');
+fs.copyFileSync('simplegst-app-v2.html', 'public/simplegst-app-v2.html');
 
 const pairs = [
   ['index.html', 'public/index.html'],
   ['app.js', 'public/app.js'],
   ['style.css', 'public/style.css'],
-  ['landing.html', 'public/landing.html']
+  ['landing.html', 'public/landing.html'],
+  ['simplegst-app-v2.html', 'public/simplegst-app-v2.html']
 ];
 
 console.log('Verifying SHA-256 Parity:');

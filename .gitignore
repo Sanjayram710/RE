@@ -15,4 +15,6 @@ data/uploads/*
 
 
 # Uploaded reference screen templates
-SimpleGST*.html
+SimpleGST_*.html
+!simplegst-app-v2.html
+!public/simplegst-app-v2.html

@@ -1421,6 +1421,8 @@ export async function handleRequest(req, res) {
     let relativePath;
     if (pathname === "/" || pathname === "/landing" || pathname === "/landing.html") {
       relativePath = "landing.html";
+    } else if (pathname === "/v2" || pathname === "/app-v2" || pathname === "/simplegst-app-v2" || pathname === "/simplegst-app-v2.html") {
+      relativePath = "simplegst-app-v2.html";
     } else if (pathname === "/app" || pathname === "/dashboard" || pathname === "/startup-express") {
       relativePath = "index.html";
     } else {

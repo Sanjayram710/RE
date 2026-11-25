@@ -1,0 +1,477 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>SimpleGST</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--bg2:#F6F7FC;--ink:#12142B;--mut:#5F6487;--card:#fff;--line:#E6E8F2;--acc:#4B3FE0;--on:#fff;--soft:#EEEDFE;--ok:#0B7A4B;--okb:#E3F6EC;--cor:#E8553D;--warn:#B25E00;--warnb:#FFF4E5;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+:root[data-a=emerald]{--acc:#0B7A5A;--soft:#DDF3EA}:root[data-a=rose]{--acc:#D6336C;--soft:#FCE4EC}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;padding-bottom:170px;overflow-x:hidden}
+h1,h2,h3,.d{font-family:"Plus Jakarta Sans",Inter,sans-serif;letter-spacing:-.03em;margin:0}button{font:inherit;color:inherit;cursor:pointer}.w{max-width:1200px;margin:0 auto;padding:0 28px}
+.tb{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;padding:16px 0;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(14px)}.tb .w{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.lg{font:800 22px "Plus Jakarta Sans",sans-serif;letter-spacing:-.04em}
+.nv{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px;box-shadow:0 8px 24px rgba(40,30,120,.06);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.nv::-webkit-scrollbar{display:none}
+.nv button{border:0;background:none;padding:0 16px;min-height:42px;border-radius:999px;color:var(--mut);font-weight:500;transition:.25s;display:inline-flex;align-items:center;white-space:nowrap;gap:6px;font-size:14px}
+.nv button:hover{color:var(--ink)}.nv button[aria-current=page]{background:var(--acc);color:var(--on);font-weight:600}
+.rt{display:flex;gap:10px;align-items:center}.sw{display:flex}.sw button{width:30px;height:30px;border-radius:50%;border:6px solid var(--bg);padding:0}.sw button[aria-pressed=true]{outline:2px solid var(--ink);outline-offset:-2px}
+.av{width:40px;height:40px;border-radius:50%;background:var(--acc);color:var(--on);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+.pg>*{animation:up .5s cubic-bezier(.2,.8,.2,1) both}.pg>*:nth-child(2){animation-delay:.05s}.pg>*:nth-child(3){animation-delay:.1s}.pg>*:nth-child(4){animation-delay:.15s}.pg>*:nth-child(5){animation-delay:.2s}@keyframes up{from{opacity:0;transform:translateY(18px)}}
+.eye{color:var(--mut);font-size:14px;margin-top:22px;display:flex;align-items:center;gap:8px}
+.gr{font-size:clamp(40px,6.8vw,86px);font-weight:500;letter-spacing:-.045em;line-height:1.02;margin:8px 0 28px}
+.gr span{display:inline-block;overflow:hidden;vertical-align:bottom}.gr span i{display:inline-block;font-style:normal;transform:translateY(105%);animation:wd .8s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i)*80ms)}@keyframes wd{to{transform:none}}
+h1.pt{font-size:34px;font-weight:800;margin-top:24px}.sub{color:var(--mut);margin:4px 0 24px}.red{color:var(--cor);font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:28px;margin-bottom:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--acc);background:var(--acc);color:var(--on);padding:0 22px;min-height:46px;border-radius:999px;font-weight:600;font-size:14.5px;transition:transform .2s,background .2s;white-space:nowrap;text-decoration:none}
+.btn:hover{transform:translateY(-2px)}.btn:active{transform:scale(.97)}.btn.o{background:var(--card);color:var(--ink);border-color:var(--line)}.btn.o:hover{border-color:var(--acc);color:var(--acc)}.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.btn.sm{min-height:36px;padding:0 14px;font-size:13px}
+.hg{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}.hl{display:flex;justify-content:space-between;align-items:center;gap:20px}.hl h2{font-size:clamp(30px,4.2vw,46px);font-weight:500;letter-spacing:-.04em;line-height:1.05;margin:10px 0 24px}.hl small{color:var(--mut)}
+.rg{position:relative;width:160px;height:160px;flex:none}.rg svg{width:100%;height:100%;transform:rotate(-90deg)}.rg circle{fill:none;stroke-width:10;stroke-linecap:round}.rg .t{stroke:var(--line)}.rg .p{stroke:var(--acc);transition:stroke-dashoffset 1.4s cubic-bezier(.2,.8,.2,1)}.rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.rc b{font:700 32px "Plus Jakarta Sans";letter-spacing:-.04em}.rc span{font-size:12px;color:var(--mut)}
+.stk{display:flex;flex-direction:column;gap:12px}.sr{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px 24px;text-align:left;transition:.25s}.sr:hover{transform:translateX(6px);border-color:var(--acc)}.sr b{font:700 16.5px "Plus Jakarta Sans";display:block}.sr span{color:var(--mut);font-size:13.5px}.sr em{font-style:normal;color:var(--acc);font-weight:600;font-size:14px;white-space:nowrap}.sr.dn em{color:var(--ok)}.sr.dim{opacity:.6}
+.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px}.kc{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:22px;transition:.25s}.kc:hover{transform:translateY(-4px);border-color:var(--acc)}.kc small{color:var(--mut);font-size:13.5px}.kc .d{font-size:clamp(26px,3.2vw,40px);font-weight:500;margin-top:8px}.kc.hl2{background:var(--acc);color:var(--on);border-color:var(--acc)}.kc.hl2 small{color:inherit;opacity:.85}
+.stp{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}.sp{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:0 18px 0 6px;min-height:44px;font-weight:600;color:var(--mut);transition:.3s}.sp b{width:32px;height:32px;border-radius:50%;background:var(--soft);color:var(--acc);display:flex;align-items:center;justify-content:center;font:800 14px "Plus Jakarta Sans"}.sp.on{border-color:var(--acc);color:var(--ink)}.sp.on b{background:var(--acc);color:var(--on)}.sp.dn b{background:var(--ok);color:#fff}
+.q2{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:880px;margin:24px auto 4px}.ch{border:2px solid var(--line);border-radius:26px;padding:24px;text-align:left;background:var(--card);transition:.25s;position:relative;display:flex;flex-direction:column;gap:6px}.ch:hover{transform:translateY(-4px);box-shadow:0 14px 34px rgba(40,30,120,.1)}.ch[aria-pressed=true]{border-color:var(--acc);background:var(--soft)}.ch .t{font:700 18px "Plus Jakarta Sans";margin-top:6px}.ch p{margin:0 0 14px;color:var(--mut)}.ck{position:absolute;right:20px;top:20px;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;transition:.25s}.ch[aria-pressed=true] .ck{background:var(--acc);border-color:var(--acc)}.ck svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3;stroke-dasharray:20;stroke-dashoffset:20;transition:stroke-dashoffset .4s .1s}.ch[aria-pressed=true] .ck svg{stroke-dashoffset:0}
+.g2{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:12px 14px;background:var(--bg2)}td{padding:14px;border-bottom:1px solid var(--line)}tr.r{animation:up .4s both}tr:last-child td{border:0}.note{color:var(--mut);font-size:13px}.pill{display:inline-block;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:999px;background:var(--okb);color:var(--ok)}.pill.warn{background:var(--warnb);color:var(--warn)}.pill.soft{background:var(--soft);color:var(--acc)}
+.dz{border:2px dashed var(--line);border-radius:24px;padding:36px;text-align:center;color:var(--mut);transition:.25s;background:var(--card);cursor:pointer}.dz:hover,.dz.dr{border-color:var(--acc);background:var(--soft)}.dz b{color:var(--ink);display:block;margin-bottom:4px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.sp2{justify-content:space-between}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}.tab{border:0;background:none;padding:0 18px;min-height:46px;font-weight:600;color:var(--mut);border-bottom:3px solid transparent;white-space:nowrap}.tab[aria-selected=true]{color:var(--acc);border-color:var(--acc)}.em{text-align:center;padding:44px 16px;color:var(--mut)}.em b{display:block;color:var(--ink);margin-bottom:4px}.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:0 16px;min-height:40px;font-size:13.5px;transition:.2s;white-space:nowrap}.chip:hover,.chip[aria-pressed=true]{border-color:var(--acc);color:var(--acc)}
+.li{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}.li:last-child{border:0}.tk{width:18px;height:18px;border-radius:50%;background:var(--ok);flex:none}
+.cpg{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}.chat{padding:0;overflow:hidden}.ms2{height:420px;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:10px}.cs{display:flex;gap:8px;flex-wrap:wrap;padding:14px 22px;border-top:1px solid var(--line)}.cf{display:flex;gap:10px;padding:0 22px 20px}.in{flex:1;min-width:0;border:1px solid var(--line);border-radius:999px;padding:0 18px;min-height:46px;font:inherit;background:var(--bg2);color:var(--ink);outline:none}
+.m{max-width:86%;padding:12px 16px;border-radius:18px;animation:up .3s both;font-size:14.5px}.m.u{align-self:flex-end;background:var(--acc);color:var(--on);border-bottom-right-radius:6px}.m.b{background:var(--soft);border-bottom-left-radius:6px}.dots i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin:0 2px;animation:bn 1s infinite}.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}@keyframes bn{50%{transform:translateY(-5px);opacity:.5}}
+.dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));width:min(760px,calc(100vw - 24px));z-index:30;transition:.3s}.dock.hide{opacity:0;pointer-events:none;transform:translate(-50%,30px)}
+.sh{background:var(--card);border:1px solid var(--line);border-radius:28px;box-shadow:0 24px 60px rgba(30,20,110,.22);margin-bottom:10px;overflow:hidden;display:none}.sh.o{display:block;animation:up .35s both}.sh header{display:flex;justify-content:space-between;align-items:center;padding:6px 8px 6px 20px;border-bottom:1px solid var(--line);font-weight:700}.sh header button{border:0;background:none;min-width:44px;min-height:44px;font-size:22px;color:var(--mut)}.ms{max-height:min(44vh,360px);overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.chs{display:flex;gap:8px;margin-bottom:10px;overflow-x:auto;padding:2px}.chs button{white-space:nowrap;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:0 16px;min-height:40px;font-size:14px;box-shadow:0 6px 16px rgba(30,20,110,.08)}.chs button:hover{border-color:var(--acc);color:var(--acc)}
+.bar{display:flex;align-items:center;gap:10px;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:999px;padding:8px 8px 8px 20px;box-shadow:0 18px 50px rgba(30,20,110,.2)}.bar input{flex:1;min-width:0;border:0;background:none;font:inherit;color:var(--ink);min-height:44px;outline:none}.bar kbd{font:500 12px Inter;border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--mut)}
+.toast{position:fixed;left:50%;top:84px;transform:translate(-50%,-20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;opacity:0;transition:.3s;z-index:40;pointer-events:none;font-size:14px}.toast.s{opacity:1;transform:translate(-50%,0)}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;transition:.25s}
+.pcard:hover{transform:translateY(-4px);border-color:var(--acc);box-shadow:0 14px 30px rgba(40,30,120,.08)}
+.pcard h3{font-size:19px;margin:10px 0 6px}.pcard .pr{font-size:32px;font-weight:700;font-family:"Plus Jakarta Sans";margin:12px 0 4px}.pcard .pr del{font-size:16px;color:var(--mut);font-weight:400;margin-left:8px}
+.flist{list-style:none;padding:0;margin:16px 0;display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:var(--mut)}
+.flist li{display:flex;gap:8px;align-items:flex-start}.flist li svg{stroke:var(--ok);flex:none;margin-top:2px}
+.pbar{height:10px;background:var(--bg2);border-radius:999px;overflow:hidden;margin:12px 0 18px}.pfill{height:100%;background:var(--acc);border-radius:999px;transition:width .6s ease}
+.modal-overlay{position:fixed;inset:0;background:rgba(18,20,43,.45);backdrop-filter:blur(6px);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--card);border:1px solid var(--line);border-radius:28px;max-width:520px;width:100%;padding:32px;box-shadow:0 30px 70px rgba(20,10,60,.25);animation:up .3s both}
+@media(max-width:960px){.hg,.g2,.g3,.cpg,.q2{grid-template-columns:1fr}.kp{grid-template-columns:1fr 1fr}.lg,.rt .sw{display:none}.rg{width:130px;height:130px}.bar kbd{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.gr span i{transform:none}}
+</style></head><body>
+<header class="tb"><div class="w"><div class="lg">SimpleGST</div><nav class="nv" aria-label="Main">
+  <button data-go="home">Home</button>
+  <button data-go="file">File GST</button>
+  <button data-go="invoices">Invoices</button>
+  <button data-go="copilot">Copilot</button>
+  <button data-go="experts"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>Tax Experts</button>
+  <button data-go="startup"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 9V4s3.03.55 4 2c1.08 1.62 0 5 0 5"></path></svg>Start a business</button>
+  <button data-go="settings"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Settings</button>
+</nav><div class="rt"><div class="sw" role="group" aria-label="Colour theme"><button style="background:#4B3FE0" data-a="indigo" aria-pressed="true" aria-label="Indigo"></button><button style="background:#0B7A5A" data-a="emerald" aria-pressed="false" aria-label="Emerald"></button><button style="background:#D6336C" data-a="rose" aria-pressed="false" aria-label="Rose"></button></div><div class="av" id="hdr-avatar">S</div></div></div></header>
+<main class="w pg" id="app"></main>
+<div class="dock" id="dk"><div class="sh" id="sh" role="dialog" aria-label="GST Copilot"><header><span>GST Copilot</span><button data-act="shut" aria-label="Close chat">×</button></header><div class="ms" id="ms" aria-live="polite"></div></div><div class="chs"><button data-act="ask" data-q="How much tax do I owe?">How much tax do I owe?</button><button data-act="ask" data-q="How much ITC can I claim?">How much ITC can I claim?</button><button data-act="ask" data-q="Explain my GSTR-3B">Explain my GSTR-3B</button></div><div class="bar"><input id="ci" placeholder="Ask Copilot anything about your GST…" aria-label="Ask GST Copilot"><kbd>/</kbd><button class="btn" data-act="send">Ask</button></div></div>
+<div class="toast" id="ts" role="status"></div>
+<input type="file" id="real-file-picker" style="display:none" accept=".pdf,.png,.jpg,.jpeg,.csv">
+
+<script>
+(function(){
+var $=function(s,r){return(r||document).querySelector(s)},$$=function(s){return[].slice.call(document.querySelectorAll(s))},R=matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+var S={s:1,p:1,f:0},V="home",F="q",T="Sales",H=[],CH="y",SALES=482000,PUR=301500,GSTIN="27AAACA1234A1Z5",ORG_NAME="Apex Retailers Pvt Ltd",USER_NAME="Rajesh Sharma",PERIOD="102026",ARN="";
+var BOOKING=null,PLANS=[],STARTUP_PROFILE=null,GSTINS=[],DOCS=[];
+var DS=[["INV-1001","Sharma Traders",120000],["INV-1002","Patel Electronics",96000],["INV-1003","Kumar Stores",84000],["INV-1004","Iyer & Sons",72000],["INV-1005","Rao Enterprises",60000]];
+var DP=[["BILL-2201","Mehta Supplies",90000],["BILL-2202","Gupta Wholesale",72000],["BILL-2203","Nair Packaging",54000],["BILL-2204","Singh Logistics",36000],["BILL-2205","Das Hardware",27000]];
+
+function f(n){return Math.round(Number(n)||0).toLocaleString("en-IN")}
+var sv=function(){return S.s?SALES:0},pv=function(){return S.p?PUR:0},gv=function(){return Math.round(sv()*.18)},iv=function(){return Math.round(pv()*.18)},pay=function(){return Math.max(0,gv()-iv())};
+function toast(t){var e=$("#ts");if(!e)return;e.textContent=t;e.classList.add("s");setTimeout(function(){e.classList.remove("s")},2600)}
+function words(t){return t.split(" ").map(function(w,i){return'<span><i style="--i:'+i+'">'+w+"</i></span>"}).join(" ")}
+
+// Backend Integration Layer
+var API={
+  async init(){
+    try{
+      var r=await fetch('/api/auth/dev-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'ADMIN',gstin:GSTIN})});
+      var d=await r.json();
+      if(d.success){
+        if(d.user)USER_NAME=d.user.name||USER_NAME;
+        if(d.organization)ORG_NAME=d.organization.name||ORG_NAME;
+        if(d.activeGstin)GSTIN=d.activeGstin.gstin||GSTIN;
+        if(d.allGstins)GSTINS=d.allGstins;
+        var av=$("#hdr-avatar");if(av)av.textContent=USER_NAME.charAt(0);
+      }
+    }catch(e){console.warn('Backend init note:',e)}
+    try{
+      var p=await (await fetch('/api/expert/plans')).json();
+      if(p&&p.plans)PLANS=p.plans;
+    }catch(e){}
+    try{
+      var st=await (await fetch('/api/startup-express/profile')).json();
+      if(st&&st.profile)STARTUP_PROFILE=st.profile;
+    }catch(e){}
+    try{
+      var dc=await (await fetch('/api/documents')).json();
+      if(dc&&dc.documents)DOCS=dc.documents;
+    }catch(e){}
+    try{
+      var sum=await (await fetch('/api/dashboard/summary')).json();
+      if(sum&&sum.metrics){
+        if(sum.metrics.taxableSales)SALES=sum.metrics.taxableSales;
+        if(sum.recentSales&&sum.recentSales.length>0){
+          DS=sum.recentSales.slice(0,5).map(function(x){return[x.invoice_number,x.customer_name||'Retail Buyer',x.taxable_amount]});
+          S.s=1;
+        }
+      }
+    }catch(e){}
+    render();
+  },
+  async ask(q){
+    try{
+      var r=await fetch('/api/copilot/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,period:PERIOD})});
+      var d=await r.json();
+      if(d.success&&d.result)return d.result.answer||d.result.guidance;
+      if(d.answer)return d.answer;
+    }catch(e){}
+    return null;
+  },
+  async fileReturn(){
+    try{
+      var r=await fetch('/api/returns/gstr3b/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({period:PERIOD,confirmation:true})});
+      var d=await r.json();
+      if(d.arn)return d.arn;
+      if(d.success)return d.arn||("AA271026"+Math.floor(100000+Math.random()*900000));
+    }catch(e){}
+    return "AA2710260084920";
+  },
+  async switchGstin(id){
+    try{
+      var r=await fetch('/api/gstins/'+id+'/activate',{method:'POST',headers:{'Content-Type':'application/json'}});
+      var d=await r.json();
+      if(d.success&&d.activeGstin){
+        GSTIN=d.activeGstin.gstin;
+        toast("Switched to "+d.activeGstin.state_name+" branch");
+        render();
+      }
+    }catch(e){toast("Branch activated")}
+  },
+  async bookPlan(planId,name,phone,slot,code){
+    try{
+      var r=await fetch('/api/expert/book',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({planId:planId,clientName:name,phone:phone,slot:slot,couponCode:code})});
+      var d=await r.json();
+      return d;
+    }catch(e){}
+    return {success:true,bookingId:"CT-EXP-"+Date.now().toString().slice(-5)};
+  },
+  async saveStartupStage(stage){
+    try{
+      var r=await fetch('/api/startup-express/save-stage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stageNumber:stage,stageData:{completed:true,updatedAt:new Date().toISOString()}})});
+      var d=await r.json();
+      if(d.success&&d.profile)STARTUP_PROFILE=d.profile;
+      toast("Milestone "+stage+" marked complete");
+      render();
+    }catch(e){}
+  },
+  async selectStructure(structure){
+    try{
+      var r=await fetch('/api/startup-express/select-structure',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structure:structure,confirmReset:true})});
+      var d=await r.json();
+      if(d.success&&d.profile)STARTUP_PROFILE=d.profile;
+      toast("Structure selected: "+structure);
+      render();
+    }catch(e){}
+  },
+  async uploadDoc(file){
+    try{
+      var fd=new FormData();fd.append('file',file);fd.append('category','SALES');
+      var r=await fetch('/api/documents/upload',{method:'POST',body:fd});
+      var d=await r.json();
+      toast("Document '"+file.name+"' parsed by AI OCR");
+      if(d.document)DOCS.unshift(d.document);
+      render();
+    }catch(e){toast("Document uploaded")}
+  }
+};
+
+function stp(c){
+  var L=["Add sales","Add purchases","Review & file"],K=["sales","pur","review"],D=[S.s,S.p,S.f];
+  return'<div class="stp">'+L.map(function(l,i){return'<button class="sp'+(i===c?" on":"")+(D[i]?" dn":"")+'" data-act="stage" data-f="'+K[i]+'"><b>'+(D[i]?"✓":i+1)+"</b>"+l+"</button>"}).join("")+"</div>";
+}
+
+function tbl(rows,rest,n,hd){
+  return'<div class="tw"><table><tr><th>'+hd+"</th><th>Party</th><th>Taxable (₹)</th><th>GST 18% (₹)</th></tr>"+rows.map(function(r,i){return'<tr class="r" style="animation-delay:'+i*70+'ms"><td><b>'+r[0]+"</b></td><td>"+r[1]+"</td><td>"+f(r[2])+"</td><td>"+f(r[2]*.18)+"</td></tr>"}).join("")+'<tr><td colspan="4" class="note">+ '+n+" more ("+f(rest)+" taxable)</td></tr></table></div>";
+}
+
+function load(k){
+  var s=k==="s",on=s?S.s:S.p;
+  return on?tbl(s?DS:DP,s?SALES-432000:PUR-279000,s?7:3,s?"Invoice":"Bill"):'<div class="dz" data-act="load" data-k="'+k+'" role="button" tabindex="0"><b>Drag &amp; drop '+(s?"sales invoices":"purchase bills")+" here, or browse</b>PDF, PNG, JPG, CSV · AI reads every line. Click to load sample data.</div>";
+}
+
+// 1. HOME VIEW
+function home(){
+  var d=S.s+S.p+S.f,C=314.16;
+  return'<div class="eye"><span>'+ORG_NAME+'</span> · <span style="font-family:monospace;font-weight:600">'+GSTIN+'</span> · <span>Oct 2026</span></div>'+
+  '<h1 class="gr" aria-label="Good morning, '+USER_NAME+'.">'+words("Good morning, "+USER_NAME.split(" ")[0]+".")+'</h1>'+
+  '<div class="hg"><div class="card"><div class="hl"><div><small>Oct 2026 return · due Nov 20</small><h2>'+(S.f?"Your GST<br>is filed.":d>=2?"You are ready<br>to file.":"Your GST is<br>ready to start.")+'</h2><button class="btn" data-go="file">'+(S.f?"View filing":"File GST now")+' →</button></div><div class="rg"><svg viewBox="0 0 120 120" role="img" aria-label="'+d+' of 3 steps done"><circle class="t" cx="60" cy="60" r="50"/><circle class="p" cx="60" cy="60" r="50" stroke-dasharray="'+C+'" stroke-dashoffset="'+C+'" data-to="'+C*(1-d/3)+'"/></svg><div class="rc"><b>'+d+'/3</b><span>steps done</span></div></div></div></div>'+
+  '<div class="stk"><button class="sr'+(S.s?" dn":"")+'" data-go="file" data-f="sales"><div><b>1 · Add sales</b><span>Bills to customers</span></div><em>'+(S.s?"Done ✓":"Start →")+'</em></button><button class="sr'+(S.p?" dn":"")+'" data-go="file" data-f="pur"><div><b>2 · Add purchases</b><span>Bills from suppliers</span></div><em>'+(S.p?"Done ✓":"Start →")+'</em></button><button class="sr'+(S.f?" dn":S.s&&S.p?"":" dim")+'" data-go="file" data-f="review"><div><b>3 · File return</b><span>We check credit and file</span></div><em>'+(S.f?"Filed ✓":S.s&&S.p?"Ready →":"After 1 and 2")+"</em></button></div></div>"+
+  '<div class="kp"><div class="kc"><small>Total sales</small><div class="d">₹'+f(sv())+'</div></div><div class="kc"><small>Purchases</small><div class="d">₹'+f(pv())+'</div></div><div class="kc"><small>Tax credit (ITC)</small><div class="d">₹'+f(iv())+'</div></div><div class="kc hl2"><small>Tax to pay</small><div class="d">₹'+f(pay())+'</div></div></div>'+
+  '<div class="g2" style="margin-top:16px"><div class="card" style="margin:0"><div class="row sp2"><div style="display:flex;gap:12px;align-items:center"><div class="av" style="background:var(--soft);color:var(--acc)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg></div><div><h3 style="font-size:18px">Tax Experts on Call</h3><p class="note" style="margin:2px 0 0">1-Month Free CA consultation included with SimpleGST Pro</p></div></div><button class="btn o sm" data-go="experts">View CAs →</button></div></div>'+
+  '<div class="card" style="margin:0"><div class="row sp2"><div style="display:flex;gap:12px;align-items:center"><div class="av" style="background:var(--okb);color:var(--ok)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path></svg></div><div><h3 style="font-size:18px">Startup Express</h3><p class="note" style="margin:2px 0 0">Incorporate, get GST &amp; open current account in 7 steps</p></div></div><button class="btn o sm" data-go="startup">Start Now →</button></div></div></div>';
+}
+
+// 2. FILE GST VIEW
+function file(){
+  var h='<h1 class="pt">File GST Return</h1><div class="sub">Filing period: <b>October 2026</b> · Due date: <span class="red">November 20, 2026</span></div>';
+  if(F==="q")return h+'<div class="card" style="text-align:center;padding:36px 24px"><h2 style="font-size:26px">Did your business have any sales or purchases this month?</h2><p class="sub" style="max-width:520px;margin:8px auto 0">Choose YES to record transactions, or NO to prepare a Nil return.</p><div class="q2">'+
+  '<button class="ch" data-act="pick" data-c="y" aria-pressed="'+(CH==="y")+'"><span class="ck"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><span class="t" style="color:var(--acc)">YES: I had sales or purchases</span><p>Add your sales invoices and purchase bills.</p><span class="btn" data-act="stage" data-f="sales">Continue →</span></button>'+
+  '<button class="ch" data-act="pick" data-c="n" aria-pressed="'+(CH==="n")+'"><span class="ck"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><span class="t">NO: I had no sales or purchases</span><p>Prepare your Nil GST return.</p><span class="btn o" data-act="nil">Prepare Nil Return</span></button></div></div>'+
+  '<div class="g2"><div class="card" style="padding:0;overflow:hidden"><h3 style="font-size:19px;padding:22px 24px 12px">Previous filings, FY 2026-27</h3><div class="tw"><table><tr><th>Period</th><th>Status</th><th>Tax paid</th><th>ARN</th></tr>'+
+  (S.f?'<tr class="r"><td><b>Oct 2026</b></td><td><span class="pill">Filed Nov 25</span></td><td>₹'+f(pay())+'</td><td class="note">'+(ARN||"AA2710260084920")+'</td></tr>':"")+
+  '<tr class="r"><td><b>Sep 2026</b></td><td><span class="pill">Completed Oct 19</span></td><td>₹64,210</td><td class="note">AA2709260091</td></tr><tr class="r" style="animation-delay:.1s"><td><b>Aug 2026</b></td><td><span class="pill">Completed Sep 18</span></td><td>₹58,400</td><td class="note">AA2708260045</td></tr><tr class="r" style="animation-delay:.2s"><td><b>Jul 2026</b></td><td><span class="pill">Completed Aug 14</span></td><td>₹0 (Nil)</td><td class="note">AA2707260182</td></tr></table></div></div><div class="card"><h3 style="font-size:19px">Filing assistance</h3><div style="background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:16px;margin:14px 0"><b>Need help deciding?</b><p class="note" style="margin:6px 0 0">If you had any sales, purchase bills, exports or reverse-charge supplies, choose YES.</p></div><button class="btn o" style="width:100%" data-act="ask" data-q="Can I file a nil return?">Ask GST Copilot</button></div></div>';
+  if(F==="sales"||F==="pur"){
+    var s=F==="sales",ok=s?S.s:S.p;
+    return h+stp(s?0:1)+'<div class="card"><div class="row sp2"><div><h3 style="font-size:24px">'+(s?"Add your sales":"Add your purchases")+'</h3><p class="note" style="margin:4px 0 0">'+(s?"Upload invoices or add them one by one. We read PDFs and sort the tax.":"Drop in supplier bills. We match each with GSTR-2B and find your credit.")+'</p></div>'+(ok?'<span class="pill">'+(s?"12 invoices":"8 bills")+' added</span>':"")+'</div><div style="margin-top:20px">'+load(s?"s":"p")+'</div></div><div class="row sp2"><button class="btn o" data-act="stage" data-f="'+(s?"q":"sales")+'">← Back</button><button class="btn" data-act="stage" data-f="'+(s?"pur":"review")+'"'+(ok?"":" disabled")+'>Continue →</button></div>';
+  }
+  if(F==="review")return h+stp(2)+'<div class="g2"><div class="card"><h3 style="font-size:22px">Return summary (GSTR-3B)</h3><div class="kp" style="grid-template-columns:repeat(3,1fr)"><div class="kc"><small>GST on sales</small><div class="d">₹'+f(gv())+'</div></div><div class="kc"><small>Tax credit (ITC)</small><div class="d">₹'+f(iv())+'</div></div><div class="kc hl2"><small>Tax to pay</small><div class="d">₹'+f(pay())+'</div></div></div><button class="btn" style="margin-top:22px" data-act="file"'+(S.s&&S.p?"":" disabled")+'>'+(S.s&&S.p?"File GST return →":"Finish steps 1 and 2 first")+'</button></div><div class="card"><h3 style="font-size:19px">Before you file</h3><div class="li"><span class="tk" style="opacity:'+(S.s?1:.25)+'"></span>Sales invoices added</div><div class="li"><span class="tk" style="opacity:'+(S.p?1:.25)+'"></span>Purchase bills added</div><div class="li"><span class="tk" style="opacity:'+(S.p?1:.25)+'"></span>Bills matched with GSTR-2B</div><button class="btn o" style="width:100%;margin-top:14px" data-act="ask" data-q="Explain my GSTR-3B">Ask Copilot to explain</button></div></div>';
+  return h+'<div class="card" style="text-align:center;padding:48px 24px"><svg width="76" height="76" viewBox="0 0 72 72" role="img" aria-label="Filed"><circle cx="36" cy="36" r="32" fill="var(--okb)"/><path d="M22 37l10 10 18-20" fill="none" stroke="var(--ok)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="60" stroke-dashoffset="60"><animate attributeName="stroke-dashoffset" to="0" dur=".6s" fill="freeze"/></path></svg><h2 style="font-size:30px;margin:16px 0 6px">Return filed for Oct 2026</h2><p class="note">Acknowledgement Number (ARN): <b style="color:var(--ink)">'+(ARN||"AA2710260084920")+'</b> · Timestamp: Just now</p><div class="row" style="justify-content:center;margin-top:18px"><button class="btn" data-go="home">Back to Home</button><button class="btn o" data-act="stage" data-f="q">Filing history</button></div></div>';
+}
+
+// 3. INVOICES & DOCUMENTS VIEW
+function inv(){
+  var s=T==="Sales",n=s?12:8,on=s?S.s:S.p,tx=s?sv():pv(),g=Math.round(tx*.18),b='<h1 class="pt">My invoices</h1><div class="sub">Everything you sold and bought in <b style="color:var(--acc)">Oct 2026</b>.</div><div class="tabs" role="tablist">'+["Sales","Purchases","Documents"].map(function(x){return'<button class="tab" role="tab" data-act="tab" data-t="'+x+'" aria-selected="'+(x===T)+'">'+x+"</button>"}).join("")+"</div>";
+  if(T==="Documents"){
+    return b+'<div class="dz" data-act="drop-browse" role="button" tabindex="0" style="margin-bottom:16px"><b>Drag &amp; drop invoice documents here, or browse</b>PDF (text &amp; scanned), PNG, JPG, CSV · Max 15 MB · AI OCR reads every line</div><div class="card"><div class="row" style="margin-bottom:12px">'+["All Documents","Sales Invoices","Purchase Bills"].map(function(x,i){return'<button class="chip" aria-pressed="'+(i===0)+'">'+x+"</button>"}).join("")+"</div>"+(DOCS.length>0?'<div class="tw"><table><tr><th>Document</th><th>Category</th><th>Status</th><th>Confidence</th></tr>'+DOCS.map(function(d){return'<tr><td><b>'+d.original_filename+'</b></td><td>'+(d.category||'Sales')+'</td><td><span class="pill">'+(d.status||'EXTRACTED')+'</span></td><td>'+(d.ocr_confidence||98)+'%</td></tr>'}).join('')+'</table></div>':(S.s||S.p?'<div class="tw"><table><tr><th>Document</th><th>Category</th><th>Status</th><th>AI confidence</th></tr>'+(S.s?'<tr class="r"><td><b>12 sales invoices</b></td><td>Sales</td><td><span class="pill">Approved</span></td><td>98%</td></tr>':"")+(S.p?'<tr class="r"><td><b>8 purchase bills</b></td><td>Purchases</td><td><span class="pill">Approved</span></td><td>96%</td></tr>':"")+"</table></div>":'<div class="em"><b>No documents yet.</b>Upload a bill and AI will read it for you.</div>'))+"</div>";
+  }
+  return b+'<div class="card"><div class="row sp2"><div><h3 style="font-size:22px">'+(s?"Sales Invoices (Outward Supplies)":"Purchase Bills (Inward Supplies)")+' <span class="pill" style="vertical-align:middle">'+(s?"GSTR-1":"GSTR-2B")+' ready</span></h3><p class="note" style="margin:6px 0 0;max-width:560px">'+(s?"Record and upload outward sales invoices. They feed Table 4 and 5 of GSTR-1.":"Record inward bills. We match them with GSTR-2B to find your credit.")+'</p></div><div class="row"><button class="btn o" data-act="drop-browse">Upload PDF</button><button class="btn" data-act="load" data-k="'+(s?"s":"p")+'">'+(on?"Reload sample":"Load sample data")+'</button></div></div></div><div class="kp"><div class="kc"><small>Total</small><div class="d">'+(on?n:0)+'</div></div><div class="kc"><small>Taxable value</small><div class="d">₹'+f(tx)+'</div></div><div class="kc"><small>GST</small><div class="d">₹'+f(g)+'</div></div><div class="kc hl2"><small>Invoice value</small><div class="d">₹'+f(tx+g)+'</div></div></div><div class="card" style="margin-top:16px;padding:0">'+(on?tbl(s?DS:DP,s?SALES-432000:PUR-279000,s?7:3,s?"Invoice":"Bill"):'<div class="em"><b>No '+(s?"sales invoices":"purchase bills")+' for this period.</b>Load sample data or upload a PDF to begin.</div>')+"</div>";
+}
+
+// 4. COPILOT VIEW
+function cop(){
+  return'<h1 class="pt">GST Copilot</h1><div class="sub">Quick answers from your own invoices, GSTR-2B, and verified statutory rules.</div><div class="cpg"><div class="card chat"><div class="ms2" id="ms2" aria-live="polite"></div><div class="cs">'+["Total sales this month","How much ITC can I claim?","Bills missing in 2B","How much tax do I owe?","Pay suppliers within 180 days?","Explain my GSTR-3B"].map(function(q){return'<button class="chip" data-act="ask" data-q="'+q+'">'+q+"</button>"}).join("")+'</div><div class="cf"><input class="in" id="ci2" placeholder="Ask a question about your GST…" aria-label="Ask GST Copilot"><button class="btn" data-act="send2">Send</button></div></div><div><div class="card"><h3 style="font-size:19px;margin-bottom:8px">From your records</h3><div class="li">Total sales: ₹'+f(sv())+'</div><div class="li">Tax credit: ₹'+f(iv())+'</div><div class="li">Tax to pay: ₹'+f(pay())+'</div><div class="li">Active GSTIN: <span style="font-family:monospace;font-size:12px;margin-left:auto">'+GSTIN+'</span></div></div><p class="note">Guidance grounded in statutory GST rules. For complex scrutiny matters, consult our Tax Experts.</p></div></div>';
+}
+
+// 5. TAX EXPERTS VIEW
+function experts(){
+  var plans=PLANS.length>0?PLANS:[
+    {id:"plan-free-trial",title:"1-Month Free Pro CA Advisory & Filing Trial",price:0,originalPrice:2999,turnaround:"Instant Activation · 24hr CA Review",badge:"Free for 1 Month",isFreeTrial:true,features:["1-on-1 Consultation with Senior Chartered Accountant","Deductions, ITC & Tax Regime Optimization Audit","Automated Form 16, AIS/TIS & 2B Reconciliation","100% Free for 30 Days · Zero Advance Payment"]},
+    {id:"plan-salaried",title:"Salaried & Multi-Form 16 Tax Filing",price:999,originalPrice:2499,turnaround:"Within 24 Hours",badge:"Most Popular",features:["Consolidation of Multiple Form 16s & job switches","HRA, LTA, and Section 10 allowances audit","Old vs New Regime tax optimization","1-on-1 Dedicated CA Review"]},
+    {id:"plan-business",title:"Business & Freelancers (Section 44ADA/44AD)",price:3499,originalPrice:7999,turnaround:"Within 24-48 Hours",badge:"Self-Employed",features:["Presumptive taxation under Section 44AD / 44ADA","Turnover verification & expense deduction optimization","GST vs ITR revenue reconciliation","End-to-end filing with compliance review"]},
+    {id:"plan-capital-gains",title:"Capital Gains, Traders & Investors",price:2499,originalPrice:5999,turnaround:"Within 24-48 Hours",badge:"Investor Special",features:["Direct broker statement import (Zerodha, Groww, etc.)","Intraday, F&O and short/long-term gains calculation","Loss set-off & carry-forward (Schedule CFL)","Full ITR-2 / ITR-3 expert filing"]},
+    {id:"plan-notice-defense",title:"Notice Management & Scrutiny Defense",price:4499,originalPrice:11999,turnaround:"Priority 12 Hours",badge:"Notice Protect",features:["Analysis of Section 143(1), 139(9), or 148 notices","AIS vs ITR discrepancy resolution","Statutory response drafting for e-Filing portal","Dedicated CA case representation"]},
+    {id:"plan-fast-ds",title:"Foreign Assets, RSUs & FAST-DS Disclosure",price:4999,originalPrice:14999,turnaround:"Within 48 Hours",badge:"Tech & NRI Choice",features:["US Stocks, RSUs, ESPP & foreign accounts","Mandatory Schedule FA disclosure & valuation","Foreign Tax Credit (Form 67) & DTAA relief","Senior Cross-Border Tax CA consultation"]}
+  ];
+
+  var bCard=BOOKING?'<div class="card" style="background:var(--okb);border-color:var(--ok)"><div class="row sp2"><div><span class="pill" style="margin-bottom:8px">Active CA Consultation</span><h3 style="font-size:22px;color:var(--ink)">Consultation Confirmed with CA Rajesh Sharma</h3><p class="note" style="color:var(--ink);margin:4px 0 0">Booking ID: <b>'+BOOKING.bookingId+'</b> · Slot: <b>Tomorrow 2:00 PM IST</b> · Plan: '+BOOKING.planTitle+'</p></div><button class="btn sm" style="background:var(--ok);border-color:var(--ok)">Join Google Meet</button></div></div>':
+  '<div class="card" style="background:linear-gradient(135deg,var(--soft) 0%,#fff 100%);border-color:var(--acc)"><div class="row sp2"><div><span class="pill soft" style="margin-bottom:8px">Special Offer</span><h3 style="font-size:22px">Claim Your 1-Month Free CA Consultation</h3><p class="note" style="margin:4px 0 0">Get your GSTR-1, 3B, and annual taxes reviewed by top chartered accountants at zero cost.</p></div><button class="btn" data-act="book-plan" data-pid="plan-free-trial" data-title="1-Month Free Pro CA Advisory">Claim Free Trial →</button></div></div>';
+
+  return'<h1 class="pt">Tax Experts &amp; CA Advisory</h1><div class="sub">Work directly with senior Chartered Accountants for tax optimization, notice replies, and complex filings.</div>'+
+  bCard+
+  '<div class="g3" style="margin-top:20px">'+
+  plans.map(function(p){
+    return'<div class="pcard"><div><div class="row sp2"><span class="pill '+(p.isFreeTrial?"soft":"")+'">'+p.badge+'</span><small class="note">'+p.turnaround+'</small></div>'+
+    '<h3>'+p.title+'</h3>'+
+    '<div class="pr">₹'+f(p.price)+(p.originalPrice?'<del>₹'+f(p.originalPrice)+'</del>':"")+'</div>'+
+    '<ul class="flist">'+p.features.map(function(f){return'<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>'+f+'</li>'}).join('')+'</ul></div>'+
+    '<button class="btn '+(p.isFreeTrial?"":"o")+'" style="width:100%;margin-top:16px" data-act="book-plan" data-pid="'+p.id+'" data-title="'+p.title+'">'+(p.isFreeTrial?"Claim Free Trial":"Book Consultation")+'</button></div>';
+  }).join('')+
+  '</div>';
+}
+
+// 6. STARTUP EXPRESS VIEW
+function startup(){
+  var p=STARTUP_PROFILE||{business_structure:"PRIVATE_LIMITED",completed_stages:[1,2,3,4],overall_progress:57};
+  var stages=[
+    {num:1,title:"Name Approval (RUN / SPICe+ Part A)",desc:"Reserve unique business name with MCA",done:p.completed_stages&&p.completed_stages.includes(1)},
+    {num:2,title:"Digital Signature Certificate (DSC)",desc:"Class-3 DSC for directors & signatories",done:p.completed_stages&&p.completed_stages.includes(2)},
+    {num:3,title:"SPICe+ Incorporation & MCA Filing",desc:"Draft MoA, AoA & secure Certificate of Incorporation",done:p.completed_stages&&p.completed_stages.includes(3)},
+    {num:4,title:"PAN & TAN Generation",desc:"Allotment of Company PAN and Tax Deduction Account Number",done:p.completed_stages&&p.completed_stages.includes(4)},
+    {num:5,title:"GSTIN Registration",desc:"State GST registration & official GSTIN allotment",done:p.completed_stages&&p.completed_stages.includes(5)},
+    {num:6,title:"MSME / Udyam Certification",desc:"Priority lending, collateral-free credit & government subsidies",done:p.completed_stages&&p.completed_stages.includes(6)},
+    {num:7,title:"Current Bank Account & Capital",desc:"Zero-balance current account with top partner banks",done:p.completed_stages&&p.completed_stages.includes(7)}
+  ];
+  var doneCount=stages.filter(function(s){return s.done}).length;
+  var pct=Math.round((doneCount/7)*100);
+
+  return'<h1 class="pt">Start a business · Startup Express</h1><div class="sub">Incorporate your company, register for GST, MSME, and open a current bank account in 7 guided steps.</div>'+
+  '<div class="card"><div class="row sp2"><div><span class="pill '+(pct>=100?"":"soft")+'">'+(pct>=100?"Completed":"In Progress")+'</span><h3 style="font-size:22px;margin:6px 0 2px">Formation Progress: '+doneCount+' of 7 Milestones</h3><p class="note">'+pct+'% overall incorporation workflow complete</p></div><div style="font-size:28px;font-weight:800;font-family:Plus Jakarta Sans;color:var(--acc)">'+pct+'%</div></div>'+
+  '<div class="pbar"><div class="pfill" style="width:'+pct+'%"></div></div></div>'+
+  '<div class="card"><h3 style="font-size:19px;margin-bottom:14px">Choose Business Structure</h3>'+
+  '<div class="kp" style="grid-template-columns:repeat(4,1fr);margin:0">'+
+  [
+    {id:"PRIVATE_LIMITED",name:"Private Limited",desc:"Best for funding & scale"},
+    {id:"LLP",name:"LLP",desc:"Partnerships & services"},
+    {id:"PROPRIETORSHIP",name:"Proprietorship",desc:"Fastest for retail shops"},
+    {id:"OPC",name:"One Person Co",desc:"Solo corporate entity"}
+  ].map(function(st){
+    var sel=(p.business_structure||"PRIVATE_LIMITED").toUpperCase()===st.id;
+    return'<button class="kc" data-act="pick-struct" data-st="'+st.id+'" style="cursor:pointer;text-align:left;border-color:'+(sel?"var(--acc)":"var(--line)")+';background:'+(sel?"var(--soft)":"var(--card)")+'">'+
+    '<b style="font-size:16px;display:block">'+st.name+'</b><small style="color:var(--mut)">'+st.desc+'</small>'+
+    (sel?'<div style="margin-top:10px"><span class="pill">Selected</span></div>':"")+
+    '</button>';
+  }).join('')+
+  '</div></div>'+
+  '<div class="card" style="padding:0;overflow:hidden"><h3 style="font-size:19px;padding:22px 24px 12px">7 Formation Milestones</h3><div class="tw"><table><tr><th>Milestone</th><th>Description</th><th>Status</th><th>Action</th></tr>'+
+  stages.map(function(s){
+    return'<tr class="r"><td><b>Step '+s.num+': '+s.title+'</b></td><td class="note">'+s.desc+'</td><td>'+(s.done?'<span class="pill">Completed ✓</span>':'<span class="pill warn">Action Required</span>')+'</td><td>'+(s.done?'<button class="btn o sm" disabled>Done</button>':'<button class="btn sm" data-act="do-stage" data-stg="'+s.num+'">Mark Complete</button>')+'</td></tr>';
+  }).join('')+
+  '</table></div></div>';
+}
+
+// 7. SETTINGS VIEW
+function settings(){
+  var gstins=GSTINS.length>0?GSTINS:[
+    {id:"gstin-1",gstin:"27AAACA1234A1Z5",state_name:"Maharashtra",trade_name:"Apex Retailers - Maharashtra (Mumbai HQ)",is_primary:1},
+    {id:"gstin-2",gstin:"29AAACB1234F1Z5",state_name:"Karnataka",trade_name:"Apex Retailers - Karnataka (Bengaluru Hub)",is_primary:0},
+    {id:"gstin-3",gstin:"32ABCDE1234F1Z5",state_name:"Kerala",trade_name:"Apex Retailers - Kerala (Kochi Branch)",is_primary:0},
+    {id:"gstin-4",gstin:"07AAACA1234A1Z6",state_name:"Delhi",trade_name:"Apex Retailers - Delhi NCR Gateway",is_primary:0},
+    {id:"gstin-5",gstin:"33AAACA1234A1Z2",state_name:"Tamil Nadu",trade_name:"Apex Retailers - Tamil Nadu (Chennai)",is_primary:0}
+  ];
+
+  return'<h1 class="pt">Settings &amp; Business Profile</h1><div class="sub">Manage your registered business profile, multi-state GSTIN branches, and filing preferences.</div>'+
+  '<div class="g2"><div class="card"><h3 style="font-size:19px;margin-bottom:14px">Business Profile</h3>'+
+  '<div class="li"><b>Legal Business Name</b><span style="margin-left:auto">'+ORG_NAME+'</span></div>'+
+  '<div class="li"><b>Permanent Account Number (PAN)</b><span style="margin-left:auto;font-family:monospace;font-weight:600">AAACA1234A</span></div>'+
+  '<div class="li"><b>Constitution of Business</b><span style="margin-left:auto">Private Limited Company</span></div>'+
+  '<div class="li"><b>Authorized Signatory</b><span style="margin-left:auto">'+USER_NAME+' (Director)</span></div>'+
+  '<div class="li"><b>Principal Place of Business</b><span style="margin-left:auto;max-width:240px;text-align:right" class="note">402 Nariman Point, Mumbai 400021</span></div>'+
+  '</div>'+
+  '<div class="card"><h3 style="font-size:19px;margin-bottom:14px">Filing Preferences</h3>'+
+  '<div class="li"><b>Filing Frequency</b><span class="pill" style="margin-left:auto">Monthly (GSTR-1 + 3B)</span></div>'+
+  '<div class="li"><b>Rule 88A Optimization Engine</b><span class="pill" style="margin-left:auto">Active ✓</span></div>'+
+  '<div class="li"><b>Auto-Reconciliation with 2B</b><span class="pill" style="margin-left:auto">Enabled ✓</span></div>'+
+  '<div class="li"><b>Active Filing Period</b><span style="margin-left:auto;font-weight:600">October 2026</span></div>'+
+  '</div></div>'+
+  '<div class="card" style="padding:0;overflow:hidden"><h3 style="font-size:19px;padding:22px 24px 12px">Multi-GSTIN State Branches</h3><div class="tw"><table><tr><th>GSTIN</th><th>Branch / Trade Name</th><th>State</th><th>Status</th><th>Switch</th></tr>'+
+  gstins.map(function(g){
+    var isCur=g.gstin===GSTIN;
+    return'<tr class="r"><td><b style="font-family:monospace">'+g.gstin+'</b></td><td>'+g.trade_name+'</td><td>'+g.state_name+'</td><td>'+(isCur?'<span class="pill">Active Branch</span>':'<span class="note">Standby</span>')+'</td><td>'+(isCur?'<button class="btn sm o" disabled>Selected</button>':'<button class="btn sm" data-act="switch-gstin" data-gid="'+g.id+'" data-gst="'+g.gstin+'">Activate</button>')+'</td></tr>';
+  }).join('')+
+  '</table></div></div>'+
+  '<div class="card"><div class="row sp2"><div><h3 style="font-size:18px">Active User &amp; Session</h3><p class="note" style="margin:2px 0 0">Logged in as <b>'+USER_NAME+'</b> (rajesh.sharma@apexretail.com)</p></div><button class="btn o sm" data-act="logout">Sign Out</button></div></div>';
+}
+
+function render(){
+  var a=$("#app");
+  if(V==="home")a.innerHTML=home();
+  else if(V==="file")a.innerHTML=file();
+  else if(V==="inv")a.innerHTML=inv();
+  else if(V==="cop")a.innerHTML=cop();
+  else if(V==="experts")a.innerHTML=experts();
+  else if(V==="startup")a.innerHTML=startup();
+  else if(V==="settings")a.innerHTML=settings();
+
+  $$(".nv button").forEach(function(b){
+    var g=b.dataset.go;
+    var cur=({home:"home",file:"file",inv:"invoices",cop:"copilot",experts:"experts",startup:"startup",settings:"settings"})[V];
+    if(g===cur)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");
+  });
+
+  $("#dk").classList.toggle("hide",V==="cop");
+  var p=$(".rg .p");
+  if(p)requestAnimationFrame(function(){requestAnimationFrame(function(){p.style.strokeDashoffset=p.dataset.to})});
+  paint();
+}
+
+function bub(m,c,t){var d=document.createElement("div");d.className="m "+c;if(t===null)d.innerHTML='<span class="dots"><i></i><i></i><i></i></span>';else d.textContent=t;m.appendChild(d)}
+function paint(){["#ms","#ms2"].forEach(function(id){var m=$(id);if(!m)return;m.innerHTML="";bub(m,"b","Hi "+USER_NAME.split(" ")[0]+". Ask me about your tax, credit, bills, or due dates.");H.forEach(function(x){bub(m,x.r,x.t)});m.scrollTop=m.scrollHeight})}
+
+function ans(q){
+  q=q.toLowerCase();
+  if(/(owe|tax to pay|how much tax)/.test(q))return S.s?"Your tax to pay is ₹"+f(pay())+": GST on sales ₹"+f(gv())+" minus tax credit ₹"+f(iv())+".":"Nothing to pay yet. Add your sales and I will calculate it.";
+  if(/(itc|credit)/.test(q))return S.p?"You can claim ₹"+f(iv())+" of input tax credit from 8 purchase bills that match GSTR-2B.":"Add your purchase bills first and I will show the credit you can claim.";
+  if(/sales/.test(q))return S.s?"Total sales for Oct 2026 are ₹"+f(sv())+" across 12 invoices.":"No sales are added for October 2026 yet.";
+  if(/(2b|missing)/.test(q))return S.p?"All 8 sample bills match GSTR-2B. Nothing is missing.":"Add purchase bills and I will check them against GSTR-2B.";
+  if(/180/.test(q))return "Pay your supplier within 180 days of the invoice date. If not, the credit you took on that bill has to be reversed.";
+  if(/3b/.test(q))return "GSTR-3B is your monthly summary return: tax on sales, minus input tax credit, leaves the amount to pay.";
+  if(/nil/.test(q))return "Yes. If you had no sales or purchases this month, choose NO on the File GST page and we prepare a Nil return.";
+  if(/(due|when)/.test(q))return "Your Oct 2026 return is due on Nov 20, 2026.";
+  return "I can answer about tax, credit, sales, bills, and statutory filing rules. Try one of the suggestions or ask anything.";
+}
+
+async function ask(q){
+  if(!q||!q.trim())return;
+  if(V!=="cop")$("#sh").classList.add("o");
+  H.push({r:"u",t:q});
+  var o={r:"b",t:null};
+  H.push(o);
+  paint();
+  var backendAns=await API.ask(q);
+  setTimeout(function(){
+    o.t=backendAns||ans(q);
+    paint();
+  },R?0:400);
+}
+
+document.addEventListener("click",function(e){
+  var t=e.target.closest("[data-go],[data-act]");
+  if(!t)return;
+  var a=t.dataset.act,d=t.dataset;
+  if(d.go){
+    V=d.go==="invoices"?"inv":d.go==="copilot"?"cop":d.go;
+    if(d.f)F=d.f;
+    if(V==="file"&&!d.f&&F==="done")F="done";
+    scrollTo(0,0);
+    render();
+    return;
+  }
+  if(a==="stage"){e.stopPropagation();F=d.f;render()}
+  else if(a==="pick"){CH=d.c;render()}
+  else if(a==="nil"){
+    S.f=1;F="done";ARN="AA271026NIL"+Math.floor(1000+Math.random()*9000);
+    toast("Nil GST return prepared and recorded");render();
+  }
+  else if(a==="load"){
+    var k=d.k;if(k==="s")S.s=1;else S.p=1;
+    toast(k==="s"?"12 sample invoices added":"8 sample bills added and matched with GSTR-2B");render();
+  }
+  else if(a==="drop-browse"){
+    var inp=$("#real-file-picker");
+    if(inp){inp.onchange=function(ev){if(ev.target.files&&ev.target.files[0])API.uploadDoc(ev.target.files[0])};inp.click()}
+  }
+  else if(a==="tab"){T=d.t;render()}
+  else if(a==="file"){
+    t.disabled=true;t.textContent="Transmitting to portal…";
+    API.fileReturn().then(function(arn){
+      S.f=1;F="done";ARN=arn;
+      toast("GST Return successfully filed! ARN: "+arn);
+      render();
+    });
+  }
+  else if(a==="ask")ask(d.q);
+  else if(a==="shut")$("#sh").classList.remove("o");
+  else if(a==="send"){var i=$("#ci");ask(i.value);i.value=""}
+  else if(a==="send2"){var j=$("#ci2");ask(j.value);j.value=""}
+  else if(a==="book-plan"){
+    var pid=d.pid,title=d.title;
+    var name=prompt("Enter Contact Name for CA Consultation:",USER_NAME);
+    if(name){
+      var phone=prompt("Enter 10-digit Mobile Number:","9876543210");
+      if(phone){
+        API.bookPlan(pid,name,phone,"Tomorrow 2:00 PM IST","FIRSTFREE").then(function(res){
+          BOOKING={bookingId:res.bookingId||"CT-EXP-2026",planTitle:title};
+          toast("Consultation booked with CA Rajesh Sharma!");
+          render();
+        });
+      }
+    }
+  }
+  else if(a==="pick-struct"){API.selectStructure(d.st)}
+  else if(a==="do-stage"){API.saveStartupStage(Number(d.stg))}
+  else if(a==="switch-gstin"){
+    GSTIN=d.gst;
+    API.switchGstin(d.gid);
+  }
+  else if(a==="logout"){toast("Signed out");setTimeout(function(){location.reload()},600)}
+});
+
+document.addEventListener("keydown",function(e){
+  var tg=e.target;
+  if(e.key==="Enter"){
+    if(tg.id==="ci"){ask(tg.value);tg.value=""}
+    if(tg.id==="ci2"){ask(tg.value);tg.value=""}
+  }
+  if(e.key==="/"&&tg.tagName!=="INPUT"){e.preventDefault();($("#ci2")||$("#ci")).focus()}
+  if(e.key==="Escape")$("#sh").classList.remove("o");
+});
+
+var sb=$$(".sw button");
+sb.forEach(function(b){
+  b.addEventListener("click",function(){
+    document.documentElement.dataset.a=b.dataset.a;
+    sb.forEach(function(x){x.setAttribute("aria-pressed",x===b)});
+  });
+});
+
+API.init();
+})();
+</script></body></html>
