@@ -54,6 +54,7 @@ export function createInitialState() {
     recentAddedId: null,
     reconciliation: { summary: null, items: [], loading: "idle", error: "" },
     filingReceipt: null,
+    startFreshFiling: false,
     submittingReturn: false,
     filingError: ""
   };
@@ -75,6 +76,7 @@ export function clearBusinessCache() {
   state.recentAddedId = null;
   state.reconciliation = { summary: null, items: [], loading: "idle", error: "" };
   state.filingReceipt = null;
+  state.startFreshFiling = false;
   state.submittingReturn = false;
   state.filingError = "";
   state.errors.dashboard = "";

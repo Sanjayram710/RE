@@ -501,6 +501,7 @@ async function approveOcrReview() {
     }, { onUnauthorized: handleUnauthorized });
 
     state.ocrReview = null;
+    state.startFreshFiling = false;
     state.recentAddedId = res.invoice?.id || res.purchase?.id || null;
     if (res.period && res.period !== state.period) {
       state.period = res.period;
@@ -587,6 +588,7 @@ async function submitSimulatedReturn(otp) {
       body: JSON.stringify({ period: state.period, otp, paymentDone: true })
     }, { onUnauthorized: handleUnauthorized });
     state.filingReceipt = res;
+    state.startFreshFiling = false;
     state.submittingReturn = false;
     await Promise.all([loadDashboard(), loadHistory()]);
     launchCelebrationConfetti();
@@ -851,24 +853,25 @@ document.addEventListener("click", async (e) => {
     }
     else if (act === "run-recon") await runReconciliationMatch();
     else if (act === "start-new-filing") {
-      const nextPeriod = getNextPeriodMMYYYY(state.period);
+      const currentPeriod = getCurrentPeriodMMYYYY();
       state.filingReceipt = null;
+      state.startFreshFiling = true;
       state.filingError = "";
       state.filingStep = 1;
       state.ocrReview = null;
       state.recentAddedId = null;
-      state.period = nextPeriod;
+      state.period = currentPeriod;
       await apiRequest("/api/context/period", {
         method: "POST",
-        body: JSON.stringify({ period: nextPeriod })
+        body: JSON.stringify({ period: currentPeriod })
       }, { onUnauthorized: handleUnauthorized }).catch(() => {});
       await apiRequest("/api/filing/draft", {
         method: "PUT",
-        body: JSON.stringify({ period: nextPeriod, currentStep: 1, draft: {} })
+        body: JSON.stringify({ period: currentPeriod, currentStep: 1, draft: {} })
       }, { onUnauthorized: handleUnauthorized }).catch(() => {});
       await loadAllBusinessData();
       navigateTo("home");
-      showToast(`Ready for ${formatPeriodLabel(nextPeriod)} filing`);
+      showToast(`Started new filing for ${formatPeriodLabel(currentPeriod)}`);
     }
     else if (act === "export-ca-csv") {
       const q = state.period ? `period=${encodeURIComponent(state.period)}&` : "";

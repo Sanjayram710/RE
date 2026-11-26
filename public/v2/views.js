@@ -116,12 +116,12 @@ export function renderHomeView(state) {
     : "";
 
   const activePeriod = dash.period || state.period;
-  const isFiled = Boolean(
+  const isFiled = !state.startFreshFiling && Boolean(
     (state.filingReceipt && state.filingReceipt.period === activePeriod) ||
     (state.filings || []).some((f) => f.period === activePeriod && String(f.return_type || "").includes("GSTR3B"))
   );
-  const salesCount = Number(m.salesCount || 0);
-  const purchasesCount = Number(m.purchasesCount || 0);
+  const salesCount = state.startFreshFiling ? 0 : Number(m.salesCount || 0);
+  const purchasesCount = state.startFreshFiling ? 0 : Number(m.purchasesCount || 0);
   const isBrandNew = salesCount === 0 && purchasesCount === 0 && !isFiled;
   const step = state.filingStep || 1;
   const step1Done = salesCount > 0 || step > 1 || isFiled;
@@ -633,9 +633,9 @@ function renderSubmitStep(state, dash, env) {
     `;
   }
 
-  const existingFiling = (state.filings || []).find(
-    (f) => f.period === state.period && String(f.return_type || "").includes("GSTR3B")
-  );
+  const existingFiling = state.startFreshFiling
+    ? null
+    : (state.filings || []).find((f) => f.period === state.period && String(f.return_type || "").includes("GSTR3B"));
   const rec = state.filingReceipt || existingFiling;
   if (rec) {
     return `
