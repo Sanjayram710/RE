@@ -1,88 +1,80 @@
-# DESIGN.md — SimpleGST design system
+# DESIGN.md — SimpleGST Design System
 
-Simple, friendly GST filing for small business owners. Plain words first, GST terms second.
-This file is the source of truth for the UI in `index.html`, `landing.html`, `app.js` and `style.css`
-(the `public/` copies are served and must stay identical).
+Simple, plain-English GST filing for ordinary retail shop owners with no accounting background.
+This file is the single source of truth for SimpleGST's UI, motion, accessibility, and copy standards.
 
-## 1. Brand
+> **Single Source of Truth (`public/` vs Root)**:
+> `server.js` serves static assets from `public/` first (falling back to root). Historically, `public/` mirrored root HTML/CSS/JS files for static hosting compatibility. Root files (and `public/v2/` modules starting in Phase 2) are the single authoring source of truth; `npm run build` runs `scripts/sync_public.js` and verifies SHA-256 byte-for-byte parity before any release.
 
-- Logos: `public/brand/simplegst-wordmark.png` (header, sign-in, landing) and
-  `public/brand/simplegst-mark.png` (app icon, favicon source). `public/brand/favicon-32.png` is the favicon.
-- Never recolour, stretch or redraw the logos. Wordmark height 28–32px.
-- Brand green comes from the logo: `#0A6B4F`.
+---
 
-## 2. Colour
+## 1. Visual Direction (KrewsUp-Inspired Prototype Tokens)
 
-| Token | Value | Use |
-|---|---|---|
-| brand / `primary` | `#0A6B4F` | Primary buttons, active nav, links |
-| brand hover / `primary-container` | `#08583F` | Hover on primary |
-| brand soft / `surface-container-high` | `#E8F3EE` | Active nav background, chips |
-| ink / `on-surface` | `#111827` | Headings and body |
-| ink 2 / `on-surface-variant` | `#4B5563` | Secondary text |
-| ink 3 / `secondary` | `#6B7280` | Meta text (12.5px and up only) |
-| canvas / `surface` | `#F6F8FA` | Page background |
-| line / `outline-variant` | `#E6E9EE` | Card borders, dividers |
+- **Canvas & Surfaces**:
+  - Primary canvas: `#FFFFFF` (`--bg`)
+  - Soft secondary surface: `#F6F7FC` (`--bg2`)
+  - Card surface: `#FFFFFF` (`--card`)
+  - Hairline borders: `1px solid #E6E8F2` (`--line`)
+- **Brand & Status Colour Tokens** (swappable via CSS custom properties):
+  - Brand accent (`--acc`): `#4B3FE0` (Indigo) · text on accent (`--on`): `#FFFFFF`
+  - Soft brand tint (`--soft`): `#EEEDFE`
+  - Ink primary (`--ink`): `#12142B` · secondary (`--mut`): `#5F6487` (all text >= 4.5:1 WCAG AA contrast)
+  - Success / Eligible ITC (`--ok` / `--okb`): `#0B7A4B` / `#E3F6EC`
+  - Warning / Needs Review (`--warn` / `--warnb`): `#B25E00` / `#FFF4E5`
+  - Error / Tax Due (`--cor` / `--corb`): `#E8553D` / `#FDE8E5`
+- **Card & Surface Rules**:
+  - Card border-radius: `24px`–`36px` (`28px` default).
+  - **One filled highlight card per screen** (e.g. "Estimated Tax to Pay" or primary CTA card); all other cards stay white with hairline `#E6E8F2` borders.
+  - Generous whitespace; no dense accounting tables on the main dashboard.
 
-Tints have a fixed meaning and are never decorative:
+---
 
-| Meaning | Soft | Strong |
-|---|---|---|
-| Sales | `#EEF4FF` | `#2F6FEB` |
-| Purchases | `#F3F0FF` | `#6D4FD8` |
-| Done / tax credit | `#EAF6EF` | `#15803D` |
-| Due / tax to pay | `#FFF5E6` | `#B45309` |
-| Error | `#FDECEC` | `#B91C1C` |
+## 2. Typography
 
-The Tailwind config in each page defines a `brand-50 … brand-900` scale; use it instead of blue/indigo.
-CSS custom properties `--sg-*` in `style.css` mirror these values.
+- **Display / Headings / Big Numerals**: `Plus Jakarta Sans`, weights `600`, `700`, `800`, tight tracking (`-0.03em` to `-0.045em`).
+- **Body & Tables**: `Inter`, weights `400`, `500`, `600`, `15px/1.5`.
+- **Financial Amounts**: Always formatted in Indian numbering (`₹1,23,456.00`) with `font-variant-numeric: tabular-nums`. Computed in **integer paise** on the backend; never hardcoded in the frontend.
 
-## 3. Type
+---
 
-- One family: **Figtree** (400/500/600/700). Amounts use `tabular-nums`.
-- Scale: page title 28 · card title 19–20 · stat 24 · body 15 · meta 13. Nothing below 12px.
+## 3. Navigation & Layout
 
-## 4. Icons
+- **Desktop Top Bar**:
+  - Brand wordmark (`SimpleGST`) on left.
+  - Centered pill navigation (`Home`, `File GST`, `Invoices`, `History`, `Copilot`, `Tax Experts`, `Start a business`, `Settings`).
+  - Always-visible **GSTIN / Branch switcher** and authenticated user menu on the right.
+- **Mobile (`<= 768px`)**:
+  - Sticky bottom tab bar (`Home`, `File GST`, `Invoices`, `Copilot`, `More`) with `>= 44px` touch targets.
+- **One Clear Focus Per Screen**:
+  - Numbered sections (`01`, `02`, `03`…), big numerals, short friendly copy.
+  - Guided filing uses 5 clear steps with saved draft progress (`filing_drafts` per `org + gstin + period`):
+    1. Add sales bills
+    2. Add purchase bills
+    3. Check tax credit and reconciliation
+    4. Review tax payable (Rule 88A + RCM)
+    5. Review and submit the GST return (**Simulation** clearly labelled)
 
-- **Material Symbols Rounded**, weight 400, unfilled, 20–22px. One library everywhere.
-- Icons sit beside labels; icon-only buttons need `aria-label`.
-- **No emojis and no decorative Unicode symbols** anywhere in the UI, alerts or generated text.
+---
 
-## 5. Components (see `style.css`, "SimpleGST design system")
+## 4. Restrained Motion
 
-- `sidebar-nav-link` + `is-active`: the clean, accessible primary navigation:
-  1. **Home**
-  2. **File GST** (guided 5-step flow)
-  3. **My Bills** (sales invoices, purchase bills, and invoice generation)
-  4. **Reconciliation** (GSTR-2B ITC matching)
-  5. **Startup Express** (7-stage business formation & compliance onboarding)
-  6. **History** (documents repository, uploaded bills, AI extractions & return filing history)
-  7. **My Business** (business profile, multi-GSTIN branches, taxpayer details)
-  8. **Help** (GST Copilot & Tax Experts help)
-  Grouped technical pages highlight their parent via `SIDEBAR_NAV_ALIASES` in `app.js`.
-- Mobile bottom bar: Home, File GST, My Bills, Reconciliation, Help.
-- `ku-card` / `sg-card`: clean modern cards with 18px radius, soft borders, subtle elevation.
-- `ku-hero`: friendly hero banner ("Your GST, made simple. Manage your bills and file GST without complicated accounting.")
-- `ku-step-pill`: interactive 5-step filing progress indicators.
-- `sg-btn-primary`: the high-contrast main action on a screen ("Start Filing GST").
-- `sg-chip`, `sg-pill-due`: period chip and due-date countdown.
-- Shadows only on menus, dialogs, and subtle card hover. No gratuitous gradients or glows.
+- **Allowed**:
+  - Page fade-up (`<= 400ms`, `cubic-bezier(.2,.8,.2,1)`)
+  - Progress bar and ring stroke transitions
+  - Count-up on amounts when real API data loads
+  - Skeleton loaders during async fetches
+  - Inline Copilot panel slide-in
+  - Table row add/remove transitions and toast with **Undo**
+- **Not Allowed**:
+  - Confetti, mascots, full-screen wipes, cursor-follow effects, marquees, or looping decorative animations.
+- **Accessibility**: Everything respects `@media (prefers-reduced-motion: reduce)`.
 
-## 6. Motion
+---
 
-- 150–200ms colour/border transitions for hover and menus. No pulsing dots, glows, floating
-  badges or infinite loops. `prefers-reduced-motion` turns transitions off.
+## 5. States, Accessibility & Honest Labelling
 
-## 7. GST Copilot
-
-- Page: `#viewCopilotSuite`. Chat controller: `askCopilotPrompt`, `handleCopilotSubmit`,
-  `clearCopilotChat` in `app.js`, calling the existing `POST /api/copilot/ask`.
-- Copilot answers from the active GSTIN's records using fixed rules (sales, ITC, missing in 2B,
-  tax liability, 180-day bills, 3B explanation, filing checklist, cash ledger, nil returns).
-  It is not a free-form AI model; the UI must not claim otherwise.
-- Entry points: sidebar, mobile bottom bar, Home "Ask GST Copilot" card.
-
-## 8. Writing
-
-- Customer words first: "Bills from your suppliers", "Tax credit (ITC)", "Tax to pay".
-- No superlatives ("100%", "India's most trusted") and no engineering jargon in labels.
+- Every view implements explicit **Loading** (skeleton), **Empty** (plain-English next step), **Error** (actionable retry), and **Success** states.
+- Minimum interactive target size: `44px x 44px`. Visible `:focus-visible` outlines (`2px solid var(--acc)`). Proper `<label>`, `aria-live`, and `aria-current="page"`.
+- **Simulation Labelling**: When live GSP credentials are not active, every OTP step, ARN receipt, status badge, and history row must explicitly display **"Simulation"** / **"Filed (simulation)"** — never an official-looking `"Filed"` status without `"(simulation)"`.
+- **CA Review Transparency**: Every statutory rule reference and plain-English explanation is flagged `needsCaReview: true` in an exportable CA review list (`caReviewItems`).
+- **Copilot Honesty**: GST Copilot answers strictly from deterministic backend tool results and never invents tax amounts, rules, or filing statuses.
