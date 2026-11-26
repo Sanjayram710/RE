@@ -463,7 +463,7 @@ var API={
   },
   async ask(q){
     try{
-      var r=await fetch('/api/copilot/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,period:PERIOD})});
+      var r=await fetch('/api/copilot/ask',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({question:q,period:PERIOD})});
       var d=await r.json();
       if(d.success&&d.result)return d.result.answer||d.result.guidance;
       if(d.answer)return d.answer;
