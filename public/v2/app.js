@@ -2,6 +2,19 @@ import { state, clearBusinessCache } from "./state.js";
 import { apiRequest, abortAllRequests, setCsrfToken } from "./api.js";
 import { escapeHtml } from "./utils.js";
 import {
+  initReducedMotionPref,
+  applyReducedMotionPref,
+  isMotionReduced,
+  placeNavPill,
+  bindNavPillHover,
+  sweepPageTransition,
+  isCurtainRunning,
+  animateCountUps,
+  animateProgressRing,
+  bindDesktopPointerMotion,
+  bindScrollProgress
+} from "./motion.js";
+import {
   renderAuthView,
   renderHomeView,
   renderFileView,
@@ -15,12 +28,23 @@ import {
 
 const $ = (sel) => document.querySelector(sel);
 
+const ROUTE_INFO = {
+  home: { eyebrow: "(01) Home", title: "Home", subtitle: "Your GST month at a glance", chips: ["Sales", "Purchases", "Filing"] },
+  file: { eyebrow: "(02) File GST", title: "File GST Return", subtitle: "Five guided steps from bills to return", chips: ["Sales", "Purchases", "ITC & Tax"] },
+  invoices: { eyebrow: "(03) Invoices", title: "My Invoices", subtitle: "Outward sales and supplier bills", chips: ["GSTR-1", "GSTR-2B", "Verified"] },
+  history: { eyebrow: "(04) History", title: "History", subtitle: "Saved acknowledgements and archives", chips: ["Simulation", "Receipts", "Audit"] },
+  copilot: { eyebrow: "(05) Copilot", title: "GST Copilot", subtitle: "Grounded answers from your backend data", chips: ["Tax to pay", "ITC", "Due dates"] },
+  experts: { eyebrow: "(06) Tax Experts", title: "Tax Experts", subtitle: "Chartered accountant assistance", chips: ["Advisory", "Review", "Support"] },
+  startup: { eyebrow: "(07) Start", title: "Start a business", subtitle: "Registration and entity setup", chips: ["GSTIN", "Company", "Compliance"] },
+  settings: { eyebrow: "(08) Settings", title: "Settings", subtitle: "Branches, preferences, and motion", chips: ["Multi-GSTIN", "Preferences", "Profile"] }
+};
+
 function showToast(message) {
   const el = $("#toast");
   if (!el) return;
   el.textContent = message;
-  el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 2800);
+  el.classList.add("s");
+  setTimeout(() => el.classList.remove("s"), 2800);
 }
 
 function handleUnauthorized(reason) {
@@ -64,23 +88,37 @@ function updateHeaderControls() {
 }
 
 function syncNavHighlight() {
-  document.querySelectorAll("[data-go]").forEach((btn) => {
+  document.querySelectorAll(".nv button[data-go]").forEach((btn) => {
+    const active = btn.dataset.go === state.view;
+    btn.classList.toggle("on", active);
+    if (active) btn.setAttribute("aria-current", "page");
+    else btn.removeAttribute("aria-current");
+  });
+  document.querySelectorAll(".mob-btn[data-go]").forEach((btn) => {
     if (btn.dataset.go === state.view) btn.setAttribute("aria-current", "page");
     else btn.removeAttribute("aria-current");
   });
+  const fab = $("#copilot-fab");
+  if (fab) fab.classList.toggle("x", state.view === "copilot");
+  placeNavPill();
 }
 
-function renderCopilotDrawerMessages() {
-  const box = $("#copilot-msgs");
-  if (!box) return;
-  if (state.copilotMessages.length === 0) {
-    box.innerHTML = `<div class="msg bot">Ask me about your tax payable, eligible ITC, or filing deadline.</div>`;
-    return;
-  }
-  box.innerHTML = state.copilotMessages
-    .map((m) => `<div class="msg ${m.role === "user" ? "user" : "bot"}">${escapeHtml(m.text)}</div>`)
-    .join("");
-  box.scrollTop = box.scrollHeight;
+function renderCopilotMessages() {
+  ["#copilot-msgs", "#copilot-page-msgs"].forEach((sel) => {
+    const box = $(sel);
+    if (!box) return;
+    if (state.copilotMessages.length === 0) {
+      box.innerHTML = `<div class="m b">Ask me about your tax payable, eligible ITC, or filing deadline.</div>`;
+      return;
+    }
+    box.innerHTML = state.copilotMessages
+      .map((m) => {
+        if (m.typing) return `<div class="m b"><span class="dots"><i></i><i></i><i></i></span></div>`;
+        return `<div class="m ${m.role === "user" ? "u" : "b"}">${escapeHtml(m.text)}</div>`;
+      })
+      .join("");
+    box.scrollTop = box.scrollHeight;
+  });
 }
 
 export function render() {
@@ -105,6 +143,8 @@ export function render() {
   else if (v === "settings") appEl.innerHTML = renderSettingsView(state);
 
   bindViewForms();
+  animateCountUps(appEl);
+  animateProgressRing(appEl);
 }
 
 function bindViewForms() {
@@ -284,36 +324,136 @@ async function saveFilingStep(step) {
   }
 }
 
+function navigateTo(view, step = null) {
+  if (isCurtainRunning()) return;
+  if (view === state.view && !step) return;
+  $("#user-menu")?.classList.remove("open");
+
+  const applyView = () => {
+    state.view = view;
+    if (step) state.filingStep = Number(step);
+    window.scrollTo(0, 0);
+    render();
+    if (step) saveFilingStep(Number(step));
+  };
+
+  if (state.authenticated && ROUTE_INFO[view]) {
+    sweepPageTransition(ROUTE_INFO[view], applyView);
+  } else {
+    applyView();
+  }
+}
+
 async function askCopilot(question) {
+  if (state.view !== "copilot") openCopilotPanel();
   state.copilotMessages.push({ role: "user", text: question });
-  renderCopilotDrawerMessages();
-  if (state.view === "copilot") render();
+  const pendingMsg = { role: "bot", text: "", typing: true };
+  state.copilotMessages.push(pendingMsg);
+  renderCopilotMessages();
+
   try {
     const res = await apiRequest("/api/copilot/ask", {
       method: "POST",
       body: JSON.stringify({ question, period: state.period })
     }, { onUnauthorized: handleUnauthorized });
-    const answer = res.answer || res.result?.answer || "No answer returned.";
-    state.copilotMessages.push({ role: "bot", text: answer });
+    const fullText = res.answer || res.result?.answer || "No answer returned.";
+    pendingMsg.typing = false;
+    if (isMotionReduced()) {
+      pendingMsg.text = fullText;
+      renderCopilotMessages();
+    } else {
+      let idx = 0;
+      const typeTick = () => {
+        idx += 4;
+        pendingMsg.text = fullText.slice(0, idx);
+        renderCopilotMessages();
+        if (idx < fullText.length) setTimeout(typeTick, 16);
+      };
+      typeTick();
+    }
   } catch (err) {
-    state.copilotMessages.push({ role: "bot", text: err.message || "Could not reach Copilot." });
+    pendingMsg.typing = false;
+    pendingMsg.text = err.message || "Could not reach Copilot.";
+    renderCopilotMessages();
   }
-  renderCopilotDrawerMessages();
-  if (state.view === "copilot") render();
 }
 
-function toggleCopilotDrawer(forceState) {
-  state.copilotOpen = typeof forceState === "boolean" ? forceState : !state.copilotOpen;
-  $("#copilot-drawer")?.classList.toggle("open", state.copilotOpen);
-  $("#copilot-drawer")?.setAttribute("aria-hidden", String(!state.copilotOpen));
-  $("#copilot-backdrop")?.classList.toggle("open", state.copilotOpen);
-  if (state.copilotOpen) {
-    renderCopilotDrawerMessages();
-    $("#copilot-input")?.focus();
-  }
+function openCopilotPanel() {
+  const pn = $("#copilot-panel");
+  const fb = $("#copilot-fab");
+  pn?.classList.add("o");
+  pn?.setAttribute("aria-hidden", "false");
+  fb?.classList.add("x");
+  renderCopilotMessages();
+  $("#copilot-input")?.focus();
+}
+
+function closeCopilotPanel() {
+  const pn = $("#copilot-panel");
+  const fb = $("#copilot-fab");
+  pn?.classList.remove("o");
+  pn?.setAttribute("aria-hidden", "true");
+  if (state.view !== "copilot") fb?.classList.remove("x");
+}
+
+/* Ctrl/Cmd+K Quick-Search Palette */
+const PALETTE_ITEMS = [
+  { label: "Home", type: "go", val: "home", tag: "Go" },
+  { label: "File GST Return", type: "go", val: "file", tag: "Go" },
+  { label: "My Invoices", type: "go", val: "invoices", tag: "Go" },
+  { label: "Filing History", type: "go", val: "history", tag: "Go" },
+  { label: "GST Copilot", type: "go", val: "copilot", tag: "Go" },
+  { label: "Tax Experts", type: "go", val: "experts", tag: "Go" },
+  { label: "Start a business", type: "go", val: "startup", tag: "Go" },
+  { label: "Settings & Branches", type: "go", val: "settings", tag: "Go" },
+  { label: "Ask: How much tax do I owe?", type: "ask", val: "How much tax do I owe?", tag: "Copilot" },
+  { label: "Ask: How much ITC can I claim?", type: "ask", val: "How much ITC can I claim?", tag: "Copilot" }
+];
+let palFiltered = PALETTE_ITEMS;
+let palIdx = 0;
+
+function renderPalette() {
+  const q = ($("#pal-input")?.value || "").toLowerCase();
+  palFiltered = PALETTE_ITEMS.filter((x) => x.label.toLowerCase().includes(q));
+  palIdx = Math.max(0, Math.min(palIdx, palFiltered.length - 1));
+  const listEl = $("#pal-list");
+  if (!listEl) return;
+  listEl.innerHTML = palFiltered.length
+    ? palFiltered.map((x, i) => `<div class="pi ${i === palIdx ? "s" : ""}" data-pal-idx="${i}">${escapeHtml(x.label)} <kbd>${escapeHtml(x.tag)}</kbd></div>`).join("")
+    : `<div class="pi">No match</div>`;
+}
+
+function openPalette() {
+  const pal = $("#pal");
+  if (!pal) return;
+  pal.classList.add("o");
+  pal.setAttribute("aria-hidden", "false");
+  $("#pal-input").value = "";
+  palIdx = 0;
+  renderPalette();
+  $("#pal-input")?.focus();
+}
+
+function closePalette() {
+  const pal = $("#pal");
+  if (!pal) return;
+  pal.classList.remove("o");
+  pal.setAttribute("aria-hidden", "true");
+}
+
+function runPaletteItem(item) {
+  closePalette();
+  if (!item) return;
+  if (item.type === "go") navigateTo(item.val);
+  else if (item.type === "ask") askCopilot(item.val);
 }
 
 async function init() {
+  initReducedMotionPref();
+  bindNavPillHover();
+  bindDesktopPointerMotion();
+  bindScrollProgress();
+
   try {
     const sess = await apiRequest("/api/auth/session");
     if (sess.authenticated) {
@@ -332,15 +472,17 @@ async function init() {
 }
 
 document.addEventListener("click", async (e) => {
+  if (isCurtainRunning()) return;
+
+  const palItem = e.target.closest("[data-pal-idx]");
+  if (palItem) {
+    runPaletteItem(palFiltered[Number(palItem.dataset.palIdx)]);
+    return;
+  }
+
   const goBtn = e.target.closest("[data-go]");
   if (goBtn) {
-    state.view = goBtn.dataset.go;
-    $("#user-menu")?.classList.remove("open");
-    if (goBtn.dataset.step) {
-      await saveFilingStep(Number(goBtn.dataset.step));
-    } else {
-      render();
-    }
+    navigateTo(goBtn.dataset.go, goBtn.dataset.step || null);
     return;
   }
 
@@ -366,7 +508,14 @@ document.addEventListener("click", async (e) => {
   const actBtn = e.target.closest("[data-act]");
   if (actBtn) {
     const act = actBtn.dataset.act;
-    if (act === "toggle-copilot") toggleCopilotDrawer();
+    if (act === "open-copilot-panel") openCopilotPanel();
+    else if (act === "ask-chip") await askCopilot(actBtn.dataset.q || "");
+    else if (act === "toggle-reduce-motion") {
+      const next = !isMotionReduced();
+      applyReducedMotionPref(next);
+      actBtn.setAttribute("aria-checked", String(next));
+      showToast(next ? "Animations reduced" : "Animations enabled");
+    }
     else if (act === "reload-dashboard") await loadDashboard();
     else if (act === "reload-sales" || act === "reload-purchases") await loadInvoices();
     else if (act === "reload-history") await loadHistory();
@@ -385,8 +534,7 @@ $("#user-menu-btn")?.addEventListener("click", () => {
   const isOpen = menu?.classList.toggle("open");
   $("#user-menu-btn")?.setAttribute("aria-expanded", String(Boolean(isOpen)));
 });
-$("#copilot-close-btn")?.addEventListener("click", () => toggleCopilotDrawer(false));
-$("#copilot-backdrop")?.addEventListener("click", () => toggleCopilotDrawer(false));
+$("#copilot-close-btn")?.addEventListener("click", closeCopilotPanel);
 $("#copilot-form")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const inp = $("#copilot-input");
@@ -395,9 +543,27 @@ $("#copilot-form")?.addEventListener("submit", async (e) => {
   inp.value = "";
   await askCopilot(q);
 });
+$("#pal-input")?.addEventListener("input", () => { palIdx = 0; renderPalette(); });
+$("#pal")?.addEventListener("click", (e) => { if (e.target.id === "pal") closePalette(); });
+
 document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    const isOpen = $("#pal")?.classList.contains("o");
+    if (isOpen) closePalette();
+    else openPalette();
+    return;
+  }
+  const palOpen = $("#pal")?.classList.contains("o");
+  if (palOpen) {
+    if (e.key === "Escape") closePalette();
+    else if (e.key === "ArrowDown") { palIdx = Math.min(palFiltered.length - 1, palIdx + 1); renderPalette(); e.preventDefault(); }
+    else if (e.key === "ArrowUp") { palIdx = Math.max(0, palIdx - 1); renderPalette(); e.preventDefault(); }
+    else if (e.key === "Enter" && palFiltered[palIdx]) runPaletteItem(palFiltered[palIdx]);
+    return;
+  }
   if (e.key === "Escape") {
-    toggleCopilotDrawer(false);
+    closeCopilotPanel();
     $("#user-menu")?.classList.remove("open");
   }
 });
@@ -405,4 +571,3 @@ document.addEventListener("keydown", (e) => {
 if (typeof window !== "undefined" && !window.__SIMPLEGST_TEST_MODE__) {
   init();
 }
-

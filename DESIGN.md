@@ -1,80 +1,61 @@
-# DESIGN.md — SimpleGST Design System
+# DESIGN.md — SimpleGST Design System & Motion Spec
 
 Simple, plain-English GST filing for ordinary retail shop owners with no accounting background.
-This file is the single source of truth for SimpleGST's UI, motion, accessibility, and copy standards.
+Visual & motion reference: `SimpleGST_ all sections (animated) (1).html` (prototype data/behaviour is **never** copied; all amounts, statuses, invoices, and ARNs come from verified backend APIs).
 
 > **Single Source of Truth (`public/` vs Root)**:
-> `server.js` serves static assets from `public/` first (falling back to root). Historically, `public/` mirrored root HTML/CSS/JS files for static hosting compatibility. Root files (and `public/v2/` modules starting in Phase 2) are the single authoring source of truth; `npm run build` runs `scripts/sync_public.js` and verifies SHA-256 byte-for-byte parity before any release.
+> `server.js` checks `public/` before root. Root files (`index.html`, `app.js`, `style.css`, `landing.html`, `simplegst-app-v2.html`) are synced to `public/` by `npm run build` (`scripts/sync_public.js`), while modular Phase 2+ assets live directly under `public/v2/` and are preserved untouched.
 
 ---
 
-## 1. Visual Direction (KrewsUp-Inspired Prototype Tokens)
+## 1. Colour Tokens
 
-- **Canvas & Surfaces**:
-  - Primary canvas: `#FFFFFF` (`--bg`)
-  - Soft secondary surface: `#F6F7FC` (`--bg2`)
-  - Card surface: `#FFFFFF` (`--card`)
-  - Hairline borders: `1px solid #E6E8F2` (`--line`)
-- **Brand & Status Colour Tokens** (swappable via CSS custom properties):
-  - Brand accent (`--acc`): `#4B3FE0` (Indigo) · text on accent (`--on`): `#FFFFFF`
-  - Soft brand tint (`--soft`): `#EEEDFE`
-  - Ink primary (`--ink`): `#12142B` · secondary (`--mut`): `#5F6487` (all text >= 4.5:1 WCAG AA contrast)
-  - Success / Eligible ITC (`--ok` / `--okb`): `#0B7A4B` / `#E3F6EC`
-  - Warning / Needs Review (`--warn` / `--warnb`): `#B25E00` / `#FFF4E5`
-  - Error / Tax Due (`--cor` / `--corb`): `#E8553D` / `#FDE8E5`
-- **Card & Surface Rules**:
-  - Card border-radius: `24px`–`36px` (`28px` default).
-  - **One filled highlight card per screen** (e.g. "Estimated Tax to Pay" or primary CTA card); all other cards stay white with hairline `#E6E8F2` borders.
-  - Generous whitespace; no dense accounting tables on the main dashboard.
+| Token | Light Value | Use |
+|---|---|---|
+| `--bg` | `#ffffff` | Primary canvas |
+| `--bg2` | `#f6f7fc` | Secondary / table header / input surface |
+| `--card` | `#ffffff` | Card surface |
+| `--ink` | `#12142b` | Primary headings & body (`>= 4.5:1` contrast) |
+| `--mut` | `#5f6487` | Secondary & meta text (`>= 4.5:1` contrast) |
+| `--line` | `#e6e8f2` | Hairline borders & dividers |
+| `--acc` | `#4b3fe0` | Brand Indigo accent (swappable via CSS tokens) |
+| `--on` | `#ffffff` | Text on accent |
+| `--soft` | `#eeedfe` | Soft accent tint & nav hover pill |
+| `--ok` / `--okb` | `#0b7a4b` / `#e3f6ec` | Done / Eligible ITC |
+| `--warn` / `--warnb` | `#944d00` / `#fff4e5` | Due / Simulation / Needs CA Review |
+| `--bad` / `--corb` | `#c93b25` / `#fde8e5` | Error / Delete / Overdue |
 
 ---
 
-## 2. Typography
+## 2. Typography & Layout
 
-- **Display / Headings / Big Numerals**: `Plus Jakarta Sans`, weights `600`, `700`, `800`, tight tracking (`-0.03em` to `-0.045em`).
-- **Body & Tables**: `Inter`, weights `400`, `500`, `600`, `15px/1.5`.
-- **Financial Amounts**: Always formatted in Indian numbering (`₹1,23,456.00`) with `font-variant-numeric: tabular-nums`. Computed in **integer paise** on the backend; never hardcoded in the frontend.
-
----
-
-## 3. Navigation & Layout
-
-- **Desktop Top Bar**:
-  - Brand wordmark (`SimpleGST`) on left.
-  - Centered pill navigation (`Home`, `File GST`, `Invoices`, `History`, `Copilot`, `Tax Experts`, `Start a business`, `Settings`).
-  - Always-visible **GSTIN / Branch switcher** and authenticated user menu on the right.
-- **Mobile (`<= 768px`)**:
-  - Sticky bottom tab bar (`Home`, `File GST`, `Invoices`, `Copilot`, `More`) with `>= 44px` touch targets.
-- **One Clear Focus Per Screen**:
-  - Numbered sections (`01`, `02`, `03`…), big numerals, short friendly copy.
-  - Guided filing uses 5 clear steps with saved draft progress (`filing_drafts` per `org + gstin + period`):
-    1. Add sales bills
-    2. Add purchase bills
-    3. Check tax credit and reconciliation
-    4. Review tax payable (Rule 88A + RCM)
-    5. Review and submit the GST return (**Simulation** clearly labelled)
+- **Display / Headings / KPI Numerals**: `Plus Jakarta Sans` (`500`, `700`, `800`), tight tracking (`-0.04em` to `-0.06em`).
+- **Body / Tables**: `Inter` (`400`, `500`, `600`), `15px/1.5`.
+- **Money**: Formatted from **integer paise** with Indian grouping and `font-variant-numeric: tabular-nums`. Zero float math in the browser.
+- **Cards**: `36px` (`28px` on mobile) border radius, `1px solid var(--line)`, **one filled highlight card** (`.kc.hi`) per screen.
+- **Targets & Accessibility**: Minimum `44px x 44px` interactive targets, visible `:focus-visible` outlines, `<label>` on all controls, and mobile bottom tab bar under `768px`.
 
 ---
 
-## 4. Restrained Motion
+## 3. Shared Motion System (`public/v2/motion.js`)
 
-- **Allowed**:
-  - Page fade-up (`<= 400ms`, `cubic-bezier(.2,.8,.2,1)`)
-  - Progress bar and ring stroke transitions
-  - Count-up on amounts when real API data loads
-  - Skeleton loaders during async fetches
-  - Inline Copilot panel slide-in
-  - Table row add/remove transitions and toast with **Undo**
-- **Not Allowed**:
-  - Confetti, mascots, full-screen wipes, cursor-follow effects, marquees, or looping decorative animations.
-- **Accessibility**: Everything respects `@media (prefers-reduced-motion: reduce)`.
+All animations animate `transform` and `opacity` only (plus SVG `stroke-dashoffset`), live in `public/v2/motion.js`, and respect both `@media (prefers-reduced-motion: reduce)` and the Settings **"Reduce animations"** switch (`[data-reduce-motion="true"]`). Motion never blocks data fetching, buttons, or forms.
 
----
-
-## 5. States, Accessibility & Honest Labelling
-
-- Every view implements explicit **Loading** (skeleton), **Empty** (plain-English next step), **Error** (actionable retry), and **Success** states.
-- Minimum interactive target size: `44px x 44px`. Visible `:focus-visible` outlines (`2px solid var(--acc)`). Proper `<label>`, `aria-live`, and `aria-current="page"`.
-- **Simulation Labelling**: When live GSP credentials are not active, every OTP step, ARN receipt, status badge, and history row must explicitly display **"Simulation"** / **"Filed (simulation)"** — never an official-looking `"Filed"` status without `"(simulation)"`.
-- **CA Review Transparency**: Every statutory rule reference and plain-English explanation is flagged `needsCaReview: true` in an exportable CA review list (`caReviewItems`).
-- **Copilot Honesty**: GST Copilot answers strictly from deterministic backend tool results and never invents tax amounts, rules, or filing statuses.
+| Animation | Token / Timing | Easing / Notes |
+|---|---|---|
+| Global ease | `--ease` | `cubic-bezier(.2, .8, .2, 1)` |
+| Top bar drop-in (`dn`) | `800ms` | `transform: translateY(-100%) -> none` |
+| Nav sliding pill (`.ni`) | `500ms` (`transform`, `width`), `300ms` (`opacity`) | Shared layout indicator for active & hovered tab |
+| Page transition curtain (`.cu`) | `500ms` in + `550ms` out (~`1.1s` total) | Sweeps **UP only** (`translateY(101%) -> 0 -> -101%`); word reveal `900ms` (`70ms` stagger), chips `600ms` (`80ms` stagger), bar `800ms`; data fetch starts immediately; clicks ignored while running |
+| Page section stagger (`up`) | `700ms`, `70ms` per child | `translateY(34px)` + `opacity: 0 -> 1` |
+| Greeting word reveal (`wd`) | `1000ms`, `200ms` delay + `110ms` stagger | `translateY(110%) rotate(4deg) -> none` |
+| Progress ring (`.rg .p`) | `2000ms`, `500ms` delay | SVG `stroke-dashoffset` sweep |
+| Step rows (`rs`) | `800ms` (`300ms`, `450ms`, `600ms` delays) | `translateX(60px) -> none` |
+| KPI count-up | `1300ms` | Quartic ease-out `1 - (1 - p)^4` on integer paise |
+| Highlight blobs (`bl`) | `7s` & `9s` alternate | Soft radial glow inside `.kc.hi` |
+| Table rows (`r` / `rm`) | `600ms` (`80ms` stagger) / `450ms` delete slide-out | Followed by Undo toast (`4500ms`) |
+| Copilot FAB & panel (`.pn`) | Ripple `2.4s`, panel `550ms` (`scale(.2) -> 1`) | Grows from bottom-right corner; typing dots + typewriter |
+| Mascot (`.mas`, `>= 1400px` desktop) | Bob `3.5s`, blink `4s`, cursor-follow eyes | Bubble reflects **real** filing progress |
+| Scroll progress (`.pb`) & strip (`.mq`) | `scaleX` on scroll / `28s linear infinite` | Strip displays **real** due date, steps done, and ITC |
+| Desktop card glow & `.mag` buttons | Pointer-move (`pointer: fine` only) | Disabled on touch/mobile |
+| Filing celebration (`cf2`) | `1.8s–3.2s` confetti | Triggers **only** after genuine `POST /api/returns/gstr3b/file` `"Filed (simulation)"` success |

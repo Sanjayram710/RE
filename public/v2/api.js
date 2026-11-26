@@ -22,7 +22,7 @@ export function abortAllRequests() {
   for (const ctrl of inflightControllers) {
     try {
       ctrl.abort();
-    } catch {}
+    } catch { }
   }
   inflightControllers.clear();
 }
@@ -79,3 +79,4 @@ export async function apiRequest(url, options = {}, { onUnauthorized } = {}) {
     inflightControllers.delete(controller);
   }
 }
+

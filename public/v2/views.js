@@ -1,8 +1,9 @@
 import { escapeHtml, formatPaiseINR, rupeesToPaise, formatDateIN } from "./utils.js";
+import { isMotionReduced } from "./motion.js";
 
 function renderLoadingCards(count = 4) {
   return `
-    <div class="kpi-grid" aria-busy="true" aria-label="Loading data">
+    <div class="kp" aria-busy="true" aria-label="Loading data">
       ${Array.from({ length: count }, () => `
         <div class="card">
           <div class="skel skel-title"></div>
@@ -17,7 +18,31 @@ function renderErrorBanner(message, retryAction) {
   return `
     <div class="banner err" role="alert">
       <span>${escapeHtml(message)}</span>
-      ${retryAction ? `<button type="button" class="btn outline" data-act="${escapeHtml(retryAction)}">Retry</button>` : ""}
+      ${retryAction ? `<button type="button" class="btn o btn-sm" data-act="${escapeHtml(retryAction)}">Retry</button>` : ""}
+    </div>
+  `;
+}
+
+function renderMascot(completedCount, isBrandNew) {
+  const bubble = isBrandNew
+    ? "Let’s get started!"
+    : completedCount >= 4
+      ? "Ready to submit!"
+      : `${completedCount} of 5 steps done!`;
+  return `
+    <div class="mas" id="mas" aria-hidden="true">
+      <div class="bub">${escapeHtml(bubble)}</div>
+      <svg viewBox="0 0 120 130">
+        <circle cx="60" cy="66" r="52" fill="#FFC857" stroke="#E0A21B" stroke-width="5"/>
+        <circle cx="60" cy="66" r="41" fill="none" stroke="#E0A21B" stroke-width="2" stroke-dasharray="3 5"/>
+        <text x="60" y="44" text-anchor="middle" font-size="17" font-weight="800" fill="#B07A00">₹</text>
+        <g class="bl"><circle cx="44" cy="62" r="10" fill="#fff"/><circle cx="76" cy="62" r="10" fill="#fff"/></g>
+        <circle class="pp" cx="44" cy="62" r="5" fill="#12142B"/>
+        <circle class="pp" cx="76" cy="62" r="5" fill="#12142B"/>
+        <path d="M42 84q18 16 36 0" fill="none" stroke="#12142B" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="32" cy="80" r="5" fill="#FF9B7A" opacity=".6"/>
+        <circle cx="88" cy="80" r="5" fill="#FF9B7A" opacity=".6"/>
+      </svg>
     </div>
   `;
 }
@@ -26,9 +51,9 @@ export function renderAuthView(state) {
   return `
     <section class="auth-shell" aria-labelledby="auth-heading">
       <div class="card">
-        <div class="eyebrow">Secure Sign In</div>
-        <h1 id="auth-heading" class="page-title auth-h1">Sign in to SimpleGST</h1>
-        <p class="sub">Enter your business account email and password to view your GST records.</p>
+        <div class="meta">Secure Sign In</div>
+        <h1 id="auth-heading" class="pt">Sign in</h1>
+        <p class="sub">Enter your business email and password to access your GST records.</p>
 
         ${state.sessionExpiredMessage ? `<div class="banner warn" role="alert">${escapeHtml(state.sessionExpiredMessage)}</div>` : ""}
         ${state.errors.auth ? `<div class="banner err" role="alert">${escapeHtml(state.errors.auth)}</div>` : ""}
@@ -42,7 +67,7 @@ export function renderAuthView(state) {
             <label for="login-password">Password</label>
             <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Enter your password">
           </div>
-          <button type="submit" class="btn btn-full" id="login-submit-btn">Sign in</button>
+          <button type="submit" class="btn btn-full mag" id="login-submit-btn">Sign in</button>
         </form>
       </div>
     </section>
@@ -52,15 +77,15 @@ export function renderAuthView(state) {
 export function renderHomeView(state) {
   if (state.loading.dashboard === "loading") {
     return `
-      <div class="eyebrow">Loading your business summary…</div>
-      <h1 class="hero-title">Your GST, made simple.</h1>
+      <div class="meta">Loading your business summary…</div>
+      <h1 class="gr"><span><i>Good</i></span> <span><i>morning.</i></span></h1>
       ${renderLoadingCards(4)}
     `;
   }
 
   if (state.loading.dashboard === "error") {
     return `
-      <h1 class="page-title">Home</h1>
+      <h1 class="pt">Home</h1>
       ${renderErrorBanner(state.errors.dashboard || "Could not load dashboard summary.", "reload-dashboard")}
     `;
   }
@@ -68,10 +93,10 @@ export function renderHomeView(state) {
   const dash = state.dashboard;
   if (!dash || dash.empty) {
     return `
-      <div class="empty-state">
-        <h3>Welcome to SimpleGST</h3>
+      <div class="empty">
+        <b>Welcome to SimpleGST</b>
         <p>Select or add a GSTIN registration in Settings to begin tracking your sales, purchases, and GST returns.</p>
-        <button type="button" class="btn" data-go="settings">Open Settings</button>
+        <button type="button" class="btn mag" data-go="settings">Open Settings</button>
       </div>
     `;
   }
@@ -90,23 +115,32 @@ export function renderHomeView(state) {
     ? `<div class="banner info" role="status"><strong>Preparation only:</strong> filing is not connected yet. You can prepare bills, reconcile, and review tax calculations.</div>`
     : `<div class="banner info" role="status"><strong>Simulation Mode:</strong> Filing uses local simulation and is not transmitted to GSTN.</div>`;
 
-  const isBrandNewBusiness = Number(m.salesCount || 0) === 0 && Number(m.purchasesCount || 0) === 0;
+  const isBrandNew = Number(m.salesCount || 0) === 0 && Number(m.purchasesCount || 0) === 0;
   const step = state.filingStep || 1;
   const completedCount = (Number(m.salesCount || 0) > 0 ? 1 : 0) + (Number(m.purchasesCount || 0) > 0 ? 1 : 0) + (step > 3 ? 1 : 0) + (step > 4 ? 1 : 0);
-  const ringPct = Math.min(100, completedCount * 20);
+  const ringCircumference = 314.16;
+  const ringTarget = (ringCircumference * (1 - completedCount / 5)).toFixed(2);
   const firstName = escapeHtml((state.user?.name || state.user?.full_name || "there").split(" ")[0]);
   const dueStr = escapeHtml(dash.statutoryDeadlines?.gstr3b || "20th of next month");
+  const greetingWords = `Good morning, ${firstName}.`.split(" ").map((w) => `<span><i>${w}</i></span>`).join(" ");
+
+  const stripItems = `
+    <span>Due ${dueStr}</span>
+    <span>${completedCount} of 5 steps done</span>
+    <span>ITC ${formatPaiseINR(p.totalEligibleItcPaise)}</span>
+    <span>${env.preparationOnly ? "Preparation only" : "Simulation ready"}</span>
+    <span>${Number(m.salesCount || 0)} sales · ${Number(m.purchasesCount || 0)} purchases</span>
+  `;
 
   return `
-    <div class="eyebrow">
+    <div class="meta">
       <span>${escapeHtml(dash.entity?.tradeName || state.organization?.name || "")}</span>
-      <span>·</span>
-      <span class="num">${escapeHtml(dash.entity?.gstin || "")}</span>
-      <span>·</span>
+      <code>${escapeHtml(dash.entity?.gstin || "")}</code>
       <span>${escapeHtml(dash.periodLabel || dash.period || "")}</span>
     </div>
 
-    <h1 class="hero-title">Good morning, ${firstName}.</h1>
+    <h1 class="gr" aria-label="Good morning, ${firstName}.">${greetingWords}</h1>
+    ${renderMascot(completedCount, isBrandNew)}
 
     ${bannerHtml}
 
@@ -115,13 +149,15 @@ export function renderHomeView(state) {
         <div class="hl">
           <div>
             <small>${escapeHtml(dash.periodLabel || "")} return · due ${dueStr}</small>
-            <h2>${isBrandNewBusiness ? "Your GST is<br>ready to start." : "Continue your<br>GST filing."}</h2>
-            <button type="button" class="btn" data-go="file">Continue GST filing →</button>
+            <h2>${isBrandNew ? "Your GST is<br>ready to start." : "Continue your<br>GST filing."}</h2>
+            <button type="button" class="btn lg2 mag" data-go="file">
+              Continue GST filing <span class="ar" aria-hidden="true">→</span>
+            </button>
           </div>
           <div class="rg">
             <svg viewBox="0 0 120 120" role="img" aria-label="${completedCount} of 5 steps done">
               <circle class="t" cx="60" cy="60" r="50"></circle>
-              <circle class="p" cx="60" cy="60" r="50" data-pct="${ringPct}"></circle>
+              <circle class="p" cx="60" cy="60" r="50" data-to="${ringTarget}"></circle>
             </svg>
             <div class="rc">
               <b>${completedCount}/5</b>
@@ -132,21 +168,21 @@ export function renderHomeView(state) {
       </div>
 
       <div class="stk">
-        <button type="button" class="sr ${Number(m.salesCount || 0) > 0 ? "dn" : ""}" data-go="file" data-step="1">
+        <button type="button" class="sr ${Number(m.salesCount || 0) > 0 ? "dn" : "rd"}" data-go="file" data-step="1">
           <div>
             <b>1 · Add sales</b>
             <span>Upload outward bills to customers</span>
           </div>
           <em>${Number(m.salesCount || 0) > 0 ? `Done (${Number(m.salesCount)}) ✓` : "Start →"}</em>
         </button>
-        <button type="button" class="sr ${Number(m.purchasesCount || 0) > 0 ? "dn" : ""}" data-go="file" data-step="2">
+        <button type="button" class="sr ${Number(m.purchasesCount || 0) > 0 ? "dn" : "rd"}" data-go="file" data-step="2">
           <div>
             <b>2 · Add purchases</b>
             <span>Upload supplier bills &amp; match GSTR-2B</span>
           </div>
           <em>${Number(m.purchasesCount || 0) > 0 ? `Done (${Number(m.purchasesCount)}) ✓` : "Start →"}</em>
         </button>
-        <button type="button" class="sr ${step >= 3 ? "" : "dm"}" data-go="file" data-step="3">
+        <button type="button" class="sr ${step >= 3 ? "rd" : "dm"}" data-go="file" data-step="3">
           <div>
             <b>3 · Check credit &amp; review</b>
             <span>Verify ITC, Rule 88A offset &amp; submit (${env.preparationOnly ? "Prep only" : "Simulation"})</span>
@@ -156,32 +192,34 @@ export function renderHomeView(state) {
       </div>
     </div>
 
-    <div class="kpi-grid">
-      <div class="card">
-        <div class="kpi-label">Total Sales (${Number(m.salesCount || 0)} bills)</div>
-        <div class="kpi-val num">${formatPaiseINR(p.taxableSalesPaise)}</div>
+    <div class="kp">
+      <div class="kc">
+        <small>Total Sales (${Number(m.salesCount || 0)} bills)</small>
+        <div class="d" data-count-paise="${p.taxableSalesPaise}">${formatPaiseINR(p.taxableSalesPaise)}</div>
       </div>
-      <div class="card">
-        <div class="kpi-label">Total Purchases (${Number(m.purchasesCount || 0)} bills)</div>
-        <div class="kpi-val num">${formatPaiseINR(p.taxablePurchasesPaise)}</div>
+      <div class="kc">
+        <small>Total Purchases (${Number(m.purchasesCount || 0)} bills)</small>
+        <div class="d" data-count-paise="${p.taxablePurchasesPaise}">${formatPaiseINR(p.taxablePurchasesPaise)}</div>
       </div>
-      <div class="card">
-        <div class="kpi-label">Available Tax Credit (ITC)</div>
-        <div class="kpi-val num">${formatPaiseINR(p.totalEligibleItcPaise)}</div>
+      <div class="kc">
+        <small>Available Tax Credit (ITC)</small>
+        <div class="d" data-count-paise="${p.totalEligibleItcPaise}">${formatPaiseINR(p.totalEligibleItcPaise)}</div>
       </div>
-      <div class="card fill">
-        <div class="kpi-label mut-on-fill">Estimated GST to Pay</div>
-        <div class="kpi-val num">${formatPaiseINR(p.netCashPayablePaise)}</div>
+      <div class="kc hi">
+        <small>Estimated GST to Pay</small>
+        <div class="d" data-count-paise="${p.netCashPayablePaise}">${formatPaiseINR(p.netCashPayablePaise)}</div>
       </div>
     </div>
 
-    ${isBrandNewBusiness ? `
-      <div class="empty-state">
-        <h3>No bills added yet for ${escapeHtml(dash.periodLabel || "this month")}</h3>
+    ${isBrandNew ? `
+      <div class="empty">
+        <b>No bills added yet for ${escapeHtml(dash.periodLabel || "this month")}</b>
         <p>Start by adding your sales bills or uploading supplier purchase bills. We will calculate your tax credit and payable GST automatically.</p>
-        <button type="button" class="btn" data-go="file">Add your first bill →</button>
+        <button type="button" class="btn mag" data-go="file">Add your first bill →</button>
       </div>
-    ` : ""}
+    ` : `
+      <div class="mq" aria-hidden="true"><div>${stripItems}${stripItems}</div></div>
+    `}
   `;
 }
 
@@ -190,11 +228,11 @@ export function renderFileView(state) {
   const env = dash.environment || {};
   const step = state.filingStep || 1;
   const steps = [
-    { n: 1, label: "1. Add sales" },
-    { n: 2, label: "2. Add purchases" },
-    { n: 3, label: "3. Check tax credit" },
-    { n: 4, label: "4. Review tax payable" },
-    { n: 5, label: env.preparationOnly ? "5. Prepare return" : "5. Submit (Simulation)" }
+    { n: 1, label: "Add sales" },
+    { n: 2, label: "Add purchases" },
+    { n: 3, label: "Check tax credit" },
+    { n: 4, label: "Review tax payable" },
+    { n: 5, label: env.preparationOnly ? "Prepare return" : "Submit (Simulation)" }
   ];
 
   let bodyHtml = "";
@@ -207,10 +245,10 @@ export function renderFileView(state) {
       <div class="card">
         <h2>Step 3: Check tax credit &amp; reconciliation</h2>
         <p class="sub">Compare your purchase bills against GSTR-2B and verify the 180-day payment rule before claiming ITC.</p>
-        <div class="banner info">Reconciliation summary and mismatch explanations are wired in detail in Phase 3.</div>
-        <div class="row-between">
-          <button type="button" class="btn outline" data-step="2">← Back</button>
-          <button type="button" class="btn" data-step="4">Continue to Review Tax →</button>
+        <div class="banner info">Reconciliation summary and mismatch explanations are wired in Phase 3.</div>
+        <div class="row sp2">
+          <button type="button" class="btn o" data-step="2">← Back</button>
+          <button type="button" class="btn mag" data-step="4">Continue to Review Tax →</button>
         </div>
       </div>
     `;
@@ -225,14 +263,14 @@ export function renderFileView(state) {
       <div class="card">
         <h2>Step 4: Review tax payable</h2>
         <p class="sub">Computed by the backend Rule 88A engine in integer paise.</p>
-        <div class="kpi-grid kpi-grid-3">
-          <div class="card"><div class="kpi-label">Gross Tax on Sales</div><div class="kpi-val num">${formatPaiseINR(p.totalOutputLiabilityPaise)}</div></div>
-          <div class="card"><div class="kpi-label">Eligible Credit Used</div><div class="kpi-val num">${formatPaiseINR(p.totalItcUtilizedPaise)}</div></div>
-          <div class="card fill"><div class="kpi-label mut-on-fill">Net Cash Payable</div><div class="kpi-val num">${formatPaiseINR(p.netCashPayablePaise)}</div></div>
+        <div class="kp kp-3">
+          <div class="kc"><small>Gross Tax on Sales</small><div class="d" data-count-paise="${p.totalOutputLiabilityPaise}">${formatPaiseINR(p.totalOutputLiabilityPaise)}</div></div>
+          <div class="kc"><small>Eligible Credit Used</small><div class="d" data-count-paise="${p.totalItcUtilizedPaise}">${formatPaiseINR(p.totalItcUtilizedPaise)}</div></div>
+          <div class="kc hi"><small>Net Cash Payable</small><div class="d" data-count-paise="${p.netCashPayablePaise}">${formatPaiseINR(p.netCashPayablePaise)}</div></div>
         </div>
-        <div class="row-between">
-          <button type="button" class="btn outline" data-step="3">← Back</button>
-          <button type="button" class="btn" data-step="5">Continue to Submit →</button>
+        <div class="row sp2">
+          <button type="button" class="btn o" data-step="3">← Back</button>
+          <button type="button" class="btn mag" data-step="5">Continue to Submit →</button>
         </div>
       </div>
     `;
@@ -241,25 +279,25 @@ export function renderFileView(state) {
       <div class="card">
         <h2>Step 5: Preparation only</h2>
         <div class="banner info" role="status"><strong>Preparation only: filing is not connected yet.</strong> Export your CA review list or return summary for portal upload.</div>
-        <button type="button" class="btn outline" data-step="4">← Back</button>
+        <button type="button" class="btn o" data-step="4">← Back</button>
       </div>
     ` : `
       <div class="card">
         <h2>Step 5: Review &amp; Submit (Simulation)</h2>
         <div class="banner warn" role="status"><strong>Simulation Mode:</strong> This submission records a local simulated acknowledgement (<code>SIM-...</code>) and does not transmit to GSTN.</div>
-        <p class="sub">Full EVC OTP confirmation and receipt flow will be completed in Phase 3.</p>
-        <button type="button" class="btn outline" data-step="4">← Back</button>
+        <p class="sub">Interactive EVC OTP confirmation and receipt flow will be completed in Phase 3.</p>
+        <button type="button" class="btn o" data-step="4">← Back</button>
       </div>
     `;
   }
 
   return `
-    <h1 class="page-title">File GST Return</h1>
+    <h1 class="pt">File GST Return</h1>
     <div class="sub">Period: <strong>${escapeHtml(dash.periodLabel || state.period || "")}</strong> · Draft progress is saved automatically for this GSTIN.</div>
-    <div class="stepper" role="tablist" aria-label="Filing steps">
+    <div class="stp" role="tablist" aria-label="Filing steps">
       ${steps.map(s => `
-        <button type="button" class="step-btn ${step === s.n ? "active" : s.n < step ? "done" : ""}" data-step="${s.n}">
-          ${escapeHtml(s.label)}
+        <button type="button" class="sp ${step === s.n ? "on" : s.n < step ? "dn" : ""}" data-step="${s.n}">
+          <b>${s.n < step ? "✓" : s.n}</b>${escapeHtml(s.label)}
         </button>
       `).join("")}
     </div>
@@ -274,8 +312,8 @@ function renderInvoiceListPanel(kind, rows, loadState, errMsg) {
 
   if (!rows || rows.length === 0) {
     return `
-      <div class="empty-state">
-        <h3>No ${isSales ? "sales" : "purchase"} bills yet</h3>
+      <div class="empty">
+        <b>No ${isSales ? "sales" : "purchase"} bills yet</b>
         <p>Bills uploaded or created for this GSTIN and period will appear here.</p>
       </div>
     `;
@@ -283,11 +321,11 @@ function renderInvoiceListPanel(kind, rows, loadState, errMsg) {
 
   return `
     <div class="card">
-      <div class="row-between section-h2">
+      <div class="row sp2" style="margin-bottom:14px">
         <h2>${isSales ? "Sales Invoices" : "Purchase Bills"} (${rows.length})</h2>
-        <button type="button" class="btn" data-step="${isSales ? 2 : 3}">Continue →</button>
+        <button type="button" class="btn mag" data-step="${isSales ? 2 : 3}">Continue →</button>
       </div>
-      <div class="table-wrap">
+      <div class="tw">
         <table>
           <thead>
             <tr>
@@ -301,7 +339,7 @@ function renderInvoiceListPanel(kind, rows, loadState, errMsg) {
           </thead>
           <tbody>
             ${rows.map(r => `
-              <tr>
+              <tr class="r">
                 <td class="num"><strong>${escapeHtml(r.invoice_number)}</strong></td>
                 <td>${escapeHtml(isSales ? r.customer_name : r.supplier_name)}</td>
                 <td>${formatDateIN(r.invoice_date)}</td>
@@ -320,11 +358,11 @@ function renderInvoiceListPanel(kind, rows, loadState, errMsg) {
 export function renderInvoicesView(state) {
   const tab = state.invoiceTab || "sales";
   return `
-    <h1 class="page-title">Invoices</h1>
+    <h1 class="pt">My Invoices</h1>
     <p class="sub">Verified sales and purchase bills stored for ${escapeHtml(state.activeGstin?.gstin || "")}.</p>
-    <div class="stepper">
-      <button type="button" class="step-btn ${tab === "sales" ? "active" : ""}" data-inv-tab="sales">Sales (${state.sales.length})</button>
-      <button type="button" class="step-btn ${tab === "purchases" ? "active" : ""}" data-inv-tab="purchases">Purchases (${state.purchases.length})</button>
+    <div class="stp">
+      <button type="button" class="sp ${tab === "sales" ? "on" : ""}" data-inv-tab="sales"><b>S</b>Sales (${state.sales.length})</button>
+      <button type="button" class="sp ${tab === "purchases" ? "on" : ""}" data-inv-tab="purchases"><b>P</b>Purchases (${state.purchases.length})</button>
     </div>
     ${tab === "sales"
       ? renderInvoiceListPanel("sales", state.sales, state.loading.sales, state.errors.sales)
@@ -333,29 +371,29 @@ export function renderInvoicesView(state) {
 }
 
 export function renderHistoryView(state) {
-  if (state.loading.history === "loading") return `<h1 class="page-title">History</h1>${renderLoadingCards(2)}`;
-  if (state.loading.history === "error") return `<h1 class="page-title">History</h1>${renderErrorBanner(state.errors.history, "reload-history")}`;
+  if (state.loading.history === "loading") return `<h1 class="pt">History</h1>${renderLoadingCards(2)}`;
+  if (state.loading.history === "error") return `<h1 class="pt">History</h1>${renderErrorBanner(state.errors.history, "reload-history")}`;
 
   const filings = state.filings || [];
   return `
-    <h1 class="page-title">Filing History</h1>
+    <h1 class="pt">History</h1>
     <p class="sub">Saved return acknowledgements for ${escapeHtml(state.activeGstin?.gstin || "")}.</p>
     ${filings.length === 0 ? `
-      <div class="empty-state">
-        <h3>No returns submitted yet</h3>
+      <div class="empty">
+        <b>No returns submitted yet</b>
         <p>Completed filings (including local Simulation filings) will appear here with their reference numbers.</p>
       </div>
     ` : `
       <div class="card">
-        <div class="table-wrap">
+        <div class="tw">
           <table>
             <thead><tr><th>Period</th><th>Return</th><th>Status</th><th>Reference / ARN</th><th>Date</th></tr></thead>
             <tbody>
               ${filings.map(f => `
-                <tr>
+                <tr class="r">
                   <td class="num">${escapeHtml(f.period)}</td>
                   <td>${escapeHtml(f.return_type)}</td>
-                  <td><span class="pill ${f.simulationMode ? "warn" : "ok"}">${escapeHtml(f.displayStatus || f.status)}</span></td>
+                  <td><span class="pill ${f.simulationMode ? "warn" : ""}">${escapeHtml(f.displayStatus || f.status)}</span></td>
                   <td class="num">${escapeHtml(f.arn || "—")}</td>
                   <td>${formatDateIN(f.filing_date)}</td>
                 </tr>
@@ -369,19 +407,38 @@ export function renderHistoryView(state) {
 }
 
 export function renderCopilotView(state) {
+  const m = state.dashboard?.metrics || {};
+  const p = m.paise || {
+    taxableSalesPaise: rupeesToPaise(m.taxableSales),
+    totalEligibleItcPaise: rupeesToPaise(m.totalEligibleItc),
+    netCashPayablePaise: rupeesToPaise(m.netCashPayable)
+  };
   return `
-    <h1 class="page-title">GST Copilot</h1>
+    <h1 class="pt">GST Copilot</h1>
     <p class="sub">Answers come from deterministic backend GST calculations for ${escapeHtml(state.activeGstin?.gstin || "")}.</p>
-    <div class="card">
-      <div id="copilot-page-msgs" class="cop-page-msgs">
-        ${state.copilotMessages.length === 0 ? `<div class="msg bot">Ask me about your tax payable, eligible ITC, or filing deadline.</div>` : ""}
-        ${state.copilotMessages.map(m => `<div class="msg ${m.role === "user" ? "user" : "bot"}">${escapeHtml(m.text)}</div>`).join("")}
+    <div class="cpg">
+      <div class="card" style="padding:0;overflow:hidden;margin:0">
+        <div class="ms2" id="copilot-page-msgs">
+          ${state.copilotMessages.length === 0 ? `<div class="m b">Ask me about your tax payable, eligible ITC, or filing deadline.</div>` : ""}
+          ${state.copilotMessages.map(msg => `<div class="m ${msg.role === "user" ? "u" : "b"}">${escapeHtml(msg.text)}</div>`).join("")}
+        </div>
+        <div class="cs">
+          <button type="button" data-act="ask-chip" data-q="How much tax do I owe?">Tax to pay?</button>
+          <button type="button" data-act="ask-chip" data-q="How much ITC can I claim?">ITC?</button>
+          <button type="button" data-act="ask-chip" data-q="Explain my GSTR-3B">GSTR-3B?</button>
+        </div>
+        <form id="copilot-page-form" class="cf">
+          <label for="copilot-page-input" class="skip-link">Ask Copilot</label>
+          <input id="copilot-page-input" class="in2" type="text" placeholder="How much tax do I owe?">
+          <button type="submit" class="btn btn-sm">Ask</button>
+        </form>
       </div>
-      <form id="copilot-page-form" class="row-between">
-        <label for="copilot-page-input" class="skip-link">Ask Copilot</label>
-        <input id="copilot-page-input" class="cop-page-input" type="text" placeholder="How much tax do I owe?">
-        <button type="submit" class="btn">Ask</button>
-      </form>
+      <div class="card">
+        <h3>From your records</h3>
+        <p class="sub">Total sales: <strong class="num">${formatPaiseINR(p.taxableSalesPaise)}</strong></p>
+        <p class="sub">Tax credit (ITC): <strong class="num">${formatPaiseINR(p.totalEligibleItcPaise)}</strong></p>
+        <p class="sub">Estimated tax to pay: <strong class="num">${formatPaiseINR(p.netCashPayablePaise)}</strong></p>
+      </div>
     </div>
   `;
 }
@@ -389,14 +446,14 @@ export function renderCopilotView(state) {
 export function renderExpertsView(state) {
   const plans = state.expertPlans || [];
   return `
-    <h1 class="page-title">Tax Experts</h1>
+    <h1 class="pt">Tax Experts</h1>
     <p class="sub">Chartered Accountant assistance for your GST returns.</p>
-    ${plans.length === 0 ? `<div class="empty-state"><h3>No plans loaded</h3><p>Check back shortly or contact support.</p></div>` : `
-      <div class="kpi-grid kpi-grid-auto">
+    ${plans.length === 0 ? `<div class="empty"><b>No plans loaded</b><p>Check back shortly or contact support.</p></div>` : `
+      <div class="g3">
         ${plans.map(pl => `
-          <div class="card">
+          <div class="card kc">
             <h3>${escapeHtml(pl.title || pl.name)}</h3>
-            <div class="kpi-val num">${formatPaiseINR(rupeesToPaise(pl.discountPrice || pl.price || 0))}</div>
+            <div class="d num">${formatPaiseINR(rupeesToPaise(pl.discountPrice || pl.price || 0))}</div>
             <p class="sub">${escapeHtml(pl.interval || "per month")}</p>
           </div>
         `).join("")}
@@ -408,13 +465,13 @@ export function renderExpertsView(state) {
 export function renderStartupView(state) {
   const prof = state.startupProfile;
   return `
-    <h1 class="page-title">Start a business</h1>
+    <h1 class="pt">Start a business</h1>
     <p class="sub">Track your business formation and GST registration stages.</p>
     <div class="card">
       ${prof ? `
         <p><strong>Proposed Name:</strong> ${escapeHtml(prof.proposed_business_name || "Not set")}</p>
         <p><strong>Structure:</strong> ${escapeHtml(prof.business_structure || "Not selected")}</p>
-        <p><strong>Status:</strong> <span class="pill soft">${escapeHtml(prof.registration_status || "IN_PROGRESS")}</span></p>
+        <p><strong>Status:</strong> <span class="pill v">${escapeHtml(prof.registration_status || "IN_PROGRESS")}</span></p>
       ` : `<p class="sub">No startup profile initialized for this organization yet.</p>`}
     </div>
   `;
@@ -422,13 +479,26 @@ export function renderStartupView(state) {
 
 export function renderSettingsView(state) {
   const gstins = state.allGstins || [];
+  const reduced = isMotionReduced();
   return `
-    <h1 class="page-title">Settings &amp; Multi-GSTIN</h1>
+    <h1 class="pt">Settings</h1>
     <p class="sub">Active organization: <strong>${escapeHtml(state.organization?.name || "")}</strong></p>
+
     <div class="card">
-      <h2 class="section-h2">Registered GSTIN Branches (${gstins.length})</h2>
+      <h2 style="margin-bottom:10px">Preferences</h2>
+      <div class="tg">
+        <div>
+          <b>Reduce animations</b>
+          <span class="sub">Turn off page sweep, count-up, and cursor motion (follows device setting by default).</span>
+        </div>
+        <button type="button" class="sw2" role="switch" id="reduce-motion-toggle" data-act="toggle-reduce-motion" aria-checked="${reduced}" aria-label="Reduce animations"></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-bottom:12px">Registered GSTIN Branches (${gstins.length})</h2>
       ${gstins.length === 0 ? `<p class="sub">No GSTIN registrations found.</p>` : `
-        <div class="table-wrap">
+        <div class="tw">
           <table>
             <thead><tr><th>GSTIN</th><th>Trade Name</th><th>State</th><th>Action</th></tr></thead>
             <tbody>
@@ -441,8 +511,8 @@ export function renderSettingsView(state) {
                     <td>${escapeHtml(g.state_name)}</td>
                     <td>
                       ${isAct
-                        ? `<span class="pill ok">Active</span>`
-                        : `<button type="button" class="btn outline" data-switch-gstin="${escapeHtml(g.id)}">Switch</button>`}
+                        ? `<span class="pill">Active</span>`
+                        : `<button type="button" class="btn o btn-sm" data-switch-gstin="${escapeHtml(g.id)}">Switch</button>`}
                     </td>
                   </tr>
                 `;
@@ -454,4 +524,3 @@ export function renderSettingsView(state) {
     </div>
   `;
 }
-

@@ -1,64 +1,44 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>SimpleGST — Your GST, made simple</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/v2/styles.css">
 </head>
-
 <body>
   <a class="skip-link" href="#app">Skip to main content</a>
+  <div class="pb" id="scroll-pb" aria-hidden="true"></div>
 
-  <header class="topbar">
-    <div class="wrap topbar-inner">
-      <button type="button" class="brand" data-go="home" aria-label="SimpleGST Home">SimpleGST</button>
+  <header class="tb">
+    <div class="in">
+      <button type="button" class="lg" data-go="home" aria-label="SimpleGST Home">SimpleGST</button>
 
-      <nav class="nav-pill" aria-label="Primary navigation">
-        <button type="button" class="nav-btn" data-go="home"><svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 11l8-7 8 7v9H4z" />
-          </svg><span>Home</span></button>
-        <button type="button" class="nav-btn" data-go="file"><svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h6" />
-          </svg><span>File GST</span></button>
-        <button type="button" class="nav-btn" data-go="invoices"><svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 4h14v16l-3-2-2 2-2-2-2 2-2-2-3 2zM9 9h6M9 13h6" />
-          </svg><span>Invoices</span></button>
-        <button type="button" class="nav-btn" data-go="history"><svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 7v5l3 2" />
-          </svg><span>History</span></button>
-        <button type="button" class="nav-btn nav-copilot" data-act="toggle-copilot"><svg viewBox="0 0 24 24"
-            aria-hidden="true">
-            <path d="M5 5h14v10H10l-5 4z" />
-          </svg><span>Copilot</span></button>
-        <button type="button" class="nav-btn" data-go="experts"><svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 14v-2a8 8 0 0116 0v2M4 14h3v5H4zM17 14h3v5h-3z" />
-          </svg><span>Tax Experts</span></button>
-        <button type="button" class="nav-btn" data-go="startup"><svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 19c0-4 3-8 9-12l4-2-2 4c-4 6-8 9-11 10zM9 15l-3 3" />
-          </svg><span>Start a business</span></button>
-        <button type="button" class="nav-btn" data-go="settings"><svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
-          </svg><span>Settings</span></button>
+      <nav class="nv" id="nv" aria-label="Primary navigation">
+        <i class="ni a" id="nav-active-pill" aria-hidden="true"></i>
+        <i class="ni" id="nav-hover-pill" aria-hidden="true"></i>
+        <button type="button" data-go="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9H4z"/></svg><span>Home</span></button>
+        <button type="button" data-go="file"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h6"/></svg><span>File GST</span></button>
+        <button type="button" data-go="invoices"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16l-3-2-2 2-2-2-2 2-2-2-3 2zM9 9h6M9 13h6"/></svg><span>Invoices</span></button>
+        <button type="button" data-go="history"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>History</span></button>
+        <button type="button" data-go="copilot"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H10l-5 4z"/></svg><span>Copilot</span></button>
+        <button type="button" data-go="experts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0116 0v2M4 14h3v5H4zM17 14h3v5h-3z"/></svg><span>Tax Experts</span></button>
+        <button type="button" data-go="startup"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c0-4 3-8 9-12l4-2-2 4c-4 6-8 9-11 10zM9 15l-3 3"/></svg><span>Start a business</span></button>
+        <button type="button" data-go="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg><span>Settings</span></button>
       </nav>
 
-      <div class="topbar-right">
+      <div class="rt2">
         <label for="gstin-switcher" class="skip-link">Active GSTIN</label>
         <select id="gstin-switcher" class="gstin-select" aria-label="Select active GSTIN branch" hidden></select>
 
-        <button type="button" class="user-btn" id="user-menu-btn" aria-haspopup="true" aria-expanded="false" hidden>
-          <span class="avatar" id="hdr-avatar">U</span>
+        <button type="button" class="us" id="user-menu-btn" aria-haspopup="true" aria-expanded="false" hidden>
+          <span class="av" id="hdr-avatar">U</span>
           <span class="user-meta">
             <b id="hdr-name">Account</b>
-            <small id="hdr-org">Business</small>
+            <span id="hdr-org">Business</span>
           </span>
         </button>
 
@@ -66,86 +46,57 @@
           <button type="button" class="menu-item" data-go="settings" role="menuitem">Settings &amp; Branches</button>
           <button type="button" class="menu-item danger" data-act="logout" role="menuitem">Sign out</button>
         </div>
-        <!-- User Dropdown Menu -->
-        <div class="user-menu" id="user-menu">
-          <div class="user-menu-hdr">
-            <b id="menu-user-name">Sanjay Administrator</b>
-            <small id="menu-user-email">admin@simplegst.in</small>
-            <div style="display:flex;gap:6px;margin-top:8px">
-              <span class="pill soft" id="menu-user-role">OWNER</span>
-              <span class="pill" id="menu-user-state">Maharashtra</span>
-            </div>
-          </div>
-          <div class="user-menu-body">
-            <button class="menu-item" data-go="settings">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path
-                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                </path>
-              </svg>
-              Settings &amp; Multi-GSTIN
-            </button>
-            <button class="menu-item" data-act="open-auth">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-              Switch Account / Sign In
-            </button>
-            <button class="menu-item del" data-act="logout">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-              </svg>
-              Sign Out
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   </header>
 
-  <main id="app" class="wrap pg" tabindex="-1" aria-live="polite"></main>
+  <main id="app" class="pg" tabindex="-1" aria-live="polite"></main>
 
   <nav class="mob-nav" aria-label="Mobile navigation">
     <button type="button" class="mob-btn" data-go="home">Home</button>
     <button type="button" class="mob-btn" data-go="file">File GST</button>
     <button type="button" class="mob-btn" data-go="invoices">Invoices</button>
-    <button type="button" class="mob-btn" data-act="toggle-copilot">Copilot</button>
+    <button type="button" class="mob-btn" data-act="open-copilot-panel">Copilot</button>
     <button type="button" class="mob-btn" data-go="settings">More</button>
   </nav>
 
-  <div class="drawer-backdrop" id="copilot-backdrop"></div>
-  <aside class="drawer" id="copilot-drawer" aria-label="GST Copilot Panel" aria-hidden="true">
-    <div class="drawer-hdr">
-      <div>
-        <strong>GST Copilot</strong>
-        <div class="num" id="copilot-gstin-label">Deterministic GST Assistant</div>
-      </div>
-      <button type="button" class="drawer-close" id="copilot-close-btn" aria-label="Close Copilot">✕</button>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="copilot-dot" title="Online"></div>
-        <button class="copilot-close" data-act="close-copilot" aria-label="Close Copilot">✕</button>
-      </div>
-    </div>
-    <div class="drawer-msgs" id="copilot-msgs" aria-live="polite"></div>
-    <form class="drawer-form" id="copilot-form">
-      <label for="copilot-input" class="skip-link">Ask GST Copilot</label>
-      <input id="copilot-input" type="text" placeholder="Ask about your tax, ITC, or due date...">
-      <button type="submit" class="btn">Ask</button>
-    </form>
-  </aside>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <button type="button" class="fab-copilot" data-act="toggle-copilot" aria-label="Open GST Copilot">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H10l-5 4z"/></svg>
+  <button type="button" class="fab" id="copilot-fab" data-act="open-copilot-panel" aria-label="Open GST Copilot">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14v10H10l-5 4z"/></svg>
     <span>Copilot</span>
   </button>
+
+  <section class="pn" id="copilot-panel" role="dialog" aria-label="GST Copilot" aria-hidden="true">
+    <header>
+      <div>
+        <strong>GST Copilot</strong>
+        <div class="pn-sub num" id="copilot-gstin-label">Deterministic GST Assistant</div>
+      </div>
+      <button type="button" id="copilot-close-btn" aria-label="Close Copilot">×</button>
+    </header>
+    <div class="ms" id="copilot-msgs" aria-live="polite"></div>
+    <div class="cs">
+      <button type="button" data-act="ask-chip" data-q="How much tax do I owe?">Tax to pay?</button>
+      <button type="button" data-act="ask-chip" data-q="How much ITC can I claim?">ITC?</button>
+      <button type="button" data-act="ask-chip" data-q="Explain my GSTR-3B">GSTR-3B?</button>
+    </div>
+    <form class="cf" id="copilot-form">
+      <label for="copilot-input" class="skip-link">Ask GST Copilot</label>
+      <input class="in2" id="copilot-input" type="text" placeholder="Ask Copilot…">
+      <button type="submit" class="btn btn-sm">Ask</button>
+    </form>
+  </section>
+
+  <div class="pal" id="pal" role="dialog" aria-label="Quick navigation palette" aria-hidden="true">
+    <div class="pc">
+      <label for="pal-input" class="skip-link">Jump to a section or ask Copilot</label>
+      <input id="pal-input" placeholder="Jump to a section or ask Copilot… (Esc to close)" autocomplete="off">
+      <div id="pal-list"></div>
+    </div>
+  </div>
+
+  <div class="cu" id="curtain" aria-live="polite"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
   <script type="module" src="/v2/app.js"></script>
 </body>
-
-</html>
-
 </html>

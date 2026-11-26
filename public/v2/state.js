@@ -74,3 +74,4 @@ export function clearBusinessCache() {
   state.loading.history = "idle";
   state.loading.documents = "idle";
 }
+
