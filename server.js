@@ -1,4 +1,5 @@
 import { handleFunctionalApi, isAllowedOrigin } from "./lib/functionalApi.js";
+import { assertProductionSafety } from "./scripts/check_prod_env.js";
 import { getSwaggerHtml, getOpenApiSpec } from "./lib/swaggerDocs.js";
 import { parseMultipartBuffer } from "./lib/multipart.js";
 import http from "node:http";
@@ -1509,6 +1510,7 @@ function escapeXmlVal(str) {
 
 // Start server if executed directly
 if (process.argv[1] && process.argv[1].endsWith("server.js")) {
+  assertProductionSafety();
   const server = createServer();
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {
