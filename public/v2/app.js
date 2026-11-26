@@ -1,6 +1,6 @@
 import { state, clearBusinessCache } from "./state.js";
 import { apiRequest, abortAllRequests, setCsrfToken } from "./api.js";
-import { escapeHtml, formatPaiseINR, rupeesToPaise } from "./utils.js";
+import { escapeHtml, formatPaiseINR, rupeesToPaise, getCurrentPeriodMMYYYY } from "./utils.js";
 import {
   initReducedMotionPref,
   applyReducedMotionPref,
@@ -277,7 +277,7 @@ function applySessionPayload(data) {
   state.organization = data.organization || null;
   state.activeGstin = data.activeGstin || null;
   state.allGstins = data.allGstins || [];
-  state.period = data.activePeriod || "102026";
+  state.period = data.activePeriod || getCurrentPeriodMMYYYY();
   updateHeaderControls();
 }
 
@@ -335,8 +335,12 @@ async function loadInvoices() {
 async function loadHistory() {
   state.loading.history = "loading";
   try {
-    const res = await apiRequest("/api/returns/history", {}, { onUnauthorized: handleUnauthorized });
+    const [res, monthsRes] = await Promise.all([
+      apiRequest("/api/returns/history", {}, { onUnauthorized: handleUnauthorized }),
+      apiRequest("/api/returns/months-history?months=3", {}, { onUnauthorized: handleUnauthorized }).catch(() => ({ months: [] }))
+    ]);
     state.filings = res.filings || [];
+    state.monthlyHistory = monthsRes.months || [];
     state.loading.history = "ready";
   } catch (err) {
     if (err.name === "AbortError" || err.status === 401) return;
@@ -817,6 +821,16 @@ document.addEventListener("click", async (e) => {
   const delBtn = e.target.closest("[data-del-id]");
   if (delBtn) {
     await deleteInvoiceRow(delBtn.dataset.delKind, delBtn.dataset.delId, delBtn.dataset.delNum);
+    return;
+  }
+
+  const swPeriodBtn = e.target.closest("[data-switch-period]");
+  if (swPeriodBtn) {
+    const p = swPeriodBtn.dataset.switchPeriod;
+    state.period = p;
+    await apiRequest("/api/context/period", { method: "POST", body: JSON.stringify({ period: p }) }).catch(() => {});
+    await loadAllBusinessData();
+    navigateTo("home");
     return;
   }
 

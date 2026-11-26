@@ -58,3 +58,23 @@ export function formatDateIN(dateStr) {
   return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+export function getCurrentPeriodMMYYYY(date = new Date()) {
+  return `${String(date.getMonth() + 1).padStart(2, "0")}${date.getFullYear()}`;
+}
+
+export function formatPeriodLabel(period) {
+  const str = String(period || "").trim();
+  if (!/^\d{6}$/.test(str)) return str || "—";
+  const mm = Number.parseInt(str.slice(0, 2), 10);
+  const yyyy = Number.parseInt(str.slice(2, 6), 10);
+  if (mm < 1 || mm > 12) return str;
+  return new Date(yyyy, mm - 1, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+}
+
+export function getTimeGreeting(date = new Date()) {
+  const hr = date.getHours();
+  if (hr < 12) return "Good morning";
+  if (hr < 17) return "Good afternoon";
+  return "Good evening";
+}
+

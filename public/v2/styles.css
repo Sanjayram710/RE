@@ -27,6 +27,18 @@ html, body {
   color: var(--ink);
   font: 15px/1.5 Inter, system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 h1, h2, h3, .d {
@@ -52,17 +64,9 @@ button { cursor: pointer; }
 }
 .skip-link:focus { left: 16px; }
 
-/* Scroll progress bar */
+/* Scroll progress bar (hidden per user preference) */
 .pb {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 3px;
-  width: 100%;
-  background: var(--acc);
-  transform: scaleX(0);
-  transform-origin: left;
-  z-index: 60;
+  display: none;
 }
 
 /* Top bar drop-in + shared sliding pill nav */

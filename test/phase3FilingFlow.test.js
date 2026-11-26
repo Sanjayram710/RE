@@ -340,9 +340,10 @@ test("Phase 3.2: Upload & OCR review UI requires confirmation on low confidence 
   assert.ok(html.includes("CGST: <b>₹180"), "Live paise GST preview must show CGST ₹180");
 
   s.filingStep = 5;
-  s.dashboard = { periodLabel: "October 2026", environment: { preparationOnly: false }, metrics: { paise: { netCashPayablePaise: 9010 } } };
-  s.filingReceipt = { displayStatus: "Filed (simulation)", period: "102026", arn: "SIM-2026-9999" };
+  s.dashboard = { periodLabel: "November 2026", environment: { preparationOnly: false }, metrics: { paise: { netCashPayablePaise: 9010 } } };
+  s.filingReceipt = { displayStatus: "Filed", period: "112026", filingTimestamp: "2026-11-26T07:30:00Z" };
   const step5Html = renderFileView(s);
-  assert.ok(step5Html.includes("Filed (simulation)"));
-  assert.ok(step5Html.includes("SIM-2026-9999"));
+  assert.ok(step5Html.includes("November 2026"));
+  assert.ok(step5Html.includes("Filed"));
+  assert.ok(!step5Html.includes("Simulation ARN"));
 });

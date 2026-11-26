@@ -45,6 +45,7 @@ export function createInitialState() {
     purchases: [],
     documents: [],
     filings: [],
+    monthlyHistory: [],
     expertPlans: [],
     startupProfile: null,
     copilotMessages: [],
@@ -68,6 +69,7 @@ export function clearBusinessCache() {
   state.purchases = [];
   state.documents = [];
   state.filings = [];
+  state.monthlyHistory = [];
   state.ocrReview = null;
   state.uploadingCategory = null;
   state.recentAddedId = null;

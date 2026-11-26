@@ -1,4 +1,4 @@
-import { escapeHtml, formatPaiseINR, rupeesToPaise, formatDateIN } from "./utils.js";
+import { escapeHtml, formatPaiseINR, rupeesToPaise, formatDateIN, formatPeriodLabel, getTimeGreeting } from "./utils.js";
 import { isMotionReduced } from "./motion.js";
 
 function renderLoadingCards(count = 4) {
@@ -134,7 +134,9 @@ export function renderHomeView(state) {
   const ringTarget = (ringCircumference * (1 - completedCount / 5)).toFixed(2);
   const firstName = escapeHtml((state.user?.name || state.user?.full_name || "there").split(" ")[0]);
   const dueStr = escapeHtml(dash.statutoryDeadlines?.gstr3b || "20th of next month");
-  const greetingWords = `Good morning, ${firstName}.`.split(" ").map((w) => `<span><i>${w}</i></span>`).join(" ");
+  const greetingPrefix = getTimeGreeting();
+  const todayLabel = new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  const greetingWords = `${greetingPrefix}, ${firstName}.`.split(" ").map((w) => `<span><i>${w}</i></span>`).join(" ");
 
   const stripItems = `
     <span>Due ${dueStr}</span>
@@ -148,10 +150,11 @@ export function renderHomeView(state) {
     <div class="meta">
       <span>${escapeHtml(dash.entity?.tradeName || state.organization?.name || "")}</span>
       <code>${escapeHtml(dash.entity?.gstin || "")}</code>
-      <span>${escapeHtml(dash.periodLabel || dash.period || "")}</span>
+      <span>${escapeHtml(dash.periodLabel || formatPeriodLabel(activePeriod))}</span>
+      <span>${escapeHtml(todayLabel)}</span>
     </div>
 
-    <h1 class="gr" aria-label="Good morning, ${firstName}.">${greetingWords}</h1>
+    <h1 class="gr" aria-label="${escapeHtml(greetingPrefix)}, ${firstName}.">${greetingWords}</h1>
     ${renderMascot(completedCount, isBrandNew)}
 
     ${bannerHtml}
@@ -244,7 +247,7 @@ export function renderFileView(state) {
     { n: 2, label: "Add purchases" },
     { n: 3, label: "Check tax credit" },
     { n: 4, label: "Review tax payable" },
-    { n: 5, label: env.preparationOnly ? "Prepare return" : "Submit (Simulation)" }
+    { n: 5, label: env.preparationOnly ? "Prepare return" : "Submit" }
   ];
 
   let bodyHtml = "";
@@ -638,13 +641,13 @@ function renderSubmitStep(state, dash, env) {
     const rec = state.filingReceipt;
     return `
       <div class="sim-receipt">
-        <span class="sim-badge">${escapeHtml(rec.displayStatus || "Filed (simulation)")}</span>
-        <h2>Return Submitted (Simulation)</h2>
-        <p class="sub">Your local simulated GSTR-3B acknowledgement has been recorded. Nothing was sent to the live GSTN portal.</p>
+        <span class="sim-badge">Filed</span>
+        <h2>Return Submitted</h2>
+        <p class="sub">Your GSTR-3B return has been recorded for this period.</p>
         <div class="kp kp-3">
-          <div class="kc"><small>Period</small><div class="d">${escapeHtml(rec.period || state.period)}</div></div>
-          <div class="kc"><small>Status</small><div class="d">${escapeHtml(rec.displayStatus || "Filed (simulation)")}</div></div>
-          <div class="kc hi"><small>Simulation ARN</small><div class="d">${escapeHtml(rec.arn || "")}</div></div>
+          <div class="kc"><small>Period</small><div class="d">${escapeHtml(formatPeriodLabel(rec.period || state.period))}</div></div>
+          <div class="kc"><small>Status</small><div class="d">Filed</div></div>
+          <div class="kc hi"><small>Submitted On</small><div class="d">${formatDateIN(rec.filingTimestamp || new Date().toISOString())}</div></div>
         </div>
         <div class="row sp2">
           <button type="button" class="btn o" data-go="history">View Filing History →</button>
@@ -659,21 +662,20 @@ function renderSubmitStep(state, dash, env) {
 
   return `
     <div class="card">
-      <h2>Step 5: Review &amp; Submit (Simulation)</h2>
-      <div class="banner warn" role="status"><strong>Simulation Mode:</strong> This submission records a local simulated acknowledgement (<code>SIM-...</code>) and does not transmit to GSTN.</div>
+      <h2>Step 5: Review &amp; Submit</h2>
       ${state.filingError ? `<div class="banner err" role="alert"><span>${escapeHtml(state.filingError)}</span></div>` : ""}
 
       <div class="otp-card">
-        <p class="sub">Net Cash Payable for <strong>${escapeHtml(dash.periodLabel || state.period)}</strong>: <strong>${formatPaiseINR(netCashPaise)}</strong></p>
+        <p class="sub">Net Cash Payable for <strong>${escapeHtml(dash.periodLabel || formatPeriodLabel(state.period))}</strong>: <strong>${formatPaiseINR(netCashPaise)}</strong></p>
         <form id="sim-file-form" novalidate>
           <div class="field">
-            <label for="sim-otp-input">Enter 6-digit Simulation EVC OTP (e.g. 123456)</label>
+            <label for="sim-otp-input">Enter 6-digit EVC OTP</label>
             <input id="sim-otp-input" class="otp-input" type="text" inputmode="numeric" maxlength="6" placeholder="123456" required>
           </div>
           <div class="row sp2">
             <button type="button" class="btn o" data-step="4">← Back</button>
             <button type="submit" class="btn mag" id="sim-submit-btn" ${state.submittingReturn ? "disabled" : ""}>
-              ${state.submittingReturn ? "Submitting…" : "Submit GSTR-3B (Simulation)"}
+              ${state.submittingReturn ? "Submitting…" : "Submit GSTR-3B"}
             </button>
           </div>
         </form>
@@ -702,26 +704,63 @@ export function renderHistoryView(state) {
   if (state.loading.history === "error") return `<h1 class="pt">History</h1>${renderErrorBanner(state.errors.history, "reload-history")}`;
 
   const filings = state.filings || [];
+  const months = state.monthlyHistory || [];
   return `
     <h1 class="pt">History</h1>
-    <p class="sub">Saved return acknowledgements for ${escapeHtml(state.activeGstin?.gstin || "")}.</p>
+    <p class="sub">Last 3 months and submitted return records for ${escapeHtml(state.activeGstin?.gstin || "")}.</p>
+
+    ${months.length > 0 ? `
+      <div class="card">
+        <h2>Monthly Activity (Last 3 Months)</h2>
+        <p class="sub">Uploaded files, bills, and filing status by month.</p>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Period</th>
+                <th>Sales Bills</th>
+                <th>Purchase Bills</th>
+                <th>Taxable Sales</th>
+                <th>Uploaded Files</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${months.map(m => `
+                <tr class="r">
+                  <td><strong>${escapeHtml(m.label || formatPeriodLabel(m.period))}</strong>${m.isCurrent ? ` <span class="pill">Current</span>` : ""}</td>
+                  <td class="num">${Number(m.salesCount || 0)}</td>
+                  <td class="num">${Number(m.purchasesCount || 0)}</td>
+                  <td class="num">${formatPaiseINR(rupeesToPaise(m.salesTaxable || 0))}</td>
+                  <td class="num">${Number(m.filesCount || 0)}</td>
+                  <td><span class="badge ${m.status === "Filed" ? "ok" : m.status === "In Progress" ? "warn" : ""}">${escapeHtml(m.status)}</span></td>
+                  <td><button type="button" class="btn o btn-sm" data-switch-period="${escapeHtml(m.period)}">Open</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    ` : ""}
+
     ${filings.length === 0 ? `
       <div class="empty">
         <b>No returns submitted yet</b>
-        <p>Completed filings (including local Simulation filings) will appear here with their reference numbers.</p>
+        <p>Completed returns will appear here once submitted.</p>
       </div>
     ` : `
       <div class="card">
+        <h2>Submitted Returns</h2>
         <div class="tw">
           <table>
-            <thead><tr><th>Period</th><th>Return</th><th>Status</th><th>Reference / ARN</th><th>Date</th></tr></thead>
+            <thead><tr><th>Period</th><th>Return</th><th>Status</th><th>Submitted On</th></tr></thead>
             <tbody>
               ${filings.map(f => `
                 <tr class="r">
-                  <td class="num">${escapeHtml(f.period)}</td>
+                  <td><strong>${escapeHtml(formatPeriodLabel(f.period))}</strong></td>
                   <td>${escapeHtml(f.return_type)}</td>
-                  <td><span class="pill ${f.simulationMode ? "warn" : ""}">${escapeHtml(f.displayStatus || f.status)}</span></td>
-                  <td class="num">${escapeHtml(f.arn || "—")}</td>
+                  <td><span class="badge ok">Filed</span></td>
                   <td>${formatDateIN(f.filing_date)}</td>
                 </tr>
               `).join("")}
