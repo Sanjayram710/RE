@@ -48,30 +48,59 @@ function renderMascot(completedCount, isBrandNew) {
 }
 
 export function renderAuthView(state) {
+  const isReg = state.authMode === "register";
   return `
     <section class="auth-shell" aria-labelledby="auth-heading">
       <div class="card">
-        <div class="meta">Secure Sign In</div>
-        <h1 id="auth-heading" class="pt">Sign in</h1>
-        <p class="sub">Enter your business email and password to access your GST records.</p>
+        <div class="meta">${isReg ? "New Business Setup" : "Secure Sign In"}</div>
+        <h1 id="auth-heading" class="pt">${isReg ? "Create account" : "Sign in"}</h1>
+        <p class="sub">${isReg ? "Create your SimpleGST owner account to start filing GST." : "Enter your business email and password to access your GST records."}</p>
 
         ${state.sessionExpiredMessage ? `<div class="banner warn" role="alert">${escapeHtml(state.sessionExpiredMessage)}</div>` : ""}
         ${state.errors.auth ? `<div class="banner err" role="alert">${escapeHtml(state.errors.auth)}</div>` : ""}
 
-        <form id="login-form" novalidate>
-          <div class="field">
-            <label for="login-email">Email address</label>
-            <input id="login-email" name="email" type="email" autocomplete="email" required placeholder="you@yourshop.in">
-          </div>
-          <div class="field">
-            <label for="login-password">Password</label>
-            <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Enter your password">
-          </div>
-          <button type="submit" class="btn btn-full mag" id="login-submit-btn">Sign in</button>
-          ${state.demoCredentials ? `
-            <button type="button" class="btn o btn-full" id="fill-demo-btn" data-act="fill-demo-login">Fill Demo Credentials</button>
-          ` : ""}
-        </form>
+        ${isReg ? `
+          <form id="register-form" novalidate>
+            <div class="field">
+              <label for="reg-name">Full Name</label>
+              <input id="reg-name" name="fullName" type="text" required placeholder="e.g. Sanjay Kumar">
+            </div>
+            <div class="field">
+              <label for="reg-mobile">10-digit Mobile Number</label>
+              <input id="reg-mobile" name="mobile" type="tel" maxlength="10" required placeholder="9876543210">
+            </div>
+            <div class="field">
+              <label for="reg-email">Email address</label>
+              <input id="reg-email" name="email" type="email" autocomplete="email" required placeholder="you@yourshop.in">
+            </div>
+            <div class="field">
+              <label for="reg-password">Password (8+ chars, A-Z, a-z, 0-9, symbol)</label>
+              <input id="reg-password" name="password" type="password" autocomplete="new-password" required placeholder="Create a strong password">
+            </div>
+            <div class="field">
+              <label for="reg-confirm">Confirm Password</label>
+              <input id="reg-confirm" name="confirmPassword" type="password" autocomplete="new-password" required placeholder="Re-enter password">
+            </div>
+            <button type="submit" class="btn btn-full mag" id="register-submit-btn">Create account</button>
+            <button type="button" class="btn o btn-full" data-act="toggle-auth-mode">Already have an account? Sign in</button>
+          </form>
+        ` : `
+          <form id="login-form" novalidate>
+            <div class="field">
+              <label for="login-email">Email address</label>
+              <input id="login-email" name="email" type="email" autocomplete="email" required placeholder="you@yourshop.in">
+            </div>
+            <div class="field">
+              <label for="login-password">Password</label>
+              <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Enter your password">
+            </div>
+            <button type="submit" class="btn btn-full mag" id="login-submit-btn">Sign in</button>
+            ${state.demoCredentials ? `
+              <button type="button" class="btn o btn-full" id="fill-demo-btn" data-act="fill-demo-login">Fill Demo Credentials</button>
+            ` : ""}
+            <button type="button" class="btn o btn-full" data-act="toggle-auth-mode">New to SimpleGST? Create account</button>
+          </form>
+        `}
       </div>
     </section>
   `;

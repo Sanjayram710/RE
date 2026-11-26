@@ -192,6 +192,41 @@ function bindViewForms() {
     });
   }
 
+  const regForm = $("#register-form");
+  if (regForm) {
+    regForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fullName = ($("#reg-name")?.value || "").trim();
+      const mobile = ($("#reg-mobile")?.value || "").trim();
+      const email = ($("#reg-email")?.value || "").trim();
+      const password = $("#reg-password")?.value || "";
+      const confirmPassword = $("#reg-confirm")?.value || "";
+      if (!fullName || !mobile || !email || !password) {
+        state.errors.auth = "Please fill in all registration fields.";
+        render();
+        return;
+      }
+      state.errors.auth = "";
+      const btn = $("#register-submit-btn");
+      if (btn) { btn.disabled = true; btn.textContent = "Creating account…"; }
+      try {
+        const res = await apiRequest("/api/auth/register", {
+          method: "POST",
+          body: JSON.stringify({ fullName, mobile, email, password, confirmPassword })
+        });
+        applySessionPayload(res);
+        try {
+          const fullSess = await apiRequest("/api/auth/session");
+          if (fullSess.authenticated) applySessionPayload(fullSess);
+        } catch {}
+        await loadAllBusinessData();
+      } catch (err) {
+        state.errors.auth = err.message || "Registration failed.";
+        render();
+      }
+    });
+  }
+
   const copPageForm = $("#copilot-page-form");
   if (copPageForm) {
     copPageForm.addEventListener("submit", async (e) => {
@@ -850,6 +885,11 @@ document.addEventListener("click", async (e) => {
     else if (act === "ask-chip") await askCopilot(actBtn.dataset.q || "");
     else if (act === "discard-ocr") {
       state.ocrReview = null;
+      render();
+    }
+    else if (act === "toggle-auth-mode") {
+      state.authMode = state.authMode === "register" ? "login" : "register";
+      state.errors.auth = "";
       render();
     }
     else if (act === "fill-demo-login") {

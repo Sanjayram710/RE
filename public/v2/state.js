@@ -7,6 +7,7 @@ export function createInitialState() {
   return {
     authChecked: false,
     authenticated: false,
+    authMode: "login",
     demoCredentials: null,
     sessionExpiredMessage: "",
     user: null,
