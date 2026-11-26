@@ -92,14 +92,10 @@ export function renderHomeView(state) {
 
   const isBrandNewBusiness = Number(m.salesCount || 0) === 0 && Number(m.purchasesCount || 0) === 0;
   const step = state.filingStep || 1;
-  const pct = Math.round(((step - 1) / 4) * 100);
-  const stepNames = [
-    "Add sales bills",
-    "Add purchase bills",
-    "Check tax credit & reconciliation",
-    "Review tax payable",
-    "Review & submit (Simulation)"
-  ];
+  const completedCount = (Number(m.salesCount || 0) > 0 ? 1 : 0) + (Number(m.purchasesCount || 0) > 0 ? 1 : 0) + (step > 3 ? 1 : 0) + (step > 4 ? 1 : 0);
+  const ringPct = Math.min(100, completedCount * 20);
+  const firstName = escapeHtml((state.user?.name || state.user?.full_name || "there").split(" ")[0]);
+  const dueStr = escapeHtml(dash.statutoryDeadlines?.gstr3b || "20th of next month");
 
   return `
     <div class="eyebrow">
@@ -110,15 +106,55 @@ export function renderHomeView(state) {
       <span>${escapeHtml(dash.periodLabel || dash.period || "")}</span>
     </div>
 
-    <div class="row-between hero-header">
-      <div>
-        <h1 class="hero-title">Your GST, made simple.</h1>
-        <p class="sub">Manage your bills and file GST without complicated accounting.</p>
-      </div>
-      <button type="button" class="btn" data-go="file">Continue GST filing →</button>
-    </div>
+    <h1 class="hero-title">Good morning, ${firstName}.</h1>
 
     ${bannerHtml}
+
+    <div class="hg">
+      <div class="card">
+        <div class="hl">
+          <div>
+            <small>${escapeHtml(dash.periodLabel || "")} return · due ${dueStr}</small>
+            <h2>${isBrandNewBusiness ? "Your GST is<br>ready to start." : "Continue your<br>GST filing."}</h2>
+            <button type="button" class="btn" data-go="file">Continue GST filing →</button>
+          </div>
+          <div class="rg">
+            <svg viewBox="0 0 120 120" role="img" aria-label="${completedCount} of 5 steps done">
+              <circle class="t" cx="60" cy="60" r="50"></circle>
+              <circle class="p" cx="60" cy="60" r="50" data-pct="${ringPct}"></circle>
+            </svg>
+            <div class="rc">
+              <b>${completedCount}/5</b>
+              <span>steps done</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stk">
+        <button type="button" class="sr ${Number(m.salesCount || 0) > 0 ? "dn" : ""}" data-go="file" data-step="1">
+          <div>
+            <b>1 · Add sales</b>
+            <span>Upload outward bills to customers</span>
+          </div>
+          <em>${Number(m.salesCount || 0) > 0 ? `Done (${Number(m.salesCount)}) ✓` : "Start →"}</em>
+        </button>
+        <button type="button" class="sr ${Number(m.purchasesCount || 0) > 0 ? "dn" : ""}" data-go="file" data-step="2">
+          <div>
+            <b>2 · Add purchases</b>
+            <span>Upload supplier bills &amp; match GSTR-2B</span>
+          </div>
+          <em>${Number(m.purchasesCount || 0) > 0 ? `Done (${Number(m.purchasesCount)}) ✓` : "Start →"}</em>
+        </button>
+        <button type="button" class="sr ${step >= 3 ? "" : "dm"}" data-go="file" data-step="3">
+          <div>
+            <b>3 · Check credit &amp; review</b>
+            <span>Verify ITC, Rule 88A offset &amp; submit (${env.preparationOnly ? "Prep only" : "Simulation"})</span>
+          </div>
+          <em>${step >= 3 ? "Ready →" : "Next →"}</em>
+        </button>
+      </div>
+    </div>
 
     <div class="kpi-grid">
       <div class="card">
@@ -145,35 +181,7 @@ export function renderHomeView(state) {
         <p>Start by adding your sales bills or uploading supplier purchase bills. We will calculate your tax credit and payable GST automatically.</p>
         <button type="button" class="btn" data-go="file">Add your first bill →</button>
       </div>
-    ` : `
-      <div class="grid-2">
-        <div class="card">
-          <div class="row-between">
-            <div>
-              <h2>Filing Progress</h2>
-              <div class="sub sub-tight">Step ${step} of 5 · Next: ${escapeHtml(stepNames[step - 1] || "")}</div>
-            </div>
-            <span class="pill soft">${pct}% complete</span>
-          </div>
-          <div class="pbar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
-            <div class="pfill" data-pct="${pct}"></div>
-          </div>
-          <div class="row-between">
-            <span class="pill warn">GSTR-3B Due: ${escapeHtml(dash.statutoryDeadlines?.gstr3b || "20th of next month")}</span>
-            <button type="button" class="btn" data-go="file">Continue GST filing →</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Need a second look?</h2>
-          <p class="sub">Ask GST Copilot about your bills or export a flagged rule summary for your Chartered Accountant.</p>
-          <div class="row-between">
-            <button type="button" class="btn outline" data-act="toggle-copilot">Ask GST Copilot</button>
-            <button type="button" class="btn outline" data-go="history">View Filing History</button>
-          </div>
-        </div>
-      </div>
-    `}
+    ` : ""}
   `;
 }
 
@@ -446,3 +454,4 @@ export function renderSettingsView(state) {
     </div>
   `;
 }
+

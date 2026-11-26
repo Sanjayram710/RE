@@ -336,7 +336,11 @@ document.addEventListener("click", async (e) => {
   if (goBtn) {
     state.view = goBtn.dataset.go;
     $("#user-menu")?.classList.remove("open");
-    render();
+    if (goBtn.dataset.step) {
+      await saveFilingStep(Number(goBtn.dataset.step));
+    } else {
+      render();
+    }
     return;
   }
 
@@ -401,3 +405,4 @@ document.addEventListener("keydown", (e) => {
 if (typeof window !== "undefined" && !window.__SIMPLEGST_TEST_MODE__) {
   init();
 }
+
