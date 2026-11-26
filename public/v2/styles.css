@@ -81,9 +81,10 @@ button { cursor: pointer; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 28px;
+  padding: 10px 20px;
   gap: 10px;
   max-width: 1500px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -118,11 +119,11 @@ button { cursor: pointer; }
   display: inline-flex;
   gap: 6px;
   align-items: center;
-  padding: 0 12px;
-  min-height: 44px;
+  padding: 0 10px;
+  min-height: 42px;
   border-radius: 999px;
   color: var(--mut);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   transition: color 0.3s;
@@ -164,25 +165,26 @@ button { cursor: pointer; }
 }
 
 .gstin-select {
-  min-height: 44px;
-  padding: 0 12px;
+  min-height: 42px;
+  padding: 0 10px;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--bg2);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
-  max-width: 175px;
+  max-width: 155px;
 }
 
 .us {
   display: inline-flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 4px 14px 4px 5px;
-  min-height: 44px;
+  padding: 4px 12px 4px 4px;
+  min-height: 42px;
   background: var(--card);
+  flex-shrink: 0;
 }
 
 .av {
@@ -196,11 +198,12 @@ button { cursor: pointer; }
   justify-content: center;
   font-weight: 800;
   font-size: 13px;
+  flex-shrink: 0;
 }
 
-.user-meta { text-align: left; line-height: 1.2; }
-.user-meta b { display: block; font-size: 13px; }
-.user-meta span { display: block; font-size: 11.5px; color: var(--mut); }
+.user-meta { text-align: left; line-height: 1.2; max-width: 125px; overflow: hidden; }
+.user-meta b { display: block; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-meta span { display: block; font-size: 11px; color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .user-menu {
   position: absolute;
@@ -718,9 +721,12 @@ tr.new-row td { background: rgba(75, 63, 224, 0.08); transition: background 1.4s
 .cpg { display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: start; }
 .g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
 
-@media (max-width: 1240px) {
-  .nv button span { display: none; }
+@media (max-width: 1360px) {
   .user-meta { display: none; }
+  .us { padding: 4px; }
+}
+@media (max-width: 1200px) {
+  .nv button span { display: none; }
 }
 @media (max-width: 1024px) {
   .hg, .cpg, .g3 { grid-template-columns: 1fr; }

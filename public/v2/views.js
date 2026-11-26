@@ -113,11 +113,23 @@ export function renderHomeView(state) {
   const env = dash.environment || {};
   const bannerHtml = env.preparationOnly
     ? `<div class="banner info" role="status"><strong>Preparation only:</strong> filing is not connected yet. You can prepare bills, reconcile, and review tax calculations.</div>`
-    : `<div class="banner info" role="status"><strong>Simulation Mode:</strong> Filing uses local simulation and is not transmitted to GSTN.</div>`;
+    : "";
 
-  const isBrandNew = Number(m.salesCount || 0) === 0 && Number(m.purchasesCount || 0) === 0;
+  const activePeriod = dash.period || state.period;
+  const isFiled = Boolean(
+    (state.filingReceipt && state.filingReceipt.period === activePeriod) ||
+    (state.filings || []).some((f) => f.period === activePeriod && String(f.return_type || "").includes("GSTR3B"))
+  );
+  const salesCount = Number(m.salesCount || 0);
+  const purchasesCount = Number(m.purchasesCount || 0);
+  const isBrandNew = salesCount === 0 && purchasesCount === 0 && !isFiled;
   const step = state.filingStep || 1;
-  const completedCount = (Number(m.salesCount || 0) > 0 ? 1 : 0) + (Number(m.purchasesCount || 0) > 0 ? 1 : 0) + (step > 3 ? 1 : 0) + (step > 4 ? 1 : 0);
+  const step1Done = salesCount > 0 || step > 1 || isFiled;
+  const step2Done = purchasesCount > 0 || step > 2 || isFiled;
+  const step3Done = step > 3 || isFiled;
+  const step4Done = step > 4 || isFiled;
+  const step5Done = isFiled;
+  const completedCount = (step1Done ? 1 : 0) + (step2Done ? 1 : 0) + (step3Done ? 1 : 0) + (step4Done ? 1 : 0) + (step5Done ? 1 : 0);
   const ringCircumference = 314.16;
   const ringTarget = (ringCircumference * (1 - completedCount / 5)).toFixed(2);
   const firstName = escapeHtml((state.user?.name || state.user?.full_name || "there").split(" ")[0]);
@@ -128,8 +140,8 @@ export function renderHomeView(state) {
     <span>Due ${dueStr}</span>
     <span>${completedCount} of 5 steps done</span>
     <span>ITC ${formatPaiseINR(p.totalEligibleItcPaise)}</span>
-    <span>${env.preparationOnly ? "Preparation only" : "Simulation ready"}</span>
-    <span>${Number(m.salesCount || 0)} sales · ${Number(m.purchasesCount || 0)} purchases</span>
+    <span>${isFiled ? "Return filed" : env.preparationOnly ? "Preparation only" : "Ready to file"}</span>
+    <span>${salesCount} sales · ${purchasesCount} purchases</span>
   `;
 
   return `
@@ -149,9 +161,9 @@ export function renderHomeView(state) {
         <div class="hl">
           <div>
             <small>${escapeHtml(dash.periodLabel || "")} return · due ${dueStr}</small>
-            <h2>${isBrandNew ? "Your GST is<br>ready to start." : "Continue your<br>GST filing."}</h2>
-            <button type="button" class="btn lg2 mag" data-go="file">
-              Continue GST filing <span class="ar" aria-hidden="true">→</span>
+            <h2>${isFiled ? "Your GST return<br>is filed." : isBrandNew ? "Your GST is<br>ready to start." : "Continue your<br>GST filing."}</h2>
+            <button type="button" class="btn lg2 mag" data-go="${isFiled ? "history" : "file"}">
+              ${isFiled ? "View filing history" : "Continue GST filing"} <span class="ar" aria-hidden="true">→</span>
             </button>
           </div>
           <div class="rg">
@@ -168,26 +180,26 @@ export function renderHomeView(state) {
       </div>
 
       <div class="stk">
-        <button type="button" class="sr ${Number(m.salesCount || 0) > 0 ? "dn" : "rd"}" data-go="file" data-step="1">
+        <button type="button" class="sr ${step1Done ? "dn" : "rd"}" data-go="file" data-step="1">
           <div>
             <b>1 · Add sales</b>
             <span>Upload outward bills to customers</span>
           </div>
-          <em>${Number(m.salesCount || 0) > 0 ? `Done (${Number(m.salesCount)}) ✓` : "Start →"}</em>
+          <em>${salesCount > 0 ? `Done (${salesCount}) ✓` : step1Done ? "Done ✓" : "Start →"}</em>
         </button>
-        <button type="button" class="sr ${Number(m.purchasesCount || 0) > 0 ? "dn" : "rd"}" data-go="file" data-step="2">
+        <button type="button" class="sr ${step2Done ? "dn" : "rd"}" data-go="file" data-step="2">
           <div>
             <b>2 · Add purchases</b>
             <span>Upload supplier bills &amp; match GSTR-2B</span>
           </div>
-          <em>${Number(m.purchasesCount || 0) > 0 ? `Done (${Number(m.purchasesCount)}) ✓` : "Start →"}</em>
+          <em>${purchasesCount > 0 ? `Done (${purchasesCount}) ✓` : step2Done ? "Done ✓" : "Start →"}</em>
         </button>
-        <button type="button" class="sr ${step >= 3 ? "rd" : "dm"}" data-go="file" data-step="3">
+        <button type="button" class="sr ${isFiled ? "dn" : step >= 3 ? "rd" : "dm"}" data-go="file" data-step="3">
           <div>
             <b>3 · Check credit &amp; review</b>
-            <span>Verify ITC, Rule 88A offset &amp; submit (${env.preparationOnly ? "Prep only" : "Simulation"})</span>
+            <span>Verify ITC, Rule 88A offset &amp; submit</span>
           </div>
-          <em>${step >= 3 ? "Ready →" : "Next →"}</em>
+          <em>${isFiled ? "Filed ✓" : step3Done ? "Done ✓" : step >= 3 ? "Ready →" : "Next →"}</em>
         </button>
       </div>
     </div>
@@ -399,7 +411,7 @@ function renderUploadAndOcrBox(category, state) {
     <div class="dz ${isUploading ? "on" : ""}" data-drop-cat="${category}">
       <h3>${isSales ? "Upload Sales Invoice (PDF / PNG / JPG)" : "Upload Purchase Bill (PDF / PNG / JPG)"}</h3>
       <p>${isUploading ? "Extracting fields from your document…" : "Drag and drop a bill here or choose a file (max 15 MB). You can review and edit extracted GST fields before saving."}</p>
-      <input class="dz-input" type="file" id="file-upload-${category}" data-upload-cat="${category}" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg">
+      <input class="dz-input" type="file" id="file-upload-${category}" data-upload-cat="${category}" accept=".pdf,.png,.jpg,.jpeg,.csv,.txt,application/pdf,image/png,image/jpeg,text/csv,text/plain">
       <div class="dz-actions">
         <label for="file-upload-${category}" class="btn btn-sm">${isUploading ? "Uploading…" : "Choose File"}</label>
       </div>

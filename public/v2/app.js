@@ -498,6 +498,13 @@ async function approveOcrReview() {
 
     state.ocrReview = null;
     state.recentAddedId = res.invoice?.id || res.purchase?.id || null;
+    if (res.period && res.period !== state.period) {
+      state.period = res.period;
+      await apiRequest("/api/context/period", {
+        method: "POST",
+        body: JSON.stringify({ period: res.period })
+      }, { onUnauthorized: handleUnauthorized }).catch(() => {});
+    }
     await Promise.all([loadDashboard(), loadInvoices()]);
     showToast(res.message || "Bill saved to register");
     setTimeout(() => { state.recentAddedId = null; }, 1600);
