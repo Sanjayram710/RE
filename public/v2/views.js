@@ -232,9 +232,9 @@ export function renderHomeView(state) {
         <p>Start by adding your sales bills or uploading supplier purchase bills. We will calculate your tax credit and payable GST automatically.</p>
         <button type="button" class="btn mag" data-go="file">Add your first bill →</button>
       </div>
-    ` : `
-      <div class="mq" aria-hidden="true"><div>${stripItems}${stripItems}</div></div>
-    `}
+    ` : ""}
+
+    <div class="mq" aria-hidden="true"><div>${stripItems}${stripItems}</div></div>
   `;
 }
 
