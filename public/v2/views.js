@@ -650,7 +650,7 @@ function renderSubmitStep(state, dash, env) {
         </div>
         <div class="row sp2">
           <button type="button" class="btn o" data-go="history">View Filing History →</button>
-          <button type="button" class="btn mag" data-go="home">Back to Home</button>
+          <button type="button" class="btn mag" data-act="start-new-filing">Back to Home</button>
         </div>
       </div>
     `;

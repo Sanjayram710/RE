@@ -62,6 +62,18 @@ export function getCurrentPeriodMMYYYY(date = new Date()) {
   return `${String(date.getMonth() + 1).padStart(2, "0")}${date.getFullYear()}`;
 }
 
+export function getNextPeriodMMYYYY(period) {
+  const str = String(period || "").trim();
+  if (!/^\d{6}$/.test(str)) return getCurrentPeriodMMYYYY();
+  let mm = Number.parseInt(str.slice(0, 2), 10) + 1;
+  let yyyy = Number.parseInt(str.slice(2, 6), 10);
+  if (mm > 12) {
+    mm = 1;
+    yyyy += 1;
+  }
+  return `${String(mm).padStart(2, "0")}${yyyy}`;
+}
+
 export function formatPeriodLabel(period) {
   const str = String(period || "").trim();
   if (!/^\d{6}$/.test(str)) return str || "—";

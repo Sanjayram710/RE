@@ -1,6 +1,6 @@
 import { state, clearBusinessCache } from "./state.js";
 import { apiRequest, abortAllRequests, setCsrfToken } from "./api.js";
-import { escapeHtml, formatPaiseINR, rupeesToPaise, getCurrentPeriodMMYYYY } from "./utils.js";
+import { escapeHtml, formatPaiseINR, rupeesToPaise, getCurrentPeriodMMYYYY, getNextPeriodMMYYYY, formatPeriodLabel } from "./utils.js";
 import {
   initReducedMotionPref,
   applyReducedMotionPref,
@@ -850,6 +850,26 @@ document.addEventListener("click", async (e) => {
       render();
     }
     else if (act === "run-recon") await runReconciliationMatch();
+    else if (act === "start-new-filing") {
+      const nextPeriod = getNextPeriodMMYYYY(state.period);
+      state.filingReceipt = null;
+      state.filingError = "";
+      state.filingStep = 1;
+      state.ocrReview = null;
+      state.recentAddedId = null;
+      state.period = nextPeriod;
+      await apiRequest("/api/context/period", {
+        method: "POST",
+        body: JSON.stringify({ period: nextPeriod })
+      }, { onUnauthorized: handleUnauthorized }).catch(() => {});
+      await apiRequest("/api/filing/draft", {
+        method: "PUT",
+        body: JSON.stringify({ period: nextPeriod, currentStep: 1, draft: {} })
+      }, { onUnauthorized: handleUnauthorized }).catch(() => {});
+      await loadAllBusinessData();
+      navigateTo("home");
+      showToast(`Ready for ${formatPeriodLabel(nextPeriod)} filing`);
+    }
     else if (act === "export-ca-csv") {
       const q = state.period ? `period=${encodeURIComponent(state.period)}&` : "";
       window.open(`/api/ca-review/export?${q}format=csv`, "_blank", "noopener");
