@@ -1,88 +1,61 @@
-# DESIGN.md — SimpleGST design system
+# DESIGN.md — SimpleGST Design System & Motion Spec
 
-Simple, friendly GST filing for small business owners. Plain words first, GST terms second.
-This file is the source of truth for the UI in `index.html`, `landing.html`, `app.js` and `style.css`
-(the `public/` copies are served and must stay identical).
+Simple, plain-English GST filing for ordinary retail shop owners with no accounting background.
+Visual & motion reference: `SimpleGST_ all sections (animated) (1).html` (prototype data/behaviour is **never** copied; all amounts, statuses, invoices, and ARNs come from verified backend APIs).
 
-## 1. Brand
+> **Single Source of Truth (`public/` vs Root)**:
+> `server.js` checks `public/` before root. Root files (`index.html`, `app.js`, `style.css`, `landing.html`, `simplegst-app-v2.html`) are synced to `public/` by `npm run build` (`scripts/sync_public.js`), while modular Phase 2+ assets live directly under `public/v2/` and are preserved untouched.
 
-- Logos: `public/brand/simplegst-wordmark.png` (header, sign-in, landing) and
-  `public/brand/simplegst-mark.png` (app icon, favicon source). `public/brand/favicon-32.png` is the favicon.
-- Never recolour, stretch or redraw the logos. Wordmark height 28–32px.
-- Brand green comes from the logo: `#0A6B4F`.
+---
 
-## 2. Colour
+## 1. Colour Tokens
 
-| Token | Value | Use |
+| Token | Light Value | Use |
 |---|---|---|
-| brand / `primary` | `#0A6B4F` | Primary buttons, active nav, links |
-| brand hover / `primary-container` | `#08583F` | Hover on primary |
-| brand soft / `surface-container-high` | `#E8F3EE` | Active nav background, chips |
-| ink / `on-surface` | `#111827` | Headings and body |
-| ink 2 / `on-surface-variant` | `#4B5563` | Secondary text |
-| ink 3 / `secondary` | `#6B7280` | Meta text (12.5px and up only) |
-| canvas / `surface` | `#F6F8FA` | Page background |
-| line / `outline-variant` | `#E6E9EE` | Card borders, dividers |
+| `--bg` | `#ffffff` | Primary canvas |
+| `--bg2` | `#f6f7fc` | Secondary / table header / input surface |
+| `--card` | `#ffffff` | Card surface |
+| `--ink` | `#12142b` | Primary headings & body (`>= 4.5:1` contrast) |
+| `--mut` | `#5f6487` | Secondary & meta text (`>= 4.5:1` contrast) |
+| `--line` | `#e6e8f2` | Hairline borders & dividers |
+| `--acc` | `#4b3fe0` | Brand Indigo accent (swappable via CSS tokens) |
+| `--on` | `#ffffff` | Text on accent |
+| `--soft` | `#eeedfe` | Soft accent tint & nav hover pill |
+| `--ok` / `--okb` | `#0b7a4b` / `#e3f6ec` | Done / Eligible ITC |
+| `--warn` / `--warnb` | `#944d00` / `#fff4e5` | Due / Simulation / Needs CA Review |
+| `--bad` / `--corb` | `#c93b25` / `#fde8e5` | Error / Delete / Overdue |
 
-Tints have a fixed meaning and are never decorative:
+---
 
-| Meaning | Soft | Strong |
+## 2. Typography & Layout
+
+- **Display / Headings / KPI Numerals**: `Plus Jakarta Sans` (`500`, `700`, `800`), tight tracking (`-0.04em` to `-0.06em`).
+- **Body / Tables**: `Inter` (`400`, `500`, `600`), `15px/1.5`.
+- **Money**: Formatted from **integer paise** with Indian grouping and `font-variant-numeric: tabular-nums`. Zero float math in the browser.
+- **Cards**: `36px` (`28px` on mobile) border radius, `1px solid var(--line)`, **one filled highlight card** (`.kc.hi`) per screen.
+- **Targets & Accessibility**: Minimum `44px x 44px` interactive targets, visible `:focus-visible` outlines, `<label>` on all controls, and mobile bottom tab bar under `768px`.
+
+---
+
+## 3. Shared Motion System (`public/v2/motion.js`)
+
+All animations animate `transform` and `opacity` only (plus SVG `stroke-dashoffset`), live in `public/v2/motion.js`, and respect both `@media (prefers-reduced-motion: reduce)` and the Settings **"Reduce animations"** switch (`[data-reduce-motion="true"]`). Motion never blocks data fetching, buttons, or forms.
+
+| Animation | Token / Timing | Easing / Notes |
 |---|---|---|
-| Sales | `#EEF4FF` | `#2F6FEB` |
-| Purchases | `#F3F0FF` | `#6D4FD8` |
-| Done / tax credit | `#EAF6EF` | `#15803D` |
-| Due / tax to pay | `#FFF5E6` | `#B45309` |
-| Error | `#FDECEC` | `#B91C1C` |
-
-The Tailwind config in each page defines a `brand-50 … brand-900` scale; use it instead of blue/indigo.
-CSS custom properties `--sg-*` in `style.css` mirror these values.
-
-## 3. Type
-
-- One family: **Figtree** (400/500/600/700). Amounts use `tabular-nums`.
-- Scale: page title 28 · card title 19–20 · stat 24 · body 15 · meta 13. Nothing below 12px.
-
-## 4. Icons
-
-- **Material Symbols Rounded**, weight 400, unfilled, 20–22px. One library everywhere.
-- Icons sit beside labels; icon-only buttons need `aria-label`.
-- **No emojis and no decorative Unicode symbols** anywhere in the UI, alerts or generated text.
-
-## 5. Components (see `style.css`, "SimpleGST design system")
-
-- `sidebar-nav-link` + `is-active`: the clean, accessible primary navigation:
-  1. **Home**
-  2. **File GST** (guided 5-step flow)
-  3. **My Bills** (sales invoices, purchase bills, and invoice generation)
-  4. **Reconciliation** (GSTR-2B ITC matching)
-  5. **Startup Express** (7-stage business formation & compliance onboarding)
-  6. **History** (documents repository, uploaded bills, AI extractions & return filing history)
-  7. **My Business** (business profile, multi-GSTIN branches, taxpayer details)
-  8. **Help** (GST Copilot & Tax Experts help)
-  Grouped technical pages highlight their parent via `SIDEBAR_NAV_ALIASES` in `app.js`.
-- Mobile bottom bar: Home, File GST, My Bills, Reconciliation, Help.
-- `ku-card` / `sg-card`: clean modern cards with 18px radius, soft borders, subtle elevation.
-- `ku-hero`: friendly hero banner ("Your GST, made simple. Manage your bills and file GST without complicated accounting.")
-- `ku-step-pill`: interactive 5-step filing progress indicators.
-- `sg-btn-primary`: the high-contrast main action on a screen ("Start Filing GST").
-- `sg-chip`, `sg-pill-due`: period chip and due-date countdown.
-- Shadows only on menus, dialogs, and subtle card hover. No gratuitous gradients or glows.
-
-## 6. Motion
-
-- 150–200ms colour/border transitions for hover and menus. No pulsing dots, glows, floating
-  badges or infinite loops. `prefers-reduced-motion` turns transitions off.
-
-## 7. GST Copilot
-
-- Page: `#viewCopilotSuite`. Chat controller: `askCopilotPrompt`, `handleCopilotSubmit`,
-  `clearCopilotChat` in `app.js`, calling the existing `POST /api/copilot/ask`.
-- Copilot answers from the active GSTIN's records using fixed rules (sales, ITC, missing in 2B,
-  tax liability, 180-day bills, 3B explanation, filing checklist, cash ledger, nil returns).
-  It is not a free-form AI model; the UI must not claim otherwise.
-- Entry points: sidebar, mobile bottom bar, Home "Ask GST Copilot" card.
-
-## 8. Writing
-
-- Customer words first: "Bills from your suppliers", "Tax credit (ITC)", "Tax to pay".
-- No superlatives ("100%", "India's most trusted") and no engineering jargon in labels.
+| Global ease | `--ease` | `cubic-bezier(.2, .8, .2, 1)` |
+| Top bar drop-in (`dn`) | `800ms` | `transform: translateY(-100%) -> none` |
+| Nav sliding pill (`.ni`) | `500ms` (`transform`, `width`), `300ms` (`opacity`) | Shared layout indicator for active & hovered tab |
+| Page transition curtain (`.cu`) | `500ms` in + `550ms` out (~`1.1s` total) | Sweeps **UP only** (`translateY(101%) -> 0 -> -101%`); word reveal `900ms` (`70ms` stagger), chips `600ms` (`80ms` stagger), bar `800ms`; data fetch starts immediately; clicks ignored while running |
+| Page section stagger (`up`) | `700ms`, `70ms` per child | `translateY(34px)` + `opacity: 0 -> 1` |
+| Greeting word reveal (`wd`) | `1000ms`, `200ms` delay + `110ms` stagger | `translateY(110%) rotate(4deg) -> none` |
+| Progress ring (`.rg .p`) | `2000ms`, `500ms` delay | SVG `stroke-dashoffset` sweep |
+| Step rows (`rs`) | `800ms` (`300ms`, `450ms`, `600ms` delays) | `translateX(60px) -> none` |
+| KPI count-up | `1300ms` | Quartic ease-out `1 - (1 - p)^4` on integer paise |
+| Highlight blobs (`bl`) | `7s` & `9s` alternate | Soft radial glow inside `.kc.hi` |
+| Table rows (`r` / `rm`) | `600ms` (`80ms` stagger) / `450ms` delete slide-out | Followed by Undo toast (`4500ms`) |
+| Copilot FAB & panel (`.pn`) | Ripple `2.4s`, panel `550ms` (`scale(.2) -> 1`) | Grows from bottom-right corner; typing dots + typewriter |
+| Mascot (`.mas`, `>= 1400px` desktop) | Bob `3.5s`, blink `4s`, cursor-follow eyes | Bubble reflects **real** filing progress |
+| Scroll progress (`.pb`) & strip (`.mq`) | `scaleX` on scroll / `28s linear infinite` | Strip displays **real** due date, steps done, and ITC |
+| Desktop card glow & `.mag` buttons | Pointer-move (`pointer: fine` only) | Disabled on touch/mobile |
+| Filing celebration (`cf2`) | `1.8s–3.2s` confetti | Triggers **only** after genuine `POST /api/returns/gstr3b/file` `"Filed (simulation)"` success |

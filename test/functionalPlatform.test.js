@@ -411,7 +411,7 @@ test("Document Management: List and delete uploaded files", async () => {
   await handleFunctionalApi(getAuthReq(), uploadRes, "/api/documents/upload", "POST", {}, {
     filename: "Doc_For_Deletion.pdf",
     category: "purchase_bill",
-    content: "Dummy Content for Deletion Test"
+    content: "%PDF-1.4\nDummy Content for Deletion Test"
   });
   assert.equal(uploadRes.statusCode, 201);
   const doc = JSON.parse(uploadRes.body).document;

@@ -1,4 +1,5 @@
 import { handleFunctionalApi, isAllowedOrigin } from "./lib/functionalApi.js";
+import { assertProductionSafety } from "./scripts/check_prod_env.js";
 import { getSwaggerHtml, getOpenApiSpec } from "./lib/swaggerDocs.js";
 import { parseMultipartBuffer } from "./lib/multipart.js";
 import http from "node:http";
@@ -485,7 +486,7 @@ export async function handleRequest(req, res) {
       const body = await readBody(req);
       const { planId, clientName, pan, phone, slot, couponCode } = body;
       const cleanPan = (pan || "CVBBC4433W").toUpperCase();
-      
+
       let basePrice = 2499;
       let planTitle = "Salaried & Multi-Form 16 Tax Filing";
       if (planId === "plan-free-trial") { basePrice = 2999; planTitle = "1-Month Free Pro CA Advisory & Filing Trial"; }
@@ -504,7 +505,7 @@ export async function handleRequest(req, res) {
       }
       const finalPrice = Math.round(basePrice * (1 - discountPercent / 100));
       const bookingId = `CT-EXP-${Date.now().toString().slice(-6)}`;
-      
+
       const record = {
         bookingId,
         clientName: clientName || "Sanjay Harshi",
@@ -1429,6 +1430,14 @@ export async function handleRequest(req, res) {
       relativePath = pathname.replace(/^\//, "");
     }
 
+    // Block static serving of internal directories (uploads, backups, DB, source)
+    const normalizedRel = relativePath.replace(/\\/g, "/").replace(/^\/+/, "");
+    if (normalizedRel.includes("..") || /^(data|lib|scripts|test|docs|node_modules)\b/i.test(normalizedRel)) {
+      res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end("Forbidden");
+      return;
+    }
+
     // Check candidate locations across public/ and root directory
     const candidatePaths = [
       path.join(__dirname, "public", relativePath),
@@ -1444,7 +1453,7 @@ export async function handleRequest(req, res) {
           targetFile = p;
           break;
         }
-      } catch {}
+      } catch { }
     }
 
     if (!targetFile) {
@@ -1457,7 +1466,16 @@ export async function handleRequest(req, res) {
       const content = await fs.promises.readFile(targetFile);
       const ext = path.extname(targetFile).toLowerCase();
       const contentType = MIME_TYPES[ext] || "application/octet-stream";
-      res.writeHead(200, { "Content-Type": contentType });
+      const headers = { "Content-Type": contentType };
+      if (ext === ".html") {
+        const isV2App = relativePath === "simplegst-app-v2.html";
+        headers["X-Content-Type-Options"] = "nosniff";
+        headers["X-Frame-Options"] = "DENY";
+        headers["Content-Security-Policy"] = isV2App
+          ? "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'"
+          : "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'";
+      }
+      res.writeHead(200, headers);
       res.end(content);
       return;
     } catch (err) {
@@ -1509,6 +1527,7 @@ function escapeXmlVal(str) {
 
 // Start server if executed directly
 if (process.argv[1] && process.argv[1].endsWith("server.js")) {
+  assertProductionSafety();
   const server = createServer();
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {

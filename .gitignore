@@ -12,6 +12,8 @@ stitch_simplegst_compliance_platform/
 data/simplegst.db
 data/uploads/*
 !data/uploads/.gitkeep
+data/backups/*
+!data/backups/.gitkeep
 
 
 # Uploaded reference screen templates

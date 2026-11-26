@@ -38,3 +38,9 @@ if (!allMatch) {
   console.log('All public/ files are 100% byte-for-byte identical.');
 }
 
+// Preserve public/v2/ modular frontend (never deleted or overwritten by sync)
+if (fs.existsSync('public/v2')) {
+  const v2Files = fs.readdirSync('public/v2');
+  console.log(`Preserved public/v2/ modular assets (${v2Files.length} entries).`);
+}
+
