@@ -47,7 +47,14 @@ export function createInitialState() {
     filings: [],
     expertPlans: [],
     startupProfile: null,
-    copilotMessages: []
+    copilotMessages: [],
+    ocrReview: null,
+    uploadingCategory: null,
+    recentAddedId: null,
+    reconciliation: { summary: null, items: [], loading: "idle", error: "" },
+    filingReceipt: null,
+    submittingReturn: false,
+    filingError: ""
   };
 }
 
@@ -61,6 +68,13 @@ export function clearBusinessCache() {
   state.purchases = [];
   state.documents = [];
   state.filings = [];
+  state.ocrReview = null;
+  state.uploadingCategory = null;
+  state.recentAddedId = null;
+  state.reconciliation = { summary: null, items: [], loading: "idle", error: "" };
+  state.filingReceipt = null;
+  state.submittingReturn = false;
+  state.filingError = "";
   state.errors.dashboard = "";
   state.errors.sales = "";
   state.errors.purchases = "";

@@ -237,58 +237,15 @@ export function renderFileView(state) {
 
   let bodyHtml = "";
   if (step === 1) {
-    bodyHtml = renderInvoiceListPanel("sales", state.sales, state.loading.sales, state.errors.sales);
+    bodyHtml = renderInvoiceListPanel("sales", state.sales, state.loading.sales, state.errors.sales, state, true);
   } else if (step === 2) {
-    bodyHtml = renderInvoiceListPanel("purchases", state.purchases, state.loading.purchases, state.errors.purchases);
+    bodyHtml = renderInvoiceListPanel("purchases", state.purchases, state.loading.purchases, state.errors.purchases, state, true);
   } else if (step === 3) {
-    bodyHtml = `
-      <div class="card">
-        <h2>Step 3: Check tax credit &amp; reconciliation</h2>
-        <p class="sub">Compare your purchase bills against GSTR-2B and verify the 180-day payment rule before claiming ITC.</p>
-        <div class="banner info">Reconciliation summary and mismatch explanations are wired in Phase 3.</div>
-        <div class="row sp2">
-          <button type="button" class="btn o" data-step="2">← Back</button>
-          <button type="button" class="btn mag" data-step="4">Continue to Review Tax →</button>
-        </div>
-      </div>
-    `;
+    bodyHtml = renderReconciliationStep(state);
   } else if (step === 4) {
-    const m = dash.metrics || {};
-    const p = m.paise || {
-      totalOutputLiabilityPaise: rupeesToPaise(m.totalOutputLiability),
-      totalItcUtilizedPaise: rupeesToPaise(m.totalItcUtilized),
-      netCashPayablePaise: rupeesToPaise(m.netCashPayable)
-    };
-    bodyHtml = `
-      <div class="card">
-        <h2>Step 4: Review tax payable</h2>
-        <p class="sub">Computed by the backend Rule 88A engine in integer paise.</p>
-        <div class="kp kp-3">
-          <div class="kc"><small>Gross Tax on Sales</small><div class="d" data-count-paise="${p.totalOutputLiabilityPaise}">${formatPaiseINR(p.totalOutputLiabilityPaise)}</div></div>
-          <div class="kc"><small>Eligible Credit Used</small><div class="d" data-count-paise="${p.totalItcUtilizedPaise}">${formatPaiseINR(p.totalItcUtilizedPaise)}</div></div>
-          <div class="kc hi"><small>Net Cash Payable</small><div class="d" data-count-paise="${p.netCashPayablePaise}">${formatPaiseINR(p.netCashPayablePaise)}</div></div>
-        </div>
-        <div class="row sp2">
-          <button type="button" class="btn o" data-step="3">← Back</button>
-          <button type="button" class="btn mag" data-step="5">Continue to Submit →</button>
-        </div>
-      </div>
-    `;
+    bodyHtml = renderTaxPayableStep(state, dash);
   } else {
-    bodyHtml = env.preparationOnly ? `
-      <div class="card">
-        <h2>Step 5: Preparation only</h2>
-        <div class="banner info" role="status"><strong>Preparation only: filing is not connected yet.</strong> Export your CA review list or return summary for portal upload.</div>
-        <button type="button" class="btn o" data-step="4">← Back</button>
-      </div>
-    ` : `
-      <div class="card">
-        <h2>Step 5: Review &amp; Submit (Simulation)</h2>
-        <div class="banner warn" role="status"><strong>Simulation Mode:</strong> This submission records a local simulated acknowledgement (<code>SIM-...</code>) and does not transmit to GSTN.</div>
-        <p class="sub">Interactive EVC OTP confirmation and receipt flow will be completed in Phase 3.</p>
-        <button type="button" class="btn o" data-step="4">← Back</button>
-      </div>
-    `;
+    bodyHtml = renderSubmitStep(state, dash, env);
   }
 
   return `
@@ -305,51 +262,409 @@ export function renderFileView(state) {
   `;
 }
 
-function renderInvoiceListPanel(kind, rows, loadState, errMsg) {
-  const isSales = kind === "sales";
-  if (loadState === "loading") return renderLoadingCards(2);
-  if (loadState === "error") return renderErrorBanner(errMsg || `Could not load ${kind}.`, `reload-${kind}`);
+function computeOcrPreviewPaise(fields, activeStateCode) {
+  const taxablePaise = rupeesToPaise(fields.taxableAmount || 0);
+  const gstRate = Number(fields.gstRate !== undefined ? fields.gstRate : 18);
+  const pos = String(fields.pos || activeStateCode || "27").slice(0, 2);
+  const isInterstate = pos !== String(activeStateCode || "27").slice(0, 2);
+  const totalTaxPaise = Math.round((taxablePaise * gstRate) / 100);
+  const igstPaise = isInterstate ? totalTaxPaise : 0;
+  const cgstPaise = isInterstate ? 0 : Math.floor(totalTaxPaise / 2);
+  const sgstPaise = isInterstate ? 0 : (totalTaxPaise - cgstPaise);
+  return {
+    isInterstate,
+    taxablePaise,
+    igstPaise,
+    cgstPaise,
+    sgstPaise,
+    totalTaxPaise,
+    totalAmountPaise: taxablePaise + totalTaxPaise
+  };
+}
 
-  if (!rows || rows.length === 0) {
-    return `
-      <div class="empty">
-        <b>No ${isSales ? "sales" : "purchase"} bills yet</b>
-        <p>Bills uploaded or created for this GSTIN and period will appear here.</p>
+function renderUploadAndOcrBox(category, state) {
+  const isSales = category === "sales_invoice";
+  const isUploading = state.uploadingCategory === category;
+  const ocr = state.ocrReview && state.ocrReview.category === category ? state.ocrReview : null;
+  const activeStateCode = state.activeGstin?.state_code || "27";
+
+  let ocrHtml = "";
+  if (ocr) {
+    const f = ocr.fields || {};
+    const confPct = Math.round(Number(ocr.confidenceScore || 0) * 100);
+    const confClass = confPct >= 85 && !ocr.isScanned ? "hi" : confPct >= 60 ? "mid" : "low";
+    const confLabel = ocr.isScanned ? `Scanned (${confPct}% confidence)` : `${confPct}% confidence`;
+    const warnings = ocr.warnings || [];
+    const needsConfirm = Number(ocr.confidenceScore || 0) < 0.85 || ocr.isScanned || warnings.length > 0;
+    const prev = computeOcrPreviewPaise(f, activeStateCode);
+
+    ocrHtml = `
+      <div class="ocr-card" aria-live="polite">
+        <div class="ocr-head">
+          <h3>Review Extracted ${isSales ? "Sales Invoice" : "Purchase Bill"} · ${escapeHtml(ocr.filename)}</h3>
+          <span class="conf-badge ${confClass}">${escapeHtml(confLabel)}</span>
+        </div>
+
+        ${(warnings.length > 0 || ocr.isScanned) ? `
+          <div class="ocr-warn" role="alert">
+            <strong>Please verify before saving:</strong>
+            <ul>
+              ${ocr.isScanned ? "<li>Document appears scanned or image-based; confirm all numbers carefully.</li>" : ""}
+              ${warnings.map(w => `<li>${escapeHtml(w)}</li>`).join("")}
+            </ul>
+          </div>
+        ` : ""}
+
+        ${ocr.error ? `<div class="banner err" role="alert"><span>${escapeHtml(ocr.error)}</span></div>` : ""}
+
+        <form id="ocr-approve-form" novalidate>
+          <div class="ocr-grid">
+            <div class="ocr-field">
+              <label for="ocr-invoiceNumber">Invoice Number *</label>
+              <input id="ocr-invoiceNumber" data-ocr-field="invoiceNumber" type="text" required value="${escapeHtml(f.invoiceNumber || "")}">
+            </div>
+            <div class="ocr-field">
+              <label for="ocr-invoiceDate">Invoice Date *</label>
+              <input id="ocr-invoiceDate" data-ocr-field="invoiceDate" type="date" required value="${escapeHtml(f.invoiceDate || "")}">
+            </div>
+            <div class="ocr-field">
+              <label for="ocr-partyName">${isSales ? "Customer Name *" : "Supplier Name *"}</label>
+              <input id="ocr-partyName" data-ocr-field="partyName" type="text" required value="${escapeHtml(f.partyName || "")}">
+            </div>
+            <div class="ocr-field">
+              <label for="ocr-gstin">${isSales ? "Customer GSTIN" : "Supplier GSTIN *"}</label>
+              <input id="ocr-gstin" data-ocr-field="gstin" type="text" maxlength="15" value="${escapeHtml(f.gstin || "")}">
+            </div>
+            <div class="ocr-field">
+              <label for="ocr-pos">Place of Supply (State Code)</label>
+              <input id="ocr-pos" data-ocr-field="pos" type="text" maxlength="2" value="${escapeHtml(f.pos || activeStateCode)}">
+            </div>
+            <div class="ocr-field">
+              <label for="ocr-taxableAmount">Taxable Value (₹) *</label>
+              <input id="ocr-taxableAmount" data-ocr-field="taxableAmount" type="number" step="0.01" min="0" required value="${escapeHtml(String(f.taxableAmount ?? ""))}">
+            </div>
+            <div class="ocr-field">
+              <label for="ocr-gstRate">GST Rate (%)</label>
+              <select id="ocr-gstRate" data-ocr-field="gstRate">
+                ${[0, 5, 12, 18, 28].map(r => `<option value="${r}" ${Number(f.gstRate ?? 18) === r ? "selected" : ""}>${r}%</option>`).join("")}
+              </select>
+            </div>
+            ${!isSales ? `
+              <div class="ocr-field">
+                <label for="ocr-itcEligibility">ITC Eligibility</label>
+                <select id="ocr-itcEligibility" data-ocr-field="itcEligibility">
+                  <option value="ELIGIBLE" ${(f.itcEligibility || "ELIGIBLE") === "ELIGIBLE" ? "selected" : ""}>Eligible ITC</option>
+                  <option value="INELIGIBLE_17_5" ${f.itcEligibility === "INELIGIBLE_17_5" ? "selected" : ""}>Ineligible (Sec 17(5))</option>
+                  <option value="INELIGIBLE_OTHER" ${f.itcEligibility === "INELIGIBLE_OTHER" ? "selected" : ""}>Ineligible (Other)</option>
+                </select>
+              </div>
+              <div class="ocr-field">
+                <label for="ocr-isRcm">Reverse Charge (RCM)</label>
+                <select id="ocr-isRcm" data-ocr-field="isRcm">
+                  <option value="false" ${!f.isRcm ? "selected" : ""}>No (Regular)</option>
+                  <option value="true" ${f.isRcm ? "selected" : ""}>Yes (RCM Cash Liability)</option>
+                </select>
+              </div>
+            ` : ""}
+          </div>
+
+          <div class="ocr-tax-preview" id="ocr-tax-preview">
+            <span>Supply: <b>${prev.isInterstate ? "Interstate (IGST)" : "Intrastate (CGST + SGST)"}</b></span>
+            <span>CGST: <b>${formatPaiseINR(prev.cgstPaise)}</b></span>
+            <span>SGST: <b>${formatPaiseINR(prev.sgstPaise)}</b></span>
+            <span>IGST: <b>${formatPaiseINR(prev.igstPaise)}</b></span>
+            <span>Total Tax: <b>${formatPaiseINR(prev.totalTaxPaise)}</b></span>
+            <span>Total Bill: <b>${formatPaiseINR(prev.totalAmountPaise)}</b></span>
+          </div>
+
+          ${needsConfirm ? `
+            <label class="ocr-confirm-box">
+              <input type="checkbox" id="ocr-confirm-check" ${ocr.confirmed ? "checked" : ""}>
+              <span>I have checked the extracted numbers against the bill and confirm they are accurate.</span>
+            </label>
+          ` : ""}
+
+          <div class="ocr-actions">
+            <button type="button" class="btn o btn-sm" data-act="discard-ocr">Discard</button>
+            <button type="submit" class="btn mag" id="ocr-save-btn" ${ocr.saving || (needsConfirm && !ocr.confirmed) ? "disabled" : ""}>
+              ${ocr.saving ? "Saving…" : "Confirm & Save"}
+            </button>
+          </div>
+        </form>
       </div>
     `;
   }
 
   return `
-    <div class="card">
-      <div class="row sp2" style="margin-bottom:14px">
-        <h2>${isSales ? "Sales Invoices" : "Purchase Bills"} (${rows.length})</h2>
-        <button type="button" class="btn mag" data-step="${isSales ? 2 : 3}">Continue →</button>
+    <div class="dz ${isUploading ? "on" : ""}" data-drop-cat="${category}">
+      <h3>${isSales ? "Upload Sales Invoice (PDF / PNG / JPG)" : "Upload Purchase Bill (PDF / PNG / JPG)"}</h3>
+      <p>${isUploading ? "Extracting fields from your document…" : "Drag and drop a bill here or choose a file (max 15 MB). You can review and edit extracted GST fields before saving."}</p>
+      <input class="dz-input" type="file" id="file-upload-${category}" data-upload-cat="${category}" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg">
+      <div class="dz-actions">
+        <label for="file-upload-${category}" class="btn btn-sm">${isUploading ? "Uploading…" : "Choose File"}</label>
       </div>
-      <div class="tw">
-        <table>
-          <thead>
-            <tr>
-              <th>Invoice #</th>
-              <th>${isSales ? "Customer" : "Supplier"}</th>
-              <th>Date</th>
-              <th>Taxable</th>
-              <th>GST</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map(r => `
-              <tr class="r">
-                <td class="num"><strong>${escapeHtml(r.invoice_number)}</strong></td>
-                <td>${escapeHtml(isSales ? r.customer_name : r.supplier_name)}</td>
-                <td>${formatDateIN(r.invoice_date)}</td>
-                <td class="num">${formatPaiseINR(rupeesToPaise(r.taxable_amount))}</td>
-                <td class="num">${formatPaiseINR(rupeesToPaise(r.total_tax))}</td>
-                <td class="num"><strong>${formatPaiseINR(rupeesToPaise(r.total_amount))}</strong></td>
+    </div>
+    ${ocrHtml}
+  `;
+}
+
+function renderInvoiceListPanel(kind, rows, loadState, errMsg, state, showStepNav = false) {
+  const isSales = kind === "sales";
+  const category = isSales ? "sales_invoice" : "purchase_bill";
+  if (loadState === "loading") return renderUploadAndOcrBox(category, state) + renderLoadingCards(2);
+  if (loadState === "error") return renderUploadAndOcrBox(category, state) + renderErrorBanner(errMsg || `Could not load ${kind}.`, `reload-${kind}`);
+
+  return `
+    ${renderUploadAndOcrBox(category, state)}
+    ${(!rows || rows.length === 0) ? `
+      <div class="empty">
+        <b>No ${isSales ? "sales" : "purchase"} bills yet</b>
+        <p>Upload a ${isSales ? "sales invoice" : "supplier bill"} above for this GSTIN and period.</p>
+        ${showStepNav ? `<button type="button" class="btn o" data-step="${isSales ? 2 : 3}">Continue to next step →</button>` : ""}
+      </div>
+    ` : `
+      <div class="card">
+        <div class="recon-actions">
+          <h2>${isSales ? "Sales Invoices" : "Purchase Bills"} (${rows.length})</h2>
+          ${showStepNav ? `
+            <div class="dz-actions">
+              ${!isSales ? `<button type="button" class="btn o" data-step="1">← Back</button>` : ""}
+              <button type="button" class="btn mag" data-step="${isSales ? 2 : 3}">Continue →</button>
+            </div>
+          ` : ""}
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice #</th>
+                <th>${isSales ? "Customer" : "Supplier"}</th>
+                <th>Date</th>
+                <th>Taxable</th>
+                <th>GST</th>
+                <th>Total</th>
+                <th>Action</th>
               </tr>
-            `).join("")}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${rows.map(r => `
+                <tr class="r${state.recentAddedId === r.id ? " new-row" : ""}" data-row-id="${escapeHtml(r.id)}">
+                  <td class="num"><strong>${escapeHtml(r.invoice_number)}</strong></td>
+                  <td>${escapeHtml(isSales ? r.customer_name : r.supplier_name)}</td>
+                  <td>${formatDateIN(r.invoice_date)}</td>
+                  <td class="num">${formatPaiseINR(rupeesToPaise(r.taxable_amount))}</td>
+                  <td class="num">${formatPaiseINR(rupeesToPaise(r.total_tax))}</td>
+                  <td class="num"><strong>${formatPaiseINR(rupeesToPaise(r.total_amount))}</strong></td>
+                  <td>
+                    <button type="button" class="del" data-del-kind="${kind}" data-del-id="${escapeHtml(r.id)}" data-del-num="${escapeHtml(r.invoice_number)}">Delete</button>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `}
+  `;
+}
+
+function renderReconciliationStep(state) {
+  const recon = state.reconciliation || { summary: null, items: [], loading: "idle", error: "" };
+  const sum = recon.summary || {};
+  const items = recon.items || [];
+  const dash = state.dashboard || {};
+  const m = dash.metrics || {};
+
+  return `
+    <div class="card">
+      <div class="recon-actions">
+        <div>
+          <h2>Step 3: Check tax credit &amp; GSTR-2B reconciliation</h2>
+          <p class="sub">Matches your purchase bills against GSTR-2B and checks the 180-day supplier payment rule (Sec 16(2)).</p>
+        </div>
+        <button type="button" class="btn btn-sm" data-act="run-recon" ${recon.loading === "loading" ? "disabled" : ""}>
+          ${recon.loading === "loading" ? "Checking…" : "Run GSTR-2B Match"}
+        </button>
+      </div>
+
+      ${recon.error ? renderErrorBanner(recon.error, "run-recon") : ""}
+
+      <div class="kp">
+        <div class="kc"><small>Matched in GSTR-2B</small><div class="d">${Number(sum.matchedCount || 0)}</div></div>
+        <div class="kc"><small>Mismatched / Missing</small><div class="d">${Number(sum.mismatchedCount || 0) + Number(sum.missingIn2bCount || 0)}</div></div>
+        <div class="kc"><small>180-Day Rule 37 Alerts</small><div class="d">${Number(sum.rule37RiskCount || m.rule37RiskCount || 0)}</div></div>
+        <div class="kc hi"><small>Eligible ITC</small><div class="d">${formatPaiseINR(rupeesToPaise(sum.eligibleItc ?? m.totalEligibleItc ?? 0))}</div></div>
+      </div>
+
+      ${items.length === 0 ? `
+        <div class="empty">
+          <b>No GSTR-2B comparison rows yet</b>
+          <p>Click "Run GSTR-2B Match" above after uploading purchase bills to check credit eligibility.</p>
+        </div>
+      ` : `
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Supplier</th>
+                <th>Invoice #</th>
+                <th>Books Tax</th>
+                <th>GSTR-2B Tax</th>
+                <th>Guidance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(it => {
+                const st = it.match_status || "UNMATCHED";
+                const bCls = st === "MATCHED" ? "ok" : st === "MISMATCHED" ? "warn" : "bad";
+                return `
+                  <tr class="r">
+                    <td><span class="badge ${bCls}">${escapeHtml(st)}</span></td>
+                    <td>${escapeHtml(it.supplier_name || it.supplier_gstin || "Supplier")}</td>
+                    <td class="num">${escapeHtml(it.invoice_number || "—")}</td>
+                    <td class="num">${formatPaiseINR(rupeesToPaise(it.books_tax || 0))}</td>
+                    <td class="num">${formatPaiseINR(rupeesToPaise(it.gstr2b_tax || 0))}</td>
+                    <td>${escapeHtml(it.action || it.investigation_notes || "Check supplier return")}</td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      `}
+
+      <div class="row sp2">
+        <button type="button" class="btn o" data-step="2">← Back</button>
+        <button type="button" class="btn mag" data-step="4">Continue to Review Tax →</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTaxPayableStep(state, dash) {
+  const m = dash.metrics || {};
+  const p = m.paise || {
+    totalOutputLiabilityPaise: rupeesToPaise(m.totalOutputLiability),
+    totalItcUtilizedPaise: rupeesToPaise(m.totalItcUtilized),
+    netCashPayablePaise: rupeesToPaise(m.netCashPayable),
+    rcmLiabilityPaise: rupeesToPaise(m.rcmLiability || 0)
+  };
+  const matrix = dash.setoffMatrix || [];
+
+  return `
+    <div class="card">
+      <div class="ca-bar">
+        <div>
+          <h2>Step 4: Review tax payable</h2>
+          <p class="sub">Rule 88A cross-utilization order and RCM cash-only items computed in integer paise. Statutory references are flagged for CA review.</p>
+        </div>
+        <button type="button" class="btn o btn-sm" data-act="export-ca-csv">Export CA Review List (CSV)</button>
+      </div>
+
+      <div class="kp kp-3">
+        <div class="kc"><small>Gross Tax on Sales</small><div class="d" data-count-paise="${p.totalOutputLiabilityPaise}">${formatPaiseINR(p.totalOutputLiabilityPaise)}</div></div>
+        <div class="kc"><small>Eligible Credit Used</small><div class="d" data-count-paise="${p.totalItcUtilizedPaise}">${formatPaiseINR(p.totalItcUtilizedPaise)}</div></div>
+        <div class="kc hi"><small>Net Cash Payable</small><div class="d" data-count-paise="${p.netCashPayablePaise}">${formatPaiseINR(p.netCashPayablePaise)}</div></div>
+      </div>
+
+      ${Number(p.rcmLiabilityPaise || 0) > 0 ? `
+        <div class="rcm-box" role="status">
+          <h4>Reverse Charge (RCM) Cash Liability: ${formatPaiseINR(p.rcmLiabilityPaise)}</h4>
+          <p>Under Sec 9(3)/9(4), Reverse Charge tax must be paid in cash before claiming matching input credit.</p>
+        </div>
+      ` : ""}
+
+      ${matrix.length > 0 ? `
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Tax Head</th>
+                <th>Output Tax</th>
+                <th>Credit Used (Rule 88A)</th>
+                <th>Cash Payable</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${matrix.map(row => `
+                <tr class="r">
+                  <td><strong>${escapeHtml(row.head || row.taxHead || "")}</strong></td>
+                  <td class="num">${formatPaiseINR(rupeesToPaise(row.output || row.outputLiability || 0))}</td>
+                  <td class="num">${formatPaiseINR(rupeesToPaise(row.itcUsed || row.creditUsed || 0))}</td>
+                  <td class="num"><strong>${formatPaiseINR(rupeesToPaise(row.cashPayable || 0))}</strong></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      ` : ""}
+
+      <div class="row sp2">
+        <button type="button" class="btn o" data-step="3">← Back</button>
+        <button type="button" class="btn mag" data-step="5">Continue to Submit →</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderSubmitStep(state, dash, env) {
+  if (env.preparationOnly) {
+    return `
+      <div class="card">
+        <h2>Step 5: Preparation only</h2>
+        <div class="banner info" role="status"><strong>Preparation only: filing is not connected yet.</strong> Export your CA review list or return summary for portal upload.</div>
+        <div class="row sp2">
+          <button type="button" class="btn o" data-step="4">← Back</button>
+          <button type="button" class="btn o" data-act="export-ca-csv">Export CA Review List (CSV)</button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (state.filingReceipt) {
+    const rec = state.filingReceipt;
+    return `
+      <div class="sim-receipt">
+        <span class="sim-badge">${escapeHtml(rec.displayStatus || "Filed (simulation)")}</span>
+        <h2>Return Submitted (Simulation)</h2>
+        <p class="sub">Your local simulated GSTR-3B acknowledgement has been recorded. Nothing was sent to the live GSTN portal.</p>
+        <div class="kp kp-3">
+          <div class="kc"><small>Period</small><div class="d">${escapeHtml(rec.period || state.period)}</div></div>
+          <div class="kc"><small>Status</small><div class="d">${escapeHtml(rec.displayStatus || "Filed (simulation)")}</div></div>
+          <div class="kc hi"><small>Simulation ARN</small><div class="d">${escapeHtml(rec.arn || "")}</div></div>
+        </div>
+        <div class="row sp2">
+          <button type="button" class="btn o" data-go="history">View Filing History →</button>
+          <button type="button" class="btn mag" data-go="home">Back to Home</button>
+        </div>
+      </div>
+    `;
+  }
+
+  const m = dash.metrics || {};
+  const netCashPaise = m.paise ? m.paise.netCashPayablePaise : rupeesToPaise(m.netCashPayable || 0);
+
+  return `
+    <div class="card">
+      <h2>Step 5: Review &amp; Submit (Simulation)</h2>
+      <div class="banner warn" role="status"><strong>Simulation Mode:</strong> This submission records a local simulated acknowledgement (<code>SIM-...</code>) and does not transmit to GSTN.</div>
+      ${state.filingError ? `<div class="banner err" role="alert"><span>${escapeHtml(state.filingError)}</span></div>` : ""}
+
+      <div class="otp-card">
+        <p class="sub">Net Cash Payable for <strong>${escapeHtml(dash.periodLabel || state.period)}</strong>: <strong>${formatPaiseINR(netCashPaise)}</strong></p>
+        <form id="sim-file-form" novalidate>
+          <div class="field">
+            <label for="sim-otp-input">Enter 6-digit Simulation EVC OTP (e.g. 123456)</label>
+            <input id="sim-otp-input" class="otp-input" type="text" inputmode="numeric" maxlength="6" placeholder="123456" required>
+          </div>
+          <div class="row sp2">
+            <button type="button" class="btn o" data-step="4">← Back</button>
+            <button type="submit" class="btn mag" id="sim-submit-btn" ${state.submittingReturn ? "disabled" : ""}>
+              ${state.submittingReturn ? "Submitting…" : "Submit GSTR-3B (Simulation)"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   `;
@@ -365,8 +680,8 @@ export function renderInvoicesView(state) {
       <button type="button" class="sp ${tab === "purchases" ? "on" : ""}" data-inv-tab="purchases"><b>P</b>Purchases (${state.purchases.length})</button>
     </div>
     ${tab === "sales"
-      ? renderInvoiceListPanel("sales", state.sales, state.loading.sales, state.errors.sales)
-      : renderInvoiceListPanel("purchases", state.purchases, state.loading.purchases, state.errors.purchases)}
+      ? renderInvoiceListPanel("sales", state.sales, state.loading.sales, state.errors.sales, state, false)
+      : renderInvoiceListPanel("purchases", state.purchases, state.loading.purchases, state.errors.purchases, state, false)}
   `;
 }
 

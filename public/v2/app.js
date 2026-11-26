@@ -1,6 +1,6 @@
 import { state, clearBusinessCache } from "./state.js";
 import { apiRequest, abortAllRequests, setCsrfToken } from "./api.js";
-import { escapeHtml } from "./utils.js";
+import { escapeHtml, formatPaiseINR, rupeesToPaise } from "./utils.js";
 import {
   initReducedMotionPref,
   applyReducedMotionPref,
@@ -12,7 +12,9 @@ import {
   animateCountUps,
   animateProgressRing,
   bindDesktopPointerMotion,
-  bindScrollProgress
+  bindScrollProgress,
+  launchCelebrationConfetti,
+  MOTION_TOKENS
 } from "./motion.js";
 import {
   renderAuthView,
@@ -39,12 +41,22 @@ const ROUTE_INFO = {
   settings: { eyebrow: "(08) Settings", title: "Settings", subtitle: "Branches, preferences, and motion", chips: ["Multi-GSTIN", "Preferences", "Profile"] }
 };
 
-function showToast(message) {
+let toastTimer = null;
+function showToast(message, undoFn = null) {
   const el = $("#toast");
   if (!el) return;
-  el.textContent = message;
+  if (toastTimer) clearTimeout(toastTimer);
+  el.innerHTML = undoFn
+    ? `<span>${escapeHtml(message)}</span><button type="button" class="toast-undo" id="toast-undo-btn">Undo</button>`
+    : `<span>${escapeHtml(message)}</span>`;
   el.classList.add("s");
-  setTimeout(() => el.classList.remove("s"), 2800);
+  if (undoFn) {
+    $("#toast-undo-btn")?.addEventListener("click", async () => {
+      el.classList.remove("s");
+      await undoFn();
+    }, { once: true });
+  }
+  toastTimer = setTimeout(() => el.classList.remove("s"), undoFn ? 4800 : 2800);
 }
 
 function handleUnauthorized(reason) {
@@ -191,6 +203,69 @@ function bindViewForms() {
       await askCopilot(q);
     });
   }
+
+  const ocrForm = $("#ocr-approve-form");
+  if (ocrForm && state.ocrReview) {
+    const updatePreviewDom = () => {
+      const f = state.ocrReview.fields;
+      const activeState = state.activeGstin?.state_code || "27";
+      const taxablePaise = rupeesToPaise(f.taxableAmount || 0);
+      const gstRate = Number(f.gstRate !== undefined ? f.gstRate : 18);
+      const pos = String(f.pos || activeState).slice(0, 2);
+      const isInter = pos !== String(activeState).slice(0, 2);
+      const totalTax = Math.round((taxablePaise * gstRate) / 100);
+      const igst = isInter ? totalTax : 0;
+      const cgst = isInter ? 0 : Math.floor(totalTax / 2);
+      const sgst = isInter ? 0 : (totalTax - cgst);
+      const prevEl = $("#ocr-tax-preview");
+      if (prevEl) {
+        prevEl.innerHTML = `
+          <span>Supply: <b>${isInter ? "Interstate (IGST)" : "Intrastate (CGST + SGST)"}</b></span>
+          <span>CGST: <b>${formatPaiseINR(cgst)}</b></span>
+          <span>SGST: <b>${formatPaiseINR(sgst)}</b></span>
+          <span>IGST: <b>${formatPaiseINR(igst)}</b></span>
+          <span>Total Tax: <b>${formatPaiseINR(totalTax)}</b></span>
+          <span>Total Bill: <b>${formatPaiseINR(taxablePaise + totalTax)}</b></span>
+        `;
+      }
+    };
+
+    ocrForm.querySelectorAll("[data-ocr-field]").forEach((inp) => {
+      const syncField = () => {
+        const key = inp.dataset.ocrField;
+        let val = inp.value;
+        if (key === "gstRate") val = Number(val);
+        else if (key === "isRcm") val = val === "true";
+        state.ocrReview.fields[key] = val;
+        updatePreviewDom();
+      };
+      inp.addEventListener("input", syncField);
+      inp.addEventListener("change", syncField);
+    });
+
+    const confirmChk = $("#ocr-confirm-check");
+    if (confirmChk) {
+      confirmChk.addEventListener("change", () => {
+        state.ocrReview.confirmed = confirmChk.checked;
+        const btn = $("#ocr-save-btn");
+        if (btn) btn.disabled = !confirmChk.checked || state.ocrReview.saving;
+      });
+    }
+
+    ocrForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await approveOcrReview();
+    });
+  }
+
+  const simForm = $("#sim-file-form");
+  if (simForm) {
+    simForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const otp = ($("#sim-otp-input")?.value || "").trim();
+      await submitSimulatedReturn(otp);
+    });
+  }
 }
 
 function applySessionPayload(data) {
@@ -282,8 +357,240 @@ async function loadSecondary() {
   } catch {}
 }
 
+async function loadReconciliation() {
+  state.reconciliation.loading = "loading";
+  state.reconciliation.error = "";
+  render();
+  try {
+    const q = state.period ? `?period=${encodeURIComponent(state.period)}` : "";
+    const [sumRes, itemsRes] = await Promise.all([
+      apiRequest(`/api/reconciliation/summary${q}`, {}, { onUnauthorized: handleUnauthorized }),
+      apiRequest(`/api/reconciliation/items${q}`, {}, { onUnauthorized: handleUnauthorized })
+    ]);
+    state.reconciliation.summary = sumRes.summary || sumRes;
+    state.reconciliation.items = itemsRes.items || [];
+    state.reconciliation.loading = "ready";
+  } catch (err) {
+    if (err.name === "AbortError" || err.status === 401) return;
+    state.reconciliation.error = err.message;
+    state.reconciliation.loading = "error";
+  }
+  render();
+}
+
+async function runReconciliationMatch() {
+  state.reconciliation.loading = "loading";
+  state.reconciliation.error = "";
+  render();
+  try {
+    await apiRequest("/api/reconciliation/run", {
+      method: "POST",
+      body: JSON.stringify({ period: state.period })
+    }, { onUnauthorized: handleUnauthorized });
+    await loadReconciliation();
+    await loadDashboard();
+    showToast("GSTR-2B reconciliation updated");
+  } catch (err) {
+    if (err.name === "AbortError" || err.status === 401) return;
+    state.reconciliation.error = err.message;
+    state.reconciliation.loading = "error";
+    render();
+  }
+}
+
+async function uploadDocumentFile(file, category) {
+  if (!file) return;
+  state.uploadingCategory = category;
+  state.ocrReview = null;
+  render();
+
+  try {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("category", category);
+    const res = await apiRequest("/api/documents/upload", {
+      method: "POST",
+      body: fd
+    }, { onUnauthorized: handleUnauthorized });
+
+    const ef = res.extractedFields || {};
+    const activeState = state.activeGstin?.state_code || "27";
+    const isSales = category === "sales_invoice";
+    const partyGstin = isSales
+      ? (ef.buyerGstin || ef.gstin || "")
+      : (ef.sellerGstin || ef.gstin || "");
+
+    state.ocrReview = {
+      category,
+      documentId: res.document?.id || null,
+      filename: res.document?.original_name || file.name,
+      confidenceScore: Number(res.ocr?.confidenceScore ?? ef.confidenceScore ?? 0.5),
+      isScanned: Boolean(res.ocr?.isScanned || ef.isScanned),
+      warnings: res.warnings || ef.warnings || [],
+      confirmed: false,
+      saving: false,
+      error: "",
+      fields: {
+        invoiceNumber: ef.invoiceNumber || "",
+        invoiceDate: ef.invoiceDate || new Date().toISOString().slice(0, 10),
+        partyName: ef.partyName || "",
+        gstin: partyGstin,
+        pos: ef.pos || activeState,
+        taxableAmount: ef.taxableAmount !== undefined ? ef.taxableAmount : "",
+        gstRate: ef.gstRate !== undefined ? Number(ef.gstRate) : 18,
+        itcEligibility: "ELIGIBLE",
+        isRcm: Boolean(ef.isRcm)
+      }
+    };
+    showToast(`Extracted details from ${file.name}`);
+  } catch (err) {
+    if (err.name === "AbortError" || err.status === 401) return;
+    showToast(err.message || "File upload failed");
+  } finally {
+    state.uploadingCategory = null;
+    render();
+  }
+}
+
+async function approveOcrReview() {
+  const ocr = state.ocrReview;
+  if (!ocr) return;
+  const f = ocr.fields;
+  const isSales = ocr.category === "sales_invoice";
+  if (!f.invoiceNumber || !f.taxableAmount) {
+    ocr.error = "Invoice number and taxable value are required.";
+    render();
+    return;
+  }
+
+  ocr.saving = true;
+  ocr.error = "";
+  render();
+
+  const payloadFields = {
+    invoiceNumber: String(f.invoiceNumber).trim(),
+    invoiceDate: f.invoiceDate,
+    pos: String(f.pos || state.activeGstin?.state_code || "27").slice(0, 2),
+    taxableAmount: Number(f.taxableAmount),
+    gstRate: Number(f.gstRate ?? 18),
+    period: state.period
+  };
+
+  if (isSales) {
+    payloadFields.customerName = f.partyName || "Customer";
+    if (f.gstin) payloadFields.customerGstin = String(f.gstin).trim().toUpperCase();
+  } else {
+    payloadFields.supplierName = f.partyName || "Supplier";
+    payloadFields.supplierGstin = String(f.gstin || "27AAACM1234B1Z2").trim().toUpperCase();
+    payloadFields.itcEligibility = f.itcEligibility || "ELIGIBLE";
+    payloadFields.isRcm = Boolean(f.isRcm);
+  }
+
+  try {
+    const res = await apiRequest("/api/ocr/approve", {
+      method: "POST",
+      body: JSON.stringify({
+        documentId: ocr.documentId,
+        invoiceType: ocr.category,
+        fields: payloadFields
+      })
+    }, { onUnauthorized: handleUnauthorized });
+
+    state.ocrReview = null;
+    state.recentAddedId = res.invoice?.id || res.purchase?.id || null;
+    await Promise.all([loadDashboard(), loadInvoices()]);
+    showToast(res.message || "Bill saved to register");
+    setTimeout(() => { state.recentAddedId = null; }, 1600);
+  } catch (err) {
+    if (err.name === "AbortError" || err.status === 401) return;
+    ocr.saving = false;
+    ocr.error = err.message || "Could not save extracted bill.";
+    render();
+  }
+}
+
+async function deleteInvoiceRow(kind, id, invNum) {
+  const isSales = kind === "sales";
+  const existing = (isSales ? state.sales : state.purchases).find((r) => r.id === id);
+  const tr = document.querySelector(`tr[data-row-id="${CSS.escape(id)}"]`);
+  if (tr && !isMotionReduced()) {
+    tr.classList.add("rm");
+    await new Promise((r) => setTimeout(r, MOTION_TOKENS.rowDeleteMs || 340));
+  }
+
+  try {
+    await apiRequest(`/api/${isSales ? "sales" : "purchases"}/${encodeURIComponent(id)}`, {
+      method: "DELETE"
+    }, { onUnauthorized: handleUnauthorized });
+    await Promise.all([loadDashboard(), loadInvoices()]);
+
+    showToast(`Deleted ${invNum || "bill"}`, existing ? async () => {
+      const restoreBody = isSales ? {
+        invoiceNumber: existing.invoice_number,
+        invoiceDate: existing.invoice_date,
+        customerName: existing.customer_name,
+        customerGstin: existing.customer_gstin,
+        pos: existing.pos,
+        taxableAmount: existing.taxable_amount,
+        gstRate: existing.gst_rate,
+        supplyType: existing.supply_type,
+        period: existing.period
+      } : {
+        invoiceNumber: existing.invoice_number,
+        invoiceDate: existing.invoice_date,
+        supplierName: existing.supplier_name,
+        supplierGstin: existing.supplier_gstin,
+        pos: existing.pos,
+        taxableAmount: existing.taxable_amount,
+        gstRate: existing.gst_rate,
+        itcEligibility: existing.itc_eligibility,
+        isRcm: Boolean(existing.is_rcm),
+        period: existing.period
+      };
+      await apiRequest(`/api/${isSales ? "sales" : "purchases"}`, {
+        method: "POST",
+        body: JSON.stringify(restoreBody)
+      }, { onUnauthorized: handleUnauthorized });
+      await Promise.all([loadDashboard(), loadInvoices()]);
+      showToast(`Restored ${invNum || "bill"}`);
+    } : null);
+  } catch (err) {
+    if (err.name === "AbortError" || err.status === 401) return;
+    tr?.classList.remove("rm");
+    showToast(err.message || "Could not delete bill");
+  }
+}
+
+async function submitSimulatedReturn(otp) {
+  if (!otp || otp.length !== 6) {
+    state.filingError = "Enter a 6-digit Simulation EVC OTP (for example 123456).";
+    render();
+    return;
+  }
+  state.submittingReturn = true;
+  state.filingError = "";
+  render();
+  try {
+    const res = await apiRequest("/api/returns/gstr3b/file", {
+      method: "POST",
+      body: JSON.stringify({ period: state.period, otp, paymentDone: true })
+    }, { onUnauthorized: handleUnauthorized });
+    state.filingReceipt = res;
+    state.submittingReturn = false;
+    await Promise.all([loadDashboard(), loadHistory()]);
+    launchCelebrationConfetti();
+    showToast(`Filed (simulation) · ${res.arn}`);
+  } catch (err) {
+    if (err.name === "AbortError" || err.status === 401) return;
+    state.submittingReturn = false;
+    state.filingError = err.message || "Filing failed.";
+    render();
+  }
+}
+
 export async function loadAllBusinessData() {
   await Promise.all([loadDashboard(), loadDraft(), loadInvoices(), loadHistory(), loadSecondary()]);
+  if (state.filingStep === 3) await loadReconciliation();
 }
 
 export async function switchGstin(gstinId) {
@@ -314,6 +621,7 @@ export async function switchGstin(gstinId) {
 async function saveFilingStep(step) {
   state.filingStep = step;
   render();
+  if (step === 3) loadReconciliation();
   try {
     await apiRequest("/api/filing/draft", {
       method: "PUT",
@@ -499,6 +807,12 @@ document.addEventListener("click", async (e) => {
     return;
   }
 
+  const delBtn = e.target.closest("[data-del-id]");
+  if (delBtn) {
+    await deleteInvoiceRow(delBtn.dataset.delKind, delBtn.dataset.delId, delBtn.dataset.delNum);
+    return;
+  }
+
   const swBtn = e.target.closest("[data-switch-gstin]");
   if (swBtn) {
     await switchGstin(swBtn.dataset.switchGstin);
@@ -510,6 +824,15 @@ document.addEventListener("click", async (e) => {
     const act = actBtn.dataset.act;
     if (act === "open-copilot-panel") openCopilotPanel();
     else if (act === "ask-chip") await askCopilot(actBtn.dataset.q || "");
+    else if (act === "discard-ocr") {
+      state.ocrReview = null;
+      render();
+    }
+    else if (act === "run-recon") await runReconciliationMatch();
+    else if (act === "export-ca-csv") {
+      const q = state.period ? `period=${encodeURIComponent(state.period)}&` : "";
+      window.open(`/api/ca-review/export?${q}format=csv`, "_blank", "noopener");
+    }
     else if (act === "toggle-reduce-motion") {
       const next = !isMotionReduced();
       applyReducedMotionPref(next);
@@ -526,6 +849,38 @@ document.addEventListener("click", async (e) => {
       render();
     }
   }
+});
+
+document.addEventListener("change", async (e) => {
+  const inp = e.target.closest("[data-upload-cat]");
+  if (inp && inp.files && inp.files[0]) {
+    const file = inp.files[0];
+    const cat = inp.dataset.uploadCat;
+    inp.value = "";
+    await uploadDocumentFile(file, cat);
+  }
+});
+
+document.addEventListener("dragover", (e) => {
+  const dz = e.target.closest("[data-drop-cat]");
+  if (dz) {
+    e.preventDefault();
+    dz.classList.add("on");
+  }
+});
+
+document.addEventListener("dragleave", (e) => {
+  const dz = e.target.closest("[data-drop-cat]");
+  if (dz && !dz.contains(e.relatedTarget)) dz.classList.remove("on");
+});
+
+document.addEventListener("drop", async (e) => {
+  const dz = e.target.closest("[data-drop-cat]");
+  if (!dz) return;
+  e.preventDefault();
+  dz.classList.remove("on");
+  const file = e.dataTransfer?.files?.[0];
+  if (file) await uploadDocumentFile(file, dz.dataset.dropCat);
 });
 
 $("#gstin-switcher")?.addEventListener("change", (e) => switchGstin(e.target.value));

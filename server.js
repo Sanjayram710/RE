@@ -486,7 +486,7 @@ export async function handleRequest(req, res) {
       const body = await readBody(req);
       const { planId, clientName, pan, phone, slot, couponCode } = body;
       const cleanPan = (pan || "CVBBC4433W").toUpperCase();
-      
+
       let basePrice = 2499;
       let planTitle = "Salaried & Multi-Form 16 Tax Filing";
       if (planId === "plan-free-trial") { basePrice = 2999; planTitle = "1-Month Free Pro CA Advisory & Filing Trial"; }
@@ -505,7 +505,7 @@ export async function handleRequest(req, res) {
       }
       const finalPrice = Math.round(basePrice * (1 - discountPercent / 100));
       const bookingId = `CT-EXP-${Date.now().toString().slice(-6)}`;
-      
+
       const record = {
         bookingId,
         clientName: clientName || "Sanjay Harshi",
@@ -1453,7 +1453,7 @@ export async function handleRequest(req, res) {
           targetFile = p;
           break;
         }
-      } catch {}
+      } catch { }
     }
 
     if (!targetFile) {

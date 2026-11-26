@@ -158,3 +158,4 @@ test("Phase 2.5: Server blocks static /data/ access, enforces CSP on /app, and r
   await handleFunctionalApi({ headers: { authorization: `Bearer ${sess.token}` }, body: {} }, caRes, "/api/ca-review/export", "GET", { period: "102026" }, {});
   assert.equal(caRes.statusCode, 403);
 });
+
