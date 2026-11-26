@@ -637,8 +637,11 @@ function renderSubmitStep(state, dash, env) {
     `;
   }
 
-  if (state.filingReceipt) {
-    const rec = state.filingReceipt;
+  const existingFiling = (state.filings || []).find(
+    (f) => f.period === state.period && String(f.return_type || "").includes("GSTR3B")
+  );
+  const rec = state.filingReceipt || existingFiling;
+  if (rec) {
     return `
       <div class="sim-receipt">
         <span class="sim-badge">Filed</span>
@@ -647,7 +650,7 @@ function renderSubmitStep(state, dash, env) {
         <div class="kp kp-3">
           <div class="kc"><small>Period</small><div class="d">${escapeHtml(formatPeriodLabel(rec.period || state.period))}</div></div>
           <div class="kc"><small>Status</small><div class="d">Filed</div></div>
-          <div class="kc hi"><small>Submitted On</small><div class="d">${formatDateIN(rec.filingTimestamp || new Date().toISOString())}</div></div>
+          <div class="kc hi"><small>Submitted On</small><div class="d">${formatDateIN(rec.filingTimestamp || rec.filing_date || new Date().toISOString())}</div></div>
         </div>
         <div class="row sp2">
           <button type="button" class="btn o" data-go="history">View Filing History →</button>
