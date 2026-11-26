@@ -10,10 +10,10 @@ stitch_simplegst_compliance_platform/
 *.db-wal
 *.db-shm
 data/simplegst.db
-data/uploads/
+data/uploads/*
+!data/uploads/.gitkeep
 data/backups/*
-!data/uploads/
-data/backups/.gitkeep
+!data/backups/.gitkeep
 
 
 # Uploaded reference screen templates
