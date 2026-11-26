@@ -68,6 +68,9 @@ export function renderAuthView(state) {
             <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Enter your password">
           </div>
           <button type="submit" class="btn btn-full mag" id="login-submit-btn">Sign in</button>
+          ${state.demoCredentials ? `
+            <button type="button" class="btn o btn-full" id="fill-demo-btn" data-act="fill-demo-login">Fill Demo Credentials</button>
+          ` : ""}
         </form>
       </div>
     </section>

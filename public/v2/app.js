@@ -782,6 +782,7 @@ async function init() {
       await loadAllBusinessData();
     } else {
       state.authenticated = false;
+      state.demoCredentials = sess.demoLoginAvailable ? sess.demoCredentials : null;
       updateHeaderControls();
       render();
     }
@@ -850,6 +851,15 @@ document.addEventListener("click", async (e) => {
     else if (act === "discard-ocr") {
       state.ocrReview = null;
       render();
+    }
+    else if (act === "fill-demo-login") {
+      if (state.demoCredentials) {
+        const em = $("#login-email");
+        const pw = $("#login-password");
+        if (em) em.value = state.demoCredentials.email || "";
+        if (pw) pw.value = state.demoCredentials.password || "";
+        showToast("Demo credentials filled");
+      }
     }
     else if (act === "run-recon") await runReconciliationMatch();
     else if (act === "start-new-filing") {
