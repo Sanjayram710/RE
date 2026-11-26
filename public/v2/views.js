@@ -306,9 +306,6 @@ function renderUploadAndOcrBox(category, state) {
   let ocrHtml = "";
   if (ocr) {
     const f = ocr.fields || {};
-    const confPct = Math.round(Number(ocr.confidenceScore || 0) * 100);
-    const confClass = confPct >= 85 && !ocr.isScanned ? "hi" : confPct >= 60 ? "mid" : "low";
-    const confLabel = ocr.isScanned ? `Scanned (${confPct}% confidence)` : `${confPct}% confidence`;
     const warnings = ocr.warnings || [];
     const needsConfirm = Number(ocr.confidenceScore || 0) < 0.85 || ocr.isScanned || warnings.length > 0;
     const prev = computeOcrPreviewPaise(f, activeStateCode);
@@ -317,7 +314,6 @@ function renderUploadAndOcrBox(category, state) {
       <div class="ocr-card" aria-live="polite">
         <div class="ocr-head">
           <h3>Review Extracted ${isSales ? "Sales Invoice" : "Purchase Bill"} · ${escapeHtml(ocr.filename)}</h3>
-          <span class="conf-badge ${confClass}">${escapeHtml(confLabel)}</span>
         </div>
 
         ${(warnings.length > 0 || ocr.isScanned) ? `
