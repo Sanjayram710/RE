@@ -1428,6 +1428,8 @@ export async function handleRequest(req, res) {
       relativePath = "simplegst-app-v2.html";
     } else if (pathname === "/partner" || pathname === "/partner-dashboard" || pathname === "/partner.html") {
       relativePath = "partner.html";
+    } else if (pathname === "/ca" || pathname === "/ca-dashboard" || pathname === "/ca.html") {
+      relativePath = "ca.html";
     } else {
       relativePath = pathname.replace(/^\//, "");
     }
@@ -1470,7 +1472,7 @@ export async function handleRequest(req, res) {
       const contentType = MIME_TYPES[ext] || "application/octet-stream";
       const headers = { "Content-Type": contentType };
       if (ext === ".html") {
-        const isV2App = relativePath === "simplegst-app-v2.html" || relativePath === "partner.html";
+        const isV2App = relativePath === "simplegst-app-v2.html" || relativePath === "partner.html" || relativePath === "ca.html";
         headers["X-Content-Type-Options"] = "nosniff";
         headers["X-Frame-Options"] = "DENY";
         headers["Content-Security-Policy"] = isV2App

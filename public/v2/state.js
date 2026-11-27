@@ -51,6 +51,8 @@ export function createInitialState() {
     expertPlans: [],
     startupProfile: null,
     partnerConsents: [],
+    caConsents: [],
+    caApprovals: [],
     copilotMessages: [],
     ocrReview: null,
     uploadingCategory: null,

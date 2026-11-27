@@ -927,6 +927,7 @@ export function renderSettingsView(state) {
           <p class="sub">Approve or revoke GST workspace access for SimpleGST Partners.</p>
         </div>
         <a href="/partner" class="btn o btn-sm">Open Partner Portal →</a>
+        <a href="/ca" class="btn o btn-sm">Open CA Portal →</a>
       </div>
       ${(state.partnerConsents || []).length === 0 ? `<p class="sub">No partner invitations or active partner links.</p>` : `
         <div class="tw">
@@ -949,6 +950,60 @@ export function renderSettingsView(state) {
           </table>
         </div>
       `}
+    </div>
+
+    <div class="card">
+      <div class="ca-bar">
+        <div>
+          <h2>CA / GST Agent Access &amp; Filing Approvals (${(state.caConsents || []).length})</h2>
+          <p class="sub">Authorize your Chartered Accountant / GST Agent and approve prepared returns before filing.</p>
+        </div>
+        <a href="/ca" class="btn o btn-sm">Open CA Portal →</a>
+      </div>
+      ${(state.caConsents || []).length === 0 ? `<p class="sub">No CA / GST Agent invitations or active links.</p>` : `
+        <div class="tw">
+          <table>
+            <thead><tr><th>CA Firm</th><th>Code</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              ${state.caConsents.map(c => `
+                <tr>
+                  <td><strong>${escapeHtml(c.firm_name)}</strong> (${escapeHtml(c.category)})</td>
+                  <td class="num">${escapeHtml(c.ca_code)}</td>
+                  <td><span class="badge ${c.consent_granted ? "ok" : "warn"}">${escapeHtml(c.consent_status)}</span></td>
+                  <td>
+                    ${c.consent_granted
+                      ? `<button type="button" class="del" data-ca-consent-id="${escapeHtml(c.id)}" data-ca-consent-act="REVOKE">Revoke Access</button>`
+                      : `<button type="button" class="btn btn-sm" data-ca-consent-id="${escapeHtml(c.id)}" data-ca-consent-act="APPROVE">Approve Access</button>`}
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `}
+      ${(state.caApprovals || []).length > 0 ? `
+        <div class="tw" style="margin-top:14px">
+          <table>
+            <thead><tr><th>Return</th><th>GSTIN</th><th>Period</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              ${state.caApprovals.map(a => `
+                <tr>
+                  <td><strong>${escapeHtml(a.return_type)} v${a.version}</strong> (${escapeHtml(a.firm_name)})</td>
+                  <td class="num">${escapeHtml(a.gstin)}</td>
+                  <td class="num">${escapeHtml(a.period)}</td>
+                  <td><span class="badge ${a.status === "APPROVED" ? "ok" : "warn"}">${escapeHtml(a.status)}</span></td>
+                  <td>
+                    ${a.status === "AWAITING_CUSTOMER_APPROVAL" ? `
+                      <button type="button" class="btn btn-sm" data-ca-app-id="${escapeHtml(a.id)}" data-ca-app-act="APPROVE">Approve Return</button>
+                      <button type="button" class="del" data-ca-app-id="${escapeHtml(a.id)}" data-ca-app-act="REJECT">Reject</button>
+                    ` : escapeHtml(a.status)}
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      ` : ""}
     </div>
   `;
 }

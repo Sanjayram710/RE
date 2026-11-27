@@ -387,14 +387,18 @@ async function loadHistory() {
 
 async function loadSecondary() {
   try {
-    const [ep, st, pc] = await Promise.all([
+    const [ep, st, pc, cc, ca] = await Promise.all([
       apiRequest("/api/expert/plans", {}, { onUnauthorized: handleUnauthorized }),
       apiRequest("/api/startup-express/profile", {}, { onUnauthorized: handleUnauthorized }),
-      apiRequest("/api/customer/partner-consents", {}, { onUnauthorized: handleUnauthorized }).catch(() => ({ consents: [] }))
+      apiRequest("/api/customer/partner-consents", {}, { onUnauthorized: handleUnauthorized }).catch(() => ({ consents: [] })),
+      apiRequest("/api/customer/ca-consents", {}, { onUnauthorized: handleUnauthorized }).catch(() => ({ consents: [] })),
+      apiRequest("/api/customer/ca-approvals", {}, { onUnauthorized: handleUnauthorized }).catch(() => ({ approvals: [] }))
     ]);
     state.expertPlans = ep.plans || [];
     state.startupProfile = st.profile || null;
     state.partnerConsents = pc.consents || [];
+    state.caConsents = cc.consents || [];
+    state.caApprovals = ca.approvals || [];
   } catch {}
 }
 
@@ -871,6 +875,36 @@ document.addEventListener("click", async (e) => {
     await apiRequest("/api/context/period", { method: "POST", body: JSON.stringify({ period: p }) }).catch(() => {});
     await loadAllBusinessData();
     navigateTo("home");
+    return;
+  }
+
+  const caConBtn = e.target.closest("[data-ca-consent-id]");
+  if (caConBtn) {
+    try {
+      await apiRequest(`/api/customer/ca-consents/${encodeURIComponent(caConBtn.dataset.caConsentId)}/respond`, {
+        method: "POST",
+        body: JSON.stringify({ action: caConBtn.dataset.caConsentAct })
+      }, { onUnauthorized: handleUnauthorized });
+      await loadSecondary();
+      render();
+      showToast(caConBtn.dataset.caConsentAct === "APPROVE" ? "CA access approved" : "CA access revoked");
+    } catch (err) { showToast(err.message || "Action failed"); }
+    return;
+  }
+
+  const caAppBtn = e.target.closest("[data-ca-app-id]");
+  if (caAppBtn) {
+    const act = caAppBtn.dataset.caAppAct;
+    const reason = act === "REJECT" ? (prompt("Rejection reason:") || "Changes needed") : "";
+    try {
+      await apiRequest(`/api/customer/ca-approvals/${encodeURIComponent(caAppBtn.dataset.caAppId)}/respond`, {
+        method: "POST",
+        body: JSON.stringify({ action: act, reason })
+      }, { onUnauthorized: handleUnauthorized });
+      await loadSecondary();
+      render();
+      showToast(act === "APPROVE" ? "Return approved for filing" : "Return rejected");
+    } catch (err) { showToast(err.message || "Action failed"); }
     return;
   }
 
