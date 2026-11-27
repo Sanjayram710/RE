@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SimpleGST Partner Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/partner/styles.css">
+</head>
+<body>
+  <div class="shell" id="shell">
+    <aside class="sb" id="sidebar" aria-label="Partner navigation">
+      <div class="sb-top">
+        <a href="/app" class="brand">SimpleGST <span>Partner</span></a>
+        <button type="button" class="sb-close" id="sb-close" aria-label="Close navigation">×</button>
+      </div>
+      <nav class="sb-nav" id="sb-nav"></nav>
+      <div class="sb-foot">
+        <a href="/app" class="nav-btn">← Customer App</a>
+      </div>
+    </aside>
+
+    <div class="main-col">
+      <header class="topbar">
+        <div class="tb-l">
+          <button type="button" class="menu-btn" id="menu-toggle" aria-label="Open navigation">☰</button>
+          <span class="tb-title" id="tb-title">Partner Portal</span>
+        </div>
+        <div class="tb-r" id="tb-right"></div>
+      </header>
+
+      <main class="content" id="app" tabindex="-1" aria-live="polite"></main>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/partner/app.js"></script>
+</body>
+</html>

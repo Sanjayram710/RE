@@ -387,12 +387,14 @@ async function loadHistory() {
 
 async function loadSecondary() {
   try {
-    const [ep, st] = await Promise.all([
+    const [ep, st, pc] = await Promise.all([
       apiRequest("/api/expert/plans", {}, { onUnauthorized: handleUnauthorized }),
-      apiRequest("/api/startup-express/profile", {}, { onUnauthorized: handleUnauthorized })
+      apiRequest("/api/startup-express/profile", {}, { onUnauthorized: handleUnauthorized }),
+      apiRequest("/api/customer/partner-consents", {}, { onUnauthorized: handleUnauthorized }).catch(() => ({ consents: [] }))
     ]);
     state.expertPlans = ep.plans || [];
     state.startupProfile = st.profile || null;
+    state.partnerConsents = pc.consents || [];
   } catch {}
 }
 
@@ -869,6 +871,22 @@ document.addEventListener("click", async (e) => {
     await apiRequest("/api/context/period", { method: "POST", body: JSON.stringify({ period: p }) }).catch(() => {});
     await loadAllBusinessData();
     navigateTo("home");
+    return;
+  }
+
+  const consentBtn = e.target.closest("[data-consent-id]");
+  if (consentBtn) {
+    try {
+      await apiRequest(`/api/customer/partner-consents/${encodeURIComponent(consentBtn.dataset.consentId)}/respond`, {
+        method: "POST",
+        body: JSON.stringify({ action: consentBtn.dataset.consentAct })
+      }, { onUnauthorized: handleUnauthorized });
+      await loadSecondary();
+      render();
+      showToast(consentBtn.dataset.consentAct === "APPROVE" ? "Partner access approved" : "Partner access revoked");
+    } catch (err) {
+      showToast(err.message || "Action failed");
+    }
     return;
   }
 

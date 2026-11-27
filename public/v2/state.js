@@ -50,6 +50,7 @@ export function createInitialState() {
     monthlyHistory: [],
     expertPlans: [],
     startupProfile: null,
+    partnerConsents: [],
     copilotMessages: [],
     ocrReview: null,
     uploadingCategory: null,

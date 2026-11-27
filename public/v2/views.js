@@ -919,5 +919,36 @@ export function renderSettingsView(state) {
         </div>
       `}
     </div>
+
+    <div class="card">
+      <div class="ca-bar">
+        <div>
+          <h2>Partner Access &amp; Consent (${(state.partnerConsents || []).length})</h2>
+          <p class="sub">Approve or revoke GST workspace access for SimpleGST Partners.</p>
+        </div>
+        <a href="/partner" class="btn o btn-sm">Open Partner Portal →</a>
+      </div>
+      ${(state.partnerConsents || []).length === 0 ? `<p class="sub">No partner invitations or active partner links.</p>` : `
+        <div class="tw">
+          <table>
+            <thead><tr><th>Partner</th><th>Code</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              ${state.partnerConsents.map(c => `
+                <tr>
+                  <td><strong>${escapeHtml(c.partner_business_name)}</strong> (${escapeHtml(c.partner_category)})</td>
+                  <td class="num">${escapeHtml(c.partner_code)}</td>
+                  <td><span class="badge ${c.consent_granted ? "ok" : "warn"}">${escapeHtml(c.onboarding_status)}</span></td>
+                  <td>
+                    ${c.consent_granted
+                      ? `<button type="button" class="del" data-consent-id="${escapeHtml(c.id)}" data-consent-act="REVOKE">Revoke Access</button>`
+                      : `<button type="button" class="btn btn-sm" data-consent-id="${escapeHtml(c.id)}" data-consent-act="APPROVE">Approve Consent</button>`}
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `}
+    </div>
   `;
 }
